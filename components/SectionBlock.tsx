@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SectionType, WorkedExample } from "@/lib/types";
+import { splitMathExpression } from "@/lib/utils/mathText";
 
 interface SectionBlockProps {
   title: string;
@@ -7,21 +8,6 @@ interface SectionBlockProps {
   type: SectionType;
   example?: WorkedExample;
   children: ReactNode;
-}
-
-function splitMathExpression(prompt: string): { text: string; math?: string } {
-  const match = prompt.match(/(\d[\d\s+\-*=?.]+)/);
-  if (!match) {
-    return { text: prompt };
-  }
-
-  const math = match[1].trim();
-  const text = prompt.replace(match[1], "").replace(/\s{2,}/g, " ").trim();
-  if (!/[+\-=]/.test(math)) {
-    return { text: prompt };
-  }
-
-  return { text, math };
 }
 
 const BORDER_BY_TYPE: Record<SectionType, string> = {
@@ -64,9 +50,11 @@ export function SectionBlock({
       {example ? (
         <article className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4" aria-label="דֻּגְמָה פְּתוּרָה">
           <h3 className="font-semibold text-amber-900">{example.title}</h3>
-          <p className="mt-1 text-sm text-amber-900">{examplePromptParts?.text}</p>
+          <p className="mt-1 text-sm text-amber-900" dir="rtl" style={{ unicodeBidi: "plaintext" }}>
+            {examplePromptParts?.text}
+          </p>
           {examplePromptParts?.math ? (
-            <div className="math-line mt-1" dir="ltr">
+            <div className="math-line mt-2" dir="ltr" style={{ unicodeBidi: "isolate" }}>
               {examplePromptParts.math}
             </div>
           ) : null}

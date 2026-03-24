@@ -7,6 +7,7 @@ import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
 import { workbookDays } from "@/lib/content/days";
 import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/progress/engine";
 import { loadProgressState } from "@/lib/progress/storage";
+import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 
 type DayCardState = "locked" | "open" | "complete";
@@ -46,13 +47,14 @@ export default function Home() {
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setPreviewAll(params.get("previewAll") === "1");
+    setPreviewAll(getPreviewAllFromLocation());
     logEvent("home_viewed");
     setProgress(loadProgressState());
     setEvents(loadEvents());
+    setIsHydrated(true);
   }, []);
 
   const weeks = useMemo(
@@ -66,6 +68,14 @@ export default function Home() {
 
   const rollups = useMemo(() => computeAnalyticsRollups(events), [events]);
   const eventsJson = useMemo(() => JSON.stringify(events, null, 2), [events]);
+
+  if (!isHydrated) {
+    return (
+      <main className="pb-10">
+        <div className="surface p-6 text-center text-lg font-semibold text-slate-600">טוֹעֲנִים...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="pb-10">
@@ -130,21 +140,16 @@ export default function Home() {
                 return (
                   <article
                     key={day.id}
-                    className={`surface relative p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
+                    className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
                   >
-                    {/* Complete badge */}
-                    {state === "complete" && (
-                      <span className="absolute left-4 top-4 text-2xl" aria-hidden="true">✅</span>
-                    )}
-
                     {/* Card header row */}
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
+                    <div className="mb-3 flex items-start justify-between gap-2 sm:gap-3">
+                      <div className="flex min-w-0 flex-1 items-start gap-2">
                         {/* Day number circle */}
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
                           {day.dayNumber}
                         </span>
-                        <strong className="text-base">
+                        <strong className="min-w-0 text-base leading-snug break-words">
                           {dayEmoji} יוֹם {day.dayNumber}: {day.title}
                         </strong>
                       </div>
@@ -152,7 +157,7 @@ export default function Home() {
                       {/* State chip */}
                       <span
                         aria-label={stateUi.text}
-                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${stateChipClasses}`}
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:px-3 ${stateChipClasses}`}
                       >
                         {stateUi.icon} {stateUi.text}
                       </span>

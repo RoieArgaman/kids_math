@@ -3,6 +3,7 @@ interface VerbalQuestionProps {
   onChange: (value: string) => void;
   onEnter: () => void;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 export function VerbalQuestion({
@@ -10,11 +11,13 @@ export function VerbalQuestion({
   onChange,
   onEnter,
   placeholder,
+  ariaLabel,
 }: VerbalQuestionProps) {
   return (
     <div className="relative mt-2 flex items-center gap-2">
       <span className="text-xl" aria-hidden="true">📝</span>
       <input
+        aria-label={ariaLabel}
         className="underline-input flex-1 text-lg"
         minLength={1}
         onChange={(event) => onChange(event.target.value)}

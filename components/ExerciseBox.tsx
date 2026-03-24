@@ -2,6 +2,7 @@
 
 import { NumberLine } from "@/components/NumberLine";
 import { VerbalQuestion } from "@/components/VerbalQuestion";
+import { splitMathExpression } from "@/lib/utils/mathText";
 import type {
   Exercise,
   MultipleChoiceExercise,
@@ -21,21 +22,6 @@ interface ExerciseBoxProps {
   onSubmit: () => void;
   onNextInput: () => void;
   onRetry: () => void;
-}
-
-function splitMathExpression(prompt: string): { text: string; math?: string } {
-  const match = prompt.match(/(\d[\d\s+\-*=?.]+)/);
-  if (!match) {
-    return { text: prompt };
-  }
-
-  const math = match[1].trim();
-  const text = prompt.replace(match[1], "").replace(/\s{2,}/g, " ").trim();
-  if (!/[+\-=]/.test(math)) {
-    return { text: prompt };
-  }
-
-  return { text, math };
 }
 
 function isPositiveFeedback(message: string): boolean {
@@ -91,6 +77,10 @@ export function ExerciseBox({
   onNextInput,
   onRetry,
 }: ExerciseBoxProps) {
+  const promptLabel = exercise.prompt.replace(/\s+/g, " ").trim();
+  const checkButtonLabel = `בְּדִיקָה: ${promptLabel}`;
+  const inputLabel = `תְּשׁוּבָה לַשְּׁאֵלָה: ${promptLabel}`;
+
   const onEnter = () => {
     onSubmit();
     onNextInput();
@@ -102,6 +92,7 @@ export function ExerciseBox({
       const typedExercise = exercise as NumberInputExercise;
       return (
         <input
+          aria-label={inputLabel}
           className="underline-input"
           dir="ltr"
           inputMode="numeric"
@@ -128,6 +119,7 @@ export function ExerciseBox({
           onChange={onChange}
           onEnter={onEnter}
           placeholder={typedExercise.hint}
+          ariaLabel={inputLabel}
         />
       );
     }
@@ -165,6 +157,7 @@ export function ExerciseBox({
         <div>
           <NumberLine start={typedExercise.start} end={typedExercise.end} />
           <input
+            aria-label={inputLabel}
             className="underline-input mt-2"
             dir="ltr"
             inputMode="numeric"
@@ -196,9 +189,11 @@ export function ExerciseBox({
 
   return (
     <article className={`surface mb-3 p-4 ${surfaceStateClass} ${correctRingClass}`}>
-      <p className="mb-1 text-lg font-semibold">{promptParts.text}</p>
+      <p className="mb-1 text-lg font-semibold" dir="rtl" style={{ unicodeBidi: "plaintext" }}>
+        {promptParts.text}
+      </p>
       {promptParts.math ? (
-        <div className="math-line mb-2 text-lg font-bold" dir="ltr">
+        <div className="math-line mb-2 text-lg font-bold" dir="ltr" style={{ unicodeBidi: "isolate" }}>
           {promptParts.math}
         </div>
       ) : null}
@@ -212,7 +207,12 @@ export function ExerciseBox({
           </button>
         </div>
       ) : null}
-      <button type="button" className="touch-button btn-accent mt-3 w-full" onClick={onSubmit}>
+      <button
+        type="button"
+        aria-label={checkButtonLabel}
+        className="touch-button btn-accent mt-3 w-full"
+        onClick={onSubmit}
+      >
         בְּדִיקָה
       </button>
     </article>

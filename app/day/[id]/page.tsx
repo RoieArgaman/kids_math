@@ -18,7 +18,8 @@ import {
 import { loadProgressState } from "@/lib/progress/storage";
 import { useProgress } from "@/lib/hooks/useProgress";
 import type { DayId, Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
-import { getRetryFeedbackText, isAnswerCorrect } from "@/lib/utils/exercise";
+import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 
 interface DayPageProps {
   params: { id: string };
@@ -39,8 +40,9 @@ export default function DayPage({ params }: DayPageProps) {
   const [attempts, setAttempts] = useState<Record<string, number>>({});
   const [showReward, setShowReward] = useState(false);
   const [resetNotice, setResetNotice] = useState("");
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState<boolean | null>(null);
   const [previewAll, setPreviewAll] = useState(false);
+  const [isRouteReady, setIsRouteReady] = useState(false);
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -50,12 +52,15 @@ export default function DayPage({ params }: DayPageProps) {
   }, [day]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setPreviewAll(params.get("previewAll") === "1");
+    setPreviewAll(getPreviewAllFromLocation());
+    setIsRouteReady(true);
   }, []);
 
   useEffect(() => {
     if (!day) {
+      return;
+    }
+    if (!isRouteReady) {
       return;
     }
     if (previewAll) {
@@ -71,7 +76,7 @@ export default function DayPage({ params }: DayPageProps) {
     const progress = loadProgressState();
     const previousProgress = progress.days[previousDay.id];
     setIsLocked(!canUnlockNextDay(previousDay, previousProgress));
-  }, [day, previewAll]);
+  }, [day, isRouteReady, previewAll]);
 
   useEffect(() => {
     if (!day) {
@@ -114,6 +119,17 @@ export default function DayPage({ params }: DayPageProps) {
     );
   }
 
+  if (!isRouteReady || isLocked === null) {
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        <div className="surface mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg">
+          <p className="mb-2 text-5xl">⏳</p>
+          <p className="text-lg font-semibold text-gray-700">טוֹעֲנִים אֶת הַיּוֹם...</p>
+        </div>
+      </main>
+    );
+  }
+
   if (isLocked) {
     return (
       <main className="flex min-h-screen items-center justify-center">
@@ -151,9 +167,20 @@ export default function DayPage({ params }: DayPageProps) {
 
   const submitExercise = (exercise: Exercise) => {
     const userAnswer = answers[exercise.id] ?? "";
+    const normalizedAnswer = normalizeAnswerValue(userAnswer);
+    const previousAttempts = attempts[exercise.id] ?? 0;
+    if (normalizedAnswer === null) {
+      setCorrectMap((prev) => ({ ...prev, [exercise.id]: false }));
+      setFeedback((prev) => ({
+        ...prev,
+        [exercise.id]: getRetryFeedbackText(exercise, userAnswer, previousAttempts),
+      }));
+      return;
+    }
+
     const success = isAnswerCorrect(exercise, userAnswer);
     setCorrectMap((prev) => ({ ...prev, [exercise.id]: success }));
-    const nextAttempt = (attempts[exercise.id] ?? 0) + 1;
+    const nextAttempt = previousAttempts + 1;
     setAttempts((prev) => ({ ...prev, [exercise.id]: nextAttempt }));
     setFeedback((prev) => ({
       ...prev,
@@ -188,17 +215,17 @@ export default function DayPage({ params }: DayPageProps) {
   return (
     <main>
       {/* Sticky progress header */}
-      <div className="progress-sticky px-4 py-3 shadow-md">
+      <div className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm">
         <p className="mb-1 text-xs font-semibold text-gray-600">📊 הַהִתְקַדְּמוּת שֶׁלִּי:</p>
         <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${passThreshold}%`} />
-        <div className="mt-2 flex items-center justify-between gap-4">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <Link
             href={previewAll ? "/?previewAll=1" : "/"}
-            className="inline-flex items-center gap-1 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100"
+            className="inline-flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100 sm:flex-none sm:px-4"
           >
             ← חֲזוֹר לָרָאשִׁי
           </Link>
-          <div className="error-counter-badge items-center gap-1 px-4 py-1.5 text-sm font-semibold" aria-live="polite">
+          <div className="error-counter-badge w-full items-center gap-1 px-4 py-1.5 text-sm font-semibold sm:w-auto" aria-live="polite">
             💥 {wrongCount}/{MAX_DAILY_WRONG_ANSWERS}
           </div>
         </div>
