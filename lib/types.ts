@@ -71,7 +71,7 @@ export interface NumberLineJumpExercise extends BaseExercise {
   kind: "number_line_jump";
   start: number;
   end: number;
-  step: 1 | 2 | 5;
+  step: 1 | 2 | 3 | 5;
   answer: number;
 }
 

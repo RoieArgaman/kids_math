@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Heebo } from "next/font/google";
 import "./globals.css";
+
+const heebo = Heebo({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-heebo",
+  display: "swap",
+});
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,7 +22,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "חוֹבֶרֶת מָתֵמָטִיקָה לִילָדִים",
-  description: "תִּרְגּוּל יוֹמִי בְּמָתֵמָטִיקָה לִילָדִים",
+  description: "תִּרְגּוּל יוֹמִי בְּמָתֵמָטִיקָה לִילָדִים",
 };
 
 export default function RootLayout({
@@ -26,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${heebo.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

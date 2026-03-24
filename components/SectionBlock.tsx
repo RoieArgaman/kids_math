@@ -33,6 +33,15 @@ const BORDER_BY_TYPE: Record<SectionType, string> = {
   review: "var(--section-review)",
 };
 
+const EMOJI_BY_TYPE: Record<SectionType, string> = {
+  warmup: "🔥",
+  arithmetic: "🔢",
+  geometry: "📐",
+  verbal: "💬",
+  challenge: "⚡",
+  review: "📝",
+};
+
 export function SectionBlock({
   title,
   learningGoal,
@@ -44,13 +53,16 @@ export function SectionBlock({
 
   return (
     <section
-      className="surface mb-4 border-s-4 p-4"
+      className="surface mb-4 border-s-[6px] p-4"
       style={{ borderInlineStartColor: BORDER_BY_TYPE[type] }}
     >
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="muted mt-1 text-sm">{learningGoal}</p>
+      <h2 className="text-xl font-bold">
+        <span className="me-2" aria-hidden="true" style={{ unicodeBidi: "isolate" }}>{EMOJI_BY_TYPE[type]}</span>
+        {title}
+      </h2>
+      <p className="muted mt-1 text-base">{learningGoal}</p>
       {example ? (
-        <article className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="דֻּגְמָה פְּתוּרָה">
+        <article className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4" aria-label="דֻּגְמָה פְּתוּרָה">
           <h3 className="font-semibold text-amber-900">{example.title}</h3>
           <p className="mt-1 text-sm text-amber-900">{examplePromptParts?.text}</p>
           {examplePromptParts?.math ? (

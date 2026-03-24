@@ -39,14 +39,14 @@ function splitMathExpression(prompt: string): { text: string; math?: string } {
 }
 
 function isPositiveFeedback(message: string): boolean {
-  return message.includes("מְעוּלֶּה") || message.includes("יָפֶה מְאֹד") || message.includes("נְכוֹנָה");
+  return message.includes("מְעוּלֶּה") || message.includes("יָפֶה מְאֹד") || message.includes("נְכוֹנָה");
 }
 
 function toShapeLabel(option: string): string {
   if (option === "circle") return "עִיגּוּל";
   if (option === "square") return "רִיבּוּעַ";
-  if (option === "triangle") return "מְשֻׁלָּשׁ";
-  if (option === "rectangle") return "מַלְבֵּן";
+  if (option === "triangle") return "מְשֻׁלָּשׁ";
+  if (option === "rectangle") return "מַלְבֵּן";
   return option;
 }
 
@@ -65,9 +65,14 @@ function ChoiceButtons({
         <button
           key={option}
           type="button"
-          className={`touch-button ${selected === option ? "btn-accent" : "bg-white"}`}
+          className={`touch-button min-h-14 rounded-2xl transition-transform hover:scale-105 ${
+            selected === option
+              ? "btn-accent"
+              : "border-2 border-slate-200 bg-white"
+          }`}
           onClick={() => onSelect(option)}
         >
+          {selected === option && <span className="me-1" aria-hidden="true">✓</span>}
           {toShapeLabel(option)}
         </button>
       ))}
@@ -170,7 +175,7 @@ export function ExerciseBox({
                 onEnter();
               }
             }}
-            placeholder="כִּתְבוּ מִסְפָּר"
+            placeholder="כִּתְבוּ מִסְפָּר"
             type="number"
             value={value}
           />
@@ -185,25 +190,30 @@ export function ExerciseBox({
       : "surface-error"
     : "";
 
+  const correctRingClass = wasChecked && isCorrect
+    ? "ring-2 ring-green-400 ring-offset-2"
+    : "";
+
   return (
-    <article className={`surface mb-3 p-4 ${surfaceStateClass}`}>
-      <p className="mb-1 font-medium">{promptParts.text}</p>
+    <article className={`surface mb-3 p-4 ${surfaceStateClass} ${correctRingClass}`}>
+      <p className="mb-1 text-lg font-semibold">{promptParts.text}</p>
       {promptParts.math ? (
-        <div className="math-line mb-2" dir="ltr">
+        <div className="math-line mb-2 text-lg font-bold" dir="ltr">
           {promptParts.math}
         </div>
       ) : null}
       {renderByKind()}
       {retryMessage ? (
         <div className={`mt-2 text-sm ${isPositiveFeedback(retryMessage) ? "feedback-success" : "feedback-error"}`}>
+          <span aria-hidden="true">{isPositiveFeedback(retryMessage) ? "✅ " : "❌ "}</span>
           {retryMessage}
-          <button type="button" className="me-2 touch-button" onClick={onRetry}>
+          <button type="button" className="me-2 touch-button rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100" onClick={onRetry}>
             נַסּוּ שׁוּב
           </button>
         </div>
       ) : null}
-      <button type="button" className="touch-button btn-accent mt-3" onClick={onSubmit}>
-        בְּדִיקָה
+      <button type="button" className="touch-button btn-accent mt-3 w-full" onClick={onSubmit}>
+        בְּדִיקָה
       </button>
     </article>
   );
