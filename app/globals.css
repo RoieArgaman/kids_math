@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --border: #cbd5e1;
+  --accent: #0f766e;
+  --success: #166534;
+  --error: #b91c1c;
+  --section-warmup: #f59e0b;
+  --section-arithmetic: #0d9488;
+  --section-geometry: #3b82f6;
+  --section-verbal: #10b981;
+  --section-challenge: #8b5cf6;
+  --section-review: #64748b;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Heebo", var(--font-geist-sans), "Segoe UI", Tahoma, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+main {
+  width: min(100%, 720px);
+  margin-inline: auto;
+  padding: 1rem 1rem 2rem;
+}
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.surface-success {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.surface-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.math-line {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: #f8fafc;
+}
+
+.underline-input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid var(--border);
+  background: transparent;
+  font-size: 1rem;
+  padding: 8px 4px;
+  outline: 0;
+}
+
+.underline-input:focus-visible {
+  border-bottom-color: var(--accent);
+  box-shadow: 0 2px 0 0 var(--accent);
+}
+
+.underline-input[dir="ltr"] {
+  text-align: left;
+}
+
+.touch-button {
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.85rem;
+}
+
+.touch-button:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, white);
+  outline-offset: 2px;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.btn-disabled {
+  background: #e2e8f0;
+  color: #334155;
+  border-color: #94a3b8;
+}
+
+.feedback-success {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.feedback-error {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.progress-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(to bottom, var(--background) 80%, transparent);
+  padding: 0.5rem 0 0.8rem;
+}
+
+.error-counter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 800;
+  border: 1px solid #b91c1c;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.star-reward {
+  animation: star-pop 900ms ease-out;
+}
+
+.star-reward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.star-reward-modal {
+  position: relative;
+  width: min(100%, 420px);
+  text-align: center;
+  padding: 1.4rem 1rem 1rem;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.24);
+  animation: star-pop 460ms ease-out;
+}
+
+.star-reward-confetti {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.star-reward-confetti-piece {
+  position: absolute;
+  top: -8%;
+  width: 7px;
+  height: 13px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fall 1150ms ease-out forwards;
+}
+
+.star-reward-confetti-piece-1 {
+  left: 8%;
+  background: #f59e0b;
+  animation-delay: 30ms;
+}
+
+.star-reward-confetti-piece-2 {
+  left: 15%;
+  background: #10b981;
+  animation-delay: 110ms;
+}
+
+.star-reward-confetti-piece-3 {
+  left: 24%;
+  background: #3b82f6;
+  animation-delay: 180ms;
+}
+
+.star-reward-confetti-piece-4 {
+  left: 36%;
+  background: #ef4444;
+  animation-delay: 260ms;
+}
+
+.star-reward-confetti-piece-5 {
+  left: 49%;
+  background: #8b5cf6;
+  animation-delay: 90ms;
+}
+
+.star-reward-confetti-piece-6 {
+  left: 62%;
+  background: #f97316;
+  animation-delay: 200ms;
+}
+
+.star-reward-confetti-piece-7 {
+  left: 75%;
+  background: #14b8a6;
+  animation-delay: 300ms;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-8px) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(260px) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@keyframes star-pop {
+  0% {
+    transform: scale(0.6) rotate(-8deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.08) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
