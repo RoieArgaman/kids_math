@@ -12,6 +12,8 @@ const DEFAULT_EVENT_CAP = 1000;
 
 const VALID_EVENT_NAMES: ReadonlySet<AnalyticsEventName> = new Set<AnalyticsEventName>([
   "home_viewed",
+  "grade_selected",
+  "plan_viewed",
   "day_card_clicked",
   "day_viewed",
   "answer_submitted",

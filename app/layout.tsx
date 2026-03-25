@@ -1,23 +1,12 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Heebo } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 
-const heebo = Heebo({
+const rubik = Rubik({
   subsets: ["hebrew", "latin"],
-  variable: "--font-heebo",
+  variable: "--font-rubik",
   display: "swap",
-});
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -32,9 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body
-        className={`${heebo.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${rubik.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

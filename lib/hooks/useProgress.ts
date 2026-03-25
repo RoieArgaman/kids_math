@@ -11,6 +11,8 @@ import {
 import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import type { AnswerValue, DayId, ExerciseId } from "@/lib/types";
 import { logEvent } from "@/lib/analytics/events";
+import type { GradeId } from "@/lib/grades";
+import { DEFAULT_GRADE } from "@/lib/grades";
 
 interface SetAnswerArgs {
   exerciseId: ExerciseId;
@@ -28,25 +30,26 @@ interface UseProgressApi {
   wrongCount: number;
 }
 
-export function useProgress(dayId: DayId): UseProgressApi {
+export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): UseProgressApi {
+  const grade = options.grade ?? DEFAULT_GRADE;
   const [state, setState] = useState(createInitialWorkbookProgressState);
   const [isHydrated, setIsHydrated] = useState(false);
 
   const dayProgress = useMemo(() => getOrCreateDayProgress(state, dayId), [state, dayId]);
 
   useEffect(() => {
-    setState(loadProgressState());
+    setState(loadProgressState({ grade }));
     setIsHydrated(true);
-    logEvent("state_loaded", { dayId });
-  }, [dayId]);
+    logEvent("state_loaded", { dayId, payload: { grade } });
+  }, [dayId, grade]);
 
   useEffect(() => {
     if (!isHydrated) {
       return;
     }
-    saveProgressState(state);
-    logEvent("state_saved");
-  }, [isHydrated, state]);
+    saveProgressState(state, { grade });
+    logEvent("state_saved", { payload: { grade } });
+  }, [isHydrated, state, grade]);
 
   const setAnswer = useCallback(
     ({ exerciseId, answer, isCorrect, totalExercises }: SetAnswerArgs) => {
@@ -62,10 +65,10 @@ export function useProgress(dayId: DayId): UseProgressApi {
       logEvent("answer_submitted", {
         dayId,
         exerciseId,
-        payload: { isCorrect },
+        payload: { isCorrect, grade },
       });
     },
-    [dayId],
+    [dayId, grade],
   );
 
   const markComplete = useCallback((): boolean => {
@@ -88,21 +91,21 @@ export function useProgress(dayId: DayId): UseProgressApi {
     }
 
     if (didComplete) {
-      logEvent("completion_gate_passed", { dayId });
-      logEvent("day_completed", { dayId });
+      logEvent("completion_gate_passed", { dayId, payload: { grade } });
+      logEvent("day_completed", { dayId, payload: { grade } });
       return true;
     }
 
     if (!gatePassed) {
-      logEvent("completion_gate_blocked", { dayId });
+      logEvent("completion_gate_blocked", { dayId, payload: { grade } });
     }
     return false;
-  }, [dayId]);
+  }, [dayId, grade]);
 
   const resetDay = useCallback(() => {
     setState((current) => resetDayProgress(current, dayId));
-    logEvent("state_saved", { dayId });
-  }, [dayId]);
+    logEvent("state_saved", { dayId, payload: { grade } });
+  }, [dayId, grade]);
 
   return {
     setAnswer,

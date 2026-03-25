@@ -1,0 +1,90 @@
+---
+description: Multi-agent playbook (roles, handoffs, definition of done)
+alwaysApply: true
+---
+
+# Multi-agent playbook
+
+Use parallel agents when it reduces latency or risk (broad codebase search, UI + logic + tests, or uncertain architecture). Every agent must return actionable outputs that the Implementer can apply directly.
+
+## Standard roles (default set)
+
+### Planner
+
+- Clarify the goal, constraints, and “definition of done”.
+- Identify likely files, risks (storage schema, RTL, accessibility), and validation steps.
+- Produce: a short plan + checklist.
+
+### Explorer
+
+- Search/skim the codebase to find the real patterns (routing, storage, analytics, UI tokens).
+- Prefer citing concrete file paths and existing helpers.
+- Produce: “where to change” map + constraints discovered.
+
+### Implementer
+
+- Make the smallest correct change that matches existing conventions.
+- Keep diffs readable; avoid drive-by refactors.
+- Produce: code changes + brief rationale + any follow-up TODOs.
+
+### Reviewer
+
+- Review the diff for correctness, edge cases, readability, and alignment with project conventions.
+- Look for: schema breakage, accidental `"use client"` spread, RTL regressions, a11y issues, and untyped payloads.
+- Produce: punch-list of fixes + approval when done.
+
+### Tester (QA)
+
+- Run available checks (at minimum `npm run lint`; add `npm run build` when change is non-trivial).
+- Add a manual test plan that a human can follow quickly (RTL, touch targets, keyboard navigation).
+- Produce: executed commands + results + repro steps for any failures.
+
+### Release/PR
+
+- Prepare PR text: summary + test plan + risk notes (storage/analytics).
+- Ensure scope is right (no secrets, no accidental large generated files).
+- Produce: PR body draft and merge readiness checklist.
+
+## Specialist roles (use as needed)
+
+### QA_Architect
+
+- Define test strategy for risky changes (state persistence, progress engine, analytics).
+- Suggest minimal automated coverage when feasible.
+
+### SeniorDev_TechLead
+
+- Ensure architecture boundaries are respected (avoid leaking UI concerns into `lib/`, keep routing helpers in `lib/routes.ts`, etc.).
+- Push for simplicity and long-term maintainability.
+
+### SeniorProductDesigner
+
+- Ensure visual/interaction consistency with existing tokens in `app/globals.css` and Tailwind theme.
+- Validate accessibility and touch-first ergonomics.
+
+### SeniorProductManager
+
+- Confirm the feature matches user value and scope; reduce overbuilding.
+- Define acceptance criteria and analytics event intent (only when needed).
+
+### MoE_PedagogyLead (רכז_פדגוגי_משרד_החינוך)
+
+- Validate exercises/wording/learning progressions and age appropriateness.
+- Check for clarity in Hebrew, misconception targeting, and proper scaffolding.
+
+## Handoff format (required)
+
+Every agent output should include:
+
+- **Findings**: 3–7 bullets, concrete and specific.
+- **Files**: exact file paths to touch (or that were inspected).
+- **Decisions**: any trade-offs chosen.
+- **Next actions**: ordered list that another agent can execute.
+
+## Definition of done (project baseline)
+
+- Code matches repo conventions (TS strict, `@/*` imports, RTL-aware UI).
+- Lint passes (`npm run lint`).
+- Build passes for non-trivial changes (`npm run build`).
+- Analytics changes (if any) use `lib/analytics/events.ts` and avoid sensitive payloads.
+

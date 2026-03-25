@@ -22,10 +22,13 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Heebo", "Fredoka", var(--font-geist-sans), sans-serif;
+  /* עקביות: כל הטקסט דרך Rubik (next/font) — ראה tailwind fontFamily.sans */
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
   overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 main {

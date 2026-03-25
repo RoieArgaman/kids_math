@@ -1,0 +1,66 @@
+---
+description: Core agent guidelines for kids_math (Next.js + TS + Tailwind)
+alwaysApply: true
+---
+
+# kids_math agent guidelines
+
+## Project snapshot
+
+- Stack: Next.js App Router, React 18, TypeScript (strict), Tailwind CSS.
+- Direction: Hebrew RTL UI (`<html lang="he" dir="rtl">`).
+- Path alias: prefer `@/*` imports (per `tsconfig.json`).
+
+## Dev workflow (source of truth)
+
+- Run locally: `npm run dev`
+- Lint: `npm run lint`
+- Build/check: `npm run build`
+
+If a change could break behavior, prefer running `npm run lint` and `npm run build` before concluding.
+
+## Code conventions
+
+- Prefer small, typed modules with explicit exported APIs.
+- Avoid `any`; when needed, narrow unknowns with type guards.
+- Keep functions pure when possible; isolate IO (localStorage, URL params, time, randomness).
+- Prefer `const`, early returns, and clear naming over cleverness.
+
+## Next.js / React conventions
+
+- App Router: keep route files in `app/**/page.tsx`, `app/**/layout.tsx`.
+- Server/client: only use `"use client"` when necessary; keep client components minimal.
+- Avoid introducing new global providers unless required.
+
+## UI / Tailwind conventions
+
+- Reuse existing design language:
+  - CSS variables in `app/globals.css` (e.g. `--background`, `--accent`).
+  - Tailwind theme extensions in `tailwind.config.ts` (kid color palette, radii, shadows, animations).
+- Prefer semantic, accessible UI:
+  - Visible focus styles (project already uses `:focus-visible` patterns).
+  - Touch-friendly targets (project uses ~44–52px conventions).
+- Preserve RTL readability:
+  - Keep general UI `dir="rtl"`; use `dir="ltr"` only for math inputs/expressions when needed.
+
+## Analytics / telemetry
+
+- Use the existing analytics module (`lib/analytics/events.ts`):
+  - Do not invent new storage keys or event pipelines.
+  - Add new event names only when there is clear product value; keep payload small and typed.
+- Never log sensitive data (free-form user input, identifiers beyond internal IDs, etc.).
+
+## Data + progress storage
+
+- Treat persisted schemas as versioned:
+  - Prefer additive changes; avoid breaking changes to stored shapes.
+  - When changing schema, add a version bump + migration path.
+
+## Git / PR expectations (lightweight)
+
+- Keep changes focused and easy to review.
+- PR/commit descriptions should include:
+  - Summary of user-visible change
+  - Test plan (commands run, or manual steps)
+  - Any data migration / storage considerations
+

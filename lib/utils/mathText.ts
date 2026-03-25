@@ -3,7 +3,6 @@ export interface SplitMathExpressionResult {
   math?: string;
 }
 
-const MATH_EXPRESSION_REGEX = /(\d[\d\s+\-*=×÷()/.?:]+)/;
 const MATH_EXPRESSION_REGEX_GLOBAL = /(\d[\d\s+\-*=×÷()/.?:]+)/g;
 const MATH_OPERATOR_REGEX = /[+\-=×÷]/;
 

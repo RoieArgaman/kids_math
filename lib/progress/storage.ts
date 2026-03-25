@@ -1,7 +1,13 @@
 import { createInitialWorkbookProgressState } from "@/lib/progress/engine";
+import type { GradeId } from "@/lib/grades";
+import { DEFAULT_GRADE } from "@/lib/grades";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
 
-const PROGRESS_STORAGE_KEY = "kids_math.workbook_progress.v1";
+const LEGACY_PROGRESS_STORAGE_KEY = "kids_math.workbook_progress.v1";
+
+function progressStorageKeyForGrade(grade: GradeId): string {
+  return `kids_math.workbook_progress.v1.grade.${grade}`;
+}
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -59,14 +65,62 @@ function sanitizeState(value: unknown): WorkbookProgressState {
   };
 }
 
-export function loadProgressState(): WorkbookProgressState {
+type ProgressStorageOptions = { grade?: GradeId };
+
+function isValidLegacyWorkbookProgress(value: unknown): boolean {
+  return isObject(value) && value.version === 1 && isObject(value.days);
+}
+
+function migrateLegacyProgressToGradeA(nextKey: string): WorkbookProgressState | null {
+  try {
+    const rawLegacy = window.localStorage.getItem(LEGACY_PROGRESS_STORAGE_KEY);
+    if (!rawLegacy) {
+      return null;
+    }
+    const parsedLegacy = JSON.parse(rawLegacy) as unknown;
+    if (!isValidLegacyWorkbookProgress(parsedLegacy)) {
+      return null;
+    }
+    const sanitizedLegacy = sanitizeState(parsedLegacy);
+    if (Object.keys(sanitizedLegacy.days).length === 0) {
+      return null;
+    }
+
+    // If new key appeared in the meantime, do not overwrite it.
+    const rawNew = window.localStorage.getItem(nextKey);
+    if (rawNew) {
+      const parsedNew = JSON.parse(rawNew) as unknown;
+      return sanitizeState(parsedNew);
+    }
+
+    try {
+      window.localStorage.setItem(nextKey, JSON.stringify(sanitizedLegacy));
+    } catch {
+      // If we can't write, keep legacy intact and still return the loaded state.
+    }
+    return sanitizedLegacy;
+  } catch {
+    return null;
+  }
+}
+
+export function loadProgressState(options: ProgressStorageOptions = {}): WorkbookProgressState {
   if (!isBrowser()) {
     return createInitialWorkbookProgressState();
   }
 
+  const grade = options.grade ?? DEFAULT_GRADE;
+  const key = progressStorageKeyForGrade(grade);
+
   try {
-    const raw = window.localStorage.getItem(PROGRESS_STORAGE_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) {
+      if (grade === "a") {
+        const migrated = migrateLegacyProgressToGradeA(key);
+        if (migrated) {
+          return migrated;
+        }
+      }
       return createInitialWorkbookProgressState();
     }
     const parsed = JSON.parse(raw) as unknown;
@@ -76,10 +130,13 @@ export function loadProgressState(): WorkbookProgressState {
   }
 }
 
-export function saveProgressState(state: WorkbookProgressState): void {
+export function saveProgressState(state: WorkbookProgressState, options: ProgressStorageOptions = {}): void {
   if (!isBrowser()) {
     return;
   }
+
+  const grade = options.grade ?? DEFAULT_GRADE;
+  const key = progressStorageKeyForGrade(grade);
 
   try {
     const nextState: WorkbookProgressState = {
@@ -87,18 +144,20 @@ export function saveProgressState(state: WorkbookProgressState): void {
       version: 1,
       updatedAt: new Date().toISOString(),
     };
-    window.localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(nextState));
+    window.localStorage.setItem(key, JSON.stringify(nextState));
   } catch {
     // Intentionally no-op to keep UI responsive even if storage is unavailable.
   }
 }
 
-export function clearProgressState(): void {
+export function clearProgressState(options: ProgressStorageOptions = {}): void {
   if (!isBrowser()) {
     return;
   }
+  const grade = options.grade ?? DEFAULT_GRADE;
+  const key = progressStorageKeyForGrade(grade);
   try {
-    window.localStorage.removeItem(PROGRESS_STORAGE_KEY);
+    window.localStorage.removeItem(key);
   } catch {
     // Intentionally no-op.
   }

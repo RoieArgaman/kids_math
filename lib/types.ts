@@ -23,7 +23,13 @@ export type SkillTag =
   | "word-problems"
   | "geometry-shapes"
   | "patterns"
-  | "place-value";
+  | "place-value"
+  | "measurement-length"
+  | "measurement-time"
+  | "symmetry-transform"
+  | "gematria-letters"
+  | "multiplication-intro"
+  | "number-bonds";
 
 export interface CurriculumMeta {
   skillTags: SkillTag[];
@@ -150,6 +156,8 @@ export interface WorkbookProgressState {
 
 export type AnalyticsEventName =
   | "home_viewed"
+  | "grade_selected"
+  | "plan_viewed"
   | "day_card_clicked"
   | "day_viewed"
   | "answer_submitted"

@@ -416,6 +416,170 @@ const concepts: DayConcept[] = [
     geometryPrompt: "אֵיזוֹ צוּרָה יֵשׁ לָהּ בְּדִיּוּק 4 צְלָעוֹת שָׁווֹת?",
     geometryAnswer: "square",
   },
+  {
+    dayNumber: 15,
+    title: "מְדִידַת אֹרֶךְ בְּסִיסִית",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְקַשֵּׁר סְפִירָה וַחֲלוּקָה פְּשׁוּטָה לְמִדַּת אֹרֶךְ (ס״מ) וּלְפָתוֹר מְשִׂימוֹת מְחוֹבֵרוֹת לָאֹרֶךְ.",
+    mainTags: ["measurement-length", "counting"],
+    spiralReviewTags: ["addition", "number-recognition"],
+    arithmeticPrompt:
+      "סַרְגֵּל בָּאֹרֶךְ 10 ס״מ. שָׂמִים אוֹתוֹ 3 פְּעָמִים זֶה אַחַר זֶה בְּקַו יָשָׁר. כַּמָּה ס״מ בַּסַּךְ הַכֹּל?",
+    arithmeticAnswer: 30,
+    arithmeticMcOptions: ["20", "30", "40"],
+    arithmeticMcAnswer: "30",
+    verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
+    verbalAnswer: "שְׁלוֹשִׁים",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 15 ס״מ + 15 ס״מ = 30 ס״מ",
+    reviewAnswer: true,
+    challengePrompt:
+      "עַל קַו מִסְפָּרִים לְהַמְחָשָׁה: מִ-0 עַד 30, כָּל קְפִיצָה הִיא 10 יְחִידוֹת. כַּמָּה קְפִיצוֹת עָשִׂינוּ?",
+    challengeAnswer: 3,
+    geometryPrompt: "אֵיזוֹ צוּרָה נִרְאֵית כְּמוֹ מִסְגֶּרֶת לָרִבּוּעַ?",
+    geometryAnswer: "square",
+  },
+  {
+    dayNumber: 16,
+    title: "זְמַן וְשָׁעוֹן פָּשׁוּט",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִקְרֹא שָׁעָה שְׁלֵמָה בַּשָּׁעוֹן, לְהוֹסִיף שָׁעָה אַחַת בְּמוֹדֵל פָּשׁוּט, וּלְקַשֵּׁר לִמְסַפֵּר שָׁעוֹת.",
+    mainTags: ["measurement-time", "number-recognition"],
+    spiralReviewTags: ["counting", "patterns"],
+    arithmeticPrompt:
+      "הַשָּׁעוֹן מַרְאֶה אֶת הַשָּׁעָה אַרְבַּע. עוֹבֵר זְמַן שֶׁל שָׁעָה אַחַת. כַּמָּה הַשָּׁעָה עַכְשָׁיו?",
+    arithmeticAnswer: 5,
+    arithmeticMcOptions: ["4", "5", "6"],
+    arithmeticMcAnswer: "5",
+    verbalPrompt: "כִּתְבוּ בִּמִילִים: אֵיזוֹ שָׁעָה הִיא כְּשֶׁהַמַּחְצֵבֶת מַצִּיגָה 7 (בְּשָׁעוֹת שְׁלֵמוֹת בִּלְבַד)?",
+    verbalAnswer: "שֶׁבַע",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: לְ-60 דַּקּוֹת קוֹרְאִים שָׁעָה אַחַת",
+    reviewAnswer: true,
+    challengePrompt:
+      "עַל קַו מִסְפָּרִים: מִ-3 עַד 9, כָּל צַעַד הוּא שָׁעָה אַחַת קָדִימָה. כַּמָּה צְעָדִים עָשִׂינוּ?",
+    challengeAnswer: 6,
+  },
+  {
+    dayNumber: 17,
+    title: "הַזָּזָה וְשִׁיקּוּף",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְהַבְדִּיל בֵּין הַזָּזָה (בְּלִי סִיבּוּב) לְבֵין שִׁיקּוּף, וְלִזְהוֹת צוּרָה סִימֶטְרִית שֶׁנִּשְׁאֶרֶת דּוֹמָה אַחֲרֵי שִׁיקּוּף אוֹפְקִי.",
+    mainTags: ["symmetry-transform", "geometry-shapes"],
+    spiralReviewTags: ["geometry-shapes", "comparing"],
+    arithmeticPrompt:
+      "עַל קַו מִסְפָּרִים מִסְפּוֹרִים נְקֻדּוֹת: מִ-5 עוֹבְרִים שְׁנֵי מָקוֹמוֹת יָמִינָה. בְּאֵיזֶה מִסְפָּר נֶעֱצְרִים?",
+    arithmeticAnswer: 7,
+    arithmeticMcOptions: ["6", "7", "8"],
+    arithmeticMcAnswer: "7",
+    verbalPrompt:
+      "לְרִיבּוּעַ יֵשׁ אַרְבַּע צְלָעוֹת שָׁווֹת. אַחֲרֵי שִׁיקּוּף אוֹפְקִי — עוֹדֶנּוּ רִיבּוּעַ? כִּתְבוּ רַק: כֵּן אוֹ לֹא.",
+    verbalAnswer: "כן",
+    reviewPrompt:
+      "אֱמֶת אוֹ שֶׁקֶר: הַזָּזָה לְצַד הִיא תָּמִיד מְשַׁנָּה אֶת גֹּדֶל הַצוּרָה",
+    reviewAnswer: false,
+    challengePrompt:
+      "בְּרֶצֶף הַמִּסְפָּרִים: 4, 5, 6, 7 — מַזִּיזִים אֶת הָרִיבּוּעַ שֶׁעַל 6 שְׁנֵי מָקוֹמוֹת יָמִינָה. עַל אֵיזֶה מִסְפָּר הוּא עַכְשָׁיו?",
+    challengeAnswer: 8,
+    geometryPrompt:
+      "אֵיזוֹ צוּרָה נִשְׁאֶרֶת 'אוֹתָהּ צוּרָה' (דּוֹמָה לְעַצְמָהּ) אַחֲרֵי שִׁיקּוּף אוֹפְקִי?",
+    geometryAnswer: "square",
+  },
+  {
+    dayNumber: 18,
+    title: "גִּימַטְרְיָה — אוֹתִיּוֹת א'–י'",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְהַקְצוֹת עֶרֶךְ מִסְפָּרִי לְאוֹתִיּוֹת א'–י', לְחַבֵּר עֶרְכֵי אוֹתִיּוֹת קְטַנִּים, וּלְכַתּוֹב שֵׁמוֹת מִסְפָּרִים בַּעֲבֵרִית.",
+    mainTags: ["gematria-letters", "number-recognition"],
+    spiralReviewTags: ["addition", "number-recognition"],
+    arithmeticPrompt:
+      "בְּגִימַטְרְיָה פָּשׁוּטָה: א (1) + ג (3) = ?",
+    arithmeticAnswer: 4,
+    arithmeticMcOptions: ["3", "4", "5"],
+    arithmeticMcAnswer: "4",
+    verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁל הָאוֹת ח (8):",
+    verbalAnswer: "שְׁמוֹנֶה",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: בְּגִימַטְרְיָה, הָאוֹת י (10) גְּדוֹלָה מִן הָאוֹת ח (8)",
+    reviewAnswer: true,
+    challengePrompt:
+      "ב' (2) + ה' (5) + ג' (3) = ?",
+    challengeAnswer: 10,
+    geometryPrompt: "אֵיזוֹ צוּרָה עֶלְיוֹנָה מוּזְכֶּרֶת לְעִתִּים בְּמוֹפַע שְׁלוֹשָׁה קְצָווֹת?",
+    geometryAnswer: "triangle",
+  },
+  {
+    dayNumber: 19,
+    title: "כֶּפֶל כַּחֲזָרַת חִיבּוּר",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְהַבִּיעַ כֶּפֶל קָטָן (לְמָשָׁל 3×4) כְּחִיבּוּר חוֹזֵר וּלִפְתּוֹר בְּמִסְפָּרִים קְטַנִּים.",
+    mainTags: ["multiplication-intro", "addition"],
+    spiralReviewTags: ["patterns", "word-problems"],
+    arithmeticPrompt:
+      '4 + 4 + 4 = ? (כְּלוֹמַר "שָׁלוֹשׁ פְּעָמִים אַרְבַּע")',
+    arithmeticAnswer: 12,
+    arithmeticMcOptions: ["10", "11", "12"],
+    arithmeticMcAnswer: "12",
+    verbalPrompt:
+      "כִּתְבוּ בִּמִילִים אֶת הַתּוֹצָאָה: 5 + 5 + 5 + 5 (אַרְבַּע פְּעָמִים חָמֵשׁ):",
+    verbalAnswer: "עֶשְׂרִים",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 2 × 6 שָׁוֶה לְ-6 + 6",
+    reviewAnswer: true,
+    challengePrompt:
+      "עַל קַו מִסְפָּרִים: מִתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-4 חָמֵשׁ פְּעָמִים. עַל אֵיזֶה מִסְפָּר נֶעֱצְרִים?",
+    challengeAnswer: 20,
+    geometryPrompt: "אֵיזוֹ צוּרָה יֵשׁ לָהּ אַרְבַּע צְלָעוֹת שָׁווֹת וְאַרְבַּע פִּנּוֹת יְשָׁרוֹת?",
+    geometryAnswer: "square",
+  },
+  {
+    dayNumber: 20,
+    title: "קִשְׁרֵי מִסְפָּר לְ-10",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְמָצֵא זוּגוֹת שֶׁמִּשְׁלִימִים לַ-10, לִפְתּוֹר חִסֵּר קָטָן בְּחִבּוּר עַד 10, וּלְשַׁנֵּן צִירוּפִים נִפְרָצִים.",
+    mainTags: ["number-bonds", "addition"],
+    spiralReviewTags: ["subtraction", "number-recognition"],
+    arithmeticPrompt: "7 + ? = 10. כַּמָּה חָסֵר?",
+    arithmeticAnswer: 3,
+    arithmeticMcOptions: ["2", "3", "4"],
+    arithmeticMcAnswer: "3",
+    verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁמִּשְׁלִים אֶת 4 לְ-10:",
+    verbalAnswer: "שִׁשָּׁה",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 9 + 1 = 10",
+    reviewAnswer: true,
+    challengePrompt:
+      "עַל קַו מִסְפָּרִים: מִ-10 חוֹזְרִים לְ-0 בִּקְפִיצוֹת שֶׁל 2. כַּמָּה קְפִיצוֹת עָשִׂינוּ?",
+    challengeAnswer: 5,
+    geometryPrompt: "אֵיזוֹ צוּרָה מַזְכִּירָה עִגּוּל חָלָק שֶׁאֵין לוֹ פִּנּוֹת?",
+    geometryAnswer: "circle",
+  },
+  {
+    dayNumber: 21,
+    title: "סִיכּוּם הַשְׁלָמָה",
+    objective:
+      "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִשַׁזֵּר רַעֲיוֹנוֹת מֵהַשָּׁבוּעוֹת שֶׁעָבְרוּ — מִדִּידָה, זְמַן, סִימֶטְרְיָה, גִּימַטְרְיָה, כֶּפֶל כַּחִיבּוּר חוֹזֵר וּקְשָׁרִים לַ-10.",
+    mainTags: [
+      "measurement-length",
+      "measurement-time",
+      "symmetry-transform",
+      "gematria-letters",
+      "multiplication-intro",
+      "number-bonds",
+    ],
+    spiralReviewTags: ["addition", "counting", "geometry-shapes", "patterns", "number-recognition"],
+    arithmeticPrompt:
+      "שְׁנֵי קֻפְסָאוֹת שְׁקֵנִים: אָרְכָּן שֶׁל כָּל אַחַת 8 ס״מ וְהֵן מְסוּדָּרוֹת זוֹ אָחֲרֵי זוֹ בְּקַו. כַּמָּה ס״מ בַּסַּךְ הַכֹּל?",
+    arithmeticAnswer: 16,
+    arithmeticMcOptions: ["14", "16", "18"],
+    arithmeticMcAnswer: "16",
+    verbalPrompt:
+      "כִּתְבוּ בִּמִילִים: כַּמָּה צָרִיךְ לְהַחְסִיר מִ-18 כְּדֵי לְהַגִּיעַ לְ-10?",
+    verbalAnswer: "שְׁמוֹנֶה",
+    reviewPrompt:
+      "אֱמֶת אוֹ שֶׁקֶר: רִיבּוּעַ נִשְׁאָר דּוֹמֶה לְעַצְמוֹ אַחֲרֵי שִׁיקּוּף אוֹפְקִי",
+    reviewAnswer: true,
+    challengePrompt:
+      "גִּימַטְרְיָה: ד (4) + ו (6) = ? וְאָז מַחֲסִירִים 3. מָה הַמִּסְפָּר הַסּוֹפִי?",
+    challengeAnswer: 7,
+    geometryPrompt: "אֵיזוֹ צוּרָה יֵשׁ לָהּ שָׁלוֹשׁ צְלָעוֹת?",
+    geometryAnswer: "triangle",
+  },
 ];
 
 const buildExpandedExercisesForDay = (
@@ -2431,7 +2595,7 @@ const buildDay = (concept: DayConcept): WorkbookDay => {
   const sections =
     concept.dayNumber <= 7
       ? buildExpandedExercisesForEarlyDays(concept, dayDifficulty)
-      : concept.dayNumber >= 8
+      : concept.dayNumber <= 14
         ? buildExpandedExercisesForDay(concept, dayDifficulty)
         : defaultSections;
 
@@ -2456,4 +2620,7 @@ export const workbookDaysById: Record<WorkbookDay["id"], WorkbookDay> = workbook
   },
   {} as Record<WorkbookDay["id"], WorkbookDay>,
 );
+
+/** מספר ימי הלמידה בחוברת — לשימוש במפת תוכנית ובמדדי התקדמות */
+export const WORKBOOK_TOTAL_DAYS = workbookDays.length;
 
