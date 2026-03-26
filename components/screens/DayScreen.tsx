@@ -4,30 +4,44 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DayHeader } from "@/components/DayHeader";
+import { AppNavLink } from "@/components/ui/AppNavLink";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ExerciseBox } from "@/components/ExerciseBox";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
+import { FinalExamScreen } from "@/components/screens/FinalExamScreen";
 import { StarReward } from "@/components/StarReward";
 import { logEvent } from "@/lib/analytics/events";
 import { LEARNING_ROUTINE_STEPS } from "@/lib/content/curriculum-plan";
-import { workbookDays } from "@/lib/content/days";
+import { getWorkbookDays } from "@/lib/content/workbook";
+import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
-import { canUnlockNextDay, COMPLETION_GATE_PERCENT, MAX_DAILY_WRONG_ANSWERS } from "@/lib/progress/engine";
+import { COMPLETION_GATE_PERCENT, MAX_DAILY_WRONG_ANSWERS } from "@/lib/progress/engine";
 import { loadProgressState } from "@/lib/progress/storage";
 import { useProgress } from "@/lib/hooks/useProgress";
+import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { routes } from "@/lib/routes";
 import type { DayId, Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
 import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
-import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 
 export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
+  if (dayId === FINAL_EXAM_DAY_ID) {
+    return <FinalExamScreen grade={effectiveGrade} />;
+  }
+  return <RegularDayScreen grade={effectiveGrade} dayId={dayId} />;
+}
 
+function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const router = useRouter();
   const { setAnswer, markComplete, resetDay, percentDone, isComplete, wrongCount } = useProgress(dayId, {
-    grade: effectiveGrade,
+    grade,
   });
-  const day = useMemo<WorkbookDay | undefined>(() => workbookDays.find((item) => item.id === dayId), [dayId]);
+  const day = useMemo<WorkbookDay | undefined>(
+    () => getWorkbookDays(grade).find((item) => item.id === dayId),
+    [dayId, grade],
+  );
+  const { previewAll, isRouteReady, isLocked } = useDayUnlockStatus({ grade, dayId });
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [correctMap, setCorrectMap] = useState<Record<string, boolean>>({});
@@ -35,51 +49,23 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const [attempts, setAttempts] = useState<Record<string, number>>({});
   const [showReward, setShowReward] = useState(false);
   const [resetNotice, setResetNotice] = useState("");
-  const [isLocked, setIsLocked] = useState<boolean | null>(null);
-  const [previewAll, setPreviewAll] = useState(false);
-  const [isRouteReady, setIsRouteReady] = useState(false);
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (day) {
-      logEvent("day_viewed", { dayId: day.id, payload: { grade: effectiveGrade } });
+      logEvent("day_viewed", { dayId: day.id, payload: { grade } });
     }
-  }, [day, effectiveGrade]);
+  }, [day, grade]);
 
-  useEffect(() => {
-    setPreviewAll(getPreviewAllFromLocation());
-    setIsRouteReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!day) {
-      return;
-    }
-    if (!isRouteReady) {
-      return;
-    }
-    if (previewAll) {
-      setIsLocked(false);
-      return;
-    }
-    const dayIndex = workbookDays.findIndex((item) => item.id === day.id);
-    if (dayIndex <= 0) {
-      setIsLocked(false);
-      return;
-    }
-    const previousDay = workbookDays[dayIndex - 1];
-    const progress = loadProgressState({ grade: effectiveGrade });
-    const previousProgress = progress.days[previousDay.id];
-    setIsLocked(!canUnlockNextDay(previousDay, previousProgress));
-  }, [day, isRouteReady, previewAll, effectiveGrade]);
+  // previewAll/isRouteReady/isLocked are derived via useDayUnlockStatus.
 
   useEffect(() => {
     if (!day) {
       return;
     }
 
-    const saved = loadProgressState({ grade: effectiveGrade }).days[day.id];
+    const saved = loadProgressState({ grade }).days[day.id];
     if (!saved) {
       return;
     }
@@ -106,7 +92,7 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
       return acc;
     }, {});
     setAttempts(attemptsByExercise);
-  }, [day, effectiveGrade]);
+  }, [day, grade]);
 
   useEffect(() => {
     if (wrongCount < MAX_DAILY_WRONG_ANSWERS) {
@@ -146,7 +132,7 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
           <p className="mb-2 text-5xl">🔍</p>
           <p className="mb-4 text-lg font-semibold text-gray-700">הַיּוֹם לֹא נִמְצָא.</p>
           <Link
-            href={routes.gradeHome(effectiveGrade, { previewAll })}
+            href={routes.gradeHome(grade, { previewAll })}
             className="touch-button mt-2 inline-block rounded-2xl bg-violet-400 px-6 py-3 font-semibold text-white shadow-sm"
           >
             חֲזָרָה לַחוֹבֶרֶת
@@ -159,10 +145,7 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   if (!isRouteReady || isLocked === null) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <div className="surface mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg">
-          <p className="mb-2 text-5xl">⏳</p>
-          <p className="text-lg font-semibold text-gray-700">טוֹעֲנִים אֶת הַיּוֹם...</p>
-        </div>
+        <LoadingPanel emoji="⏳" title="טוֹעֲנִים אֶת הַיּוֹם..." />
       </main>
     );
   }
@@ -177,7 +160,7 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
             צָרִיךְ לְהַשְׁלִים אֶת הַיּוֹם הַקּוֹדֵם בְּ-100% כְּדֵי לִפְתֹּחַ אֶת הַיּוֹם הַזֶּה.
           </p>
           <Link
-            href={routes.gradeHome(effectiveGrade, { previewAll })}
+            href={routes.gradeHome(grade, { previewAll })}
             className="touch-button inline-block rounded-2xl bg-violet-400 px-6 py-3 font-semibold text-white shadow-sm"
           >
             חֲזוֹר הַבַּיְתָה
@@ -242,18 +225,8 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   return (
     <main>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={routes.gradeHome(effectiveGrade, { previewAll })}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
-        >
-          חֲזָרָה לַחוֹבֶרֶת
-        </Link>
-        <Link
-          href={routes.gradePicker({ previewAll })}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
-        >
-          חזרה לבחירת כיתה
-        </Link>
+        <AppNavLink href={routes.gradeHome(grade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
+        <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
       </div>
 
       {/* Sticky progress header */}
@@ -263,13 +236,13 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <div className="flex min-w-0 flex-1 flex-wrap gap-2 sm:flex-none">
             <Link
-              href={routes.gradeHome(effectiveGrade, { previewAll })}
+              href={routes.gradeHome(grade, { previewAll })}
               className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100 sm:flex-none sm:px-4"
             >
               חֲזוֹר לָרָאשִׁי
             </Link>
             <Link
-              href={routes.gradePlan(effectiveGrade, { previewAll })}
+              href={routes.gradePlan(grade, { previewAll })}
               className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-800 shadow-sm transition-colors hover:bg-violet-100 sm:flex-none sm:px-4"
             >
               תּוֹכְנִית לִמּוּדִים
@@ -416,7 +389,7 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       <StarReward
         visible={showReward}
-        onConfirm={() => router.push(routes.gradeHome(effectiveGrade, { previewAll }))}
+        onConfirm={() => router.push(routes.gradeHome(grade, { previewAll }))}
       />
     </main>
   );

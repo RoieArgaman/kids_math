@@ -1,6 +1,12 @@
+import { notFound } from "next/navigation";
 import { DayScreen } from "@/components/screens/DayScreen";
-import type { DayId } from "@/lib/types";
+import { parseDayId } from "@/lib/utils/parseDayId";
 
 export default function LegacyDayPage({ params }: { params: { id: string } }) {
-  return <DayScreen grade="a" dayId={params.id as DayId} />;
+  const dayId = parseDayId(params.id);
+  if (!dayId) {
+    notFound();
+  }
+
+  return <DayScreen grade="a" dayId={dayId} />;
 }

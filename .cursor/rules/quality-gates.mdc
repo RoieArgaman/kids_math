@@ -1,0 +1,38 @@
+---
+description: Verification and PR-quality gates for this repo
+alwaysApply: true
+---
+
+# Quality Gates (kids_math)
+
+Run these checks when code behavior might be affected, especially for routing, gating, storage/progress, or UI changes.
+
+## Pre-merge Automated Checks
+
+1. Lint
+- `npm run lint`
+
+2. Build
+- `npm run build`
+
+3. Unit tests (when logic changed)
+- `npm run test:unit`
+
+4. E2E tests (when routes/gates were touched)
+- `npm run test:e2e`
+
+## Manual Spot Checks (fast)
+
+- Verify critical flows in RTL:
+  - Home -> plan -> day/grade navigation
+  - Any “locked/unlocked” gate behavior (cookies/storage)
+- Keyboard navigation (Tab/Shift+Tab) for key UI elements that gained changes.
+- Touch target size for primary buttons (should feel ~44-52px tall).
+
+## Reviewer Checklist
+
+- Was the change minimal and typed (no `any`)?
+- Did we avoid breaking persisted shapes (or include migration/version bump)?
+- Are UI/UX changes consistent with existing Tailwind tokens?
+- Does the app still pass gates above?
+

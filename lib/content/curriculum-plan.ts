@@ -1,4 +1,5 @@
-import { WORKBOOK_TOTAL_DAYS } from "@/lib/content/days";
+import { getWorkbookTotalDays } from "@/lib/content/workbook";
+import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import type { SkillTag } from "@/lib/types";
 import type { WorkbookProgressState } from "@/lib/types";
 
@@ -17,13 +18,13 @@ export interface MinistryStrand {
   skillTags: SkillTag[];
 }
 
-export const MINISTRY_STRANDS: MinistryStrand[] = [
+export const MINISTRY_STRANDS_GRADE_A: MinistryStrand[] = [
   {
     id: "natural-numbers",
     title: "מַסְפָּרִים טְבִעִיִּים וִיצּוּג",
     summary:
       "מִנִּיָּה, הַכָּרַת מִסְפָּרִים, קַו מִסְפָּרִים, הַשְׁוָאָה, דְּפוּסִים, זוּגִי וְאִי־זוּגִי, עֶרֶךְ מָקוֹם.",
-    dayNumbers: [1, 2, 5, 6, 9, 10],
+    dayNumbers: [1, 2, 5, 6, 9, 10, 24, 25],
     skillTags: [
       "counting",
       "number-recognition",
@@ -37,14 +38,14 @@ export const MINISTRY_STRANDS: MinistryStrand[] = [
     id: "operations",
     title: "פְּעוּלוֹת חֶשְׁבּוֹן וּבְעָיוֹת",
     summary: "חִיבּוּר וְחִיסּוּר, עֲשָׂרוֹת שְׁלֵמוֹת, בְּעָיוֹת מִילּוּלִיּוֹת, הַטְמָעָה.",
-    dayNumbers: [3, 4, 6, 7, 11, 12, 13, 14],
+    dayNumbers: [3, 4, 6, 7, 11, 12, 13, 14, 15, 27, 28],
     skillTags: ["addition", "subtraction", "word-problems", "number-line", "comparing", "place-value"],
   },
   {
     id: "measurement-geometry",
     title: "מְדִידָה וּגְאוֹמֶטְרִיָּה",
     summary: "צוּרוֹת, מְצוּלָעִים, מְדִידַת אֹרֶךְ וְזְמַן, חִשּׁוּב הַזָּזָה וְשִׁקּוּף — בְּהַשְׁלָמָה לְפִי הַתָּכְנִית.",
-    dayNumbers: [8, 14, 15, 16, 17],
+    dayNumbers: [8, 14, 16, 17, 18, 19, 20],
     skillTags: [
       "geometry-shapes",
       "measurement-length",
@@ -57,10 +58,64 @@ export const MINISTRY_STRANDS: MinistryStrand[] = [
     title: "הַשְׁלָמָה וְכִּשּׁוּרִים מַתְקַדְּמִים",
     summary:
       "גִימַטְרִיָּה אוֹתִיּוֹת א־י, כֶּפֶל כְּחִזּוּר חִיבּוּר, קִשְׁרֵי מִסְפָּר ל־10.",
-    dayNumbers: [18, 19, 20, 21],
+    dayNumbers: [21, 22, 23, 26],
     skillTags: ["gematria-letters", "multiplication-intro", "number-bonds", "addition"],
   },
 ];
+
+/** תחומי עיגון לכיתה ב׳ (29 ימים כולל מבחן) */
+export const MINISTRY_STRANDS_GRADE_B: MinistryStrand[] = [
+  {
+    id: "natural-numbers",
+    title: "מַסְפָּרִים, מִקּוֹם וַהַשְׁוָאָה",
+    summary: "מִסְפָּרִים עַד 100, עֶרֶךְ מָקוֹם, דְּפוּסִים וְקַו מִסְפָּרִים.",
+    dayNumbers: [1, 10, 23, 24, 27],
+    skillTags: ["place-value", "comparing", "patterns", "number-line", "number-recognition"],
+  },
+  {
+    id: "operations",
+    title: "חִיבּוּר, חִיסּוּר, כֶּפֶל וְחִלּוּק",
+    summary: "פְּעוּלוֹת עַד 100, נְשִׂיאָה, כֶּפֶל כַּחִזּוּר, חִלּוּק לַקְבוּצוֹת שָׁווֹת.",
+    dayNumbers: [2, 3, 4, 5, 6, 7, 8, 18, 19, 22, 25, 28],
+    skillTags: [
+      "addition",
+      "subtraction",
+      "multiplication-intro",
+      "multiplication-tables",
+      "division-equal-groups",
+      "number-bonds",
+      "word-problems",
+    ],
+  },
+  {
+    id: "measurement-geometry",
+    title: "מְדִידָה וּגְאוֹמֶטְרְיָה",
+    summary: "אֹרֶךְ, שֶׁטַח, מִשְׁקָל, זְמַן, צוּרוֹת, גּוּפִים, סִימֶטְרְיָה.",
+    dayNumbers: [11, 12, 13, 14, 15, 16, 26],
+    skillTags: [
+      "measurement-length",
+      "measurement-area",
+      "measurement-weight",
+      "measurement-time",
+      "geometry-shapes",
+      "geometry-solids",
+      "symmetry-transform",
+    ],
+  },
+  {
+    id: "supplementary-pedagogy",
+    title: "שְׁבָרִים, כֶּסֶף וְהַשְׁלָמָה",
+    summary: "חֲצִי וְרֶבַע וְשְׁלִישׁ, שְׁקָלִים פְּשׁוּטִים וּבְעָיוֹת הַשְׁלָמָה.",
+    dayNumbers: [9, 17, 20, 21],
+    skillTags: ["fractions-parts", "money-shekel", "comparing", "word-problems"],
+  },
+];
+
+export const MINISTRY_STRANDS = MINISTRY_STRANDS_GRADE_A;
+
+export function getMinistryStrandsForGrade(grade: GradeId): MinistryStrand[] {
+  return grade === "b" ? MINISTRY_STRANDS_GRADE_B : MINISTRY_STRANDS_GRADE_A;
+}
 
 export const LEARNING_ROUTINE_STEPS: string[] = [
   "קוֹרְאִים אֶת הַשְּׁאֵלָה בְּקוֹל רָם — מְבִינִים מָה מְבַקְשִׁים.",
@@ -69,8 +124,12 @@ export const LEARNING_ROUTINE_STEPS: string[] = [
   "בּוֹדְקִים: הַאִם הַתְּשׁוּבָה הִגְיוֹנִית? אֶפְשָׁר לְהַסְבִּיר לַאֲחֵר?",
 ];
 
-/** מספר ימי העבודה בחוברת — מסונכרן אוטומטית עם workbookDays */
-export const TOTAL_CURRICULUM_DAYS = WORKBOOK_TOTAL_DAYS;
+/** מספר ימי העבודה בחוברת כיתה א׳ — לתאימות לאחור */
+export const TOTAL_CURRICULUM_DAYS = getWorkbookTotalDays(DEFAULT_GRADE);
+
+export function getTotalCurriculumDaysForGrade(grade: GradeId): number {
+  return getWorkbookTotalDays(grade);
+}
 
 export const PARENT_GUIDE = {
   title: "מַדְרִיךְ קָצָר לְהוֹרִים — לִפְנֵי וְאַחֲרֵי",

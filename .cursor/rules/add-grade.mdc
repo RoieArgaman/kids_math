@@ -1,0 +1,79 @@
+---
+description: When adding or changing grades (GradeId), grade routes, workbook split, unlock gates, or final-exam behavior.
+alwaysApply: false
+---
+
+# Adding a new grade (כיתה)
+
+Use this checklist when introducing another workbook grade (e.g. ג׳) or changing how grades A/B work. Keep changes minimal; extend patterns rather than inventing parallel flows.
+
+## How grades work today (mental model)
+
+- **`GradeId`** lives in `lib/grades.ts`. It drives `parseGradeId` for `/grade/[grade]/*`, Hebrew labels (`gradeLabel`), and any `switch (grade)` branches.
+- **Workbook content** is selected in `lib/content/workbook.ts`: grade A → `lib/content/days.ts`; grade B → `lib/content/days-grade-b.ts` (reuses `buildDayFromConcepts` / `DayConcept` from `days.ts`).
+- **Plan / ministry UI** uses `getMinistryStrandsForGrade` and `getTotalCurriculumDaysForGrade` in `lib/content/curriculum-plan.ts` (length comes from the workbook for that grade).
+- **Progress** is per grade in `lib/progress/storage.ts`: `kids_math.workbook_progress.v2.grade.${grade}`. Grade A has legacy migration from an older unscoped key; grade B had a v1 → v2 path—only add migrations if you introduce another predecessor key layout.
+- **Final exam**: `FINAL_EXAM_DAY_ID` in `lib/final-exam/config.ts` is `day-29`. `components/screens/DayScreen.tsx` routes that id to `FinalExamScreen`. The exam **bank** and **localStorage** are per grade (`lib/final-exam/picker.ts`, `lib/final-exam/storage.ts`). After submit with pass ≥ `FINAL_EXAM_PASS_PERCENT`, **only grade `"a"`** triggers `POST /api/unlock-grade-b` (see `components/screens/FinalExamScreen.tsx`).
+- **Grade B gate**: `middleware.ts` matches `/grade/b/:path*`. Without cookie `kids_math.unlocked_grade_b=1`, requests redirect to `app/grade/b/locked/page.tsx` (API paths under `/grade/b` are excluded so clients can still call unlock).
+- **Grade picker**: `app/page.tsx`. **Legacy day URLs**: `app/day/[id]/page.tsx` is hardwired to grade **A** only.
+
+```mermaid
+flowchart TD
+  picker[GradePicker root]
+  gradeHome["/grade/:grade"]
+  mw{Middleware for grade b}
+  locked["/grade/b/locked"]
+  home[HomeScreen]
+  day[DayScreen or FinalExam]
+  progress["localStorage progress v2.grade.*"]
+  examStore["localStorage final_exam v1.grade.*"]
+  unlockApi["POST /api/unlock-grade-b"]
+  picker --> gradeHome
+  gradeHome --> mw
+  mw -->|b no cookie| locked
+  mw -->|a or b unlocked| home
+  home --> day
+  day --> progress
+  day --> examStore
+  examStore -->|pass on grade a| unlockApi
+  unlockApi -->|Set-Cookie| mw
+```
+
+## Grade A vs grade B (reference)
+
+| Area | Grade A | Grade B |
+|------|---------|---------|
+| Route gate | None | Middleware + valid unlock cookie |
+| Content | `days.ts` | `days-grade-b.ts` + `workbook.ts` branch |
+| Strands | `MINISTRY_STRANDS_GRADE_A` | `MINISTRY_STRANDS_GRADE_B` |
+| Progress key | `v2.grade.a` (+ legacy migration) | `v2.grade.b` (+ optional v1 migration) |
+| Unlock | N/A | Cookie after **A** final exam pass (85%+) |
+
+## Implementation checklist (order matters)
+
+1. **`lib/grades.ts`** — Extend `GradeId`, `parseGradeId`, `gradeLabel` (and `DEFAULT_GRADE` only if product requires).
+2. **Content** — Add `lib/content/days-grade-*.ts` (or extend existing) and wire `getWorkbookDays` / `getWorkbookDaysById` in `lib/content/workbook.ts`.
+3. **`lib/content/curriculum-plan.ts`** — Add strands constant + branch in `getMinistryStrandsForGrade`. If day numbers in strands must match the new workbook length, update them carefully.
+4. **`lib/types.ts`** — New `SkillTag` values if the workbook needs tags not in the union; then exercise builders / warmup helpers that key off tags.
+5. **Picker UI** — `app/page.tsx`: new card/link, analytics `grade_selected`, copy and `aria-label` if stale.
+6. **Gated grade (optional)** — Mirror grade B: constants in `lib/gradeUnlock.ts`, `middleware.ts` `matcher` + redirect, `app/grade/<id>/locked/page.tsx`, `app/api/unlock-grade-<id>/route.ts`, and **exactly one** prerequisite final-exam success path that calls the unlock API (today: A → B). Ensure middleware still allows any API routes needed on that grade path.
+7. **Progress** — Confirm new grade uses `v2.grade.${grade}` automatically; add targeted migration only if users already have data under a different key.
+8. **Final exam** — Confirm last workbook day stays aligned with `FINAL_EXAM_DAY_ID` (today `day-29`). If length changes, centralize the id in config and replace hardcoded checks. Wire “unlock next grade” cookie only from the correct prerequisite grade’s `finishExam`.
+9. **Tests** — Use `tests/e2e/grade-b.spec.ts` as template for cookie gates; add unit tests if `parseGradeId` / storage gets new branches.
+10. **Quality gates** — `npm run lint`, `npm run build`, and per `quality-gates.mdc` run `test:unit` / `test:e2e` when routing, gates, storage, or UI flows change.
+
+## Attention points (risks)
+
+- **TypeScript exhaustiveness** — After extending `GradeId`, fix every `switch` / map until the compiler is clean.
+- **Persisted data** — Avoid breaking `WorkbookProgressState` / final exam JSON shapes; prefer additive changes + version bumps with sanitizers if needed.
+- **Middleware** — Do not block the unlock API or other required endpoints; grade B exempts `pathname.startsWith("/api/")` under `/grade/b`.
+- **Product copy** — Picker text vs locked page vs final exam success message should stay consistent (e.g. grade B “בקרוב” vs actual gate).
+- **Third gated grade** — Names like `unlock-grade-b` are B-specific; a chain A→B→C may need a generalized API or multiple narrow routes—plan before copying the pattern blindly.
+- **Educational content** — When adding real lesson text or progression, follow `multi-agent-playbook.mdc` / MoE verification expectations for syllabus alignment.
+
+## Key files (quick navigation)
+
+- `lib/grades.ts`, `lib/content/workbook.ts`, `lib/content/curriculum-plan.ts`, `lib/progress/storage.ts`
+- `lib/final-exam/config.ts`, `lib/final-exam/picker.ts`, `lib/final-exam/storage.ts`, `components/screens/FinalExamScreen.tsx`, `components/screens/DayScreen.tsx`
+- `middleware.ts`, `lib/gradeUnlock.ts`, `app/api/unlock-grade-b/route.ts`, `app/grade/b/locked/page.tsx`
+- `app/page.tsx`, `app/grade/[grade]/layout.tsx`, `app/grade/[grade]/page.tsx`, `app/grade/[grade]/day/[id]/page.tsx`, `lib/routes.ts`

@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { AppNavLink } from "@/components/ui/AppNavLink";
 import { logEvent } from "@/lib/analytics/events";
 import {
   COMPLETION_GATE_NOTE,
   LEARNING_ROUTINE_STEPS,
-  MINISTRY_STRANDS,
   PARENT_GUIDE,
-  TOTAL_CURRICULUM_DAYS,
+  getMinistryStrandsForGrade,
+  getTotalCurriculumDaysForGrade,
   dayIdFromNumber,
   fractionOfDaysComplete,
   fractionOverallComplete,
   isStrandComplete,
 } from "@/lib/content/curriculum-plan";
-import { workbookDays, workbookDaysById } from "@/lib/content/days";
+import { getWorkbookDays, getWorkbookDaysById } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { gradeLabel } from "@/lib/grades";
 import { createInitialWorkbookProgressState } from "@/lib/progress/engine";
@@ -25,6 +26,13 @@ import type { WorkbookProgressState } from "@/lib/types";
 
 export function PlanScreen({ grade }: { grade: GradeId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
+  const workbookDaysList = getWorkbookDays(effectiveGrade);
+  const workbookDaysById = getWorkbookDaysById(effectiveGrade);
+  const ministryStrands = useMemo(() => getMinistryStrandsForGrade(effectiveGrade), [effectiveGrade]);
+  const totalCurriculumDays = useMemo(
+    () => getTotalCurriculumDaysForGrade(effectiveGrade),
+    [effectiveGrade],
+  );
 
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
   const [previewAll, setPreviewAll] = useState(false);
@@ -38,8 +46,8 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
   }, [effectiveGrade]);
 
   const overallPct = useMemo(
-    () => Math.round(fractionOverallComplete(progress, TOTAL_CURRICULUM_DAYS) * 100),
-    [progress],
+    () => Math.round(fractionOverallComplete(progress, totalCurriculumDays) * 100),
+    [progress, totalCurriculumDays],
   );
 
   const dayTitle = (n: number) => workbookDaysById[dayIdFromNumber(n)]?.title ?? `יוֹם ${n}`;
@@ -67,18 +75,8 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
 
         <div className="relative space-y-3">
           <nav aria-label="ניווט מהיר" className="flex flex-wrap items-center gap-4">
-            <Link
-              href={routes.gradeHome(effectiveGrade, { previewAll })}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
-            >
-              חֲזָרָה לַחוֹבֶרֶת
-            </Link>
-            <Link
-              href={routes.gradePicker({ previewAll })}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
-            >
-              חזרה לבחירת כיתה
-            </Link>
+            <AppNavLink href={routes.gradeHome(effectiveGrade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
+            <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
           </nav>
           <h1 className="text-3xl font-bold leading-tight text-violet-900 sm:text-4xl">
             תּוֹכְנִית לִמּוּדִים לְפִי מִשְׁרַד הַחִינוּךְ
@@ -98,7 +96,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
           הַהִתְקַדְּמוּת בְּכָל הַחוֹבֶרֶת
         </h2>
         <p className="muted mb-4 text-sm leading-relaxed">
-          {TOTAL_CURRICULUM_DAYS} יְמוֹת לִמּוּד — כָּל יוֹם בְּנוּי מִקְטָעִים שֶׁמְחַזְּקִים חִשּׁוּב, שָׂפָה וּבְדִיקַת עַצְמִי.
+          {totalCurriculumDays} יְמוֹת לִמּוּד — כָּל יוֹם בְּנוּי מִקְטָעִים שֶׁמְחַזְּקִים חִשּׁוּב, שָׂפָה וּבְדִיקַת עַצְמִי.
         </p>
         <div className="mb-2 flex items-center justify-between text-xs font-medium">
           <span className="text-slate-600">יָמִים שֶׁהוּשְׁלְמוּ</span>
@@ -121,7 +119,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         <h2 id="strands-heading" className="text-lg font-bold text-slate-800">
           יְסוֹדוֹת הַלִּמּוּד לְפִי תְחוּמִים
         </h2>
-        {MINISTRY_STRANDS.map((strand) => {
+        {ministryStrands.map((strand) => {
           const frac = fractionOfDaysComplete(strand.dayNumbers, progress);
           const pct = Math.round(frac * 100);
           const complete = isStrandComplete(strand.dayNumbers, progress);
@@ -228,7 +226,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
           חֲזָרָה לְרַשִׁימַת הַיָּמִים
         </Link>
         <span className="hidden text-center text-xs text-slate-400 sm:inline sm:self-center">
-          {workbookDays.length} יְמוֹת · כִּיתָּה {gradeLabel(effectiveGrade)}
+          {workbookDaysList.length} יְמוֹת · כִּיתָּה {gradeLabel(effectiveGrade)}
         </span>
       </div>
     </main>

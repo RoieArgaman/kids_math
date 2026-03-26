@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   COMPLETION_GATE_PERCENT,
@@ -34,10 +34,12 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
   const grade = options.grade ?? DEFAULT_GRADE;
   const [state, setState] = useState(createInitialWorkbookProgressState);
   const [isHydrated, setIsHydrated] = useState(false);
+  const lastStateSavedLogAtRef = useRef<number>(0);
 
   const dayProgress = useMemo(() => getOrCreateDayProgress(state, dayId), [state, dayId]);
 
   useEffect(() => {
+    lastStateSavedLogAtRef.current = 0;
     setState(loadProgressState({ grade }));
     setIsHydrated(true);
     logEvent("state_loaded", { dayId, payload: { grade } });
@@ -48,7 +50,11 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
       return;
     }
     saveProgressState(state, { grade });
-    logEvent("state_saved", { payload: { grade } });
+    const now = Date.now();
+    if (now - lastStateSavedLogAtRef.current >= 5000) {
+      lastStateSavedLogAtRef.current = now;
+      logEvent("state_saved", { payload: { grade } });
+    }
   }, [isHydrated, state, grade]);
 
   const setAnswer = useCallback(
@@ -72,40 +78,28 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
   );
 
   const markComplete = useCallback((): boolean => {
-    let didComplete = false;
-    let alreadyComplete = false;
-    let gatePassed = false;
-
-    setState((current) => {
-      const before = getOrCreateDayProgress(current, dayId);
-      alreadyComplete = before.isComplete;
-      gatePassed = before.percentDone >= COMPLETION_GATE_PERCENT;
-      const next = markDayComplete(current, dayId);
-      const after = getOrCreateDayProgress(next, dayId);
-      didComplete = !before.isComplete && after.isComplete;
-      return next;
-    });
-
+    // Avoid mutating outer variables inside `setState(updater)` because React may
+    // invoke updaters more than once (StrictMode / concurrent rendering).
+    const alreadyComplete = dayProgress.isComplete;
     if (alreadyComplete) {
       return true;
     }
 
-    if (didComplete) {
-      logEvent("completion_gate_passed", { dayId, payload: { grade } });
-      logEvent("day_completed", { dayId, payload: { grade } });
-      return true;
-    }
-
+    const gatePassed = dayProgress.percentDone >= COMPLETION_GATE_PERCENT;
     if (!gatePassed) {
       logEvent("completion_gate_blocked", { dayId, payload: { grade } });
+      return false;
     }
-    return false;
-  }, [dayId, grade]);
+
+    setState((current) => markDayComplete(current, dayId));
+    logEvent("completion_gate_passed", { dayId, payload: { grade } });
+    logEvent("day_completed", { dayId, payload: { grade } });
+    return true;
+  }, [dayId, dayProgress.isComplete, dayProgress.percentDone, grade]);
 
   const resetDay = useCallback(() => {
     setState((current) => resetDayProgress(current, dayId));
-    logEvent("state_saved", { dayId, payload: { grade } });
-  }, [dayId, grade]);
+  }, [dayId]);
 
   return {
     setAnswer,

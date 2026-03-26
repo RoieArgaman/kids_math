@@ -1,0 +1,49 @@
+---
+description: Learning loop instructions (append updates to markdown)
+alwaysApply: true
+---
+
+# Learning Loop
+
+The goal of this repo is not only to ship changes, but to keep teaching future runs.
+
+## While developing: capture patterns for the future
+
+While you work, if you notice a **project pattern** that is not written down yet (or is wrong in the rules), feed it forward:
+
+1. **`docs/LEARNING_LOG.md`** — Default place for a short entry: what you saw, where, and how to reuse it. Use this for one-off discoveries, bug gotchas, and “we always do X here” notes.
+2. **`.cursor/rules/*.mdc`** — When the pattern is **stable**, **repeated**, and should constrain *every* future agent (naming, folder placement, routing, testing strategy, gates), update or add a rule:
+   - Prefer **small edits** to the closest existing rule (e.g. `agent-guidelines.mdc`, `quality-gates.mdc`, `add-grade.mdc`) instead of a new file unless the topic is large.
+   - New topic file: use `alwaysApply: false` + a clear `description` so Cursor pulls it in when relevant.
+   - Do not duplicate long prose across many files; link from one rule to another when it helps.
+
+If the insight is trivial or obvious from the code alone, skip. If you are unsure, a learning-log entry alone is enough.
+
+## When to Write a Learning Entry
+
+Append a new entry to `docs/LEARNING_LOG.md` when you:
+- Discover a new repo convention (routing pattern, storage approach, component usage).
+- Fix a tricky bug (especially cookie gating, storage versioning, or RTL issues).
+- Learn something that reduces future investigation time.
+- Make a decision due to constraints (performance, test flakiness, schema compatibility).
+
+If the change is purely mechanical and teaches nothing new, skip writing a log entry.
+
+## Learning Entry Format (copy/paste)
+
+Add a new entry under the most recent date section or at the top under an `Unreleased` heading:
+
+### YYYY-MM-DD
+- **Trigger:** (what request led to this learning)
+- **What changed / where:** (file paths or feature area)
+- **What we learned:** (1-4 bullets, concrete)
+- **Why it matters:** (how it affects correctness/quality)
+- **How to reuse next time:** (a small rule of thumb)
+- **Open questions (optional):** (if something is still unclear)
+
+## Quality Rules
+
+- Keep the entry short (aim for 8-20 lines).
+- Avoid sensitive data (no cookies/session IDs, no user PII).
+- Prefer actionable statements over vague commentary.
+

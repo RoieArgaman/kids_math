@@ -1,0 +1,17 @@
+{
+  "apphosting": [
+    {
+      "backendId": "kids-math",
+      "rootDir": ".",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "playwright-report",
+        "test-results"
+      ]
+    }
+  ]
+}
+

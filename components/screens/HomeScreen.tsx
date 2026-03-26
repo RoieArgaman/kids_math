@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { AppNavLink } from "@/components/ui/AppNavLink";
 import { logEvent, loadEvents } from "@/lib/analytics/events";
 import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
-import { workbookDays } from "@/lib/content/days";
+import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { gradeLabel } from "@/lib/grades";
+import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
+import { loadFinalExamState } from "@/lib/final-exam/storage";
 import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/progress/engine";
 import { loadProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
@@ -35,6 +38,7 @@ function getDayState(
   day: WorkbookDay,
   dayIndex: number,
   progress: WorkbookProgressState,
+  days: WorkbookDay[],
 ): DayCardState {
   const dayProgress = progress.days[day.id];
   if (dayProgress?.isComplete) {
@@ -44,7 +48,7 @@ function getDayState(
     return "open";
   }
 
-  const previousDay = workbookDays[dayIndex - 1];
+  const previousDay = days[dayIndex - 1];
   const previousProgress = progress.days[previousDay.id];
   return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
 }
@@ -52,8 +56,10 @@ function getDayState(
 export function HomeScreen({ grade }: { grade: GradeId }) {
   // Grade B is gated at the route layer; keep a safe fallback.
   const effectiveGrade = grade ?? DEFAULT_GRADE;
+  const workbookDaysList = getWorkbookDays(effectiveGrade);
 
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
+  const [finalExam, setFinalExam] = useState<ReturnType<typeof loadFinalExamState>>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -62,17 +68,18 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
     setPreviewAll(getPreviewAllFromLocation());
     logEvent("home_viewed", { payload: { grade: effectiveGrade } });
     setProgress(loadProgressState({ grade: effectiveGrade }));
+    setFinalExam(loadFinalExamState(effectiveGrade));
     setEvents(loadEvents());
     setIsHydrated(true);
   }, [effectiveGrade]);
 
   const weeks = useMemo(
     () =>
-      workbookDays.reduce<Record<number, WorkbookDay[]>>((acc, day) => {
+      workbookDaysList.reduce<Record<number, WorkbookDay[]>>((acc, day) => {
         acc[day.week] = [...(acc[day.week] ?? []), day];
         return acc;
       }, {}),
-    [],
+    [workbookDaysList],
   );
 
   const rollups = useMemo(() => computeAnalyticsRollups(events), [events]);
@@ -89,12 +96,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   return (
     <main className="pb-10">
       <div className="mb-4">
-        <Link
-          className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
-          href={routes.gradePicker({ previewAll })}
-        >
-          חזרה לבחירת כיתה
-        </Link>
+        <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
       </div>
 
       {/* Hero header */}
@@ -150,15 +152,30 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
             <div className="grid gap-4">
               {weekDays.map((day) => {
-                const idx = workbookDays.findIndex((item) => item.id === day.id);
-                const state = previewAll
-                  ? progress.days[day.id as DayId]?.isComplete
+                const idx = workbookDaysList.findIndex((item) => item.id === day.id);
+                const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;
+                const finalExamPassed = Boolean(finalExam?.passed);
+
+                const state = isFinalExamDay
+                  ? finalExamPassed
                     ? "complete"
-                    : "open"
-                  : getDayState(day, idx, progress);
+                    : previewAll
+                      ? "open"
+                      : idx === 0
+                        ? "open"
+                        : (() => {
+                            const previousDay = workbookDaysList[idx - 1];
+                            const previousProgress = progress.days[previousDay.id];
+                            return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
+                          })()
+                  : previewAll
+                    ? progress.days[day.id as DayId]?.isComplete
+                      ? "complete"
+                      : "open"
+                    : getDayState(day, idx, progress, workbookDaysList);
                 const stateUi = STATE_COPY[state];
                 const dayProgress = progress.days[day.id as DayId];
-                const score = dayProgress?.percentDone ?? 0;
+                const score = isFinalExamDay ? (finalExam?.scorePercent ?? 0) : (dayProgress?.percentDone ?? 0);
                 const dayEmoji = DAY_EMOJIS[(day.dayNumber - 1) % DAY_EMOJIS.length];
 
                 const stateChipClasses =

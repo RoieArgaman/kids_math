@@ -29,7 +29,14 @@ export type SkillTag =
   | "symmetry-transform"
   | "gematria-letters"
   | "multiplication-intro"
-  | "number-bonds";
+  | "multiplication-tables"
+  | "number-bonds"
+  | "division-equal-groups"
+  | "fractions-parts"
+  | "measurement-area"
+  | "measurement-weight"
+  | "geometry-solids"
+  | "money-shekel";
 
 export interface CurriculumMeta {
   skillTags: SkillTag[];

@@ -4,9 +4,11 @@ import { DEFAULT_GRADE } from "@/lib/grades";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
 
 const LEGACY_PROGRESS_STORAGE_KEY = "kids_math.workbook_progress.v1";
+const GRADE_A_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.a";
+const GRADE_B_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.b";
 
 function progressStorageKeyForGrade(grade: GradeId): string {
-  return `kids_math.workbook_progress.v1.grade.${grade}`;
+  return `kids_math.workbook_progress.v2.grade.${grade}`;
 }
 
 function isBrowser(): boolean {
@@ -104,6 +106,33 @@ function migrateLegacyProgressToGradeA(nextKey: string): WorkbookProgressState |
   }
 }
 
+function migrateGradeBProgressV1ToV2(nextKey: string): WorkbookProgressState | null {
+  try {
+    const rawV1 = window.localStorage.getItem(GRADE_B_PROGRESS_STORAGE_KEY_V1);
+    if (!rawV1) {
+      return null;
+    }
+    const parsed = JSON.parse(rawV1) as unknown;
+    const sanitized = sanitizeState(parsed);
+    if (Object.keys(sanitized.days).length === 0) {
+      return null;
+    }
+    if (window.localStorage.getItem(nextKey)) {
+      const parsedNew = JSON.parse(window.localStorage.getItem(nextKey) as string) as unknown;
+      return sanitizeState(parsedNew);
+    }
+    try {
+      window.localStorage.setItem(nextKey, JSON.stringify(sanitized));
+      window.localStorage.removeItem(GRADE_B_PROGRESS_STORAGE_KEY_V1);
+    } catch {
+      // quota / private mode — still return migrated state for this session
+    }
+    return sanitized;
+  } catch {
+    return null;
+  }
+}
+
 export function loadProgressState(options: ProgressStorageOptions = {}): WorkbookProgressState {
   if (!isBrowser()) {
     return createInitialWorkbookProgressState();
@@ -116,9 +145,24 @@ export function loadProgressState(options: ProgressStorageOptions = {}): Workboo
     const raw = window.localStorage.getItem(key);
     if (!raw) {
       if (grade === "a") {
+        try {
+          const staleV1 = window.localStorage.getItem(GRADE_A_PROGRESS_STORAGE_KEY_V1);
+          if (staleV1) {
+            window.localStorage.removeItem(GRADE_A_PROGRESS_STORAGE_KEY_V1);
+            return createInitialWorkbookProgressState();
+          }
+        } catch {
+          /* no-op */
+        }
         const migrated = migrateLegacyProgressToGradeA(key);
         if (migrated) {
           return migrated;
+        }
+      }
+      if (grade === "b") {
+        const migratedB = migrateGradeBProgressV1ToV2(key);
+        if (migratedB) {
+          return migratedB;
         }
       }
       return createInitialWorkbookProgressState();
@@ -158,6 +202,12 @@ export function clearProgressState(options: ProgressStorageOptions = {}): void {
   const key = progressStorageKeyForGrade(grade);
   try {
     window.localStorage.removeItem(key);
+    if (grade === "a") {
+      window.localStorage.removeItem(GRADE_A_PROGRESS_STORAGE_KEY_V1);
+    }
+    if (grade === "b") {
+      window.localStorage.removeItem(GRADE_B_PROGRESS_STORAGE_KEY_V1);
+    }
   } catch {
     // Intentionally no-op.
   }

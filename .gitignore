@@ -8,6 +8,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/blob-report/
 
 # next.js
 /.next/
@@ -15,6 +18,12 @@
 
 # production
 /build
+
+# firebase
+/.firebase/
+firebase-debug.log
+firebase-debug.*.log
+/.playwright-browsers/
 
 # misc
 .DS_Store

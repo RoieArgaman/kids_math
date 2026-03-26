@@ -3,8 +3,9 @@ export type GradeId = "a" | "b";
 export const DEFAULT_GRADE: GradeId = "a";
 
 export function parseGradeId(input: string): GradeId | null {
-  if (input === "a" || input === "b") {
-    return input;
+  const g = input.trim().toLowerCase();
+  if (g === "a" || g === "b") {
+    return g;
   }
   return null;
 }

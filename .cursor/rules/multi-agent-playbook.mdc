@@ -25,19 +25,39 @@ Use parallel agents when it reduces latency or risk (broad codebase search, UI +
 
 - Make the smallest correct change that matches existing conventions.
 - Keep diffs readable; avoid drive-by refactors.
+- If you surface a **stable, repeated** project pattern that future agents should follow, capture it per `learning-loop.mdc` (`docs/LEARNING_LOG.md` and/or `.cursor/rules/*.mdc`).
 - Produce: code changes + brief rationale + any follow-up TODOs.
+- Tester is mandatory: after producing code changes, run `Tester Phase (QA Multi-role Team)` and attempt to add/modify related tests/coverage.
 
 ### Reviewer
 
 - Review the diff for correctness, edge cases, readability, and alignment with project conventions.
 - Look for: schema breakage, accidental `"use client"` spread, RTL regressions, a11y issues, and untyped payloads.
 - Produce: punch-list of fixes + approval when done.
+- Multi-role invariant (always): when a review is part of the multi-role workflow, the review must include and keep the full maintained team:
+  - `SeniorDev_TechLead`
+  - `SeniorFrontEnd_TechLead`
+  - `Dev_Architect`
+  - `QA_Architect`
+  - `SeniorAutomation_Engineer`
+  - `SeniorQA_Engineer`
+  - `SeniorProductDesigner`
+  - `SeniorProductManager`
+- Approval requires agreement from all roles in the maintained team; if any role reports a blocking issue, the review is not approved yet.
+- Tester is mandatory: after reviewing, run `Tester Phase (QA Multi-role Team)` and attempt to add/modify related tests/coverage.
 
 ### Tester (QA)
 
-- Run available checks (at minimum `npm run lint`; add `npm run build` when change is non-trivial).
-- Add a manual test plan that a human can follow quickly (RTL, touch targets, keyboard navigation).
-- Produce: executed commands + results + repro steps for any failures.
+- Always run as a multi-QA team (`Tester Phase (QA Multi-role Team)`):
+  - `SeniorAutomation_Engineer`
+  - `SeniorAutomation_TechLead`
+  - `SeniorManualQA_Engineer`
+  - `UX_QA_Engineer`
+  - `QA_Architect`
+- Attempt to add or modify related tests/coverage (unit/e2e) and any required test helpers/mocks.
+- Run available checks (at minimum `npm run lint`; add `npm run build` and relevant tests when change is non-trivial).
+- Add a manual RTL test plan that a human can follow quickly (touch targets, keyboard navigation, core flows).
+- Produce: executed commands + results + repro steps for any failures (when applicable).
 
 ### Release/PR
 
@@ -47,22 +67,64 @@ Use parallel agents when it reduces latency or risk (broad codebase search, UI +
 
 ## Specialist roles (use as needed)
 
-### QA_Architect
+### QA_Architect (qa architect)
 
 - Define test strategy for risky changes (state persistence, progress engine, analytics).
 - Suggest minimal automated coverage when feasible.
 
-### SeniorDev_TechLead
+### SeniorDev_TechLead (Senior tech lead)
 
 - Ensure architecture boundaries are respected (avoid leaking UI concerns into `lib/`, keep routing helpers in `lib/routes.ts`, etc.).
 - Push for simplicity and long-term maintainability.
 
-### SeniorProductDesigner
+### SeniorFrontEnd_TechLead (Senior Front end tech lead)
+
+- Ensure UI implementation details match existing component patterns (Tailwind classes, layout primitives, state management).
+- Validate RTL correctness and accessibility expectations (focus order, keyboard navigation, aria where needed).
+- Keep diffs minimal and avoid “new UI frameworks” inside the repo.
+
+### Dev_Architect (Dev architect)
+
+- Ensure the design respects boundaries between `app/`, `components/`, and `lib/` (server vs client concerns).
+- Validate data-flow and side effects (cookies/storage, route gating, serialization formats).
+- Call out where a refactor would be required vs where a localized change is safe.
+
+### SeniorAutomation_Engineer (senior automation engineer)
+
+- Propose the most valuable automated coverage (unit vs e2e) for the exact risk being changed.
+- Specify test hooks and what should be asserted (no brittle selectors; focus on behaviors).
+- If the repo already has a test for the flow, prefer extending it over adding duplicate coverage.
+
+### SeniorAutomation_TechLead (senior automation tech lead)
+
+- Ensure automated tests use stable strategies (avoid brittle selectors; prefer data-testid/semantic selectors).
+- Propose any shared test helpers/utilities to keep the suite maintainable.
+- Validate that test timing/flakiness risks are mitigated (deterministic setup, explicit waits, clear assertions).
+
+### SeniorManualQA_Engineer (senior manual QA engineer)
+
+- Write a short, step-by-step manual test script tailored to the changed user journey(s) in RTL.
+- Cover edge cases and failure states (loading, empty states, locked/unlocked gates).
+- Ensure manual steps are reproducible and do not require fragile “guessing” by a tester.
+
+### UX_QA_Engineer (UX QA engineer)
+
+- Verify UX/a11y behavior relevant to the change: focus order, keyboard navigation, touch ergonomics, and visibility.
+- Check error messaging clarity and input affordances (RTL readability, truncation, and contrast).
+- Ensure interactive elements meet expected touch target sizes for primary actions.
+
+### SeniorQA_Engineer (senior qa engineer)
+
+- Provide edge cases and failure modes to test manually (especially around gates, storage, and error states).
+- Add a short manual test checklist that a human can execute quickly in RTL.
+- Ensure the manual plan complements (not duplicates) automation.
+
+### SeniorProductDesigner (senior product designer)
 
 - Ensure visual/interaction consistency with existing tokens in `app/globals.css` and Tailwind theme.
 - Validate accessibility and touch-first ergonomics.
 
-### SeniorProductManager
+### SeniorProductManager (senior product manager)
 
 - Confirm the feature matches user value and scope; reduce overbuilding.
 - Define acceptance criteria and analytics event intent (only when needed).
@@ -72,6 +134,128 @@ Use parallel agents when it reduces latency or risk (broad codebase search, UI +
 - Validate exercises/wording/learning progressions and age appropriateness.
 - Check for clarity in Hebrew, misconception targeting, and proper scaffolding.
 
+## Planner Phase (Multi-role Team)
+
+When the task is executed as “Planner” (see `agent-definer.mdc`), the plan output must include multi-role contributions from the full team below (each role gets 1 short subsection).
+
+### Required multi-role contributions (Planner)
+
+### Conditional education specialist (only when educational content changes)
+
+If the request changes or adds educational material (lesson/exercise wording, learning objectives, explanations, progression/difficulty, or pedagogical approach), the plan output must also include:
+- `MoE_PedagogyLead` (מורה ותיקה / יועצת פתגוגית / רכזת חינוך)
+- a required verification step that the updated content matches the relevant Israeli Ministry of Education syllabus/program.
+
+### SeniorDev_TechLead (Senior tech lead)
+- Core architecture direction + top risks.
+
+### SeniorFrontEnd_TechLead (Senior Front end tech lead)
+- UI/component patterns to use and where UI state should live.
+
+### Dev_Architect (Dev architect)
+- Data flow + boundaries (server/client, IO boundaries, serialization).
+
+### QA_Architect (qa architect)
+- Minimal test strategy for correctness + regressions.
+
+### SeniorAutomation_Engineer (senior automation engineer)
+- Which automation to add/update (unit vs e2e) and what to assert.
+
+### SeniorQA_Engineer (senior qa engineer)
+- Edge cases + quick RTL manual checklist.
+
+### SeniorProductDesigner (senior product designer)
+- UX/a11y expectations + touch-first ergonomics constraints.
+
+### SeniorProductManager (senior product manager)
+- Acceptance criteria (definition of done) aligned with user value.
+
+## Explorer Phase (Multi-role Team)
+
+When the task is executed as “Explorer” (see `agent-definer.mdc`), the exploration output must include multi-role contributions optimized for “where to change” (each role gets 1 short subsection).
+
+### Required multi-role contributions (Explorer)
+
+### Conditional education specialist (only when educational content changes)
+
+If the request changes or adds educational material (lesson/exercise wording, learning objectives, explanations, progression/difficulty, or pedagogical approach), the exploration output must also include:
+- `MoE_PedagogyLead` (מורה ותיקה / יועצת פתגוגית / רכזת חינוך)
+- a required verification step that the updated content matches the relevant Israeli Ministry of Education syllabus/program.
+
+### SeniorDev_TechLead (Senior tech lead)
+- Where in the runtime/routing architecture the change should land.
+
+### SeniorFrontEnd_TechLead (Senior Front end tech lead)
+- Which pages/components should change or be reused.
+
+### Dev_Architect (Dev architect)
+- Which `lib/` modules/contracts are affected and what boundaries must be preserved.
+
+### QA_Architect (qa architect)
+- Which test surfaces must be covered.
+
+### SeniorAutomation_Engineer (senior automation engineer)
+- Which automated checks cover the touched surfaces.
+
+### SeniorQA_Engineer (senior qa engineer)
+- Which manual checks must be run in RTL to validate behavior.
+
+### SeniorProductDesigner (senior product designer)
+- Which UI tokens/layout/a11y expectations might shift.
+
+### SeniorProductManager (senior product manager)
+- Which user journeys must remain correct.
+
+## Tester Phase (QA Multi-role Team)
+
+When the workflow includes `Tester (QA)` (see `agent-definer.mdc`), the tester phase must run as a multi-QA team and attempt to add or modify the related tests/coverage.
+
+### Required multi-role contributions (Tester)
+
+### SeniorAutomation_Engineer (senior automation engineer)
+- Propose and implement the most valuable unit/e2e test additions or modifications.
+- Specify what to assert (behavior-first) and where to place the assertions.
+
+### SeniorAutomation_TechLead (senior automation tech lead)
+- Ensure test maintainability (stable selectors, shared helpers/utilities if needed).
+- Flag flakiness risks and propose mitigations.
+
+### QA_Architect (qa architect)
+- Confirm the test strategy is sufficient for correctness and regression coverage.
+- Suggest minimal automated coverage to achieve meaningful confidence.
+
+### SeniorManualQA_Engineer (senior manual QA engineer)
+- Provide a step-by-step RTL manual checklist targeted to the change.
+- Include edge cases and expected results for gate/storage-related behavior.
+
+### UX_QA_Engineer (UX QA engineer)
+- Validate UX/a11y expectations relevant to the change (focus order, keyboard nav, touch ergonomics).
+- Ensure error/empty states are understandable and usable in RTL.
+
+## Review & Fix Loop (iterate-until-approved)
+
+After the Planner/Explorer output, run an iterative review where the same roles review and produce a punch-list of fixes.
+
+### Iteration rules
+- Default max cycles: 2.
+- Each cycle: each role provides “what to fix” as actionable bullets (what/where/why).
+- Stop early if all roles approve.
+- Team invariance (always): each review cycle must include feedback from all 8 maintained roles; roles may not be dropped between cycles.
+- Tester mandatory each cycle: after each review cycle’s fixes are incorporated (or, if implementation is not yet applied, after the punch-list is produced), run `Tester Phase (QA Multi-role Team)` with:
+  - `SeniorAutomation_Engineer`
+  - `SeniorAutomation_TechLead`
+  - `SeniorManualQA_Engineer`
+  - `UX_QA_Engineer`
+  - `QA_Architect`
+
+### Review checklist (all roles)
+- Is the plan/exploration correct and aligned with repo conventions?
+- Are risks called out (storage schema, route gating, typed payloads, RTL/a11y)?
+- Is the next implementation step minimal and safe?
+- Does the response include/keep the `Learning update` requirement (append to `docs/LEARNING_LOG.md`), and when a convention is stable, should `.cursor/rules` be updated (see `learning-loop.mdc`)?
+- Conditional syllabus/program check:
+  - If educational content was changed or added, the review must include verification against the relevant Israeli Ministry of Education syllabus/program (via `MoE_PedagogyLead`).
+
 ## Handoff format (required)
 
 Every agent output should include:
@@ -80,6 +264,7 @@ Every agent output should include:
 - **Files**: exact file paths to touch (or that were inspected).
 - **Decisions**: any trade-offs chosen.
 - **Next actions**: ordered list that another agent can execute.
+- **Learning update**: when something new was learned, append a short entry to `docs/LEARNING_LOG.md`. If the lesson is ongoing guidance for all agents, also update the relevant `.cursor/rules` file per `learning-loop.mdc` (prefer small edits; avoid duplicating long text).
 
 ## Definition of done (project baseline)
 

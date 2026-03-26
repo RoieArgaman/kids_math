@@ -19,6 +19,10 @@ alwaysApply: true
 
 If a change could break behavior, prefer running `npm run lint` and `npm run build` before concluding.
 
+## Grades (כיתות) and workbooks
+
+- Adding or changing grades (content split, `GradeId`, middleware unlock, final exam): use `add-grade.mdc` as the source checklist.
+
 ## Code conventions
 
 - Prefer small, typed modules with explicit exported APIs.
@@ -63,4 +67,8 @@ If a change could break behavior, prefer running `npm run lint` and `npm run bui
   - Summary of user-visible change
   - Test plan (commands run, or manual steps)
   - Any data migration / storage considerations
+
+## Evolving Cursor rules and the learning log
+
+- If you notice a **recurring convention or pitfall** while coding, document it for the next run: see `learning-loop.mdc` (learning log vs updating `.cursor/rules` when guidance should apply to all agents).
 
