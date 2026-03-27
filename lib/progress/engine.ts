@@ -1,4 +1,5 @@
 import {
+  type Exercise,
   type AnswerValue,
   type DayId,
   type DayProgressState,
@@ -136,6 +137,75 @@ export function markDayComplete(
     },
     updatedAt: new Date().toISOString(),
   };
+}
+
+export function forceMarkDayComplete(
+  state: WorkbookProgressState,
+  dayId: DayId,
+  options?: { day?: WorkbookDay; fillAnswers?: boolean },
+): WorkbookProgressState {
+  const dayState = getOrCreateDayProgress(state, dayId);
+  const now = new Date().toISOString();
+  const completedAt = dayState.completedAt ?? now;
+  const shouldFillAnswers = Boolean(options?.fillAnswers && options?.day);
+
+  let answers = dayState.answers;
+  let correctAnswers = dayState.correctAnswers;
+  let attempts = dayState.attempts;
+  if (shouldFillAnswers && options?.day) {
+    const exercises = options.day.sections.flatMap((section) => section.exercises);
+    answers = Object.fromEntries(
+      exercises.map((exercise) => [exercise.id, answerValueForExercise(exercise)]),
+    ) as DayProgressState["answers"];
+    correctAnswers = Object.fromEntries(exercises.map((exercise) => [exercise.id, true])) as DayProgressState["correctAnswers"];
+    attempts = exercises.map((exercise) => ({
+      exerciseId: exercise.id,
+      answer: answerValueForExercise(exercise),
+      isCorrect: true,
+      attemptedAt: now,
+    }));
+  }
+
+  const nextDayState: DayProgressState = {
+    ...dayState,
+    answers,
+    correctAnswers,
+    attempts,
+    wrongCount: 0,
+    percentDone: 100,
+    isComplete: true,
+    completedAt,
+  };
+
+  return {
+    ...state,
+    days: {
+      ...state.days,
+      [dayId]: nextDayState,
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function answerValueForExercise(exercise: Exercise): AnswerValue {
+  switch (exercise.kind) {
+    case "number_input":
+      return exercise.answer;
+    case "number_line_jump":
+      return exercise.answer;
+    case "multiple_choice":
+      return exercise.answer;
+    case "verbal_input":
+      return exercise.answer;
+    case "true_false":
+      return exercise.answer;
+    case "shape_choice":
+      return exercise.answer;
+    default: {
+      const exhaustiveCheck: never = exercise;
+      return exhaustiveCheck;
+    }
+  }
 }
 
 export function resetDayProgress(

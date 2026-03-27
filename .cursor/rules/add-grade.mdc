@@ -13,7 +13,8 @@ Use this checklist when introducing another workbook grade (e.g. ג׳) or changi
 - **Workbook content** is selected in `lib/content/workbook.ts`: grade A → `lib/content/days.ts`; grade B → `lib/content/days-grade-b.ts` (reuses `buildDayFromConcepts` / `DayConcept` from `days.ts`).
 - **Plan / ministry UI** uses `getMinistryStrandsForGrade` and `getTotalCurriculumDaysForGrade` in `lib/content/curriculum-plan.ts` (length comes from the workbook for that grade).
 - **Progress** is per grade in `lib/progress/storage.ts`: `kids_math.workbook_progress.v2.grade.${grade}`. Grade A has legacy migration from an older unscoped key; grade B had a v1 → v2 path—only add migrations if you introduce another predecessor key layout.
-- **Final exam**: `FINAL_EXAM_DAY_ID` in `lib/final-exam/config.ts` is `day-29`. `components/screens/DayScreen.tsx` routes that id to `FinalExamScreen`. The exam **bank** and **localStorage** are per grade (`lib/final-exam/picker.ts`, `lib/final-exam/storage.ts`). After submit with pass ≥ `FINAL_EXAM_PASS_PERCENT`, **only grade `"a"`** triggers `POST /api/unlock-grade-b` (see `components/screens/FinalExamScreen.tsx`).
+- **Final exam**: `FINAL_EXAM_DAY_ID` in `lib/final-exam/config.ts` is `day-29`.
+- **Optional GMAT-style challenge**: after passing the final exam, learners can open `/grade/[grade]/gmat-challenge` (see `lib/gmat-challenge/*`, `components/screens/GmatChallengeScreen.tsx`). When adding a grade, run `pickGmatChallengeItems` + classifier against the new workbook or disable the CTA until pools validate. `components/screens/DayScreen.tsx` routes that id to `FinalExamScreen`. The exam **bank** and **localStorage** are per grade (`lib/final-exam/picker.ts`, `lib/final-exam/storage.ts`). After submit with pass ≥ `FINAL_EXAM_PASS_PERCENT`, **only grade `"a"`** triggers `POST /api/unlock-grade-b` (see `components/screens/FinalExamScreen.tsx`).
 - **Grade B gate**: `middleware.ts` matches `/grade/b/:path*`. Without cookie `kids_math.unlocked_grade_b=1`, requests redirect to `app/grade/b/locked/page.tsx` (API paths under `/grade/b` are excluded so clients can still call unlock).
 - **Grade picker**: `app/page.tsx`. **Legacy day URLs**: `app/day/[id]/page.tsx` is hardwired to grade **A** only.
 
@@ -59,8 +60,20 @@ flowchart TD
 6. **Gated grade (optional)** — Mirror grade B: constants in `lib/gradeUnlock.ts`, `middleware.ts` `matcher` + redirect, `app/grade/<id>/locked/page.tsx`, `app/api/unlock-grade-<id>/route.ts`, and **exactly one** prerequisite final-exam success path that calls the unlock API (today: A → B). Ensure middleware still allows any API routes needed on that grade path.
 7. **Progress** — Confirm new grade uses `v2.grade.${grade}` automatically; add targeted migration only if users already have data under a different key.
 8. **Final exam** — Confirm last workbook day stays aligned with `FINAL_EXAM_DAY_ID` (today `day-29`). If length changes, centralize the id in config and replace hardcoded checks. Wire “unlock next grade” cookie only from the correct prerequisite grade’s `finishExam`.
-9. **Tests** — Use `tests/e2e/grade-b.spec.ts` as template for cookie gates; add unit tests if `parseGradeId` / storage gets new branches.
-10. **Quality gates** — `npm run lint`, `npm run build`, and per `quality-gates.mdc` run `test:unit` / `test:e2e` when routing, gates, storage, or UI flows change.
+9. **Admin tooling compatibility (required)** — New/changed grades must work with admin progress controls:
+   - Grade picker entry to admin should remain available (`app/page.tsx` + `routes.adminProgress(...)`).
+   - Per-grade admin actions in `components/screens/AdminProgressScreen.tsx` must support the grade:
+     - mark single day complete/reset
+     - mark all regular days complete
+     - force final exam complete (enabled only after all regular days are complete)
+   - `forceMarkDayComplete(..., { fillAnswers: true })` should keep prefilling answer state so reopening a completed day shows answers.
+   - If your grade-unlock chain changes (e.g. B unlocks C), update admin forced-final-exam side effects consistently with the new prerequisite chain.
+10. **Tests** — Use `tests/e2e/grade-b.spec.ts` as template for cookie gates; add unit tests if `parseGradeId` / storage gets new branches.
+    - Add/update admin e2e coverage in `tests/e2e/admin-progress.spec.ts` for the new grade:
+      - single-day complete/reset behavior
+      - all-days-complete + final-exam-complete behavior
+      - grade isolation (edits in one grade do not mutate another)
+11. **Quality gates** — Run the required checks from `quality-gates.mdc` (risk-based matrix, including `check:testids`, `test:unit`, and `test:e2e` where applicable).
 
 ## Attention points (risks)
 
@@ -69,6 +82,7 @@ flowchart TD
 - **Middleware** — Do not block the unlock API or other required endpoints; grade B exempts `pathname.startsWith("/api/")` under `/grade/b`.
 - **Product copy** — Picker text vs locked page vs final exam success message should stay consistent (e.g. grade B “בקרוב” vs actual gate).
 - **Third gated grade** — Names like `unlock-grade-b` are B-specific; a chain A→B→C may need a generalized API or multiple narrow routes—plan before copying the pattern blindly.
+- **Admin consistency** — If grade unlock prerequisites change, make sure admin forced-final-exam behavior triggers the same unlock side effects as the normal exam pass flow.
 - **Educational content** — When adding real lesson text or progression, follow `multi-agent-playbook.mdc` / MoE verification expectations for syllabus alignment.
 
 ## Key files (quick navigation)

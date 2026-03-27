@@ -41,6 +41,10 @@ function buildQuery(opts?: RouteOpts): URLSearchParams {
     else out.delete("previewAll");
   }
 
+  if (opts?.grade) {
+    out.set("grade", opts.grade);
+  }
+
   return out;
 }
 
@@ -55,5 +59,8 @@ export const routes = {
   gradePlan: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/grade/${grade}/plan`, opts),
   gradeDay: (grade: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/day/${dayId}`, opts),
+  gradeGmatChallenge: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/grade/${grade}/gmat-challenge`, opts),
+  adminProgress: (opts?: RouteOpts) => withQuery("/admin/progress", opts),
 };
 

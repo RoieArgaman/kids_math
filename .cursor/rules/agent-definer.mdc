@@ -14,40 +14,35 @@ Use when:
 - The task is broad/ambiguous.
 - You need a multi-step plan with risks and validation steps.
 - You must decide approach before touching code.
-- Also run the multi-role Planner workflow from `multi-agent-playbook.mdc` (all roles must contribute and then the iterative review & fix loop runs).
+- Follow `multi-agent-playbook.mdc` workflow scaling policy; use full multi-role Planner workflow only for high-risk or explicitly requested deep planning.
 
 ### Explorer
 Use when:
 - You need to locate existing patterns (routing, UI components, storage keys, analytics).
 - You want a “where to change” map before implementing.
-- Also run the multi-role Explorer workflow from `multi-agent-playbook.mdc` (all roles must contribute and then the iterative review & fix loop runs).
+- Follow `multi-agent-playbook.mdc` workflow scaling policy; use full multi-role Explorer workflow for medium/high-risk discovery.
 
 ### Implementer
 Use when:
 - The change is well-scoped and you know what to modify.
 - The goal is to implement, refactor, or add code with minimal diffs.
 - When adding a new grade (workbook split, routing, gates, final exam): follow `add-grade.mdc` for the ordered checklist and risks.
-- After implementing, run `Tester Phase (QA Multi-role Team)` from `multi-agent-playbook.mdc` and attempt to add/modify related unit/e2e tests (with the full QA team).
+- After implementing, run tester scope based on risk level per `multi-agent-playbook.mdc` and `quality-gates.mdc`.
 
 ### Reviewer
 Use when:
 - The user asks for a code review or “is this correct?”.
 - There are potential regressions (storage, RTL/a11y, type safety).
 - For any review that follows the multi-role workflow, run the full multi-role review workflow from `multi-agent-playbook.mdc` and require input from all maintained roles (tech, front-end tech, architecture, qa, automation, design, product).
-- Also run `Tester Phase (QA Multi-role Team)` from `multi-agent-playbook.mdc` (multi-QA team) and attempt to add/modify related tests/coverage.
+- Run tester scope according to risk level per `multi-agent-playbook.mdc`.
 
 ### Tester (QA)
 Use when:
 - The user asks for verification.
 - You need to run `npm run lint`, `npm run build`, unit tests, or E2E tests.
 - You need a manual test plan (touch, keyboard navigation, RTL layout).
-- Tester is mandatory and must run as a multi-QA team via `Tester Phase (QA Multi-role Team)` in `multi-agent-playbook.mdc`:
-  - `SeniorAutomation_Engineer`
-  - `SeniorAutomation_TechLead`
-  - `SeniorManualQA_Engineer`
-  - `UX_QA_Engineer`
-  - `QA_Architect`
-- Tester must try to add/modify related tests/coverage (not only report results).
+- Run the tester workflow and team size from `multi-agent-playbook.mdc` based on risk level.
+- Always follow `quality-gates.mdc` command matrix and try to add/modify related tests/coverage.
 
 ### Release/PR
 Use when:
@@ -62,9 +57,5 @@ Use when:
 
 ## Output Format (enforced)
 
-Where possible, the final response must end with:
-- `Findings` (3-7 bullets, ordered by severity)
-- `Files` (exact paths inspected/touched)
-- `Decisions` (trade-offs)
-- `Next actions` (ordered list)
+Use the canonical handoff format from `multi-agent-playbook.mdc` (including `Learning update` expectations).
 

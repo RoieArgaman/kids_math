@@ -82,7 +82,12 @@ test.describe("grade B lifecycle", () => {
     await seedFinalExamState(page, "b", failState);
 
     await page.goto("/grade/b/day/day-29");
-    await expect(page.getByTestId(testIds.screen.finalExam.root("b"))).toBeVisible();
+    const finalExamRootB = page.getByTestId(testIds.screen.finalExam.root("b"));
+    await expect(finalExamRootB).toBeVisible();
+    await expect(
+      finalExamRootB.locator('[data-testid^="km.component.exerciseBox.exercise."][data-testid$=".check"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId(testIds.screen.finalExam.finishCta("b"))).toBeVisible();
 
     await page.getByTestId(testIds.screen.finalExam.finishCta("b")).click();
     await expect(page.getByText("לא עבר — אפשר להיבחן שוב.")).toBeVisible();
@@ -101,7 +106,7 @@ test.describe("grade B lifecycle", () => {
     expect(beforeParsed?.scorePercent).toBeGreaterThanOrEqual(85);
     expect(Boolean(beforeParsed?.submittedAt)).toBe(true);
 
-    // Immutability: after submit, attempting to change answers / re-check should not mutate persisted state.
+    // Immutability: after submit, attempting to change answers should not mutate persisted state.
     const byId = exerciseByIdForGrade("b");
     const stored = await page.evaluate(() => window.localStorage.getItem("kids_math.final_exam.v1.grade.b"));
     const parsed = stored ? (JSON.parse(stored) as any) : null;
@@ -117,7 +122,6 @@ test.describe("grade B lifecycle", () => {
       } else if (firstExercise.kind === "multiple_choice") {
         await page.getByTestId(testIds.component.exerciseBox.choice(firstExercise.id, firstExercise.answer)).click();
       }
-      await page.getByTestId(testIds.component.exerciseBox.check(firstExercise.id)).click();
     }
 
     const storedAfter = await page.evaluate(() => window.localStorage.getItem("kids_math.final_exam.v1.grade.b"));

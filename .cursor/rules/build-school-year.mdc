@@ -10,6 +10,10 @@ Use this rule when the USER asks to:
 - לשפר הישגים בסוף כיתה א׳/ב׳
 - להשוות שיטות הוראה בין מדינות ואז “להטמיע במערכת”
 
+Required companion references for pedagogical implementation and validation:
+- `docs/PEDAGOGY_CODE_INJECTION_POINTS.md`
+- `docs/VALIDATION_PLAN_G1_G2_PEDAGOGY.md`
+
 ## Definition of done (מה יוצא בסוף)
 
 - **Outcomes**: מטרות סוף-כיתה ברורות (במונחי מיומנויות, לא רק נושאים).

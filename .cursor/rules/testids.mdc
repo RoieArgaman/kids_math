@@ -12,8 +12,11 @@ alwaysApply: true
 
 ## Requirements (mandatory)
 
-- **Every intrinsic JSX element** (DOM node) in `app/**` and `components/**` must have a `data-testid`.
-  - Intrinsic JSX elements are lower-case tags like `div`, `span`, `p`, `article`, `section`, `header`, `button`, `input`, `a`, etc.
+- **All interactive elements must have `data-testid`** in `app/**` and `components/**`.
+  - Includes `button`, `input`, `textarea`, `select`, `a`, and any element with click/keyboard handlers.
+- **All screen roots and test-critical semantic containers must have `data-testid`**.
+  - Includes screen `<main>` roots, cards/panels/lists/rows used by E2E flows, and key state containers (locked/empty/error/success).
+- Non-interactive presentational wrappers (`div`/`span` used only for layout/text) do not require mandatory IDs unless tests rely on them.
 - **No ad-hoc strings**: build IDs using the shared helper in `lib/testIds.ts`.
 - **No localized/copy text** in test ids:
   - Do not derive IDs from Hebrew strings, workbook prompts, visible labels, or any user input.
@@ -40,4 +43,11 @@ alwaysApply: true
   - XPath (`locator('xpath=...')`)
   - selectors derived from content strings (e.g. `exercise.prompt`)
   - unscoped tag-name selectors (`page.locator('button').first()`)
+
+## Legacy migration policy (`km.autogen.*`)
+
+- Existing legacy `km.autogen.*` IDs are allowed temporarily.
+- New code and edited code must use helper-based IDs from `lib/testIds.ts` + `childTid()`.
+- When touching a component that still uses `km.autogen.*`, migrate at least the edited subtree to helper-based IDs.
+- Before merge, run `npm run check:testids` and fix reported violations.
 

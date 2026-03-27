@@ -12,14 +12,48 @@ Run these checks when code behavior might be affected, especially for routing, g
 1. Lint
 - `npm run lint`
 
-2. Build
+2. Test ID coverage (align with CI)
+- `npm run check:testids`
+
+3. Build
 - `npm run build`
 
-3. Unit tests (when logic changed)
+4. Unit tests (when logic changed)
 - `npm run test:unit`
 
-4. E2E tests (when routes/gates were touched)
+5. E2E tests (when routes/gates were touched)
 - `npm run test:e2e`
+
+## Risk-based command matrix (fast + accurate)
+
+Use the smallest set that matches changed risk surface:
+
+- **UI copy/layout in isolated component (no routing/storage logic)**
+  - `npm run lint`
+  - `npm run check:testids`
+  - Targeted E2E spec for touched flow
+- **Routing/gates/middleware/unlock behavior**
+  - `npm run lint && npm run check:testids && npm run build`
+  - `npm run test:e2e -- tests/e2e/grade-b.spec.ts tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/admin-progress.spec.ts tests/e2e/gmat-challenge.spec.ts`
+- **Progress/storage schema/engine**
+  - `npm run lint && npm run check:testids`
+  - `npm run test:unit -- tests/unit/lib/progress/engine.test.ts tests/unit/lib/progress/storage.test.ts`
+  - Add route/lifecycle e2e if gate behavior changed
+- **Final exam logic/state**
+  - `npm run lint && npm run check:testids`
+  - `npm run test:unit -- tests/unit/lib/final-exam/grading.test.ts tests/unit/lib/final-exam/picker.test.ts tests/unit/lib/final-exam/storage.test.ts`
+  - `npm run test:e2e -- tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/grade-b-lifecycle.spec.ts`
+- **Content/day generation**
+  - `npm run lint && npm run check:testids`
+  - `npm run test:unit -- tests/unit/lib/content/content-validity.test.ts`
+  - `npm run test:e2e -- tests/e2e/day-smoke.spec.ts` (promote to full completion checks before merge)
+
+## Full vs partial policy
+
+- **Partial runs are allowed** during local iteration when risk is scoped.
+- **Full confidence run is required before merge** for medium/high-risk changes:
+  - `npm run lint && npm run check:testids && npm run test:unit && npm run build && npm run test:e2e`
+- `npm run test:qa` remains a convenient near-full bundle for local pre-merge confidence.
 
 ## Manual Spot Checks (fast)
 

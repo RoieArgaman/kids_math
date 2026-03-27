@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
-import { createInitialFinalExamState, loadFinalExamState, saveFinalExamState } from "@/lib/final-exam/storage";
+import { clearFinalExamState, createInitialFinalExamState, loadFinalExamState, saveFinalExamState } from "@/lib/final-exam/storage";
 import { pickFinalExamExerciseIds } from "@/lib/final-exam/picker";
 import type { FinalExamState } from "@/lib/final-exam/types";
 
@@ -77,6 +77,34 @@ describe("final-exam storage", () => {
   it("returns null for corrupt JSON", () => {
     window.localStorage.setItem("kids_math.final_exam.v1.grade.a", "{");
     expect(loadFinalExamState("a")).toBeNull();
+  });
+
+
+  it("clearFinalExamState removes the grade key from localStorage", () => {
+    const selectedExerciseIds = pickFinalExamExerciseIds({
+      grade: "a",
+      seed: "clear-probe",
+      pickerVersion: 1,
+    });
+    const initial = createInitialFinalExamState({ grade: "a", selectedExerciseIds });
+    saveFinalExamState("a", initial);
+    expect(window.localStorage.getItem("kids_math.final_exam.v1.grade.a")).toBeTruthy();
+
+    clearFinalExamState("a");
+
+    expect(window.localStorage.getItem("kids_math.final_exam.v1.grade.a")).toBeNull();
+  });
+
+  it("clearFinalExamState targets the correct grade key", () => {
+    const idsA = pickFinalExamExerciseIds({ grade: "a", seed: "ca", pickerVersion: 1 });
+    const idsB = pickFinalExamExerciseIds({ grade: "b", seed: "cb", pickerVersion: 1 });
+    saveFinalExamState("a", createInitialFinalExamState({ grade: "a", selectedExerciseIds: idsA }));
+    saveFinalExamState("b", createInitialFinalExamState({ grade: "b", selectedExerciseIds: idsB }));
+
+    clearFinalExamState("a");
+
+    expect(window.localStorage.getItem("kids_math.final_exam.v1.grade.a")).toBeNull();
+    expect(window.localStorage.getItem("kids_math.final_exam.v1.grade.b")).toBeTruthy();
   });
 
   it("does not throw when localStorage.setItem fails (quota/private mode)", () => {

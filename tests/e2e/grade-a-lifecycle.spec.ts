@@ -74,7 +74,12 @@ test.describe("grade A lifecycle", () => {
     await seedFinalExamState(page, "a", failState);
 
     await page.goto("/grade/a/day/day-29");
-    await expect(page.getByTestId(testIds.screen.finalExam.root("a"))).toBeVisible();
+    const finalExamRootA = page.getByTestId(testIds.screen.finalExam.root("a"));
+    await expect(finalExamRootA).toBeVisible();
+    await expect(
+      finalExamRootA.locator('[data-testid^="km.component.exerciseBox.exercise."][data-testid$=".check"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId(testIds.screen.finalExam.finishCta("a"))).toBeVisible();
 
     await page.getByTestId(testIds.screen.finalExam.finishCta("a")).click();
     await expect(page.getByText("לא עבר — אפשר להיבחן שוב.")).toBeVisible();
@@ -92,6 +97,9 @@ test.describe("grade A lifecycle", () => {
     await page.getByTestId(testIds.screen.finalExam.retryCta("a")).click();
     await expect(page.getByTestId(testIds.screen.finalExam.finishCta("a"))).toBeHidden();
     await expect(page.getByText("לא עבר — אפשר להיבחן שוב.")).toBeHidden();
+    await expect(
+      finalExamRootA.locator('[data-testid^="km.component.exerciseBox.exercise."][data-testid$=".check"]'),
+    ).toHaveCount(0);
 
     const secondSelection = await page.evaluate(() => {
       const raw = window.localStorage.getItem("kids_math.final_exam.v1.grade.a");
@@ -127,7 +135,7 @@ test.describe("grade A lifecycle", () => {
     expect(beforeParsed?.scorePercent).toBeGreaterThanOrEqual(85);
     expect(Boolean(beforeParsed?.submittedAt)).toBe(true);
 
-    // Immutability: after submit, attempting to change answers / re-check should not mutate persisted state.
+    // Immutability: after submit, attempting to change answers should not mutate persisted state.
     const byId = exerciseByIdForGrade("a");
     const firstExerciseId =
       Array.isArray(beforeParsed?.selectedExerciseIds) && typeof beforeParsed.selectedExerciseIds[0] === "string"
@@ -144,7 +152,6 @@ test.describe("grade A lifecycle", () => {
       } else if (firstExercise.kind === "multiple_choice") {
         await page.getByTestId(testIds.component.exerciseBox.choice(firstExercise.id, firstExercise.answer)).click();
       }
-      await page.getByTestId(testIds.component.exerciseBox.check(firstExercise.id)).click();
     }
 
     const storedAfter = await page.evaluate(() => window.localStorage.getItem("kids_math.final_exam.v1.grade.a"));

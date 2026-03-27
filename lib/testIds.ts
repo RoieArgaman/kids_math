@@ -50,6 +50,7 @@ export const testIds = {
     gradePicker: {
       root: () => tid("screen", "gradePicker"),
       hero: () => tid("screen", "gradePicker", "hero"),
+      adminCta: () => tid("screen", "gradePicker", "cta", "admin"),
       gradeCard: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade),
       gradeCardCta: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade, "cta"),
     },
@@ -62,8 +63,30 @@ export const testIds = {
       root: (grade: string) => tid("screen", "home", "grade", grade),
       hero: (grade: string) => tid("screen", "home", "hero", "grade", grade),
       planCta: (grade: string) => tid("screen", "home", "cta", "plan", "grade", grade),
+      adminCta: (grade: string) => tid("screen", "home", "cta", "admin", "grade", grade),
       dayCard: (dayId: string) => tid("screen", "home", "dayCard", "day", dayId),
       dayCardCta: (dayId: string) => tid("screen", "home", "dayCard", "day", dayId, "cta", "open"),
+      gmatChallengeCta: (grade: string) => tid("screen", "home", "cta", "gmatChallenge", "grade", grade),
+    },
+    adminProgress: {
+      root: () => tid("screen", "adminProgress"),
+      navBack: () => tid("screen", "adminProgress", "nav", "back"),
+      pinInput: () => tid("screen", "adminProgress", "pin", "input"),
+      pinSubmit: () => tid("screen", "adminProgress", "pin", "submit"),
+      pinError: () => tid("screen", "adminProgress", "pin", "error"),
+      gradeSelect: () => tid("screen", "adminProgress", "grade", "select"),
+      dayRow: (grade: string, dayId: string) => tid("screen", "adminProgress", "grade", grade, "day", dayId),
+      dayState: (grade: string, dayId: string) => tid("screen", "adminProgress", "grade", grade, "day", dayId, "state"),
+      markComplete: (grade: string, dayId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "complete"),
+      reset: (grade: string, dayId: string) => tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "reset"),
+      resetConfirm: (grade: string, dayId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "reset", "confirm"),
+      resetCancel: (grade: string, dayId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "reset", "cancel"),
+      markAllDaysComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "markAllDaysComplete"),
+      forceFinalExamComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "forceFinalExamComplete"),
+      statusMessage: () => tid("screen", "adminProgress", "statusMessage"),
     },
     plan: {
       root: (grade: string) => tid("screen", "plan", "grade", grade),
@@ -89,6 +112,19 @@ export const testIds = {
       retryCta: (grade: string) => tid("screen", "finalExam", "cta", "retry", "grade", grade),
       startGradeB: () => tid("screen", "finalExam", "cta", "start-grade-b"),
       gradePicker: () => tid("screen", "finalExam", "cta", "grade-picker"),
+      gmatChallengeCta: (grade: string) => tid("screen", "finalExam", "cta", "gmatChallenge", "grade", grade),
+    },
+    gmatChallenge: {
+      root: (grade: string) => tid("screen", "gmatChallenge", "grade", grade),
+      locked: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "locked"),
+      rulesPanel: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "rules"),
+      orderPanel: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "order"),
+      breakPanel: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "break"),
+      sectionHeader: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "sectionHeader"),
+      finishSectionCta: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "cta", "finishSection"),
+      confirmReviewCta: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "cta", "confirmReview"),
+      results: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "results"),
+      restartCta: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "cta", "restart"),
     },
     comingSoon: {
       root: (grade: string) => tid("screen", "comingSoon", "grade", grade),

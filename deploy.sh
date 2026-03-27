@@ -86,7 +86,13 @@ else
 fi
 
 echo "Deploying to Firebase App Hosting"
-firebase deploy --project "$PROJECT_ID" --only "apphosting:$BACKEND_ID"
+echo "Note: App Hosting requires the Firebase project to be on the Blaze (pay-as-you-go) plan."
+if ! firebase deploy --project "$PROJECT_ID" --only "apphosting:$BACKEND_ID"; then
+  echo ""
+  echo "Deploy failed. If the error mentions Blaze/billing, upgrade the plan here:"
+  echo "  https://console.firebase.google.com/project/${PROJECT_ID}/usage/details"
+  exit 1
+fi
 
 echo "Done."
 

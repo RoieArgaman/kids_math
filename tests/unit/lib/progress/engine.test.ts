@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import { getWorkbookDaysById } from "@/lib/content/workbook";
 import {
   calculatePercentDone,
   canUnlockNextDay,
   createInitialWorkbookProgressState,
+  forceMarkDayComplete,
   markDayComplete,
   resetDayProgress,
   setAnswerForDay,
@@ -91,6 +93,43 @@ describe("markDayComplete", () => {
     const next = markDayComplete(state, "day-1");
     expect(next).toBe(state); // unchanged
     expect(next.days["day-1"]?.isComplete).toBe(false);
+  });
+});
+
+describe("forceMarkDayComplete", () => {
+  it("marks complete with 100% and sets completedAt", () => {
+    const state = createInitialWorkbookProgressState();
+    const next = forceMarkDayComplete(state, "day-1");
+    const day = next.days["day-1"];
+    expect(day?.isComplete).toBe(true);
+    expect(day?.percentDone).toBe(100);
+    expect(day?.completedAt).toBeTruthy();
+    expect(next.version).toBe(1);
+    expect(typeof next.updatedAt).toBe("string");
+  });
+
+  it("is idempotent on completion semantics", () => {
+    const state = createInitialWorkbookProgressState();
+    const once = forceMarkDayComplete(state, "day-1");
+    const twice = forceMarkDayComplete(once, "day-1");
+    expect(twice.days["day-1"]?.isComplete).toBe(true);
+    expect(twice.days["day-1"]?.percentDone).toBe(100);
+    expect(twice.days["day-1"]?.completedAt).toBe(once.days["day-1"]?.completedAt);
+    expect(Object.keys(twice.days["day-1"] ?? {}).sort()).toEqual(
+      ["answers", "attempts", "completedAt", "correctAnswers", "dayId", "isComplete", "percentDone", "wrongCount"].sort(),
+    );
+  });
+
+  it("can prefill day answers when requested", () => {
+    const day = getWorkbookDaysById("a")["day-1"];
+    const state = createInitialWorkbookProgressState();
+    const next = forceMarkDayComplete(state, "day-1", { day, fillAnswers: true });
+    const dayState = next.days["day-1"];
+    expect(dayState?.isComplete).toBe(true);
+    expect(dayState?.percentDone).toBe(100);
+    expect(Object.keys(dayState?.answers ?? {}).length).toBeGreaterThan(0);
+    expect(Object.values(dayState?.correctAnswers ?? {}).every(Boolean)).toBe(true);
+    expect((dayState?.attempts ?? []).length).toBe(Object.keys(dayState?.answers ?? {}).length);
   });
 });
 

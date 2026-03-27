@@ -7,6 +7,22 @@ alwaysApply: true
 
 Use parallel agents when it reduces latency or risk (broad codebase search, UI + logic + tests, or uncertain architecture). Every agent must return actionable outputs that the Implementer can apply directly.
 
+## Workflow scaling policy (speed vs rigor)
+
+Choose the smallest workflow that keeps risk controlled:
+
+- **Small task** (single file/small diff/copy or local UI tweak, no routing/storage gates):
+  - Single Implementer + targeted Tester checks.
+  - No full multi-role review loop required unless user asks for deep review.
+- **Medium task** (multiple files, logic changes, moderate UX impact):
+  - 2-3 roles (typically Implementer + Reviewer + Tester).
+  - Run targeted automation plus manual RTL checks.
+- **High-risk task** (routing, middleware/gates, persisted schema/migrations, final-exam flow, broad refactor):
+  - Full multi-role workflow with iterative Review & Fix loop.
+  - Full tester phase and stronger quality gates.
+
+If scope is unclear, start at medium and escalate to high-risk when touching gated routes, persistence, or unlock logic.
+
 ## Standard roles (default set)
 
 ### Planner
@@ -27,7 +43,7 @@ Use parallel agents when it reduces latency or risk (broad codebase search, UI +
 - Keep diffs readable; avoid drive-by refactors.
 - If you surface a **stable, repeated** project pattern that future agents should follow, capture it per `learning-loop.mdc` (`docs/LEARNING_LOG.md` and/or `.cursor/rules/*.mdc`).
 - Produce: code changes + brief rationale + any follow-up TODOs.
-- Tester is mandatory: after producing code changes, run `Tester Phase (QA Multi-role Team)` and attempt to add/modify related tests/coverage.
+- Run tester scope according to the **Workflow scaling policy** above (targeted checks for small/medium, full QA team for high-risk).
 
 ### Reviewer
 
@@ -44,16 +60,17 @@ Use parallel agents when it reduces latency or risk (broad codebase search, UI +
   - `SeniorProductDesigner`
   - `SeniorProductManager`
 - Approval requires agreement from all roles in the maintained team; if any role reports a blocking issue, the review is not approved yet.
-- Tester is mandatory: after reviewing, run `Tester Phase (QA Multi-role Team)` and attempt to add/modify related tests/coverage.
+- Run tester scope according to the **Workflow scaling policy** above.
 
 ### Tester (QA)
 
-- Always run as a multi-QA team (`Tester Phase (QA Multi-role Team)`):
+- For **high-risk tasks**, run as a multi-QA team (`Tester Phase (QA Multi-role Team)`):
   - `SeniorAutomation_Engineer`
   - `SeniorAutomation_TechLead`
   - `SeniorManualQA_Engineer`
   - `UX_QA_Engineer`
   - `QA_Architect`
+- For **small/medium tasks**, run targeted QA checks mapped to touched risk surface (unit/e2e/manual).
 - Attempt to add or modify related tests/coverage (unit/e2e) and any required test helpers/mocks.
 - Run available checks (at minimum `npm run lint`; add `npm run build` and relevant tests when change is non-trivial).
 - Add a manual RTL test plan that a human can follow quickly (touch targets, keyboard navigation, core flows).
@@ -258,6 +275,8 @@ After the Planner/Explorer output, run an iterative review where the same roles 
 
 ## Handoff format (required)
 
+This is the canonical handoff contract for this repo. Other guidance files should reference this section instead of duplicating it.
+
 Every agent output should include:
 
 - **Findings**: 3–7 bullets, concrete and specific.
@@ -265,6 +284,10 @@ Every agent output should include:
 - **Decisions**: any trade-offs chosen.
 - **Next actions**: ordered list that another agent can execute.
 - **Learning update**: when something new was learned, append a short entry to `docs/LEARNING_LOG.md`. If the lesson is ongoing guidance for all agents, also update the relevant `.cursor/rules` file per `learning-loop.mdc` (prefer small edits; avoid duplicating long text).
+
+## Canonical quality gates reference
+
+Use `quality-gates.mdc` as the single source of truth for command-level verification requirements (risk matrix, required checks, and manual spot checks).
 
 ## Definition of done (project baseline)
 

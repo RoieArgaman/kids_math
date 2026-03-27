@@ -24,11 +24,11 @@ import {
 } from "@/lib/final-exam/storage";
 import type { FinalExamState } from "@/lib/final-exam/types";
 import { gradeLabel, type GradeId } from "@/lib/grades";
-import type { Exercise } from "@/lib/types";
+import type { Exercise, ExerciseId } from "@/lib/types";
 import { routes } from "@/lib/routes";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { gradeFinalExam } from "@/lib/final-exam/grading";
-import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { normalizeAnswerValue } from "@/lib/utils/exercise";
 import { childTid, testIds } from "@/lib/testIds";
 
 function createSeed(): string {
@@ -49,7 +49,7 @@ function createSeed(): string {
 export function FinalExamScreen({ grade }: { grade: GradeId }) {
   const router = useRouter();
   const { previewAll, isLocked } = useDayUnlockStatus({ grade, dayId: FINAL_EXAM_DAY_ID });
-  const refs = useRef<Record<string, HTMLElement | null>>({});
+  const refs = useRef<Partial<Record<ExerciseId, HTMLElement | null>>>({});
   const stateRef = useRef<FinalExamState | null>(null);
 
   const [state, setState] = useState<FinalExamState | null>(null);
@@ -62,7 +62,15 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
   useEffect(() => {
     const existing = loadFinalExamState(grade);
     if (existing) {
-      setState(existing);
+      const needsReset =
+        !existing.submittedAt && Object.keys(existing.correctMap).length > 0;
+      const cleaned = needsReset
+        ? { ...existing, correctMap: {}, attempts: {} }
+        : existing;
+      if (needsReset) {
+        saveFinalExamState(grade, cleaned);
+      }
+      setState(cleaned);
       return;
     }
     const seed = createSeed();
@@ -111,14 +119,14 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
   const canFinish = answeredCount === FINAL_EXAM_QUESTION_COUNT;
 
   const exerciseOrder = useMemo(() => selectedExercises.map((e) => e.id), [selectedExercises]);
-  const focusNextInput = useCallback((currentId: string) => {
+  const focusNextInput = useCallback((currentId: ExerciseId) => {
     const currentIndex = exerciseOrder.findIndex((id) => id === currentId);
     const nextId = exerciseOrder[currentIndex + 1];
     if (!nextId) return;
     refs.current[nextId]?.focus();
   }, [exerciseOrder]);
 
-  const setFocusRef = useCallback((exerciseId: string, node: HTMLElement | null) => {
+  const setFocusRef = useCallback((exerciseId: ExerciseId, node: HTMLElement | null) => {
     refs.current[exerciseId] = node;
   }, []);
 
@@ -127,48 +135,33 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
     setState(next);
   }, [grade]);
 
-  const onChangeValue = useCallback((exerciseId: string, value: string) => {
+  const onChangeValue = useCallback((exerciseId: ExerciseId, value: string) => {
     const current = stateRef.current;
-    if (!current) return;
+    if (!current || current.submittedAt) return;
+    const nextCorrect = { ...current.correctMap };
+    delete nextCorrect[exerciseId];
     persist({
       ...current,
       answers: { ...current.answers, [exerciseId]: value },
+      correctMap: nextCorrect,
     });
   }, [persist]);
 
-  const onRetryExercise = useCallback((exerciseId: string) => {
+  const onRetryExercise = useCallback((exerciseId: ExerciseId) => {
     const current = stateRef.current;
     if (!current || current.submittedAt) return;
+    const nextCorrect = { ...current.correctMap };
+    delete nextCorrect[exerciseId];
     persist({
       ...current,
       answers: { ...current.answers, [exerciseId]: "" },
+      correctMap: nextCorrect,
     });
   }, [persist]);
 
-  const submitExercise = useCallback((exercise: Exercise) => {
-    const current = stateRef.current;
-    if (!current) return;
-    if (current.submittedAt) return;
-    const userAnswer = current.answers[exercise.id] ?? "";
-    const normalizedAnswer = normalizeAnswerValue(userAnswer);
-    const previousAttempts = current.attempts[exercise.id] ?? 0;
-    if (normalizedAnswer === null) {
-      // keep feedback by marking incorrect; no attempt increment
-      persist({
-        ...current,
-        correctMap: { ...current.correctMap, [exercise.id]: false },
-      });
-      return;
-    }
-
-    const success = isAnswerCorrect(exercise, userAnswer);
-    const nextAttempt = previousAttempts + 1;
-    persist({
-      ...current,
-      attempts: { ...current.attempts, [exercise.id]: nextAttempt },
-      correctMap: { ...current.correctMap, [exercise.id]: success },
-    });
-  }, [persist]);
+  const noopSubmitExercise: (exercise: Exercise) => void = useCallback(() => {
+    /* Per-question checks disabled; grade via finish CTA only. */
+  }, []);
 
   const retryExam = () => {
     clearFinalExamState(grade);
@@ -181,6 +174,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
     });
     const initial = createInitialFinalExamState({ grade, selectedExerciseIds });
     saveFinalExamState(grade, initial);
+    stateRef.current = initial;
     setState(initial);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -284,14 +278,12 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         data-testid={childTid(testIds.screen.finalExam.root(grade), "section", "questions")}
         title="שְׁאֵלוֹת הַמִּבְחָן"
         type="review"
-        learningGoal="פּוֹתְרִים שְׁאֵלוֹת מִבַּנְק שֶׁמִּתְחַלֵּף. בְּסוֹף — לָחֲצוּ ״סיימתי״ לְקַבֵּל צִיּוֹן."
+        learningGoal="פּוֹתְרִים שְׁאֵלוֹת מִבַּנְק שֶׁמִּתְחַלֵּף. בִּסְיוּם — לָחֲצוּ ״בְּדִיקָה״ כְּדֵי לִרְאוֹת מָה נָכוֹן וּמָה לֹא."
       >
         {selectedExercises.map((exercise) => {
           const value = state.answers[exercise.id] ?? "";
-          const attempts = state.attempts[exercise.id] ?? 0;
-          const wasChecked = exercise.id in state.correctMap;
+          const wasChecked = Boolean(showResults && exercise.id in state.correctMap);
           const isCorrect = state.correctMap[exercise.id];
-          const retryMessage = wasChecked ? getRetryFeedbackText(exercise, value, attempts) : undefined;
 
           return (
             <ExerciseItem
@@ -301,11 +293,11 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               value={value}
               wasChecked={wasChecked}
               isCorrect={isCorrect}
-              retryMessage={retryMessage}
               isReadOnly={showResults}
+              showCheckButton={false}
               setFocusRef={setFocusRef}
               onChangeValue={onChangeValue}
-              onSubmitExercise={submitExercise}
+              onSubmitExercise={noopSubmitExercise}
               onNextInput={focusNextInput}
               onRetryExercise={onRetryExercise}
             />
@@ -322,7 +314,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               className="touch-button btn-accent mt-2 w-full"
               onClick={finishExam}
             >
-              סיימתי
+              בְּדִיקָה
             </button>
           ) : (
             <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "hint")} className="muted mt-2 text-sm">
@@ -390,6 +382,15 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               >
                 חזרה לחוברת
               </Link>
+              {passed ? (
+                <Link
+                  data-testid={testIds.screen.finalExam.gmatChallengeCta(grade)}
+                  href={routes.gradeGmatChallenge(grade, { previewAll })}
+                  className="touch-button col-span-full inline-block w-full rounded-2xl border-2 border-violet-200 bg-violet-50 px-6 py-3 text-center font-semibold text-violet-900 hover:bg-violet-100 sm:col-span-2"
+                >
+                  אתגר התנסות רשות (בהשראת GMAT Focus)
+                </Link>
+              ) : null}
             </div>
           </div>
         ) : null}

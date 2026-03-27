@@ -26,10 +26,10 @@ When the user asks to “implement”, “fix”, or “add feature”, structur
 - List 3-6 concrete outcomes (how we know it’s correct).
 
 **Quality Gates**
-- Lint/build/tests to run (if this changes runtime behavior).
+- Follow `quality-gates.mdc` (risk-based matrix + required checks).
 
 **Output Format**
-- Follow the handoff format: `Findings`, `Files`, `Decisions`, `Next actions`.
+- Follow the canonical handoff contract in `multi-agent-playbook.mdc`.
 
 ## 2) Debugging / Investigation Template
 
@@ -64,5 +64,5 @@ When asked to review:
 - Test plan adequacy.
 
 **Reviewer Output**
-- Always include `Findings` (ordered by severity), then `Files`, `Decisions`, `Next actions`.
+- Use the canonical handoff contract in `multi-agent-playbook.mdc`.
 

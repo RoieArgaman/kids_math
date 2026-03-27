@@ -173,7 +173,11 @@ export type AnalyticsEventName =
   | "day_completed"
   | "state_loaded"
   | "state_saved"
-  | "state_load_failed";
+  | "state_load_failed"
+  | "gmat_challenge_rules_viewed"
+  | "gmat_challenge_started"
+  | "gmat_challenge_section_completed"
+  | "gmat_challenge_completed";
 
 export interface AnalyticsEvent {
   id: string;

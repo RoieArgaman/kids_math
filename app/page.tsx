@@ -8,14 +8,17 @@ import { Surface } from "@/components/ui/Surface";
 import { logEvent } from "@/lib/analytics/events";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
+import { loadFinalExamState } from "@/lib/final-exam/storage";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 
 export default function GradePickerPage() {
   const [previewAll, setPreviewAll] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [gradeAFinalPassed, setGradeAFinalPassed] = useState(false);
 
   useEffect(() => {
     setPreviewAll(getPreviewAllFromLocation());
+    setGradeAFinalPassed(Boolean(loadFinalExamState("a")?.passed));
     setIsHydrated(true);
   }, []);
 
@@ -31,6 +34,16 @@ export default function GradePickerPage() {
 
   return (
     <main data-testid={testIds.screen.gradePicker.root()} className="pb-10">
+      <div data-testid={childTid(testIds.screen.gradePicker.root(), "topNav")} className="mb-4">
+        <Link
+          data-testid={testIds.screen.gradePicker.adminCta()}
+          className="touch-button inline-flex"
+          href={routes.adminProgress()}
+        >
+          גישת אדמין
+        </Link>
+      </div>
+
       <HeroHeader
         data-testid={testIds.screen.gradePicker.hero()}
         title="בוחרים כיתה"
@@ -60,9 +73,15 @@ export default function GradePickerPage() {
                 מסלול יומי • פתיחה הדרגתית לפי התקדמות
               </p>
             </div>
-            <Chip data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "badge")} tone="info" className="px-3 py-1">
-              מומלץ
-            </Chip>
+            {gradeAFinalPassed ? (
+              <Chip data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "badge")} tone="success" className="px-3 py-1">
+                הושלם (מבחן מסכם)
+              </Chip>
+            ) : (
+              <Chip data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "badge")} tone="info" className="px-3 py-1">
+                מומלץ
+              </Chip>
+            )}
           </div>
           <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "ctaRow")} className="mt-4">
             <span data-testid={testIds.screen.gradePicker.gradeCardCta("a")} className="touch-button btn-accent inline-flex w-full justify-center text-center">
@@ -76,7 +95,7 @@ export default function GradePickerPage() {
           className="surface p-5 shadow-sm hover:shadow-md transition-shadow"
           href={routes.gradeHome("b", { previewAll })}
           onClick={() => logEvent("grade_selected", { payload: { grade: "b" } })}
-          aria-label="כיתה ב׳ — בקרוב (פרטים)"
+          aria-label="כיתה ב׳"
         >
           <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "row")} className="flex items-start justify-between gap-3">
             <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "content")}>
@@ -87,16 +106,16 @@ export default function GradePickerPage() {
                 כיתה ב׳
               </p>
               <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "subtitle")} className="muted mt-1 text-sm">
-                עדיין בבנייה
+                נפתחת אחרי שעוברים את מבחן המסכם בכיתה א׳
               </p>
             </div>
             <Chip data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "badge")} tone="neutral" className="px-3 py-1">
-              בקרוב
+              המשך מסלול
             </Chip>
           </div>
           <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "ctaRow")} className="mt-4">
             <span data-testid={testIds.screen.gradePicker.gradeCardCta("b")} className="touch-button inline-flex w-full justify-center text-center">
-              לצפייה בפרטים
+              לכיתה ב׳
             </span>
           </div>
         </Link>

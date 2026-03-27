@@ -6,6 +6,57 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-03-27 (Firebase App Hosting requires Blaze)
+- **Trigger:** Deploy `kids_math` to Firebase project `kids-learing-hub` via existing `deploy.sh` / `apphosting:kids-math`.
+- **What changed / where:** `.firebaserc` (default project), `package.json` scripts `deploy:firebase` / `deploy:firebase:quick`.
+- **What we learned:**
+  - `firebase deploy --only apphosting:<backendId>` fails on Spark: project must upgrade to **Blaze** before API `firebaseapphosting.googleapis.com` can be enabled. Console link is printed in the CLI error (Usage & billing for the project).
+  - Repo was already configured (`firebase.json` apphosting + `apphosting.yaml`); **ymt**-style classic Hosting (`public` + static `dist`) is the wrong model for this Next.js app (middleware + `/api/*` route handlers).
+- **Why it matters:** Avoids assuming App Hosting works on the free tier; sets correct expectations for deploy troubleshooting.
+- **How to reuse next time:** After Blaze upgrade, run `npm run deploy:firebase` (full QA) or `npm run deploy:firebase:quick` (build + deploy only), then smoke the live App Hosting URL from the deploy output.
+
+### 2026-03-27 (Timed exam-session + optional GMAT-style challenge)
+- **Trigger:** Optional post-final-exam challenge with GMAT Focus–inspired rules and reusable architecture.
+- **What changed / where:** `lib/exam-session/*`, `lib/gmat-challenge/*`, `components/timed-exam/*`, `components/screens/GmatChallengeScreen.tsx`, `app/grade/[grade]/gmat-challenge/page.tsx`, entry CTAs on `FinalExamScreen` / `HomeScreen`, `global-e2e.d.ts`, analytics events, `tests/unit/**`, `tests/e2e/gmat-challenge.spec.ts`, `.cursor/rules/timed-exam-session.mdc`.
+- **What we learned:**
+  - Separate generic session policy (`exam-session`) from product pickers/storage (`gmat-challenge`) so future timed exams do not duplicate timer/review math.
+  - GMAT-like “up to three answer changes per section” maps cleanly to “max divergent exercises vs end-of-section snapshot” using `normalizeAnswerValue`.
+  - Playwright E2E for timed flows: set `window.__KIDS_MATH_E2E_SHORT_GMAT__` in `addInitScript` to cap section/break durations without shipping test hooks in production UI beyond a harmless global flag.
+- **Why it matters:** Keeps optional assessments maintainable, testable, and obviously non-gating for unlock logic.
+- **How to reuse next time:** Follow `timed-exam-session.mdc`; add a new `lib/<exam>/` adapter + compose existing timed-exam components.
+
+
+### 2026-03-27 (Cursor rules: speed + accuracy scaling)
+- **Trigger:** בקשה לבצע מחקר עומק ולהאיץ את תהליך הפיתוח דרך עדכוני `.cursor`.
+- **What changed / where:** `.cursor/rules/multi-agent-playbook.mdc`, `.cursor/rules/agent-definer.mdc`, `.cursor/rules/quality-gates.mdc`, `.cursor/rules/testids.mdc`, `.cursor/rules/agent-guidelines.mdc`, `.cursor/rules/add-grade.mdc`, `.cursor/rules/build-school-year.mdc`.
+- **What we learned:**
+  - חובה להימנע משכפול חוזים בין כללים; עדיף מקור קנוני אחד ל־handoff ול־quality gates והפניות מכל כלל אחר.
+  - workflow קבוע "תמיד full multi-role" מאט משימות פשוטות; מודל scaled לפי סיכון (small/medium/high-risk) שומר על דיוק ומקצר זמן ריצה.
+  - יישור gates מקומיים ל־CI (`check:testids`) מפחית הפתעות ב־PR ומקטין סבבי תיקון.
+  - מדיניות `data-testid` אפקטיבית יותר כשאוכפים קשיחות על אלמנטים אינטראקטיביים/עוגני בדיקה ולא על כל `div/span` מצגתי.
+- **Why it matters:** משפר יחס signal/noise לכללים, מצמצם overhead של הסוכן, ושומר על כיסוי חכם באזורים מסוכנים (gates/storage/routing).
+- **How to reuse next time:** בכל שינוי כללים רחב, להתחיל במקור קנוני אחד, להוסיף מטריצת בדיקות מבוססת סיכון, ולהגדיר precedence ברור כשכללים מתנגשים.
+
+### 2026-03-27 (Admin route + search params in App Router)
+- **Trigger:** הוספת מסך אדמין לעריכת התקדמות ימים (complete/reset) עם PIN.
+- **What changed / where:** `app/admin/progress/page.tsx`, `components/screens/AdminProgressScreen.tsx`, `lib/admin/session.ts`, `lib/routes.ts`, `lib/progress/engine.ts`, בדיקות unit/e2e.
+- **What we learned:**
+  - שימוש ב־`useSearchParams` בתוך עמוד שמרונדר סטטית יכול להפיל build אם לא עוטפים ב־`Suspense`; עדיף לפרסר `searchParams` ב־`page.tsx` (server) ולהעביר `initialGrade` לקומפוננטת client.
+  - למסכי כלי/אדמין שמבוססים על localStorage, עדיף גבול נקי: route server פשוט + מסך client-only + מודול session נפרד (`lib/admin/session.ts`).
+  - לשינויי unlock/gating, בדיקת e2e חייבת לכלול גם relock (reset) ולא רק unlock.
+- **Why it matters:** מונע כשלי build ב־Next.js ושומר על ארכיטקטורה יציבה למסכים client-heavy.
+- **How to reuse next time:** בכל route חדש שצריך query params + localStorage — פרסו query בשרת, העבירו props לקליינט, והוסיפו e2e דו-כיווני (enable + disable behavior).
+
+### 2026-03-27 (Admin bulk completion flows)
+- **Trigger:** בקשה להוסיף לאדמין גם סימון גורף לכל הימים וגם סימון מבחן מסכם כהושלם.
+- **What changed / where:** `components/screens/AdminProgressScreen.tsx`, `lib/testIds.ts`, `tests/e2e/admin-progress.spec.ts`.
+- **What we learned:**
+  - בסימון מבחן מסכם אדמיני, עדיף לייצר state תקין דרך `createInitialFinalExamState` ואז להוסיף `submittedAt/scorePercent/passed`, במקום לכתוב shape ידנית.
+  - כדי למנוע עקיפה לא רצויה של gate, כפתור “סמן מבחן מסכם כהושלם” צריך להיות מושבת עד שכל ימי הלימוד הרגילים (ללא `day-29`) מסומנים כהושלמו.
+  - כיתה א׳ דורשת side-effect נוסף (קריאה ל־`/api/unlock-grade-b`) כשמסמנים מבחן מסכם כעובר.
+- **Why it matters:** שומר על חוזי unlock עקביים בין זרימה רגילה לאדמין, ומונע state חלקי/לא תקין.
+- **How to reuse next time:** לכל action אדמיני שמשפיע על gating, לאכוף תנאי-קדם ב־UI ולהוסיף e2e שמכסה גם disabled->enabled->effect.
+
 ### 2026-03-27 (All-days QA: unlock race + verbal numeric answers)
 - **Trigger:** בקשת QA מלאה לסיים את כל הימים בכיתה א׳ וב׳, למצוא תקלות, לתקן ולהריץ שוב.
 - **What changed / where:** `tests/e2e/day-smoke.spec.ts`, `tests/e2e/all-days-completion.spec.ts`, `tests/e2e/answering.ts`, `lib/utils/exercise.ts`, `components/screens/FinalExamScreen.tsx`, `lib/testIds.ts`, `tests/unit/lib/utils/exercise.test.ts`.

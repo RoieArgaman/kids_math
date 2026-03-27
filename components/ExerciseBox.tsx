@@ -13,6 +13,8 @@ interface ExerciseBoxProps {
   retryMessage?: string;
   isCorrect?: boolean;
   wasChecked?: boolean;
+  /** When false, hides the per-question check button (e.g. final exam until bulk grade). */
+  showCheckButton?: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onNextInput: () => void;
@@ -29,6 +31,7 @@ export function ExerciseBox({
   retryMessage,
   isCorrect,
   wasChecked,
+  showCheckButton = true,
   onChange,
   onSubmit,
   onNextInput,
@@ -40,7 +43,9 @@ export function ExerciseBox({
   const baseTestId = testIds.component.exerciseBox.root(exercise.id);
 
   const onEnter = () => {
-    onSubmit();
+    if (showCheckButton) {
+      onSubmit();
+    }
     onNextInput();
   };
   const promptParts = splitMathExpression(exercise.prompt);
@@ -112,15 +117,17 @@ export function ExerciseBox({
           ) : null}
         </div>
       ) : null}
-      <button
-        data-testid={testIds.component.exerciseBox.check(exercise.id)}
-        type="button"
-        aria-label={checkButtonLabel}
-        className="touch-button btn-accent mt-3 w-full"
-        onClick={onSubmit}
-      >
-        בְּדִיקָה
-      </button>
+      {showCheckButton ? (
+        <button
+          data-testid={testIds.component.exerciseBox.check(exercise.id)}
+          type="button"
+          aria-label={checkButtonLabel}
+          className="touch-button btn-accent mt-3 w-full"
+          onClick={onSubmit}
+        >
+          בְּדִיקָה
+        </button>
+      ) : null}
     </article>
   );
 }

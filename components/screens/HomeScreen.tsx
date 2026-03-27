@@ -11,12 +11,14 @@ import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { gradeLabel } from "@/lib/grades";
-import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
+import { FINAL_EXAM_DAY_ID, FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
 import { loadFinalExamState } from "@/lib/final-exam/storage";
+import type { FinalExamState } from "@/lib/final-exam/types";
 import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/progress/engine";
 import { loadProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
+import { normalizeAnswerValue } from "@/lib/utils/exercise";
 import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 
@@ -27,6 +29,17 @@ const STATE_COPY: Record<DayCardState, { icon: string; text: string }> = {
   open: { icon: "▶️", text: "בֹּאוּ נִלְמַד!" },
   complete: { icon: "🏆", text: "הוּשְׁלַם" },
 };
+
+function percentForFinalExamHomeCard(finalExam: FinalExamState | null): number {
+  if (!finalExam) return 0;
+  if (finalExam.submittedAt && typeof finalExam.scorePercent === "number") {
+    return finalExam.scorePercent;
+  }
+  const ids = finalExam.selectedExerciseIds;
+  if (!ids.length) return 0;
+  const answered = ids.filter((id) => normalizeAnswerValue(finalExam.answers[id] ?? "") !== null).length;
+  return Math.round((answered / FINAL_EXAM_QUESTION_COUNT) * 100);
+}
 
 const DAY_EMOJIS = ["🦁", "🐸", "🦋", "🐬", "🦊", "🐼", "🦄", "🐙", "🦉", "🐳"];
 
@@ -102,7 +115,9 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   return (
     <main data-testid={testIds.screen.home.root(effectiveGrade)} className="pb-10">
       <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav")} className="mb-4">
-        <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+        <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav", "actions")} className="flex items-center gap-4">
+          <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+        </div>
       </div>
 
       <HeroHeader
@@ -137,6 +152,22 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
         }
       />
 
+      {finalExam?.passed ? (
+        <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "gmatBanner")}
+          className="surface mb-6 rounded-3xl p-4"
+        >
+          <p data-testid={childTid(testIds.screen.home.root(effectiveGrade), "gmatBanner", "text")} className="text-sm font-semibold text-slate-800">רוצים עוד אתגר מתמטי (רשות)?</p>
+          <Link
+            data-testid={testIds.screen.home.gmatChallengeCta(effectiveGrade)}
+            className="touch-button btn-accent mt-3 inline-block w-full text-center text-sm font-semibold sm:w-auto"
+            href={routes.gradeGmatChallenge(effectiveGrade, { previewAll })}
+          >
+            אתגר התנסות — בסגנון GMAT Focus
+          </Link>
+        </div>
+      ) : null}
+
       {Object.entries(weeks).map(([week, weekDays]) => {
         const weekNum = Number(week);
         const weekCfg =
@@ -159,6 +190,8 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
               {weekDays.map((day) => {
                 const idx = workbookDaysList.findIndex((item) => item.id === day.id);
                 const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;
+                const dayProgress = progress.days[day.id as DayId];
+                // Use final-exam submission only — workbook day-29 can be marked complete without `passed`.
                 const finalExamPassed = Boolean(finalExam?.passed);
 
                 const state = isFinalExamDay
@@ -179,8 +212,9 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                       : "open"
                     : getDayState(day, idx, progress, workbookDaysList);
                 const stateUi = STATE_COPY[state];
-                const dayProgress = progress.days[day.id as DayId];
-                const score = isFinalExamDay ? (finalExam?.scorePercent ?? 0) : (dayProgress?.percentDone ?? 0);
+                const score = isFinalExamDay
+                  ? percentForFinalExamHomeCard(finalExam)
+                  : (dayProgress?.percentDone ?? 0);
                 const dayEmoji = DAY_EMOJIS[(day.dayNumber - 1) % DAY_EMOJIS.length];
 
                 const stateChipClasses =
@@ -224,6 +258,14 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                     </div>
 
                     <p data-testid="km.autogen.homescreen.node.idx.23" className="muted mb-3 text-sm">{day.objective}</p>
+                    {isFinalExamDay && !finalExamPassed ? (
+                      <p
+                        data-testid={childTid(testIds.screen.home.dayCard(day.id), "gmatHint")}
+                        className="mb-3 text-xs leading-relaxed text-slate-600"
+                      >
+                        ההתקדמות כאן מציגה את מבחן המסכם בלבד. אתגר GMAT (רשות, עם כללים בנפרד) ייפתח רק אחרי שעוברים את המבחן המסכם.
+                      </p>
+                    ) : null}
 
                     {/* Progress bar */}
                     <div data-testid="km.autogen.homescreen.node.idx.24" className="mb-4">

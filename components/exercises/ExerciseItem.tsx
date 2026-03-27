@@ -3,7 +3,7 @@
 import { memo, useCallback } from "react";
 import { ExerciseBox } from "@/components/ExerciseBox";
 import { childTid } from "@/lib/testIds";
-import type { Exercise } from "@/lib/types";
+import type { Exercise, ExerciseId } from "@/lib/types";
 
 interface ExerciseItemProps {
   screenRootTestId: string;
@@ -13,11 +13,12 @@ interface ExerciseItemProps {
   isCorrect?: boolean;
   wasChecked: boolean;
   isReadOnly?: boolean;
-  setFocusRef: (exerciseId: string, node: HTMLElement | null) => void;
-  onChangeValue: (exerciseId: string, value: string) => void;
+  showCheckButton?: boolean;
+  setFocusRef: (exerciseId: ExerciseId, node: HTMLElement | null) => void;
+  onChangeValue: (exerciseId: ExerciseId, value: string) => void;
   onSubmitExercise: (exercise: Exercise) => void;
-  onNextInput: (exerciseId: string) => void;
-  onRetryExercise: (exerciseId: string) => void;
+  onNextInput: (exerciseId: ExerciseId) => void;
+  onRetryExercise: (exerciseId: ExerciseId) => void;
 }
 
 function ExerciseItemBase({
@@ -28,6 +29,7 @@ function ExerciseItemBase({
   isCorrect,
   wasChecked,
   isReadOnly = false,
+  showCheckButton = true,
   setFocusRef,
   onChangeValue,
   onSubmitExercise,
@@ -68,6 +70,7 @@ function ExerciseItemBase({
         retryMessage={retryMessage}
         isCorrect={isCorrect}
         wasChecked={wasChecked}
+        showCheckButton={showCheckButton}
         onChange={onChange}
         onSubmit={onSubmit}
         onNextInput={onNext}
