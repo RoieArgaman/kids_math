@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import type { Exercise, WorkbookDay } from "../../lib/types";
-import { getWorkbookDaysById } from "../../lib/content/workbook";
+import type { Exercise, WorkbookDay } from "@/lib/types";
+import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { answerExerciseWrongly } from "./answering";
 import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
-import { childTid, testIds } from "../../lib/testIds";
-import { splitMathExpression, tokenizeMathExpression } from "../../lib/utils/mathText";
+import { childTid, testIds } from "@/lib/testIds";
+import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
 
 function findFirstInputExercise(day: WorkbookDay): Exercise | null {
   for (const section of day.sections) {

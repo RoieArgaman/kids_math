@@ -7,7 +7,7 @@ import {
   seedFinalExamState,
   seedProgressState,
 } from "./testUtils";
-import { testIds } from "../../lib/testIds";
+import { testIds } from "@/lib/testIds";
 
 function getCookieUrl() {
   return process.env.PLAYWRIGHT_COOKIE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";

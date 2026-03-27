@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import type { DayId, WorkbookDay } from "../../lib/types";
-import { getWorkbookDaysById } from "../../lib/content/workbook";
+import type { DayId, WorkbookDay } from "@/lib/types";
+import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
-import { testIds } from "../../lib/testIds";
-import { FINAL_EXAM_DAY_ID } from "../../lib/final-exam/config";
+import { testIds } from "@/lib/testIds";
+import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 
 function getCookieUrl() {
   return process.env.PLAYWRIGHT_COOKIE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";

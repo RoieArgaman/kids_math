@@ -1,8 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
-import type { GradeId } from "../../lib/grades";
-import type { DayId, Exercise, WorkbookDay } from "../../lib/types";
-import { getWorkbookDaysById } from "../../lib/content/workbook";
-import { testIds } from "../../lib/testIds";
+import type { GradeId } from "@/lib/grades";
+import type { DayId, Exercise, WorkbookDay } from "@/lib/types";
+import { getWorkbookDaysById } from "@/lib/content/workbook";
+import { testIds } from "@/lib/testIds";
 
 function toShapeLabel(option: string): string {
   if (option === "circle") return "עִיגּוּל";

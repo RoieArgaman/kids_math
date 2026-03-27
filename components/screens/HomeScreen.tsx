@@ -109,7 +109,11 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
         data-testid={testIds.screen.home.hero(effectiveGrade)}
         title={
           <>
-            <span aria-hidden="true" style={{ unicodeBidi: "isolate" }}>
+            <span
+              data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "emoji")}
+              aria-hidden="true"
+              style={{ unicodeBidi: "isolate" }}
+            >
               🧮{" "}
             </span>
             חוֹבֶרֶת מָתֵמָטִיקָה - כִּיתָּה {gradeLabel(effectiveGrade)}

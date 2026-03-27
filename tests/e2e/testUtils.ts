@@ -1,10 +1,10 @@
 import type { Page } from "@playwright/test";
-import type { GradeId } from "../../lib/grades";
-import type { DayId, DayProgressState, Exercise, ExerciseId, WorkbookDay, WorkbookProgressState } from "../../lib/types";
-import { getWorkbookDaysById } from "../../lib/content/workbook";
-import { pickFinalExamExerciseIds } from "../../lib/final-exam/picker";
-import { FINAL_EXAM_QUESTION_COUNT } from "../../lib/final-exam/config";
-import type { FinalExamStateV1 } from "../../lib/final-exam/types";
+import type { GradeId } from "@/lib/grades";
+import type { DayId, DayProgressState, Exercise, ExerciseId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import { getWorkbookDaysById } from "@/lib/content/workbook";
+import { pickFinalExamExerciseIds } from "@/lib/final-exam/picker";
+import { FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
+import type { FinalExamStateV1 } from "@/lib/final-exam/types";
 
 const PROGRESS_KEY_PREFIX = "kids_math.workbook_progress.v2.grade.";
 const FINAL_EXAM_KEY_PREFIX = "kids_math.final_exam.v1.grade.";
