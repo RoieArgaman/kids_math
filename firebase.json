@@ -10,8 +10,8 @@
         "firebase-debug.*.log",
         "playwright-report",
         "test-results"
-      ]
+      ],
+      "alwaysDeployFromSource": true
     }
   ]
 }
-

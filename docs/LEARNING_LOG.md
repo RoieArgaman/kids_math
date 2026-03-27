@@ -6,6 +6,15 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-03-27 (Firebase App Hosting + `NODE_ENV=production` installs)
+- **Trigger:** Cloud Build for App Hosting failed: missing `tailwindcss`, bogus `@/` resolutions, then local prod simulation failed on ESLint + `vitest.config.ts` typecheck.
+- **What changed / where:** `package.json` (move `tailwindcss`, `postcss`, `typescript`, `@types/*` to `dependencies`), `next.config.mjs` (`eslint.ignoreDuringBuilds`), `tsconfig.json` exclude `tests`/Vitest/Playwright configs from app typecheck.
+- **What we learned:**
+  - App Hosting runs `npm ci` with **`NODE_ENV=production`**, so **`devDependencies` are not installed**; anything `next build` needs (Tailwind, PostCSS, TS) must live in **`dependencies`** (or the build must install devDeps—nonstandard).
+  - Next’s build-time ESLint expects `eslint` installed unless **`eslint.ignoreDuringBuilds`**; keep `npm run lint` in CI/deploy scripts.
+  - Root **`vitest.config.ts`** was inside `include`; excluding test-only configs avoids production typecheck needing Vitest.
+- **How to reuse next time:** After dependency moves, verify with `rm -rf node_modules .next && NODE_ENV=production npm ci && npm run build`.
+
 ### 2026-03-27 (Firebase App Hosting requires Blaze)
 - **Trigger:** Deploy `kids_math` to Firebase project `kids-learing-hub` via existing `deploy.sh` / `apphosting:kids-math`.
 - **What changed / where:** `.firebaserc` (default project), `package.json` scripts `deploy:firebase` / `deploy:firebase:quick`.
