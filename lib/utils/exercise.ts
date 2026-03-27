@@ -77,10 +77,7 @@ export const isAnswerCorrect = (exercise: Exercise, rawAnswer: unknown): boolean
         exercise.start < exercise.end
       );
     case "verbal_input":
-      return (
-        typeof normalized === "string" &&
-        normalizeTextAnswer(normalized) === normalizeTextAnswer(exercise.answer)
-      );
+      return normalizeTextAnswer(String(normalized)) === normalizeTextAnswer(exercise.answer);
     case "shape_choice":
       return String(normalized) === exercise.answer;
     default: {
@@ -90,9 +87,79 @@ export const isAnswerCorrect = (exercise: Exercise, rawAnswer: unknown): boolean
   }
 };
 
+const representationHint = (exercise: Exercise): string | null => {
+  switch (exercise.meta.representation) {
+    case "concrete":
+      return "היעזרו בעצמים: חרוזים/קוביות/אצבעות, וסדרו אותם כדי לראות את הפעולה.";
+    case "pictorial":
+      return "ציירו ציור קטן: נקודות/קבוצות/קו מספרים, ואז כתבו את התרגיל שמתאים לציור.";
+    case "abstract":
+      return null;
+    default: {
+      const _never: never = exercise.meta.representation;
+      return _never;
+    }
+  }
+};
+
+const strategyHint = (exercise: Exercise): string | null => {
+  const tags = exercise.meta.skillTags;
+  const has = (t: string) => tags.includes(t as never);
+
+  if (has("word-problems")) {
+    return "בבעיות מילוליות: סמנו מה שואלים, רשמו את הנתונים, וכתבו תרגיל אחד שמתאים לסיפור.";
+  }
+
+  if (has("number-bonds")) {
+    return "נסו לפרק ולהשלים ל-10 (קשרים בין מספרים).";
+  }
+
+  if (has("place-value")) {
+    return "חשבו בעשרות ויחידות בנפרד (ערך המקום), ואז חברו/חסרו.";
+  }
+
+  if (has("number-line")) {
+    return "השתמשו בקו מספרים: התחילו במספר הראשון וקפצו/ספרו לפי הצעד.";
+  }
+
+  if (has("addition")) {
+    return "בחיבור: נסו 'להשלים ל-10' או להשתמש בכפולות (דאבל).";
+  }
+
+  if (has("subtraction")) {
+    return "בחיסור: נסו 'להגיע לעשר' או לספור אחורה על קו מספרים.";
+  }
+
+  if (has("multiplication-intro") || has("multiplication-tables")) {
+    return "בכפל: חשבו על קבוצות שוות או על חיבור חוזר.";
+  }
+
+  if (has("division-equal-groups")) {
+    return "בחילוק: חלקו לקבוצות שוות ובדקו כמה בכל קבוצה (או כמה קבוצות יש).";
+  }
+
+  if (has("fractions-parts")) {
+    return "בשברים: חשבו על השלם כמחולק לחלקים שווים (חצי/רבע) וספרו חלקים.";
+  }
+
+  return null;
+};
+
 const defaultHint = (exercise: Exercise): string => {
   if (exercise.hint) {
     return exercise.hint;
+  }
+
+  const rep = representationHint(exercise);
+  const strat = strategyHint(exercise);
+  if (rep && strat) {
+    return `${strat} ${rep}`;
+  }
+  if (strat) {
+    return strat;
+  }
+  if (rep) {
+    return rep;
   }
 
   switch (exercise.kind) {

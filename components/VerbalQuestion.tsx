@@ -4,6 +4,8 @@ interface VerbalQuestionProps {
   onEnter: () => void;
   placeholder?: string;
   ariaLabel?: string;
+  "data-testid"?: string;
+  "data-exercise-focus"?: string;
 }
 
 export function VerbalQuestion({
@@ -12,11 +14,15 @@ export function VerbalQuestion({
   onEnter,
   placeholder,
   ariaLabel,
+  "data-testid": dataTestId,
+  "data-exercise-focus": dataExerciseFocus,
 }: VerbalQuestionProps) {
   return (
-    <div className="relative mt-2 flex items-center gap-2">
-      <span className="text-xl" aria-hidden="true">📝</span>
+    <div data-testid="km.autogen.verbalquestion.node.idx.0" className="relative mt-2 flex items-center gap-2">
+      <span data-testid="km.autogen.verbalquestion.node.idx.1" className="text-xl" aria-hidden="true">📝</span>
       <input
+        data-testid={dataTestId ?? "km.autogen.verbalquestion.node.idx.2"}
+        data-exercise-focus={dataExerciseFocus}
         aria-label={ariaLabel}
         className="underline-input flex-1 text-lg"
         minLength={1}

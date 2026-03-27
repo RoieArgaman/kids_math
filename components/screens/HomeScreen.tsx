@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
+import { Chip } from "@/components/ui/Chip";
+import { HeroHeader } from "@/components/ui/HeroHeader";
+import { Surface } from "@/components/ui/Surface";
 import { logEvent, loadEvents } from "@/lib/analytics/events";
 import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
 import { getWorkbookDays } from "@/lib/content/workbook";
@@ -14,6 +17,7 @@ import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/prog
 import { loadProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
+import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 
 type DayCardState = "locked" | "open" | "complete";
@@ -87,52 +91,47 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
   if (!isHydrated) {
     return (
-      <main className="pb-10">
-        <div className="surface p-6 text-center text-lg font-semibold text-slate-600">טוֹעֲנִים...</div>
+      <main data-testid={testIds.screen.home.root(`${effectiveGrade}.loading`)} className="pb-10">
+        <Surface data-testid={childTid(testIds.screen.home.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-slate-600">
+          טוֹעֲנִים...
+        </Surface>
       </main>
     );
   }
 
   return (
-    <main className="pb-10">
-      <div className="mb-4">
+    <main data-testid={testIds.screen.home.root(effectiveGrade)} className="pb-10">
+      <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav")} className="mb-4">
         <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
       </div>
 
-      {/* Hero header */}
-      <header className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-l from-violet-200 to-sky-100 p-6 shadow-md border border-violet-200">
-        {/* Decorative background elements */}
-        <span className="pointer-events-none absolute -left-4 -top-4 text-7xl opacity-15 select-none" aria-hidden>
-          ✨
-        </span>
-        <span className="pointer-events-none absolute -bottom-3 left-8 text-6xl opacity-15 select-none" aria-hidden>
-          ⭐
-        </span>
-        <span className="pointer-events-none absolute right-4 top-2 text-5xl opacity-20 select-none" aria-hidden>
-          🔢
-        </span>
-        <span className="pointer-events-none absolute bottom-1 right-16 text-4xl opacity-10 select-none" aria-hidden>
-          ➕
-        </span>
-
-        <div className="relative">
-          <h1 className="text-4xl font-bold leading-tight text-violet-900">
+      <HeroHeader
+        data-testid={testIds.screen.home.hero(effectiveGrade)}
+        title={
+          <>
             <span aria-hidden="true" style={{ unicodeBidi: "isolate" }}>
               🧮{" "}
             </span>
             חוֹבֶרֶת מָתֵמָטִיקָה - כִּיתָּה {gradeLabel(effectiveGrade)}
-          </h1>
-          <p className="mt-2 text-sm text-violet-600">
-            מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת.
-          </p>
+          </>
+        }
+        subtitle="מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת."
+        decorations={[
+          { emoji: "✨", className: "pointer-events-none absolute -left-4 -top-4 text-7xl opacity-15 select-none" },
+          { emoji: "⭐", className: "pointer-events-none absolute -bottom-3 left-8 text-6xl opacity-15 select-none" },
+          { emoji: "🔢", className: "pointer-events-none absolute right-4 top-2 text-5xl opacity-20 select-none" },
+          { emoji: "➕", className: "pointer-events-none absolute bottom-1 right-16 text-4xl opacity-10 select-none" },
+        ]}
+        actions={
           <Link
-            className="mt-4 touch-button btn-accent inline-block w-full text-center text-base font-semibold shadow-sm sm:w-auto"
+            data-testid={testIds.screen.home.planCta(effectiveGrade)}
+            className="touch-button btn-accent inline-block w-full text-center text-base font-semibold shadow-sm sm:w-auto"
             href={routes.gradePlan(effectiveGrade, { previewAll })}
           >
             תּוֹכְנִית לִמּוּדִים לְפִי מִשְׁרַד הַחִינוּךְ
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       {Object.entries(weeks).map(([week, weekDays]) => {
         const weekNum = Number(week);
@@ -140,17 +139,19 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           WEEK_CONFIG[weekNum] ?? { emoji: "📚", badgeBg: "bg-slate-100", badgeText: "text-slate-700" };
 
         return (
-          <section key={week} className="mb-8">
+          <section data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week)} key={week} className="mb-8">
             {/* Week banner */}
-            <div className="mb-4 flex items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-base font-bold ${weekCfg.badgeBg} ${weekCfg.badgeText}`}
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "banner")} className="mb-4 flex items-center gap-2">
+              <Chip
+                data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "badge")}
+                tone="neutral"
+                className={`gap-1.5 px-4 py-1.5 text-base font-bold ${weekCfg.badgeBg} ${weekCfg.badgeText}`}
               >
                 {weekCfg.emoji} שָׁבוּעַ {week}
-              </span>
+              </Chip>
             </div>
 
-            <div className="grid gap-4">
+            <div data-testid="km.autogen.homescreen.node.idx.16" className="grid gap-4">
               {weekDays.map((day) => {
                 const idx = workbookDaysList.findIndex((item) => item.id === day.id);
                 const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;
@@ -164,10 +165,10 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                       : idx === 0
                         ? "open"
                         : (() => {
-                            const previousDay = workbookDaysList[idx - 1];
-                            const previousProgress = progress.days[previousDay.id];
-                            return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
-                          })()
+                          const previousDay = workbookDaysList[idx - 1];
+                          const previousProgress = progress.days[previousDay.id];
+                          return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
+                        })()
                   : previewAll
                     ? progress.days[day.id as DayId]?.isComplete
                       ? "complete"
@@ -193,24 +194,24 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                       : "";
 
                 return (
-                  <article
+                  <article data-testid="km.autogen.homescreen.node.idx.17"
                     key={day.id}
                     className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
                   >
                     {/* Card header row */}
-                    <div className="mb-3 flex items-start justify-between gap-2 sm:gap-3">
-                      <div className="flex min-w-0 flex-1 items-start gap-2">
+                    <div data-testid="km.autogen.homescreen.node.idx.18" className="mb-3 flex items-start justify-between gap-2 sm:gap-3">
+                      <div data-testid="km.autogen.homescreen.node.idx.19" className="flex min-w-0 flex-1 items-start gap-2">
                         {/* Day number circle */}
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
+                        <span data-testid="km.autogen.homescreen.node.idx.20" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">
                           {day.dayNumber}
                         </span>
-                        <strong className="min-w-0 text-base leading-snug break-words">
+                        <strong data-testid="km.autogen.homescreen.node.idx.21" className="min-w-0 text-base leading-snug break-words">
                           {dayEmoji} יוֹם {day.dayNumber}: {day.title}
                         </strong>
                       </div>
 
                       {/* State chip */}
-                      <span
+                      <span data-testid="km.autogen.homescreen.node.idx.22"
                         aria-label={stateUi.text}
                         className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:px-3 ${stateChipClasses}`}
                       >
@@ -218,18 +219,18 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                       </span>
                     </div>
 
-                    <p className="muted mb-3 text-sm">{day.objective}</p>
+                    <p data-testid="km.autogen.homescreen.node.idx.23" className="muted mb-3 text-sm">{day.objective}</p>
 
                     {/* Progress bar */}
-                    <div className="mb-4">
-                      <div className="mb-1 flex items-center justify-between text-xs font-medium">
-                        <span className="text-slate-500">הִתְקַדְּמוּת</span>
-                        <span className={`font-bold ${score === 100 ? "text-emerald-600" : "text-violet-500"}`}>
+                    <div data-testid="km.autogen.homescreen.node.idx.24" className="mb-4">
+                      <div data-testid="km.autogen.homescreen.node.idx.25" className="mb-1 flex items-center justify-between text-xs font-medium">
+                        <span data-testid="km.autogen.homescreen.node.idx.26" className="text-slate-500">הִתְקַדְּמוּת</span>
+                        <span data-testid="km.autogen.homescreen.node.idx.27" className={`font-bold ${score === 100 ? "text-emerald-600" : "text-violet-500"}`}>
                           {Math.round(score)}%
                         </span>
                       </div>
-                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
-                        <div
+                      <div data-testid="km.autogen.homescreen.node.idx.28" className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div data-testid="km.autogen.homescreen.node.idx.29"
                           className={`h-full rounded-full transition-all ${score === 100 ? "bg-emerald-400" : "bg-violet-400"}`}
                           style={{ width: `${score}%` }}
                         />
@@ -238,9 +239,10 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
                     {/* CTA */}
                     {state === "locked" ? (
-                      <p className="muted text-center text-sm">סַיְּימוּ אֶת הַיּוֹם הַקּוֹדֵם כְּדֵי לִפְתּוֹחַ 🔒</p>
+                      <p data-testid="km.autogen.homescreen.node.idx.30" className="muted text-center text-sm">סַיְּימוּ אֶת הַיּוֹם הַקּוֹדֵם כְּדֵי לִפְתּוֹחַ 🔒</p>
                     ) : (
                       <Link
+                        data-testid={testIds.screen.home.dayCardCta(day.id)}
                         className="touch-button btn-accent block w-full text-center sm:w-auto"
                         href={routes.gradeDay(effectiveGrade, day.id, { previewAll })}
                         onClick={() => logEvent("day_card_clicked", { payload: { grade: effectiveGrade, dayId: day.id } })}
@@ -257,15 +259,15 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       })}
 
       {/* QA section */}
-      <details className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-500">🛠 מַדְּדֵי QA מְקוֹמִיִּים</summary>
-        <p className="muted mt-2 text-xs">
+      <details data-testid="km.autogen.homescreen.node.idx.31" className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70">
+        <summary data-testid="km.autogen.homescreen.node.idx.32" className="cursor-pointer text-sm font-semibold text-slate-500">🛠 מַדְּדֵי QA מְקוֹמִיִּים</summary>
+        <p data-testid="km.autogen.homescreen.node.idx.33" className="muted mt-2 text-xs">
           חֲסִימוֹת שַׁעַר: {rollups.gateBlockedCount} | מַעֲבַר שַׁעַר: {rollups.gatePassedCount} | דִּיּוּק נִסָּיוֹן
           רִאשׁוֹן: {Math.round(rollups.firstPassAccuracy * 100)}%
         </p>
-        <details className="mt-3">
-          <summary className="cursor-pointer text-xs font-medium text-slate-400">תְּצוּגַת אֵירוּעִים (JSON)</summary>
-          <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-white p-3 text-xs text-slate-600">
+        <details data-testid="km.autogen.homescreen.node.idx.34" className="mt-3">
+          <summary data-testid="km.autogen.homescreen.node.idx.35" className="cursor-pointer text-xs font-medium text-slate-400">תְּצוּגַת אֵירוּעִים (JSON)</summary>
+          <pre data-testid="km.autogen.homescreen.node.idx.36" className="mt-2 max-h-64 overflow-auto rounded-lg bg-white p-3 text-xs text-slate-600">
             {eventsJson || "[]"}
           </pre>
         </details>

@@ -1,0 +1,102 @@
+---
+description: How to design and iterate a full school year (Grades 1-2 now, scalable) from curriculum goals + global pedagogy into kids_math product changes
+alwaysApply: false
+---
+
+# Build a school year (שנת חינוך) — kids_math
+
+Use this rule when the USER asks to:
+- “לבנות שנה/כיתה/תכנית לימודים”
+- לשפר הישגים בסוף כיתה א׳/ב׳
+- להשוות שיטות הוראה בין מדינות ואז “להטמיע במערכת”
+
+## Definition of done (מה יוצא בסוף)
+
+- **Outcomes**: מטרות סוף-כיתה ברורות (במונחי מיומנויות, לא רק נושאים).
+- **Coverage map**: מיפוי תוכנית משרד החינוך → `SkillTag`s → ימים/מקטעים/תרגילים.
+- **Pedagogy decisions**: 5–10 טכניקות “ברורות ליישום מוצרי” שנבחרו מתוך השוואה בינלאומית (ולמה).
+- **Implementation plan**: נקודות הזרקה מדויקות בקוד + סדר עבודה שמקטין סיכונים (persist/progress/RTL/a11y).
+- **Measurement**: איך נמדוד שיפור (signals בתוך המוצר), ומה לולאת האיטרציה.
+
+## Workflow (Plan → Benchmark → Map → Implement → Measure → Iterate)
+
+### 1) Plan (תכנון)
+
+- **Grade scope**: איזו כיתה/טווח (א׳–ב׳, או תבנית לכל הכיתות).
+- **Constraints**:
+  - התאמה לישראל (משרד החינוך) + גיל/שפה (עברית, RTL).
+  - UI קצר, עומס קריאה נמוך, תרגול רב, רמזים חכמים.
+- **Success metrics (מינימלי)**:
+  - שיעור הצלחה לפי `SkillTag` לאורך זמן (לא רק “עבר/לא עבר יום”).
+  - ירידה בשגיאות חוזרות (misconceptions) / פחות ניסיונות לתשובה נכונה.
+  - שימור ידע (spaced review): אחוז הצלחה בבדיקות חוזרות אחרי X ימים.
+
+### 2) Benchmark (השוואה בין מדינות)
+
+מטרה: לא “להעתיק תכנית לימודים”, אלא להעתיק **שיטות הוראה** שמתאימות לאפליקציה.
+
+- בחרו 4–7 מדינות, וסכמו לכל אחת:
+  - **Core routine** (למשל Number Talks / problem-solving lesson structure)
+  - **Representations** (Concrete/Pictorial/Abstract; diagrams; number line; bar model)
+  - **Practice design** (variation, mastery, spiral review)
+  - **Feedback style** (hinting, strategy prompting, error diagnosis)
+- מסננים טכניקות שלא מתאימות לאפליקציה (תלויות מורה/כיתה שלמה) או דורשות טקסט ארוך.
+
+### 3) Map (מיפוי לתכנית ישראל ולמוצר)
+
+- **Israel MoE**: מיפוי “מה חייבים לדעת” ל־`SkillTag` (העדפה ל־additive: לא לשבור טקסונומיה קיימת).
+- **Content structure**: כל מטרה צריכה:
+  - “הצגה/דוגמה” (אופציונלי) + “תרגול” + “שאלות מילוליות/הבנה” + “בדיקת שימור”.
+- **CPA ramp**: לכל רעיון מרכזי — דרך Concrete→Pictorial→Abstract לאורך מספר תרגילים/ימים.
+
+### 4) Implement (הטמעה בקוד — מינימום דיפ)
+
+העדפה: להישען על המבנים הקיימים ולשמור על תאימות persist.
+
+- **Content / sequencing**: `lib/content/days.ts`
+  - בניית ימים/מקטעים/תרגילים, ורצפים (variation: שינוי משתנה אחד בכל פעם).
+- **Pedagogy metadata**: `lib/types.ts`
+  - השתמשו ב־`SkillTag`, `RepresentationType`, `misconceptionTarget` לפני שמוסיפים שדות חדשים.
+- **Hints & feedback**: `lib/utils/exercise.ts`
+  - להפוך רמזים ל־strategy-based בהתאם ל־`skillTags` + `representation`.
+- **Progress gates**: `lib/progress/engine.ts`
+  - שינוי gate/unlock הוא “high risk”: לשמור על יציבות unlock ולתכנן migration אם schema משתנה.
+- **Day UX**: `components/screens/DayScreen.tsx`, `components/ExerciseBox.tsx`
+  - לשמור RTL, נגישות, ו־touch targets (44–52px).
+
+### 5) Measure (מדידה)
+
+- הגדירו 3–6 “signals” שאפשר למדוד:
+  - הצלחה לפי `SkillTag` (כולל חזרה מאוחרת).
+  - זמן/מס’ ניסיונות (בזהירות; לא להפוך ל־speed game).
+  - סוגי טעויות (אם יש `misconceptionTarget`).
+- אם מוסיפים אנליטיקס:
+  - להשתמש ב־`lib/analytics/events.ts`
+  - payload קטן ומטוּיפס, בלי מידע רגיש.
+
+### 6) Iterate (איטרציה)
+
+- מחזור שבועי/דו-שבועי:
+  - לבחור 1–2 `SkillTag`s “נופלים”
+  - לשפר סדר תרגילים / variation / hints
+  - להוסיף spaced review מותאם
+  - להריץ quality gates לפני merge
+
+## QA / Quality gates (לא לדלג)
+
+- `npm run lint`
+- `npm run build`
+- `npm run test:unit` כששינוי נוגע ללוגיקה (sequencing / progress / grading / hints)
+- `npm run test:e2e` כשנוגעים בנתיבים/נעילות/מסכים
+- Manual RTL spot-check:
+  - Home → plan → day
+  - מקלדת Tab/Shift+Tab למרכיבים חדשים
+  - touch targets לכפתורים חדשים
+
+## Product patterns that fit an app (דוגמאות)
+
+- **Daily routine**: “Number Talk” קצר בתוך יום (3–5 פריטים, השוואת אסטרטגיות).
+- **Strategy ladder**: make-10, doubles/near doubles, decomposition לפני אלגוריתם.
+- **Variation**: סט תרגילים שבו כל פעם משתנה רק רכיב אחד (מספר/פעולה/הקשר).
+- **CPA**: אותו רעיון נבנה מייצוג מוחשי → ציורי → סימבולי.
+

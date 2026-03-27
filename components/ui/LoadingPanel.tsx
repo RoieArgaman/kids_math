@@ -14,9 +14,9 @@ export function LoadingPanel({ emoji, title, className }: LoadingPanelProps) {
       : defaultCardClass;
 
   return (
-    <div className={merged}>
-      {emoji ? <p className="mb-2 text-5xl">{emoji}</p> : null}
-      <p className="text-lg font-semibold text-gray-700">{title}</p>
+    <div data-testid="km.autogen.loadingpanel.node.idx.0" className={merged}>
+      {emoji ? <p data-testid="km.autogen.loadingpanel.node.idx.1" className="mb-2 text-5xl">{emoji}</p> : null}
+      <p data-testid="km.autogen.loadingpanel.node.idx.2" className="text-lg font-semibold text-gray-700">{title}</p>
     </div>
   );
 }

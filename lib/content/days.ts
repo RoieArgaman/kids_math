@@ -8,6 +8,7 @@ import type {
   SkillTag,
   WorkbookDay,
 } from "../types";
+import { countRangePrompt } from "./promptTemplates";
 
 export type DayConcept = {
   dayNumber: number;
@@ -218,7 +219,7 @@ const warmupExerciseForTag = (
         dayNumber,
         1,
         exerciseIndex,
-        `חִימּוּם מִיּוֹמִים קוֹדְמִים: סִפְרוּ מִ-1 עַד ${4 + (seed % 4)}. כַּמָּה מִסְפָּרִים?`,
+        `חִימּוּם מִיָּמִים קוֹדְמִים: סִפְרוּ מִ-1 עַד ${4 + (seed % 4)}. כַּמָּה מִסְפָּרִים?`,
         4 + (seed % 4),
         ["counting"],
         difficulty,
@@ -231,7 +232,7 @@ const warmupExerciseForTag = (
         dayNumber,
         1,
         exerciseIndex,
-        "חִימּוּם: 5 + 4 = ?",
+        "חִימּוּם: חַשְּׁבוּ 5 + 4",
         9,
         ["number-recognition", "addition"],
         difficulty,
@@ -240,47 +241,62 @@ const warmupExerciseForTag = (
         20,
       );
     case "number-line":
-      return numberLineJump(
-        dayNumber,
-        1,
-        exerciseIndex,
-        "חִימּוּם: מִ-0 עַד 10 בִּקְפִיצוֹת שֶׁל 2. כַּמָּה קְפִיצוֹת?",
-        0,
-        10,
-        2,
-        5,
-        ["number-line"],
-        difficulty,
-        "pictorial",
-      );
+      return (() => {
+        const step = ((): 1 | 2 | 3 | 5 => {
+          const s = (seed % 4) as 0 | 1 | 2 | 3;
+          return s === 0 ? 1 : s === 1 ? 2 : s === 2 ? 3 : 5;
+        })();
+        const start = step === 5 ? 0 : seed % 2 === 0 ? 0 : step;
+        const jumps = 4 + (seed % 3); // 4–6 jumps
+        const end = start + step * jumps;
+        return numberLineJump(
+          dayNumber,
+          1,
+          exerciseIndex,
+          `חִימּוּם: עַל קַו מִסְפָּרִים מִ-${start} עַד ${end} בִּקְפִיצוֹת שֶׁל ${step}. כַּמָּה קְפִיצוֹת?`,
+          start,
+          end,
+          step,
+          jumps,
+          ["number-line"],
+          difficulty,
+          exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
+        );
+      })();
     case "addition": {
-      const a = 3 + (seed % 5);
-      const b = 2 + ((seed >> 2) % 5);
+      const a = 3 + (seed % 7);
+      const b = 2 + ((seed >> 2) % 7);
+      const sum = a + b;
+      const prompt = `חִימּוּם: חַשְּׁבוּ ${a} + ${b}`;
+      const answer = sum;
       return numberInput(
         dayNumber,
         1,
         exerciseIndex,
-        `חִימּוּם: ${a} + ${b} = ?`,
-        a + b,
+        prompt,
+        answer,
         ["addition"],
         difficulty,
-        "abstract",
+        exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
         0,
         30,
       );
     }
     case "subtraction": {
-      const x = 12 + (seed % 7);
-      const y = 3 + (seed % 4);
+      const x = 12 + (seed % 18);
+      const y = 2 + (seed % 9);
+      const diff = x - y;
+      const prompt = `חִימּוּם: חַשְּׁבוּ ${x} - ${y}`;
+      const answer = diff;
       return numberInput(
         dayNumber,
         1,
         exerciseIndex,
-        `חִימּוּם: ${x} - ${y} = ?`,
-        x - y,
+        prompt,
+        answer,
         ["subtraction"],
         difficulty,
-        "abstract",
+        exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
         0,
         30,
       );
@@ -389,7 +405,7 @@ const warmupExerciseForTag = (
         dayNumber,
         1,
         exerciseIndex,
-        "חִימּוּם בְּגִימַטְרְיָה: א (1) + ב (2) = ?",
+        "חִימּוּם בְּגִימַטְרְיָה: חַשְּׁבוּ א (1) + ב (2)",
         3,
         ["gematria-letters", "addition"],
         difficulty,
@@ -402,7 +418,7 @@ const warmupExerciseForTag = (
         dayNumber,
         1,
         exerciseIndex,
-        'חִימּוּם: 3 + 3 + 3 = ? (שָׁלוֹשׁ פְּעָמִים שָׁלוֹשׁ)',
+        "חִימּוּם: חַשְּׁבוּ 3 + 3 + 3 (שָׁלוֹשׁ פְּעָמִים שָׁלוֹשׁ)",
         9,
         ["multiplication-intro", "addition"],
         difficulty,
@@ -411,25 +427,30 @@ const warmupExerciseForTag = (
         30,
       );
     case "number-bonds":
-      return numberInput(
-        dayNumber,
-        1,
-        exerciseIndex,
-        "חִימּוּם: 6 + ? = 10",
-        4,
-        ["number-bonds", "addition"],
-        difficulty,
-        "abstract",
-        0,
-        15,
-      );
+      return (() => {
+        const target = seed % 2 === 0 ? 10 : 20;
+        const left = 3 + (seed % (target === 10 ? 7 : 17));
+        const right = target - left;
+        return numberInput(
+          dayNumber,
+          1,
+          exerciseIndex,
+          `חִימּוּם: כַּמָּה צָרִיךְ לְהוֹסִיף לְ-${left} כְּדֵי לְהַגִּיעַ לְ-${target}?`,
+          right,
+          ["number-bonds", "addition"],
+          difficulty,
+          exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
+          0,
+          target,
+        );
+      })();
     case "multiplication-tables": {
       const f = 2 + (seed % 4);
       return numberInput(
         dayNumber,
         1,
         exerciseIndex,
-        `חִימּוּם: ${f} + ${f} + ${f} = ? (שָׁלוֹשׁ פְּעָמִים ${f})`,
+        `חִימּוּם: חַשְּׁבוּ ${f} + ${f} + ${f} (שָׁלוֹשׁ פְּעָמִים ${f})`,
         f * 3,
         ["multiplication-tables", "multiplication-intro"],
         difficulty,
@@ -522,7 +543,7 @@ const warmupExerciseForTag = (
         dayNumber,
         1,
         exerciseIndex,
-        "חִימּוּם: 4 + 5 = ?",
+        "חִימּוּם: חַשְּׁבוּ 4 + 5",
         9,
         ["addition"],
         difficulty,
@@ -546,7 +567,7 @@ const concepts: DayConcept[] = [
   {
     dayNumber: 1,
     title: "מוֹנִים עַד 5",
-    objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִסְפֹּר אוֹבְיֶקְטִים עַד 5 וּלְזַהוֹת כַּמּוּת נָכוֹן בְּ-5 מִתּוֹךְ 6 מְשִׂימוֹת.",
+    objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִסְפֹּר אוֹבְיֶקְטִים עַד 5 וּלְזַהוֹת אֶת הַכַּמּוּת הַנְּכוֹנָה בְּ-5 מִתּוֹךְ 6 מְשִׂימוֹת.",
     mainTags: ["counting", "number-recognition"],
     spiralReviewTags: ["counting"],
     arithmeticPrompt: "בְּסַל יֵשׁ 2 תַּפּוּחִים. אִמָּא הוֹסִיפָה עוֹד תַּפּוּחַ. כַּמָּה תַּפּוּחִים יֵשׁ עַכְשָׁיו?",
@@ -924,7 +945,7 @@ const concepts: DayConcept[] = [
     mainTags: ["gematria-letters", "number-recognition"],
     spiralReviewTags: ["geometry-shapes", "addition"],
     arithmeticPrompt:
-      "בְּגִימַטְרְיָה פָּשׁוּטָה: א (1) + ג (3) = ?",
+      "בְּגִימַטְרְיָה פָּשׁוּטָה: חַשְּׁבוּ א (1) + ג (3)",
     arithmeticAnswer: 4,
     arithmeticMcOptions: ["3", "4", "5"],
     arithmeticMcAnswer: "4",
@@ -933,7 +954,7 @@ const concepts: DayConcept[] = [
     reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: בְּגִימַטְרְיָה, הָאוֹת י (10) גְּדוֹלָה מִן הָאוֹת ח (8)",
     reviewAnswer: true,
     challengePrompt:
-      "ב' (2) + ה' (5) + ג' (3) = ?",
+      "חַשְּׁבוּ ב' (2) + ה' (5) + ג' (3)",
     challengeAnswer: 10,
     geometryPrompt: "אֵיזוֹ צוּרָה מוּזְכֶּרֶת לְעִתִּים בְּמוֹפַע שְׁלוֹשָׁה קְצָווֹת?",
     geometryAnswer: "triangle",
@@ -946,14 +967,14 @@ const concepts: DayConcept[] = [
     mainTags: ["multiplication-intro", "addition"],
     spiralReviewTags: ["patterns", "gematria-letters"],
     arithmeticPrompt:
-      '4 + 4 + 4 = ? (כְּלוֹמַר "שָׁלוֹשׁ פְּעָמִים אַרְבַּע")',
+      'חַשְּׁבוּ 4 + 4 + 4 (כְּלוֹמַר "שָׁלוֹשׁ פְּעָמִים אַרְבַּע")',
     arithmeticAnswer: 12,
     arithmeticMcOptions: ["10", "11", "12"],
     arithmeticMcAnswer: "12",
     verbalPrompt:
       "כִּתְבוּ בִּמִילִים אֶת הַתּוֹצָאָה: 5 + 5 + 5 + 5 (אַרְבַּע פְּעָמִים חָמֵשׁ):",
     verbalAnswer: "עֶשְׂרִים",
-    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 2 × 6 שָׁוֶה לְ-6 + 6",
+    reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 2 × 6 שָׁוֶה לְ 6 + 6",
     reviewAnswer: true,
     challengePrompt:
       "עַל קַו מִסְפָּרִים: מִתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-4 חָמֵשׁ פְּעָמִים. עַל אֵיזֶה מִסְפָּר נֶעֱצְרִים?",
@@ -968,7 +989,7 @@ const concepts: DayConcept[] = [
       "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְמָצֵא זוּגוֹת שֶׁמִּשְׁלִימִים לַ-10, לִפְתּוֹר חִסֵּר קָטָן בְּחִבּוּר עַד 10, וּלְשַׁנֵּן צִירוּפִים נִפְרָצִים.",
     mainTags: ["number-bonds", "addition"],
     spiralReviewTags: ["multiplication-intro", "subtraction"],
-    arithmeticPrompt: "7 + ? = 10. כַּמָּה חָסֵר?",
+    arithmeticPrompt: "כַּמָּה צָרִיךְ לְהוֹסִיף לְ-7 כְּדֵי לְהַגִּיעַ לְ-10?",
     arithmeticAnswer: 3,
     arithmeticMcOptions: ["2", "3", "4"],
     arithmeticMcAnswer: "3",
@@ -1019,7 +1040,7 @@ const concepts: DayConcept[] = [
     reviewAnswer: true,
     challengePrompt: "עַל קַו מִסְפָּרִים: מִ-60 עַד 80 בִּקְפִיצוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת?",
     challengeAnswer: 4,
-    geometryPrompt: "אֵיזוֹ צוּרָה אֲרוּכָּה (כְּמוֹ דֶּפֶק) וְיֵשׁ לָהּ 4 צְלָעוֹת?",
+    geometryPrompt: "אֵיזוֹ צוּרָה אֲרוּכָּה (כְּמוֹ דֶּלֶת) וְיֵשׁ לָהּ 4 צְלָעוֹת?",
     geometryAnswer: "rectangle",
   },
   {
@@ -1048,7 +1069,7 @@ const concepts: DayConcept[] = [
       "אֱמֶת אוֹ שֶׁקֶר: רִיבּוּעַ נִשְׁאָר דּוֹמֶה לְעַצְמוֹ אַחֲרֵי שִׁיקּוּף אוֹפְקִי",
     reviewAnswer: true,
     challengePrompt:
-      "גִּימַטְרְיָה: ד (4) + ו (6) = ? וְאָז מַחֲסִירִים 3. מָה הַמִּסְפָּר הַסּוֹפִי?",
+      "גִּימַטְרְיָה: חַשְּׁבוּ ד (4) + ו (6), וְאָז הַחְסִירוּ 3. מָה הַמִּסְפָּר הַסּוֹפִי?",
     challengeAnswer: 7,
     geometryPrompt: "אֵיזוֹ צוּרָה יֵשׁ לָהּ שָׁלוֹשׁ צְלָעוֹת?",
     geometryAnswer: "triangle",
@@ -1147,7 +1168,7 @@ const buildExpandedExercisesForDay = (
       id: toSectionId(d, 1),
       title: "חִימּוּם וַחֲזָרַת סְפִּירָלָה",
       type: "warmup",
-      learningGoal: "לְהַתְחִיל בְּהַצְלָחָה וּלְחַזֵּק נוֹשְׂאִים מִימִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
+      learningGoal: "לְהַתְחִיל בְּהַצְלָחָה וּלְחַזֵּק נוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
       exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
     },
@@ -1190,7 +1211,7 @@ const buildExpandedExercisesForDay = (
         };
         if (d === 11) return {
           title: "דֻּגְמָה פְּתוּרָה — חִיבּוּר עֲשָׂרוֹת",
-          prompt: "30 + 40 = ?",
+          prompt: "חַשְּׁבוּ 30 + 40",
           steps: [
             "30 = 3 עֲשָׂרוֹת, 40 = 4 עֲשָׂרוֹת.",
             "3 עֲשָׂרוֹת + 4 עֲשָׂרוֹת = 7 עֲשָׂרוֹת = 70.",
@@ -1200,7 +1221,7 @@ const buildExpandedExercisesForDay = (
         };
         if (d === 12) return {
           title: "דֻּגְמָה פְּתוּרָה — חִיסּוּר עֲשָׂרוֹת",
-          prompt: "80 - 30 = ?",
+          prompt: "חַשְּׁבוּ 80 - 30",
           steps: [
             "80 = 8 עֲשָׂרוֹת, 30 = 3 עֲשָׂרוֹת.",
             "8 עֲשָׂרוֹת - 3 עֲשָׂרוֹת = 5 עֲשָׂרוֹת = 50.",
@@ -1221,7 +1242,7 @@ const buildExpandedExercisesForDay = (
         // d === 14 — review day
         return {
           title: "דֻּגְמָה פְּתוּרָה — חִישּּׁוּב מִשֻֻׁלָּב",
-          prompt: `דֻּגְמָה: ${base} + 10 = ?`,
+          prompt: `דֻּגְמָה: חַשְּׁבוּ ${base} + 10`,
           steps: [
             `קוֹרְאִים אֶת הַתַּרְגִּיל: ${base} + 10.`,
             `מוֹסִיפִים עֲשָׂרָה לְ-${base} וּמְקַבְּלִים ${base + 10}.`,
@@ -1231,34 +1252,37 @@ const buildExpandedExercisesForDay = (
         };
       })(),
       exercises: [
+        // Variation mini-sequence (China/Germany-inspired): same structure, different unknown position.
         numberInput(
           d,
           2,
           1,
-          `דֻּגְמָה: ${base} + 10 = ${base + 10}. עַכְשָׁיו: ${base + 2} + 10 = ?`,
+          `דֻּגְמָה: ${base} + 10 = ${base + 10}. עַכְשָׁיו חַשְּׁבוּ ${base + 2} + 10`,
           base + 12,
           ["addition", ...concept.mainTags],
           dayDifficulty,
           "concrete",
         ),
-        multipleChoice(
-          d,
-          2,
-          2,
-          `${base + 15} - 10 = ?`,
-          [`${base + 5}`, `${base + 4}`, `${base + 6}`],
-          `${base + 5}`,
-          ["subtraction", ...concept.mainTags],
-          dayDifficulty,
-          "pictorial",
-        ),
         numberInput(
           d,
           2,
+          2,
+          `כַּמָּה צָרִיךְ לְהוֹסִיף לְ-10 כְּדֵי לְהַגִּיעַ לְ-${base + 12}?`,
+          base + 2,
+          ["addition", "place-value", ...concept.mainTags],
+          dayDifficulty,
+          "pictorial",
+          0,
+          200,
+        ),
+        multipleChoice(
+          d,
+          2,
           3,
-          `פִּתְרוּ: ${base + 9} + ${d - 5} = ?`,
-          base + d + 4,
-          ["addition"],
+          `כַּמָּה צָרִיךְ לְהוֹסִיף לְ-${base + 2} כְּדֵי לְהַגִּיעַ לְ-${base + 12}?`,
+          ["8", "9", "10"],
+          "10",
+          ["number-bonds", "addition", ...concept.mainTags],
           dayDifficulty,
           "abstract",
         ),
@@ -1266,7 +1290,7 @@ const buildExpandedExercisesForDay = (
           d,
           2,
           4,
-          `פִּתְרוּ: ${base + 20} - ${d} = ?`,
+          `חַשְּׁבוּ: ${base + 20} - ${d}`,
           base + 20 - d,
           ["subtraction"],
           dayDifficulty,
@@ -1369,7 +1393,7 @@ const buildExpandedExercisesForDay = (
           2,
           9,
           d === 8
-            ? "מַתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-4 עַד 16. כַּמָּה קְפִיצוֹת?"
+            ? "מַתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-2 עַד 16. כַּמָּה קְפִיצוֹת?"
             : d === 9
               ? "מַתְחִילִים בְּ-2 וְקוֹפְצִים בְּ-2 עַד 20. כַּמָּה קְפִיצוֹת?"
               : d === 10
@@ -1383,8 +1407,8 @@ const buildExpandedExercisesForDay = (
                       : "סִפְרָה בִּקְפִיצוֹת: מִ-10 לְ-20, כָּל קְפִיצָה 2. כַּמָּה קְפִיצוֹת?",
           d === 8 ? 0 : d === 9 ? 2 : d === 10 ? 10 : d === 11 ? 0 : d === 12 ? 60 : d === 13 ? 5 : 10,
           d === 8 ? 16 : d === 9 ? 20 : d === 10 ? 30 : d === 11 ? 40 : d === 12 ? 80 : d === 13 ? 25 : 20,
-          d === 8 || d === 9 || d === 14 ? 2 : 5,
-          d === 8 ? 4 : d === 9 ? 9 : d === 10 ? 4 : d === 11 ? 8 : d === 12 ? 4 : d === 13 ? 4 : 5,
+          d === 8 ? 2 : d === 9 || d === 14 ? 2 : 5,
+          d === 8 ? 8 : d === 9 ? 9 : d === 10 ? 4 : d === 11 ? 8 : d === 12 ? 4 : d === 13 ? 4 : 5,
           concept.mainTags,
           dayDifficulty,
           "abstract",
@@ -1738,9 +1762,9 @@ const buildExpandedExercisesForDay = (
               : d === 10
                 ? "בַּמִּסְפָּר 85 כַּמָּה עֲשָׂרוֹת יֵשׁ?"
                 : d === 11
-                  ? "חַבְּרוּ עֲשָׂרוֹת: 50 + 30 = ?"
+                  ? "חַשְּׁבוּ חִיבּוּר עֲשָׂרוֹת: 50 + 30"
                   : d === 12
-                    ? "הַחְסִירוּ עֲשָׂרוֹת: 70 - 20 = ?"
+                    ? "חַשְּׁבוּ חִיסּוּר עֲשָׂרוֹת: 70 - 20"
                     : d === 13
                       ? "בַּסַּל הָיוּ 20 פֵּרוֹת. נֶאֱכְלוּ 8 וְנוֹסְפוּ 5. כַּמָּה יֵשׁ?"
                       : "בְּקֻפָּה יֵשׁ 40 עִפְּרוֹנוֹת. מוֹסִיפִים עוֹד 30, אַחַר כָּךְ לוֹקְחִים 20. כַּמָּה נִשְׁאַר?",
@@ -1853,7 +1877,7 @@ const buildExpandedExercisesForDay = (
           d,
           5,
           1,
-          `דֻּגְמָה בְּ${dayCue}: קֹדֶם מְחַבְּרִים וְאַחַר כָּךְ מַחְסִירִים. 20 + 5 - 3 = 22. עַכְשָׁיו: 18 + 6 - 4 = ?`,
+          `דֻּגְמָה בְּ${dayCue}: קֹדֶם מְחַבְּרִים וְאַחַר כָּךְ מַחְסִירִים. 20 + 5 - 3 = 22. עַכְשָׁיו חַשְּׁבוּ 18 + 6 - 4`,
           20,
           ["word-problems", "addition", "subtraction"],
           dayDifficulty,
@@ -1954,7 +1978,7 @@ const buildExpandedExercisesForDay = (
                       : "מִסְפָּרִים בַּחֲמִישִּׁיּוֹת מִ-5 עַד 30. כַּמָּה קְפִיצוֹת?",
           d === 12 ? 70 : d === 8 ? 0 : d === 9 ? 3 : d === 10 ? 20 : d === 11 ? 10 : d === 13 ? 8 : 5,
           d === 12 ? 90 : d === 8 ? 12 : d === 9 ? 18 : d === 10 ? 40 : d === 11 ? 35 : d === 13 ? 20 : 30,
-          d === 9 ? 3 : d === 14 ? 5 : 2,
+          d === 9 ? 3 : d === 10 || d === 11 || d === 12 || d === 14 ? 5 : 2,
           d === 8 ? 6 : d === 9 ? 5 : d === 10 ? 4 : d === 11 ? 5 : d === 12 ? 4 : d === 13 ? 6 : 5,
           concept.mainTags,
           dayDifficulty,
@@ -2039,8 +2063,8 @@ const buildExpandedExercisesForEarlyDays = (
       const start = Math.max(0, Math.min(4, idx - 1));
       const dayOnePrompts = [
         `סִפְרוּ מִ-${start} עַד 5. כַּמָּה מִסְפָּרִים אוֹמְרִים?`,
-        `מַתְחִילִים בְּ-${start} וּמְסַיְּמִים בְּ-5. כַּמָּה מִסְפָּרִים יֵשׁ?`,
-        `סִפְרָה קְצָרָה: מִ-${start} עַד 5. מָה מִסְפַּר הַמִּסְפָּרִים?`,
+        countRangePrompt(start, 5),
+        countRangePrompt(start, 5),
         `סִפְרוּ בְּקוֹל: ${start}, ... , 5. כַּמָּה נֶאֱמָרִים בַּסַּךְ הַכֹּל?`,
         `סוֹפְרִים אֶת כָּל הַמִּסְפָּרִים מִ-${start} עַד 5. כַּמָּה יֵשׁ?`,
         `עִבְרוּ מִ-${start} עַד 5 בִּסְפִירָה. כַּמָּה מִסְפָּרִים עוֹבְרִים?`,
@@ -2056,12 +2080,12 @@ const buildExpandedExercisesForEarlyDays = (
       const start = (idx - 1) % 6;
       const end = Math.min(10, start + 4);
       const dayTwoPrompts = [
-        `סִפְרוּ מִ-${start} עַד ${end}. כַּמָּה מִסְפָּרִים יֵשׁ?`,
-        `הַתְחִילוּ בְּ-${start} וְסִיְּמוּ בְּ-${end}. מָה כַּמּוּת הַמִּסְפָּרִים?`,
+        countRangePrompt(start, end),
+        countRangePrompt(start, end),
         `אִמְרוּ אֶת הַסְּפִירָה ${start} עַד ${end}. כַּמָּה נֶאֱמָר?`,
         `בִּסְפִירָה מִ-${start} לְ-${end}, כַּמָּה מִסְפָּרִים כּוֹלֵל הַטֶּוַח?`,
         `סִפְרָה מֻדְרֶכֶת: מִ-${start} עַד ${end}. כַּמָּה יֵשׁ בַּסְּפִירָה?`,
-        `סִפְרוּ צַעַד-צַעַד מִ-${start} עַד ${end}. כַּמָּה מִסְפָּרִים?`,
+        countRangePrompt(start, end),
       ];
       return {
         prompt: dayTwoPrompts[(idx - 1) % dayTwoPrompts.length],
@@ -2073,12 +2097,12 @@ const buildExpandedExercisesForEarlyDays = (
     if (d === 3) {
       const [a, b] = day3AdditionPair(idx);
       const dayThreePrompts = [
-        `${a} + ${b} = ?`,
-        `פִּתְרוּ חִיבּוּר: ${a} + ${b} = ?`,
+        `חַשְּׁבוּ: ${a} + ${b}`,
+        `חַשְּׁבוּ חִיבּוּר: ${a} + ${b}`,
         `מָה הַתּוֹצָאָה שֶׁל ${a} + ${b}?`,
-        `חַשְּׁבוּ: ${a} + ${b} = __`,
+        `כַּמָּה יֵצֵא בְּ-${a} + ${b}?`,
         `תַּרְגִּיל חִיבּוּר קָצָר: ${a} + ${b}`,
-        `הַשְׁלִימוּ: ${a} + ${b} = ___`,
+        `תַּרְגִּיל חִיבּוּר: ${a} וְעוֹד ${b}.`,
       ];
       return {
         prompt: dayThreePrompts[(idx - 1) % dayThreePrompts.length],
@@ -2090,12 +2114,12 @@ const buildExpandedExercisesForEarlyDays = (
     if (d === 4) {
       const [a, sub] = day4SubtractionPair(idx);
       const dayFourPrompts = [
-        `${a} - ${sub} = ?`,
-        `פִּתְרוּ חִיסּוּר: ${a} - ${sub} = ?`,
+        `חַשְּׁבוּ: ${a} - ${sub}`,
+        `חַשְּׁבוּ חִיסּוּר: ${a} - ${sub}`,
         `מָה הַתּוֹצָאָה בַּתַּרְגִּיל ${a} - ${sub}?`,
-        `חַשְּׁבוּ: ${a} - ${sub} = __`,
+        `כַּמָּה יֵצֵא בְּ-${a} - ${sub}?`,
         `תַּרְגִּיל חִיסּוּר קָצָר: ${a} - ${sub}`,
-        `הַשְׁלִימוּ: ${a} - ${sub} = ___`,
+        `תַּרְגִּיל חִיסּוּר: ${a} פָּחוֹת ${sub}.`,
       ];
       return {
         prompt: dayFourPrompts[(idx - 1) % dayFourPrompts.length],
@@ -2127,10 +2151,10 @@ const buildExpandedExercisesForEarlyDays = (
         const a = 10 + idx;
         const b = idx <= 4 ? 3 : 4;
         const evenPrompts = [
-          `חַשְּׁבוּ חִיבּוּר: ${a} + ${b} = ?`,
+          `חַשְּׁבוּ חִיבּוּר: ${a} + ${b}`,
           `כַּמָּה יֵשׁ בְּסַךְ הַכֹּל? ${a} וְעוֹד ${b}.`,
           `הוֹסִיפוּ ${b} לְ-${a}. מַה הַתּוֹצָאָה?`,
-          `הַשְׁלִימוּ אֶת הַתַּרְגִּיל: ${a} + ${b} = __`,
+          `כַּמָּה יֵצֵא בְּ-${a} + ${b}?`,
         ];
         return {
           prompt: evenPrompts[(idx / 2 - 1) % evenPrompts.length],
@@ -2141,9 +2165,9 @@ const buildExpandedExercisesForEarlyDays = (
       const a = 18 + idx;
       const b = idx <= 4 ? 4 : 5;
       const oddPrompts = [
-        `חַשְּׁבוּ חִיסּוּר: ${a} - ${b} = ?`,
+        `חַשְּׁבוּ חִיסּוּר: ${a} - ${b}`,
         `מַה נִשְׁאָר אִם מוֹרִידִים ${b} מִ-${a}?`,
-        `הַשְׁלִימוּ אֶת הַתַּרְגִּיל: ${a} - ${b} = __`,
+        `כַּמָּה יֵצֵא בְּ-${a} - ${b}?`,
         `הַחְסִירוּ ${b} מִ-${a}. מַה הַתְּשׁוּבָה?`,
       ];
       return {
@@ -2165,14 +2189,14 @@ const buildExpandedExercisesForEarlyDays = (
       const start = Math.max(0, Math.min(4, idx - 1));
       const end = 5;
       const dayOneDrillPrompts = [
-        `סִפְרוּ מִ-${start} עַד ${end}. כַּמָּה מִסְפָּרִים יֵשׁ?`,
-        `מֵהַמִּסְפָּר ${start} עַד ${end} - כַּמָּה סוֹפְרִים?`,
+        countRangePrompt(start, end),
+        countRangePrompt(start, end),
         `הַשְׁלִימוּ סְפִירָה מִ-${start} עַד ${end}. כַּמָּה בַּסַּךְ הַכֹּל?`,
-        `סִפְרוּ בַּטֶּוַח ${start} עַד ${end}. מָה כַּמּוּת הַמִּסְפָּרִים?`,
+        countRangePrompt(start, end),
         `סוֹפְרִים: ${start}...${end}. כַּמָּה מִסְפָּרִים נֶאֱמָרִים?`,
         `סִפְרָה יְשִׁירָה מִ-${start} עַד ${end}. כַּמָּה יֵשׁ?`,
-        `מַתְחִילִים בְּ-${start} וְעוֹצְרִים בְּ-${end}. כַּמָּה מִסְפָּרִים?`,
-        `מִ-${start} עַד ${end} כּוֹלֵל. כַּמָּה מִסְפָּרִים יֵשׁ?`,
+        countRangePrompt(start, end),
+        countRangePrompt(start, end),
       ];
       return {
         prompt: dayOneDrillPrompts[(idx - 1) % dayOneDrillPrompts.length],
@@ -2204,12 +2228,12 @@ const buildExpandedExercisesForEarlyDays = (
     if (d === 3) {
       const [a, b] = day3AdditionPair(idx);
       const dayThreeDrillPrompts = [
-        `פִּתְרוּ חִיבּוּר: ${a} + ${b} = ?`,
-        `חַשְּׁבוּ אֶת הַתַּרְגִּיל ${a} + ${b} = ?`,
+        `חַשְּׁבוּ חִיבּוּר: ${a} + ${b}`,
+        `חַשְּׁבוּ אֶת הַתַּרְגִּיל ${a} + ${b}`,
         `מָה תּוֹצָאַת הַחִיבּוּר ${a} + ${b}?`,
-        `הַשְׁלִימוּ: ${a} + ${b} = __`,
-        `תַּרְגִּיל יוֹם 3: ${a} + ${b} = ?`,
-        `כִּתְבוּ תְּשׁוּבָה לְ-${a} + ${b} = ?`,
+        `חִיבּוּר: ${a} וְעוֹד ${b}. כַּמָּה?`,
+        `תַּרְגִּיל יוֹם 3: חַשְּׁבוּ ${a} + ${b}`,
+        `כִּתְבוּ תְּשׁוּבָה לְ-${a} + ${b}`,
         `חִיבּוּר קָצָר: ${a} וְעוֹד ${b}. כַּמָּה?`,
         `מָה יֵצֵא אִם מוֹסִיפִים ${b} לְ-${a}?`,
       ];
@@ -2223,12 +2247,12 @@ const buildExpandedExercisesForEarlyDays = (
     if (d === 4) {
       const [a, sub] = day4SubtractionPair(idx);
       const dayFourDrillPrompts = [
-        `פִּתְרוּ חִיסּוּר: ${a} - ${sub} = ?`,
-        `חַשְּׁבוּ אֶת הַתַּרְגִּיל ${a} - ${sub} = ?`,
+        `חַשְּׁבוּ חִיסּוּר: ${a} - ${sub}`,
+        `חַשְּׁבוּ אֶת הַתַּרְגִּיל ${a} - ${sub}`,
         `מָה תּוֹצָאַת הַחִיסּוּר ${a} - ${sub}?`,
-        `הַשְׁלִימוּ: ${a} - ${sub} = __`,
-        `תַּרְגִּיל יוֹם 4: ${a} - ${sub} = ?`,
-        `כִּתְבוּ תְּשׁוּבָה לְ-${a} - ${sub} = ?`,
+        `חִיסּוּר: ${a} פָּחוֹת ${sub}. כַּמָּה?`,
+        `תַּרְגִּיל יוֹם 4: חַשְּׁבוּ ${a} - ${sub}`,
+        `כִּתְבוּ תְּשׁוּבָה לְ-${a} - ${sub}`,
         `חִיסּוּר קָצָר: ${a} פָּחוֹת ${sub}. כַּמָּה?`,
         `מָה יֵצֵא אִם נַחְסִיר ${sub} מִ-${a}?`,
       ];
@@ -2264,10 +2288,10 @@ const buildExpandedExercisesForEarlyDays = (
         const a = 11 + idx;
         const b = 4;
         const evenDrillPrompts = [
-          `פִּתְרוּ: ${a} + ${b} = ?`,
+          `חַשְּׁבוּ: ${a} + ${b}`,
           `מָה הַתּוֹצָאָה שֶׁל ${a} וְעוֹד ${b}?`,
           `הוֹסִיפוּ ${b} לְ-${a} וּכְתְבוּ אֶת הַסְּכוּם.`,
-          `תַּרְגִּיל חִיבּוּר: ${a} + ${b} = ?`,
+          `תַּרְגִּיל חִיבּוּר: ${a} + ${b}`,
         ];
         return {
           prompt: evenDrillPrompts[(idx / 2 - 1) % evenDrillPrompts.length],
@@ -2278,9 +2302,9 @@ const buildExpandedExercisesForEarlyDays = (
       const a = 20 + idx;
       const b = 5;
       const oddDrillPrompts = [
-        `פִּתְרוּ: ${a} - ${b} = ?`,
+        `חַשְּׁבוּ: ${a} - ${b}`,
         `כַּמָּה נִשְׁאָר מִ-${a} אַחֲרֵי הוֹרָדַת ${b}?`,
-        `תַּרְגִּיל חִיסּוּר: ${a} - ${b} = ?`,
+        `תַּרְגִּיל חִיסּוּר: ${a} - ${b}`,
         `הַחְסִירוּ ${b} מִ-${a} וּכְתְבוּ תְּשׁוּבָה.`,
       ];
       return {
@@ -2304,7 +2328,7 @@ const buildExpandedExercisesForEarlyDays = (
       id: toSectionId(d, 1),
       title: "חִימּוּם וַחֲזָרַת סְפִּירָלָה",
       type: "warmup",
-      learningGoal: "לְהַתְחִיל בְּהַצְלָחָה עִם 3–4 תַּרְגּוּלִים מִיּוֹמִים קוֹדְמִים.",
+      learningGoal: "לְהַתְחִיל בְּהַצְלָחָה עִם 3–4 תַּרְגּוּלִים מִיָּמִים קוֹדְמִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
       exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
     },
@@ -2423,7 +2447,7 @@ const buildExpandedExercisesForEarlyDays = (
           d,
           3,
           1,
-          `דֻּגְמָה: ${subBase + 2} - 2 = ${subBase}. עַכְשָׁיו: ${subBase + 3} - 2 = ?`,
+          `דֻּגְמָה: ${subBase + 2} - 2 = ${subBase}. עַכְשָׁיו חַשְּׁבוּ ${subBase + 3} - 2`,
           subBase + 1,
           ["subtraction"],
           dayDifficulty,
@@ -2431,14 +2455,14 @@ const buildExpandedExercisesForEarlyDays = (
           0,
           20,
         ),
-        numberInput(d, 3, 2, `${subBase + 1} - 3 = ?`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
-        numberInput(d, 3, 3, `${subBase + 2} - 4 = ?`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
-        numberInput(d, 3, 4, `${subBase} - 2 = ?`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
+        numberInput(d, 3, 2, `חַשְּׁבוּ ${subBase + 1} - 3`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
+        numberInput(d, 3, 3, `חַשְּׁבוּ ${subBase + 2} - 4`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
+        numberInput(d, 3, 4, `חַשְּׁבוּ ${subBase} - 2`, subBase - 2, ["subtraction"], dayDifficulty, "abstract"),
         multipleChoice(
           d,
           3,
           5,
-          `${subBase + 4} - 3 = ?`,
+          `חַשְּׁבוּ ${subBase + 4} - 3`,
           [`${subBase}`, `${subBase + 1}`, `${subBase + 2}`],
           `${subBase + 1}`,
           ["subtraction"],
@@ -2449,7 +2473,7 @@ const buildExpandedExercisesForEarlyDays = (
           d,
           3,
           6,
-          `${Math.min(maxForDay, subBase + 5)} - 5 = ?`,
+          `חַשְּׁבוּ ${Math.min(maxForDay, subBase + 5)} - 5`,
           Math.min(maxForDay, subBase + 5) - 5,
           ["subtraction"],
           dayDifficulty,
@@ -2613,7 +2637,7 @@ const buildExpandedExercisesForEarlyDays = (
           d,
           5,
           1,
-          `דֻּגְמָה: ${addBase + 3} + 2 = ?`,
+          `דֻּגְמָה: חַשְּׁבוּ ${addBase + 3} + 2`,
           [`${addBase + 4}`, `${addBase + 5}`, `${addBase + 6}`],
           `${addBase + 5}`,
           ["addition"],
@@ -2624,7 +2648,7 @@ const buildExpandedExercisesForEarlyDays = (
           d,
           5,
           2,
-          `${subBase + 3} - 3 = ?`,
+          `חַשְּׁבוּ ${subBase + 3} - 3`,
           [`${subBase - 1}`, `${subBase}`, `${subBase + 1}`],
           `${subBase}`,
           ["subtraction"],
@@ -2735,6 +2759,9 @@ function buildProgressiveConceptFocusSection(
 ): Section {
   const d = concept.dayNumber;
   const tags = concept.mainTags;
+  const hasTag = (tag: SkillTag) => tags.includes(tag);
+  const hasWordProblems = hasTag("word-problems");
+  const hasPlaceValue = hasTag("place-value");
   const a = concept.arithmeticAnswer;
   const exercises: Exercise[] = [];
   let exNum = 1;
@@ -2757,14 +2784,20 @@ function buildProgressiveConceptFocusSection(
   );
 
   if (a >= 3) {
+    const placeValueNumber = Math.min(999, Math.max(10, a + 10));
+    const placeValueTens = Math.floor(placeValueNumber / 10);
     exercises.push(
       numberInput(
         d,
         2,
         exNum++,
-        `תִרְגּוּל הַמְשָׁךְ לְנוֹשֵׂא הַיּוֹם: ${a} - 3 = ?`,
-        a - 3,
-        tags,
+        hasPlaceValue
+          ? `בַּמִּסְפָּר ${placeValueNumber}, כַּמָּה עֲשָׂרוֹת יֵשׁ?`
+          : hasWordProblems
+            ? `בְּעָיָה: הָיוּ ${a} עִפְּרוֹנוֹת. הִשְׁתַּמְּשׁוּ בְּ-3. כַּמָּה נִשְׁאֲרוּ?`
+            : `תִרְגּוּל הַמְשָׁךְ לְנוֹשֵׂא הַיּוֹם: חַשְּׁבוּ ${a} - 3`,
+        hasPlaceValue ? placeValueTens : a - 3,
+        hasPlaceValue ? ["place-value", ...tags] : tags,
         dayDifficulty,
         "abstract",
         0,
@@ -2773,14 +2806,21 @@ function buildProgressiveConceptFocusSection(
     );
   }
 
+  const placeValueNumber2 = Math.min(999, Math.max(10, a + 10));
+  const placeValueTensBase = Math.floor(placeValueNumber2 / 10) * 10;
+  const placeValueOnes = placeValueNumber2 - placeValueTensBase;
   exercises.push(
     numberInput(
       d,
       2,
       exNum++,
-      `תִרְגּוּל הַמְשָׁךְ: ${a} + 2 = ?`,
-      a + 2,
-      tags,
+      hasPlaceValue
+        ? `כַּמָּה צָרִיךְ לְהוֹסִיף לְ-${placeValueTensBase} כְּדֵי לְהַגִּיעַ לְ-${placeValueNumber2}?`
+        : hasWordProblems
+          ? `בְּעָיָה: לְדָנִי הָיוּ ${a + 2} מַדְבֵּקוֹת. הוּא נָתַן 2. כַּמָּה הָיוּ לוֹ לִפְנֵי שֶׁנָּתַן?`
+          : `תִרְגּוּל הַמְשָׁךְ: חַשְּׁבוּ ${a} + 2`,
+      hasPlaceValue ? placeValueOnes : hasWordProblems ? a : a + 2,
+      hasPlaceValue ? ["place-value", "number-bonds", ...tags] : tags,
       dayDifficulty,
       "abstract",
       0,
@@ -2793,7 +2833,7 @@ function buildProgressiveConceptFocusSection(
       d,
       2,
       exNum++,
-      `חִזּוּק: ${a} + 10 = ?`,
+      `חִזּוּק: חַשְּׁבוּ ${a} + 10`,
       a + 10,
       tags,
       dayDifficulty,
@@ -2880,7 +2920,7 @@ export function buildDayFromConcepts(
       id: toSectionId(concept.dayNumber, 1),
       title: "חִימּוּם וַחֲזָרַת סְפִּירָלָה",
       type: "warmup",
-      learningGoal: "לְהִיזָּכֵר בְּנוֹשְׂאִים מִיּוֹמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
+      learningGoal: "לְהִיזָּכֵר בְּנוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
       exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
     },
@@ -2931,7 +2971,7 @@ export function buildDayFromConcepts(
             ? "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים."
             : "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
           concept.dayNumber <= 5 ? 0 : concept.dayNumber <= 8 ? concept.dayNumber : 0,
-          concept.dayNumber <= 5 ? 10 : 20,
+          concept.dayNumber <= 8 ? 10 : 20,
           concept.dayNumber <= 8 ? 1 : 2,
           concept.dayNumber <= 8 ? 10 - (concept.dayNumber <= 5 ? 0 : concept.dayNumber) : 10,
           ["number-line", ...concept.mainTags],

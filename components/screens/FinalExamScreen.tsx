@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExerciseBox } from "@/components/ExerciseBox";
+import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { AppNavLink } from "@/components/ui/AppNavLink";
+import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { ButtonLink } from "@/components/ui/Button";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import {
   FINAL_EXAM_DAY_ID,
-  FINAL_EXAM_PASS_PERCENT,
   FINAL_EXAM_QUESTION_COUNT,
 } from "@/lib/final-exam/config";
 import { pickFinalExamExerciseIds } from "@/lib/final-exam/picker";
@@ -23,10 +24,12 @@ import {
 } from "@/lib/final-exam/storage";
 import type { FinalExamState } from "@/lib/final-exam/types";
 import { gradeLabel, type GradeId } from "@/lib/grades";
-import type { Exercise, ExerciseId } from "@/lib/types";
+import type { Exercise } from "@/lib/types";
 import { routes } from "@/lib/routes";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
+import { gradeFinalExam } from "@/lib/final-exam/grading";
 import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { childTid, testIds } from "@/lib/testIds";
 
 function createSeed(): string {
   const c = typeof window !== "undefined" ? window.crypto : undefined;
@@ -46,9 +49,15 @@ function createSeed(): string {
 export function FinalExamScreen({ grade }: { grade: GradeId }) {
   const router = useRouter();
   const { previewAll, isLocked } = useDayUnlockStatus({ grade, dayId: FINAL_EXAM_DAY_ID });
-  const refs = useRef<Record<string, HTMLInputElement | null>>({});
+  const refs = useRef<Record<string, HTMLElement | null>>({});
+  const stateRef = useRef<FinalExamState | null>(null);
 
   const [state, setState] = useState<FinalExamState | null>(null);
+  const [isUnlockingGradeB, setIsUnlockingGradeB] = useState(false);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     const existing = loadFinalExamState(grade);
@@ -102,37 +111,52 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
   const canFinish = answeredCount === FINAL_EXAM_QUESTION_COUNT;
 
   const exerciseOrder = useMemo(() => selectedExercises.map((e) => e.id), [selectedExercises]);
-  const focusNextInput = (currentId: string) => {
+  const focusNextInput = useCallback((currentId: string) => {
     const currentIndex = exerciseOrder.findIndex((id) => id === currentId);
     const nextId = exerciseOrder[currentIndex + 1];
     if (!nextId) return;
     refs.current[nextId]?.focus();
-  };
+  }, [exerciseOrder]);
 
-  const persist = (next: FinalExamState) => {
+  const setFocusRef = useCallback((exerciseId: string, node: HTMLElement | null) => {
+    refs.current[exerciseId] = node;
+  }, []);
+
+  const persist = useCallback((next: FinalExamState) => {
     saveFinalExamState(grade, next);
     setState(next);
-  };
+  }, [grade]);
 
-  const onChange = (exerciseId: ExerciseId, value: string) => {
-    if (!state) return;
+  const onChangeValue = useCallback((exerciseId: string, value: string) => {
+    const current = stateRef.current;
+    if (!current) return;
     persist({
-      ...state,
-      answers: { ...state.answers, [exerciseId]: value },
+      ...current,
+      answers: { ...current.answers, [exerciseId]: value },
     });
-  };
+  }, [persist]);
 
-  const submitExercise = (exercise: Exercise) => {
-    if (!state) return;
-    if (state.submittedAt) return;
-    const userAnswer = state.answers[exercise.id] ?? "";
+  const onRetryExercise = useCallback((exerciseId: string) => {
+    const current = stateRef.current;
+    if (!current || current.submittedAt) return;
+    persist({
+      ...current,
+      answers: { ...current.answers, [exerciseId]: "" },
+    });
+  }, [persist]);
+
+  const submitExercise = useCallback((exercise: Exercise) => {
+    const current = stateRef.current;
+    if (!current) return;
+    if (current.submittedAt) return;
+    const userAnswer = current.answers[exercise.id] ?? "";
     const normalizedAnswer = normalizeAnswerValue(userAnswer);
-    const previousAttempts = state.attempts[exercise.id] ?? 0;
+    const previousAttempts = current.attempts[exercise.id] ?? 0;
     if (normalizedAnswer === null) {
       // keep feedback by marking incorrect; no attempt increment
       persist({
-        ...state,
-        correctMap: { ...state.correctMap, [exercise.id]: false },
+        ...current,
+        correctMap: { ...current.correctMap, [exercise.id]: false },
       });
       return;
     }
@@ -140,11 +164,11 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
     const success = isAnswerCorrect(exercise, userAnswer);
     const nextAttempt = previousAttempts + 1;
     persist({
-      ...state,
-      attempts: { ...state.attempts, [exercise.id]: nextAttempt },
-      correctMap: { ...state.correctMap, [exercise.id]: success },
+      ...current,
+      attempts: { ...current.attempts, [exercise.id]: nextAttempt },
+      correctMap: { ...current.correctMap, [exercise.id]: success },
     });
-  };
+  }, [persist]);
 
   const retryExam = () => {
     clearFinalExamState(grade);
@@ -163,36 +187,38 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
 
   const finishExam = async () => {
     if (!state) return;
-    if (!canFinish) return;
-    const nextCorrectMap: Record<ExerciseId, boolean> = { ...state.correctMap };
-    for (const ex of selectedExercises) {
-      const raw = state.answers[ex.id] ?? "";
-      nextCorrectMap[ex.id] = isAnswerCorrect(ex, raw);
-    }
-    const nextCorrectCount = state.selectedExerciseIds.filter((id) => nextCorrectMap[id]).length;
-    const scorePercent = Math.round((nextCorrectCount / FINAL_EXAM_QUESTION_COUNT) * 100);
-    const passed = scorePercent >= FINAL_EXAM_PASS_PERCENT;
+    const graded = gradeFinalExam({ selectedExercises, answers: state.answers });
+    if (!graded.canFinish) return;
     const next: FinalExamState = {
       ...state,
-      correctMap: nextCorrectMap,
+      correctMap: graded.correctMap,
       submittedAt: new Date().toISOString(),
-      scorePercent,
-      passed,
+      scorePercent: graded.scorePercent,
+      passed: graded.passed,
     };
     persist(next);
 
-    if (passed && grade === "a") {
-      await fetch("/api/unlock-grade-b", { method: "POST" }).catch(() => null);
+    if (graded.passed && grade === "a") {
+      setIsUnlockingGradeB(true);
+      try {
+        const response = await fetch("/api/unlock-grade-b", { method: "POST" });
+        if (!response.ok) {
+          throw new Error(`unlock failed with status ${response.status}`);
+        }
+      } finally {
+        setIsUnlockingGradeB(false);
+      }
     }
   };
 
   if (!state) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="surface mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg">
-          <p className="mb-2 text-5xl">⏳</p>
-          <p className="text-lg font-semibold text-gray-700">טוֹעֲנִים אֶת הַמִּבְחָן...</p>
-        </div>
+      <main data-testid={testIds.screen.finalExam.root(`${grade}.loading`)}>
+        <CenteredPanel
+          data-testid={childTid(testIds.screen.finalExam.root(`${grade}.loading`), "panel")}
+          emoji="⏳"
+          title="טוֹעֲנִים אֶת הַמִּבְחָן..."
+        />
       </main>
     );
   }
@@ -203,7 +229,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
 
   if (isLocked === null) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
+      <main data-testid={testIds.screen.finalExam.root(`${grade}.unlock-loading`)} className="flex min-h-screen items-center justify-center">
         <LoadingPanel emoji="⏳" title="טוֹעֲנִים אֶת הַמִּבְחָן..." />
       </main>
     );
@@ -211,45 +237,51 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
 
   if (isLocked) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="surface mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg">
-          <p className="mb-2 text-6xl">🔒</p>
-          <p className="mb-2 text-xl font-semibold text-gray-800">המבחן נעול</p>
-          <p className="mb-6 text-sm text-gray-500">
-            {grade === "a"
+      <main data-testid={testIds.screen.finalExam.root(`${grade}.locked`)}>
+        <CenteredPanel
+          data-testid={childTid(testIds.screen.finalExam.root(`${grade}.locked`), "panel")}
+          emoji="🔒"
+          title="המבחן נעול"
+          description={
+            grade === "a"
               ? "צריך להשלים את כיתה א׳ עד הסוף כדי לפתוח את המבחן המסכם."
-              : "צריך להשלים את כל ימי הלימוד הקודמים כדי לפתוח את המבחן המסכם."}
-          </p>
-          <Link
-            href={routes.gradeHome(grade, { previewAll })}
-            className="touch-button inline-block rounded-2xl bg-violet-400 px-6 py-3 font-semibold text-white shadow-sm"
-          >
-            חזרה לחוברת
-          </Link>
-        </div>
+              : "צריך להשלים את כל ימי הלימוד הקודמים כדי לפתוח את המבחן המסכם."
+          }
+          actions={
+            <ButtonLink
+              data-testid={childTid(testIds.screen.finalExam.root(`${grade}.locked`), "cta", "home")}
+              href={routes.gradeHome(grade, { previewAll })}
+              className="w-full text-center"
+            >
+              חזרה לחוברת
+            </ButtonLink>
+          }
+        />
       </main>
     );
   }
 
   return (
-    <main className="pb-10">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <main data-testid={testIds.screen.finalExam.root(grade)} className="pb-10">
+      <div data-testid={childTid(testIds.screen.finalExam.root(grade), "topNav")} className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <AppNavLink href={routes.gradeHome(grade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
       </div>
 
-      <header className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm">
-        <h1 className="text-xl font-bold text-slate-900">
+      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm">
+        <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-slate-900">
           מִבְחָן מְסַכֵּם — כִּיתָּה {gradeLabel(grade)}
         </h1>
-        <p className="muted mt-1 text-sm">
+        <p data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "subtitle")} className="muted mt-1 text-sm">
           עָנִיתָ עַל {answeredCount} מִתּוֹךְ {FINAL_EXAM_QUESTION_COUNT}
         </p>
-        <div className="mt-3">
+        <div data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "progress")} className="mt-3">
           <ProgressBar value={percentAnswered} label="הִתְקַדְּמוּת בַּמִּבְחָן" />
         </div>
       </header>
 
       <SectionBlock
+        sectionId="final-exam.questions"
+        data-testid={childTid(testIds.screen.finalExam.root(grade), "section", "questions")}
         title="שְׁאֵלוֹת הַמִּבְחָן"
         type="review"
         learningGoal="פּוֹתְרִים שְׁאֵלוֹת מִבַּנְק שֶׁמִּתְחַלֵּף. בְּסוֹף — לָחֲצוּ ״סיימתי״ לְקַבֵּל צִיּוֹן."
@@ -262,75 +294,79 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
           const retryMessage = wasChecked ? getRetryFeedbackText(exercise, value, attempts) : undefined;
 
           return (
-            <div
+            <ExerciseItem
+              screenRootTestId={testIds.screen.finalExam.root(grade)}
               key={exercise.id}
-              ref={(el) => {
-                refs.current[exercise.id] = (el?.querySelector("input") as HTMLInputElement | null) ?? null;
-              }}
-            >
-              <ExerciseBox
-                exercise={exercise}
-                value={value}
-                wasChecked={wasChecked}
-                isCorrect={isCorrect}
-                retryMessage={retryMessage}
-                onChange={(v) => {
-                  if (showResults) return;
-                  onChange(exercise.id, v);
-                }}
-                onSubmit={() => {
-                  if (showResults) return;
-                  submitExercise(exercise);
-                }}
-                onNextInput={() => focusNextInput(exercise.id)}
-                onRetry={() => {
-                  if (showResults) return;
-                  onChange(exercise.id, "");
-                }}
-              />
-            </div>
+              exercise={exercise}
+              value={value}
+              wasChecked={wasChecked}
+              isCorrect={isCorrect}
+              retryMessage={retryMessage}
+              isReadOnly={showResults}
+              setFocusRef={setFocusRef}
+              onChangeValue={onChangeValue}
+              onSubmitExercise={submitExercise}
+              onNextInput={focusNextInput}
+              onRetryExercise={onRetryExercise}
+            />
           );
         })}
       </SectionBlock>
 
-      <div className="surface mt-4 rounded-3xl p-5">
+      <div data-testid={testIds.screen.finalExam.finishPanel(grade)} className="surface mt-4 rounded-3xl p-5">
         {!showResults ? (
           canFinish ? (
-            <button type="button" className="touch-button btn-accent mt-2 w-full" onClick={finishExam}>
+            <button
+              data-testid={testIds.screen.finalExam.finishCta(grade)}
+              type="button"
+              className="touch-button btn-accent mt-2 w-full"
+              onClick={finishExam}
+            >
               סיימתי
             </button>
           ) : (
-            <p className="muted mt-2 text-sm">
+            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "hint")} className="muted mt-2 text-sm">
               נשארו עוד {FINAL_EXAM_QUESTION_COUNT - answeredCount} שאלות כדי לקבל ציון.
             </p>
           )
         ) : null}
 
         {showResults ? (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-lg font-bold text-slate-900">ציון: {scorePercent}%</p>
-            <p className={`mt-1 text-sm font-semibold ${passed ? "text-emerald-700" : "text-rose-700"}`}>
+          <div
+            data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results")}
+            className="mt-4 rounded-2xl border border-slate-200 bg-white p-4"
+          >
+            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-slate-900">
+              ציון: {scorePercent}%
+            </p>
+            <p
+              data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "status")}
+              className={`mt-1 text-sm font-semibold ${passed ? "text-emerald-700" : "text-rose-700"}`}
+            >
               {passed
                 ? grade === "a"
                   ? "עברת! אפשר להתחיל כיתה ב׳."
                   : "עברת את המבחן המסכם לכיתה ב׳!"
                 : "לא עבר — אפשר להיבחן שוב."}
             </p>
-            <p className="muted mt-2 text-sm">
+            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "breakdown")} className="muted mt-2 text-sm">
               נכון: {correctCount} | לא נכון: {FINAL_EXAM_QUESTION_COUNT - correctCount}
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "ctas")} className="mt-3 grid gap-2 sm:grid-cols-2">
               {passed ? (
                 grade === "a" ? (
                   <button
+                    data-testid={testIds.screen.finalExam.startGradeB()}
                     type="button"
-                    className="touch-button btn-accent w-full"
+                    className={`touch-button w-full ${isUnlockingGradeB ? "btn-disabled" : "btn-accent"}`}
+                    disabled={isUnlockingGradeB}
                     onClick={() => router.push(routes.gradeHome("b"))}
                   >
-                    להתחיל כיתה ב׳
+                    {isUnlockingGradeB ? "פותחים את כיתה ב׳..." : "להתחיל כיתה ב׳"}
                   </button>
                 ) : (
                   <button
+                    data-testid={testIds.screen.finalExam.gradePicker()}
                     type="button"
                     className="touch-button btn-accent w-full"
                     onClick={() => router.push(routes.gradePicker())}
@@ -339,7 +375,12 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
                   </button>
                 )
               ) : (
-                <button type="button" className="touch-button btn-accent w-full" onClick={retryExam}>
+                <button
+                  data-testid={testIds.screen.finalExam.retryCta(grade)}
+                  type="button"
+                  className="touch-button btn-accent w-full"
+                  onClick={retryExam}
+                >
                   להיבחן שוב
                 </button>
               )}

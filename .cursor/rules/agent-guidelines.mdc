@@ -41,11 +41,22 @@ If a change could break behavior, prefer running `npm run lint` and `npm run bui
 - Reuse existing design language:
   - CSS variables in `app/globals.css` (e.g. `--background`, `--accent`).
   - Tailwind theme extensions in `tailwind.config.ts` (kid color palette, radii, shadows, animations).
+- Prefer composing shared UI primitives over repeating large Tailwind strings:
+  - `components/ui/Surface.tsx` for `.surface` containers (supports `variant`).
+  - `components/ui/Button.tsx` (`Button`, `ButtonLink`) for `.touch-button` + variants.
+  - `components/ui/Chip.tsx` for pill badges.
+  - `components/ui/HeroHeader.tsx` for repeated hero sections.
+  - `components/ui/CenteredPanel.tsx` for centered locked/not-found/loading panels.
 - Prefer semantic, accessible UI:
   - Visible focus styles (project already uses `:focus-visible` patterns).
   - Touch-friendly targets (project uses ~44–52px conventions).
 - Preserve RTL readability:
   - Keep general UI `dir="rtl"`; use `dir="ltr"` only for math inputs/expressions when needed.
+
+## `data-testid` in UI components
+
+- Every custom component that renders a DOM root must accept and **forward** `data-testid`.
+- Prefer `testIds.screen.*` for Tier‑1 anchors and `childTid()` for nested UI blocks (see `.cursor/rules/testids.mdc`).
 
 ## Analytics / telemetry
 

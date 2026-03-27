@@ -1,0 +1,43 @@
+---
+description: Mandatory data-testid convention (kids_math)
+alwaysApply: true
+---
+
+# Mandatory `data-testid` convention
+
+## Goal
+
+- Playwright E2E selectors must be **`getByTestId()` first**.
+- The app must provide **robust, stable, unique** `data-testid` attributes to support that.
+
+## Requirements (mandatory)
+
+- **Every intrinsic JSX element** (DOM node) in `app/**` and `components/**` must have a `data-testid`.
+  - Intrinsic JSX elements are lower-case tags like `div`, `span`, `p`, `article`, `section`, `header`, `button`, `input`, `a`, etc.
+- **No ad-hoc strings**: build IDs using the shared helper in `lib/testIds.ts`.
+- **No localized/copy text** in test ids:
+  - Do not derive IDs from Hebrew strings, workbook prompts, visible labels, or any user input.
+  - Use stable internal identifiers instead (`grade`, `day.id`, `strand.id`, `exercise.id`, etc.).
+- **Custom components must forward** `data-testid` to a real DOM root element.
+  - If a component renders an intrinsic element, it must accept `data-testid` (or `testId`) and pass it through.
+
+## ID structure (contract)
+
+- Prefix all IDs with `km.` (see `lib/testIds.ts`).
+- Prefer stable “Tier‑1” anchors for screens/cards/exercises, then derive children from those anchors.
+
+## Component composition (mandatory)
+
+- **Tier‑1 anchors live on the screen root** (`<main>`): use `testIds.screen.*.root(...)` there.
+- **Nested blocks must use `childTid()`** from the Tier‑1 anchor (e.g. `childTid(testIds.screen.day.root(...), "panel")`).
+- **Never reuse the same `data-testid` on multiple elements** (Playwright strict mode treats that as ambiguous).
+  - If you need both a screen root and an inner panel id, **keep the root** on `<main>` and use `childTid(root, ...)` for the panel.
+
+## Testing guidance
+
+- Prefer `page.getByTestId(testIds....)` to locate elements.
+- Avoid brittle selectors:
+  - XPath (`locator('xpath=...')`)
+  - selectors derived from content strings (e.g. `exercise.prompt`)
+  - unscoped tag-name selectors (`page.locator('button').first()`)
+

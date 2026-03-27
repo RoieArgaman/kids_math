@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl">
-      <body className={`${rubik.variable} font-sans antialiased`}>
+    <html data-testid="km.autogen.layout.node.idx.0" lang="he" dir="rtl">
+      <body data-testid="km.autogen.layout.node.idx.1" className={`${rubik.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

@@ -78,6 +78,55 @@ main {
   background: #fffde7;
 }
 
+.km-math-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.km-math-token {
+  display: inline-flex;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border-width: 1px;
+  padding-inline: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.km-math-token--number {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0c4a6e;
+}
+
+.km-math-token--operator {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+  color: #5b21b6;
+}
+
+.km-math-token--equals {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.km-math-token--question {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
 .underline-input {
   width: 100%;
   min-height: 44px;

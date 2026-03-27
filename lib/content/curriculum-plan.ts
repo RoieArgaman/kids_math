@@ -21,7 +21,7 @@ export interface MinistryStrand {
 export const MINISTRY_STRANDS_GRADE_A: MinistryStrand[] = [
   {
     id: "natural-numbers",
-    title: "מַסְפָּרִים טְבִעִיִּים וִיצּוּג",
+    title: "מַסְפָּרִים טְבִעִיִּים וְיִצּוּג",
     summary:
       "מִנִּיָּה, הַכָּרַת מִסְפָּרִים, קַו מִסְפָּרִים, הַשְׁוָאָה, דְּפוּסִים, זוּגִי וְאִי־זוּגִי, עֶרֶךְ מָקוֹם.",
     dayNumbers: [1, 2, 5, 6, 9, 10, 24, 25],
@@ -67,7 +67,7 @@ export const MINISTRY_STRANDS_GRADE_A: MinistryStrand[] = [
 export const MINISTRY_STRANDS_GRADE_B: MinistryStrand[] = [
   {
     id: "natural-numbers",
-    title: "מַסְפָּרִים, מִקּוֹם וַהַשְׁוָאָה",
+    title: "מַסְפָּרִים, מָקוֹם וְהַשְׁוָאָה",
     summary: "מִסְפָּרִים עַד 100, עֶרֶךְ מָקוֹם, דְּפוּסִים וְקַו מִסְפָּרִים.",
     dayNumbers: [1, 10, 23, 24, 27],
     skillTags: ["place-value", "comparing", "patterns", "number-line", "number-recognition"],
