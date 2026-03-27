@@ -7,7 +7,7 @@ import {
   seedFinalExamState,
   seedProgressState,
 } from "./testUtils";
-import { testIds } from "../../lib/testIds";
+import { testIds } from "@/lib/testIds";
 
 test.beforeEach(async ({ page, context }) => {
   await context.clearCookies();

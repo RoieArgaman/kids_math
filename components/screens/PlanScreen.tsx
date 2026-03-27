@@ -82,7 +82,11 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
           </>
         }
         actions={
-          <nav aria-label="ניווט מהיר" className="flex flex-wrap items-center gap-4">
+          <nav
+            data-testid={childTid(testIds.screen.plan.hero(effectiveGrade), "quickNav")}
+            aria-label="ניווט מהיר"
+            className="flex flex-wrap items-center gap-4"
+          >
             <AppNavLink href={routes.gradeHome(effectiveGrade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
             <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
           </nav>
