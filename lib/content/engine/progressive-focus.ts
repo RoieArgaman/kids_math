@@ -6,7 +6,6 @@ import {
   numberInput,
   numberLineJump,
   toSectionId,
-  trueFalse,
 } from "./exercise-factories";
 
 /** מקטע «מושג היום» מורחב אחרי חימום — כל התרגילים נגזרים מ־DayConcept (לכיתה ב׳). */

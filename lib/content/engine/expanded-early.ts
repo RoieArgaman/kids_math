@@ -6,10 +6,8 @@ import {
   multipleChoice,
   numberInput,
   numberLineJump,
-  shapeChoice,
   toSectionId,
   trueFalse,
-  verbalInput,
 } from "./exercise-factories";
 import { buildSpiralWarmupExercises } from "./warmup-generator";
 
