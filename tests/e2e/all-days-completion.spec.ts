@@ -2,7 +2,12 @@ import { expect, test } from "@playwright/test";
 import type { DayId } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerDayCorrectly } from "./answering";
-import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
+import {
+  createCompletedDayProgressState,
+  createProgressState,
+  dismissDayCompletionCelebration,
+  seedProgressState,
+} from "./testUtils";
 import { testIds } from "@/lib/testIds";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 
@@ -58,6 +63,7 @@ test.describe("all days completion", () => {
 
         await page.getByTestId(testIds.screen.day.completeCta(grade, dayId)).click();
         await page.getByTestId(testIds.component.starReward.confirm()).click();
+        await dismissDayCompletionCelebration(page);
         await expect(page).toHaveURL(new RegExp(`/grade/${grade}/?$`));
       }
     });

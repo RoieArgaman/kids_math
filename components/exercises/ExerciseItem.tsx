@@ -19,6 +19,9 @@ interface ExerciseItemProps {
   onSubmitExercise: (exercise: Exercise) => void;
   onNextInput: (exerciseId: ExerciseId) => void;
   onRetryExercise: (exerciseId: ExerciseId) => void;
+  wrongAttempts: number;
+  hintUsed: boolean;
+  onRevealHint: (exerciseId: ExerciseId) => void;
 }
 
 function ExerciseItemBase({
@@ -35,6 +38,9 @@ function ExerciseItemBase({
   onSubmitExercise,
   onNextInput,
   onRetryExercise,
+  wrongAttempts,
+  hintUsed,
+  onRevealHint,
 }: ExerciseItemProps) {
   const onChange = useCallback(
     (nextValue: string) => {
@@ -56,6 +62,11 @@ function ExerciseItemBase({
     onRetryExercise(exercise.id);
   }, [exercise.id, isReadOnly, onRetryExercise]);
 
+  const onHint = useCallback(() => {
+    if (isReadOnly) return;
+    onRevealHint(exercise.id);
+  }, [exercise.id, isReadOnly, onRevealHint]);
+
   return (
     <div
       data-testid={childTid(screenRootTestId, "exerciseWrap", exercise.id)}
@@ -71,6 +82,9 @@ function ExerciseItemBase({
         isCorrect={isCorrect}
         wasChecked={wasChecked}
         showCheckButton={showCheckButton}
+        wrongAttempts={wrongAttempts}
+        hintUsed={hintUsed}
+        onRevealHint={onHint}
         onChange={onChange}
         onSubmit={onSubmit}
         onNextInput={onNext}

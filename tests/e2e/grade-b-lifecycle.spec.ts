@@ -3,6 +3,7 @@ import {
   createCompletedDayProgressState,
   createFinalExamState,
   createProgressState,
+  dismissDayCompletionCelebration,
   exerciseByIdForGrade,
   seedFinalExamState,
   seedProgressState,
@@ -55,6 +56,7 @@ test.describe("grade B lifecycle", () => {
 
     await page.getByTestId(testIds.screen.day.completeCta("b", "day-1")).click();
     await page.getByTestId(testIds.component.starReward.confirm()).click();
+    await dismissDayCompletionCelebration(page);
     await expect(page).toHaveURL(/\/grade\/b\/?$/);
 
     await page.reload();

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { testIds } from "@/lib/testIds";
 import type { GradeId } from "@/lib/grades";
 import type { DayId, DayProgressState, Exercise, ExerciseId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
@@ -158,5 +159,19 @@ export function createFinalExamState(params: {
 
 export async function seedFinalExamState(page: Page, grade: GradeId, state: FinalExamStateV1): Promise<void> {
   await seedLocalStorage(page, { [finalExamKeyForGrade(grade)]: state });
+}
+
+/**
+ * After confirming the star reward on day completion, a trophy modal may appear when new badges unlock.
+ * Dismiss it so navigation to the grade home can finish (see DayScreen StarReward / TrophyUnlock).
+ */
+export async function dismissDayCompletionCelebration(page: Page): Promise<void> {
+  const trophyConfirm = page.getByTestId(testIds.component.trophyUnlock.confirm());
+  try {
+    await trophyConfirm.waitFor({ state: "visible", timeout: 3000 });
+    await trophyConfirm.click();
+  } catch {
+    // No trophy step; grade home navigation already happened from star confirm alone.
+  }
 }
 

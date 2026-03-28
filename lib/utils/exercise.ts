@@ -145,7 +145,7 @@ const strategyHint = (exercise: Exercise): string | null => {
   return null;
 };
 
-const defaultHint = (exercise: Exercise): string => {
+export const defaultHint = (exercise: Exercise): string => {
   if (exercise.hint) {
     return exercise.hint;
   }

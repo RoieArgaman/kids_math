@@ -24,9 +24,12 @@ export interface DayAnswersState {
   correctMap: Record<string, boolean>;
   feedback: Record<string, string>;
   attempts: Record<string, number>;
+  wrongAttempts: Record<string, number>;
+  hintUsed: Record<string, boolean>;
   resetAnswerState: () => void;
   onChangeValue: (exerciseId: string, value: string) => void;
   onRetryExercise: (exerciseId: string) => void;
+  onRevealHint: (exerciseId: string) => void;
   submitExercise: (exercise: Exercise) => void;
 }
 
@@ -40,14 +43,18 @@ export function useDayAnswers({
   const [correctMap, setCorrectMap] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [attempts, setAttempts] = useState<Record<string, number>>({});
+  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
+  const [hintUsed, setHintUsed] = useState<Record<string, boolean>>({});
 
   // Stable refs to avoid stale closures in submitExercise
   const answersRef = useRef(answers);
   const attemptsRef = useRef(attempts);
+  const wrongAttemptsRef = useRef(wrongAttempts);
   useEffect(() => {
     answersRef.current = answers;
     attemptsRef.current = attempts;
-  }, [answers, attempts]);
+    wrongAttemptsRef.current = wrongAttempts;
+  }, [answers, attempts, wrongAttempts]);
 
   // Restore state from localStorage on mount / day change
   useEffect(() => {
@@ -89,6 +96,8 @@ export function useDayAnswers({
     setCorrectMap({});
     setFeedback({});
     setAttempts({});
+    setWrongAttempts({});
+    setHintUsed({});
   }, []);
 
   const onChangeValue = useCallback((exerciseId: string, value: string) => {
@@ -116,10 +125,20 @@ export function useDayAnswers({
           ...prev,
           [exercise.id]: getRetryFeedbackText(exercise, userAnswer, previousAttempts),
         }));
+        setWrongAttempts((prev) => ({
+          ...prev,
+          [exercise.id]: (wrongAttemptsRef.current[exercise.id] ?? 0) + 1,
+        }));
         return;
       }
 
       const success = isAnswerCorrect(exercise, userAnswer);
+      if (!success) {
+        setWrongAttempts((prev) => ({
+          ...prev,
+          [exercise.id]: (wrongAttemptsRef.current[exercise.id] ?? 0) + 1,
+        }));
+      }
       setCorrectMap((prev) => ({ ...prev, [exercise.id]: success }));
       const nextAttempt = previousAttempts + 1;
       setAttempts((prev) => ({ ...prev, [exercise.id]: nextAttempt }));
@@ -137,14 +156,21 @@ export function useDayAnswers({
     [allExercisesCount, setAnswer],
   );
 
+  const onRevealHint = useCallback((exerciseId: string) => {
+    setHintUsed((prev) => ({ ...prev, [exerciseId]: true }));
+  }, []);
+
   return {
     answers,
     correctMap,
     feedback,
     attempts,
+    wrongAttempts,
+    hintUsed,
     resetAnswerState,
     onChangeValue,
     onRetryExercise,
+    onRevealHint,
     submitExercise,
   };
 }

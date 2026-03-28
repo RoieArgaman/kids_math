@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { Chip } from "@/components/ui/Chip";
 import { HeroHeader } from "@/components/ui/HeroHeader";
@@ -18,7 +18,14 @@ import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/prog
 import { loadProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
+import { loadStreakState, saveStreakState } from "@/lib/streak/storage";
+import { computeNextStreakState, getTodayDate } from "@/lib/streak/engine";
+import type { StreakState } from "@/lib/streak/types";
+import type { StreakBadgeId } from "@/lib/streak/types";
+import { StreakBadge } from "@/components/ui/StreakBadge";
+import { TrophyUnlock } from "@/components/TrophyUnlock";
 import { normalizeAnswerValue } from "@/lib/utils/exercise";
+import { useBadges } from "@/lib/hooks/useBadges";
 import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 
@@ -80,6 +87,12 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [streakState, setStreakState] = useState<StreakState | null>(null);
+  const [newlyEarnedBadge, setNewlyEarnedBadge] = useState<StreakBadgeId | null>(null);
+  const [showTrophy, setShowTrophy] = useState(false);
+  const { newlyUnlockedIds, markAllSeen, badgeState, allBadges } = useBadges(effectiveGrade);
+
+  const handleDismissBadge = useCallback(() => setNewlyEarnedBadge(null), []);
 
   useEffect(() => {
     setPreviewAll(getPreviewAllFromLocation());
@@ -87,8 +100,29 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
     setProgress(loadProgressState({ grade: effectiveGrade }));
     setFinalExam(loadFinalExamState(effectiveGrade));
     setEvents(loadEvents());
+
+    // Streak — global, not grade-specific
+    const loaded = loadStreakState();
+    const { nextState, newlyEarnedBadges } = computeNextStreakState(loaded, getTodayDate());
+    if (nextState !== loaded) {
+      saveStreakState(nextState);
+      logEvent("streak_updated", { payload: { currentStreak: nextState.currentStreak } });
+    }
+    if (newlyEarnedBadges.length > 0) {
+      setNewlyEarnedBadge(newlyEarnedBadges[0]);
+      logEvent("badge_earned", { payload: { badgeId: newlyEarnedBadges[0] } });
+    }
+    setStreakState(nextState);
+
     setIsHydrated(true);
   }, [effectiveGrade]);
+
+  useEffect(() => {
+    if (isHydrated && newlyUnlockedIds.length > 0) {
+      setShowTrophy(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated]);
 
   const weeks = useMemo(
     () =>
@@ -117,6 +151,13 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav")} className="mb-4">
         <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav", "actions")} className="flex items-center gap-4">
           <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+          <AppNavLink
+            href={routes.gradeBadges(effectiveGrade, { previewAll })}
+            data-testid={testIds.screen.badges.badgesCta(effectiveGrade)}
+            onClick={() => logEvent("badges_viewed", { payload: { grade: effectiveGrade, unlockedCount: badgeState.unlocked.length } })}
+          >
+            🏆 הַפְּרָסִים שֶׁלִּי ({badgeState.unlocked.length}/{allBadges.length})
+          </AppNavLink>
         </div>
       </div>
 
@@ -151,6 +192,20 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           </Link>
         }
       />
+
+      {streakState !== null && (
+        <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "streakRow")}
+          className="mb-4 flex justify-start"
+        >
+          <StreakBadge
+            data-testid={childTid(testIds.screen.home.root(effectiveGrade), "streakBadge")}
+            currentStreak={streakState.currentStreak}
+            newlyEarnedBadge={newlyEarnedBadge}
+            onDismissBadge={handleDismissBadge}
+          />
+        </div>
+      )}
 
       {finalExam?.passed ? (
         <div
@@ -303,6 +358,15 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           </section>
         );
       })}
+
+      <TrophyUnlock
+        visible={showTrophy}
+        newBadgeIds={newlyUnlockedIds}
+        onConfirm={() => {
+          markAllSeen();
+          setShowTrophy(false);
+        }}
+      />
 
       {/* QA section */}
       <details data-testid="km.autogen.homescreen.node.idx.31" className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70">

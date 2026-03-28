@@ -13,7 +13,9 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
 import { FinalExamScreen } from "@/components/screens/FinalExamScreen";
 import { StarReward } from "@/components/StarReward";
+import { TrophyUnlock } from "@/components/TrophyUnlock";
 import { logEvent } from "@/lib/analytics/events";
+import { useBadges } from "@/lib/hooks/useBadges";
 import { LEARNING_ROUTINE_STEPS } from "@/lib/content/curriculum-plan";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
@@ -48,13 +50,15 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const { previewAll, isRouteReady, isLocked } = useDayUnlockStatus({ grade, dayId });
 
   const [showReward, setShowReward] = useState(false);
+  const [showTrophy, setShowTrophy] = useState(false);
+  const { newlyUnlockedIds, markAllSeen } = useBadges(grade, { evaluateTrigger: isComplete });
 
   const allExercises = useMemo(
     () => (day ? day.sections.flatMap((section) => section.exercises) : []),
     [day],
   );
 
-  const { answers, correctMap, feedback, attempts, resetAnswerState, onChangeValue, onRetryExercise, submitExercise } =
+  const { answers, correctMap, feedback, attempts, wrongAttempts, hintUsed, resetAnswerState, onChangeValue, onRetryExercise, onRevealHint, submitExercise } =
     useDayAnswers({
       day,
       grade,
@@ -222,6 +226,9 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
                 isCorrect={correctMap[exercise.id]}
                 wasChecked={(attempts[exercise.id] ?? 0) > 0}
                 setFocusRef={setFocusRef}
+                wrongAttempts={wrongAttempts[exercise.id] ?? 0}
+                hintUsed={hintUsed[exercise.id] ?? false}
+                onRevealHint={onRevealHint}
                 onChangeValue={onChangeValue}
                 onSubmitExercise={submitExercise}
                 onNextInput={focusNextInput}
@@ -296,7 +303,22 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       <StarReward
         visible={showReward}
-        onConfirm={() => router.push(routes.gradeHome(grade, { previewAll }))}
+        onConfirm={() => {
+          if (newlyUnlockedIds.length > 0) {
+            setShowReward(false);
+            setShowTrophy(true);
+          } else {
+            router.push(routes.gradeHome(grade, { previewAll }));
+          }
+        }}
+      />
+      <TrophyUnlock
+        visible={showTrophy}
+        newBadgeIds={newlyUnlockedIds}
+        onConfirm={() => {
+          markAllSeen();
+          router.push(routes.gradeHome(grade, { previewAll }));
+        }}
       />
     </main>
   );

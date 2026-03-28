@@ -509,6 +509,9 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                     retryMessage={retryMessage}
                     isReadOnly={false}
                     setFocusRef={setFocusRef}
+                    wrongAttempts={0}
+                    hintUsed={false}
+                    onRevealHint={() => undefined}
                     onChangeValue={onChangeValue}
                     onSubmitExercise={submitExercise}
                     onNextInput={focusNextInput}
@@ -558,6 +561,9 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                   isCorrect={undefined}
                   isReadOnly={false}
                   setFocusRef={setFocusRef}
+                  wrongAttempts={0}
+                  hintUsed={false}
+                  onRevealHint={() => undefined}
                   onChangeValue={onChangeValue}
                   onSubmitExercise={() => undefined}
                   onNextInput={focusNextInput}
