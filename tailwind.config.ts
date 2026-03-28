@@ -94,8 +94,13 @@ const config: Config = {
         "bounce-in": "bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
         wiggle:      "wiggle 0.4s ease",
         float:       "float 3s ease-in-out infinite",
+        "cookie-banner-in": "cookie-banner-in 0.22s ease-out both",
       },
       keyframes: {
+        "cookie-banner-in": {
+          "0%":   { transform: "translateY(10px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
         "bounce-in": {
           "0%":   { transform: "scale(0.5)", opacity: "0" },
           "60%":  { transform: "scale(1.1)", opacity: "1" },

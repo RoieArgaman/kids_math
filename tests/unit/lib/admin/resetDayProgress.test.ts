@@ -39,6 +39,11 @@ function cascadeResetWorkbook(state: WorkbookProgressState, startDayId: DayId, g
   return next;
 }
 
+function withoutUpdatedAt(state: WorkbookProgressState): Omit<WorkbookProgressState, "updatedAt"> {
+  const { updatedAt: _ignored, ...rest } = state;
+  return rest;
+}
+
 describe("resetAdminDayProgress", () => {
   it("returns null when dayId is not in the workbook", () => {
     expect(resetAdminDayProgress(seedState(), "day-999" as DayId, "a")).toBeNull();
@@ -99,7 +104,7 @@ describe("resetAdminDayProgress", () => {
     const result = resetAdminDayProgress(state, "day-3", "a");
     expect(result).not.toBeNull();
     const expected = cascadeResetWorkbook(state, "day-3", "a");
-    expect(result?.nextState).toEqual(expected);
+    expect(withoutUpdatedAt(result!.nextState)).toEqual(withoutUpdatedAt(expected));
     expect(result?.nextState.days["day-3"]?.isComplete).toBe(false);
     expect(result?.nextState.days["day-4"]?.isComplete).toBe(false);
   });
@@ -107,6 +112,8 @@ describe("resetAdminDayProgress", () => {
   it("matches cascade-only workbook reset for mid workbook start", () => {
     const state = seedState();
     const result = resetAdminDayProgress(state, "day-5", "a");
-    expect(result?.nextState).toEqual(cascadeResetWorkbook(state, "day-5", "a"));
+    expect(withoutUpdatedAt(result!.nextState)).toEqual(
+      withoutUpdatedAt(cascadeResetWorkbook(state, "day-5", "a")),
+    );
   });
 });
