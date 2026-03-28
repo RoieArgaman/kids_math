@@ -1,0 +1,21 @@
+import type { DayConcept } from "../engine/day-builder";
+
+export const concept: DayConcept = {
+  dayNumber: 1,
+  title: "מוֹנִים עַד 5",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִסְפֹּר אוֹבְיֶקְטִים עַד 5 וּלְזַהוֹת אֶת הַכַּמּוּת הַנְּכוֹנָה בְּ-5 מִתּוֹךְ 6 מְשִׂימוֹת.",
+  mainTags: ["counting", "number-recognition"],
+  spiralReviewTags: ["counting"],
+  arithmeticPrompt: "בְּסַל יֵשׁ 2 תַּפּוּחִים. אִמָּא הוֹסִיפָה עוֹד תַּפּוּחַ. כַּמָּה תַּפּוּחִים יֵשׁ עַכְשָׁיו?",
+  arithmeticAnswer: 3,
+  arithmeticMcOptions: ["2", "3", "4"],
+  arithmeticMcAnswer: "3",
+  verbalPrompt: "כִּתְבוּ בְּעִבְרִית אֶת הַמִּסְפָּר: 4",
+  verbalAnswer: "אַרְבַּע",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 5 גָּדוֹל מִ-2",
+  reviewAnswer: true,
+  challengePrompt: "עַל קַו הַמִּסְפָּרִים: מִ-1 עַד 5, כָּל פַּעַם צַעַד אֶחָד קָדִימָה. כַּמָּה צְעָדִים עָשִׂינוּ?",
+  challengeAnswer: 4,
+  geometryPrompt: "אֵיזוֹ צוּרָה הִיא עִיגּוּל?",
+  geometryAnswer: "circle",
+};

@@ -210,6 +210,14 @@ export const testIds = {
       chip: {
         root: (key: string) => tid("component", "ui", "chip", "key", key),
       },
+      storageErrorBoundary: {
+        root: () => tid("component", "ui", "storageErrorBoundary"),
+        title: () => tid("component", "ui", "storageErrorBoundary", "title"),
+        body: () => tid("component", "ui", "storageErrorBoundary", "body"),
+        br: () => tid("component", "ui", "storageErrorBoundary", "br"),
+        detail: () => tid("component", "ui", "storageErrorBoundary", "detail"),
+        resetCta: () => tid("component", "ui", "storageErrorBoundary", "cta", "reset"),
+      },
     },
     exerciseBox: {
       root: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId),

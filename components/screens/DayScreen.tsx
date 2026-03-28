@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DayHeader } from "@/components/DayHeader";
@@ -19,13 +19,14 @@ import { getWorkbookDays } from "@/lib/content/workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { COMPLETION_GATE_PERCENT, MAX_DAILY_WRONG_ANSWERS } from "@/lib/progress/engine";
-import { loadProgressState } from "@/lib/progress/storage";
 import { useProgress } from "@/lib/hooks/useProgress";
+import { useDayAnswers } from "@/lib/hooks/useDayAnswers";
+import { useDayReset } from "@/lib/hooks/useDayReset";
+import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import type { DayId, Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
-import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import type { DayId, WorkbookDay } from "@/lib/types";
 
 export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
@@ -46,161 +47,35 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   );
   const { previewAll, isRouteReady, isLocked } = useDayUnlockStatus({ grade, dayId });
 
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [correctMap, setCorrectMap] = useState<Record<string, boolean>>({});
-  const [feedback, setFeedback] = useState<Record<string, string>>({});
-  const [attempts, setAttempts] = useState<Record<string, number>>({});
   const [showReward, setShowReward] = useState(false);
-  const [resetNotice, setResetNotice] = useState("");
-  const refs = useRef<Record<string, HTMLElement | null>>({});
-  const resetNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const allExercises = useMemo(
+    () => (day ? day.sections.flatMap((section) => section.exercises) : []),
+    [day],
+  );
+
+  const { answers, correctMap, feedback, attempts, resetAnswerState, onChangeValue, onRetryExercise, submitExercise } =
+    useDayAnswers({
+      day,
+      grade,
+      allExercisesCount: allExercises.length,
+      setAnswer,
+    });
+
+  const handleReset = useCallback(() => {
+    resetAnswerState();
+    setShowReward(false);
+  }, [resetAnswerState]);
+
+  const { resetNotice } = useDayReset({ wrongCount, resetDay, onReset: handleReset });
+
+  const { focusNextInput, setFocusRef } = useExerciseFocus(allExercises);
 
   useEffect(() => {
     if (day) {
       logEvent("day_viewed", { dayId: day.id, payload: { grade } });
     }
   }, [day, grade]);
-
-  // previewAll/isRouteReady/isLocked are derived via useDayUnlockStatus.
-
-  useEffect(() => {
-    if (!day) {
-      return;
-    }
-
-    const saved = loadProgressState({ grade }).days[day.id];
-    if (!saved) {
-      return;
-    }
-
-    const restoredAnswers: Record<string, string> = {};
-    for (const [exerciseId, value] of Object.entries(saved.answers)) {
-      restoredAnswers[exerciseId] = String(value);
-    }
-    setAnswers(restoredAnswers);
-    setCorrectMap(saved.correctAnswers ?? {});
-
-    const attemptsByExercise = saved.attempts.reduce<Record<string, number>>((acc, attempt) => {
-      const exerciseId =
-        attempt &&
-          typeof attempt === "object" &&
-          "exerciseId" in attempt &&
-          typeof (attempt as { exerciseId?: unknown }).exerciseId === "string"
-          ? (attempt as { exerciseId: string }).exerciseId
-          : null;
-      if (!exerciseId) {
-        return acc;
-      }
-      acc[exerciseId] = (acc[exerciseId] ?? 0) + 1;
-      return acc;
-    }, {});
-    setAttempts(attemptsByExercise);
-  }, [day, grade]);
-
-  useEffect(() => {
-    if (wrongCount < MAX_DAILY_WRONG_ANSWERS) {
-      return;
-    }
-    if (resetNotice) {
-      return;
-    }
-    resetDay();
-    setAnswers({});
-    setCorrectMap({});
-    setFeedback({});
-    setAttempts({});
-    setShowReward(false);
-    setResetNotice("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.");
-
-    if (resetNoticeTimeoutRef.current) {
-      clearTimeout(resetNoticeTimeoutRef.current);
-    }
-    resetNoticeTimeoutRef.current = setTimeout(() => {
-      setResetNotice("");
-    }, 5000);
-  }, [wrongCount, resetDay, resetNotice]);
-
-  useEffect(() => {
-    return () => {
-      if (resetNoticeTimeoutRef.current) {
-        clearTimeout(resetNoticeTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const allExercises = useMemo(
-    () => (day ? day.sections.flatMap((section) => section.exercises) : []),
-    [day],
-  );
-  const allExercisesCount = allExercises.length;
-  const answersRef = useRef(answers);
-  const attemptsRef = useRef(attempts);
-
-  useEffect(() => {
-    answersRef.current = answers;
-    attemptsRef.current = attempts;
-  }, [answers, attempts]);
-
-  const exerciseOrder = useMemo(() => allExercises.map((exercise) => exercise.id), [allExercises]);
-
-  const focusNextInput = useCallback((currentId: string) => {
-    const currentIndex = exerciseOrder.findIndex((id) => id === currentId);
-    const nextId = exerciseOrder[currentIndex + 1];
-    if (!nextId) {
-      return;
-    }
-    refs.current[nextId]?.focus();
-  }, [exerciseOrder]);
-
-  const setFocusRef = useCallback((exerciseId: string, node: HTMLElement | null) => {
-    refs.current[exerciseId] = node;
-  }, []);
-
-  const onChangeValue = useCallback((exerciseId: string, value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [exerciseId]: value,
-    }));
-  }, []);
-
-  const onRetryExercise = useCallback((exerciseId: string) => {
-    setAnswers((prev) => ({ ...prev, [exerciseId]: "" }));
-    setCorrectMap((prev) => {
-      const next = { ...prev };
-      delete next[exerciseId];
-      return next;
-    });
-    setFeedback((prev) => ({ ...prev, [exerciseId]: "" }));
-  }, []);
-
-  const submitExercise = useCallback((exercise: Exercise) => {
-    const userAnswer = answersRef.current[exercise.id] ?? "";
-    const normalizedAnswer = normalizeAnswerValue(userAnswer);
-    const previousAttempts = attemptsRef.current[exercise.id] ?? 0;
-    if (normalizedAnswer === null) {
-      setCorrectMap((prev) => ({ ...prev, [exercise.id]: false }));
-      setFeedback((prev) => ({
-        ...prev,
-        [exercise.id]: getRetryFeedbackText(exercise, userAnswer, previousAttempts),
-      }));
-      return;
-    }
-
-    const success = isAnswerCorrect(exercise, userAnswer);
-    setCorrectMap((prev) => ({ ...prev, [exercise.id]: success }));
-    const nextAttempt = previousAttempts + 1;
-    setAttempts((prev) => ({ ...prev, [exercise.id]: nextAttempt }));
-    setFeedback((prev) => ({
-      ...prev,
-      [exercise.id]: getRetryFeedbackText(exercise, userAnswer, nextAttempt),
-    }));
-    setAnswer({
-      exerciseId: exercise.id as ExerciseId,
-      answer: userAnswer,
-      isCorrect: success,
-      totalExercises: allExercisesCount,
-    });
-  }, [allExercisesCount, setAnswer]);
 
   if (!day) {
     return (

@@ -1,0 +1,19 @@
+import type { DayConcept } from "../engine/day-builder";
+
+export const concept: DayConcept = {
+  dayNumber: 7,
+  title: "בְּעָיוֹת מִילּוּלִיּוֹת פְּשׁוּטוֹת",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִקְרֹא בְּעִיָּה מִילּוּלִית, לְזַהוֹת אֶת הַפְּעוּלָה וְלִפְתּוֹר 3 מִתּוֹךְ 4 בְּעָיוֹת חַד-שְׁלָבִיּוֹת.",
+  mainTags: ["word-problems", "addition", "subtraction"],
+  spiralReviewTags: ["number-line", "comparing"],
+  arithmeticPrompt: "לְדָנָה הָיוּ 7 מַדְבֵּקוֹת. בְּיוֹם הַהוּלֶּדֶת קִבְּלָה עוֹד 6 מַדְבֵּקוֹת. כַּמָּה מַדְבֵּקוֹת יֵשׁ לָהּ עַכְשָׁיו?",
+  arithmeticAnswer: 13,
+  arithmeticMcOptions: ["12", "13", "14"],
+  arithmeticMcAnswer: "13",
+  verbalPrompt: "כִּתְבוּ בְּעִבְרִית אֶת הַמִּסְפָּר: 13",
+  verbalAnswer: "שְׁלוֹשׁ עֶשְׂרֵה",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: אִם יֵשׁ 15 עוּגִיּוֹת וְאָכְלוּ 5, נִשְׁאָרוֹת 10 עוּגִיּוֹת",
+  reviewAnswer: true,
+  challengePrompt: "עַל קַו הַמִּסְפָּרִים: מִ-3 עַד 13 בִּקְפִיצוֹת שֶׁל 2. כַּמָּה קְפִיצוֹת עָשִׂינוּ?",
+  challengeAnswer: 5,
+};

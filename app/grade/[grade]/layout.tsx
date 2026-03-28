@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { parseGradeId } from "@/lib/grades";
 
+import GradePageShell from "./GradePageShell";
+
 export default function GradeLayout({
   children,
   params,
@@ -14,6 +16,6 @@ export default function GradeLayout({
     notFound();
   }
 
-  return children;
+  return <GradePageShell>{children}</GradePageShell>;
 }
 
