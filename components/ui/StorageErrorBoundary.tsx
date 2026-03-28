@@ -2,6 +2,8 @@
 
 import { Component, type ReactNode } from "react";
 
+import { testIds } from "@/lib/testIds";
+
 interface Props {
   children: ReactNode;
   /** Optional storage key to clear on reset (clears all kids_math keys if omitted). */
@@ -67,17 +69,22 @@ export class StorageErrorBoundary extends Component<Props, State> {
       return this.props.children;
     }
 
+    const t = testIds.component.ui.storageErrorBoundary;
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 p-8 text-center">
-        <p className="text-2xl font-bold text-red-600">שגיאה בטעינת ההתקדמות</p>
-        <p className="text-gray-700">
+      <div
+        data-testid={t.root()}
+        className="flex min-h-[60vh] flex-col items-center justify-center gap-6 p-8 text-center"
+      >
+        <p data-testid={t.title()} className="text-2xl font-bold text-red-600">שגיאה בטעינת ההתקדמות</p>
+        <p data-testid={t.body()} className="text-gray-700">
           לא הצלחנו לטעון את ההתקדמות שלך.
-          <br />
+          <br data-testid={t.br()} />
           {this.state.errorMessage && (
-            <span className="text-sm text-gray-500">{this.state.errorMessage}</span>
+            <span data-testid={t.detail()} className="text-sm text-gray-500">{this.state.errorMessage}</span>
           )}
         </p>
         <button
+          data-testid={t.resetCta()}
           onClick={this.handleReset}
           className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700"
         >
