@@ -28,6 +28,10 @@ const VALID_EVENT_NAMES: ReadonlySet<AnalyticsEventName> = new Set<AnalyticsEven
   "gmat_challenge_started",
   "gmat_challenge_section_completed",
   "gmat_challenge_completed",
+  "streak_updated",
+  "badge_earned",
+  "badge_unlocked",
+  "badges_viewed",
 ]);
 
 interface LogEventInput {

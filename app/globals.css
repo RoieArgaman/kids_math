@@ -56,6 +56,11 @@ main {
   background: #fff1f2;
 }
 
+.surface-hint {
+  border-color: #fcd34d;  /* amber-300 */
+  background: #fffbeb;    /* amber-50 */
+}
+
 .muted {
   color: var(--muted);
 }

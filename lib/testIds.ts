@@ -126,6 +126,11 @@ export const testIds = {
       results: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "results"),
       restartCta: (grade: string) => tid("screen", "gmatChallenge", "grade", grade, "cta", "restart"),
     },
+    badges: {
+      root: (grade: string) => tid("screen", "badges", "grade", grade),
+      badgeCard: (badgeId: string) => tid("screen", "badges", "badge", badgeId),
+      badgesCta: (grade: string) => tid("screen", "home", "cta", "badges", "grade", grade),
+    },
     comingSoon: {
       root: (grade: string) => tid("screen", "comingSoon", "grade", grade),
       ctaStartGradeA: () => tid("screen", "comingSoon", "cta", "start-grade-a"),
@@ -226,11 +231,20 @@ export const testIds = {
       retry: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId, "retry"),
       choice: (exerciseId: string, optionKey: string) =>
         tid("component", "exerciseBox", "exercise", exerciseId, "choice", optionKey),
+      hint: (exerciseId: string) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "hint"),
+      hintText: (exerciseId: string) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "hintText"),
     },
     starReward: {
       overlay: () => tid("component", "starReward", "overlay"),
       dialog: () => tid("component", "starReward", "dialog"),
       confirm: () => tid("component", "starReward", "cta", "confirm"),
+    },
+    trophyUnlock: {
+      overlay: () => tid("component", "trophyUnlock", "overlay"),
+      dialog: () => tid("component", "trophyUnlock", "dialog"),
+      confirm: () => tid("component", "trophyUnlock", "cta", "confirm"),
     },
   },
 } as const;

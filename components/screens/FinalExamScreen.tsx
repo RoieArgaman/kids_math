@@ -296,6 +296,9 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               isReadOnly={showResults}
               showCheckButton={false}
               setFocusRef={setFocusRef}
+              wrongAttempts={0}
+              hintUsed={false}
+              onRevealHint={() => undefined}
               onChangeValue={onChangeValue}
               onSubmitExercise={noopSubmitExercise}
               onNextInput={focusNextInput}

@@ -5,6 +5,7 @@ import { MathExpressionTokens } from "@/components/ui/MathExpressionTokens";
 import { childTid, testIds } from "@/lib/testIds";
 import { getRenderableMathTokens } from "@/lib/utils/exerciseMathPolicy";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
+import { defaultHint } from "@/lib/utils/exercise";
 import type { Exercise } from "@/lib/types";
 
 interface ExerciseBoxProps {
@@ -19,6 +20,9 @@ interface ExerciseBoxProps {
   onSubmit: () => void;
   onNextInput: () => void;
   onRetry: () => void;
+  wrongAttempts?: number;
+  hintUsed?: boolean;
+  onRevealHint: () => void;
 }
 
 function isPositiveFeedback(message: string): boolean {
@@ -36,6 +40,9 @@ export function ExerciseBox({
   onSubmit,
   onNextInput,
   onRetry,
+  wrongAttempts,
+  hintUsed,
+  onRevealHint,
 }: ExerciseBoxProps) {
   const promptLabel = exercise.prompt.replace(/\s+/g, " ").trim();
   const checkButtonLabel = `בְּדִיקָה: ${promptLabel}`;
@@ -52,15 +59,20 @@ export function ExerciseBox({
   const mathTokens = promptParts.math ? tokenizeMathExpression(promptParts.math) : null;
   const renderableMathTokens = getRenderableMathTokens(exercise, mathTokens);
   const showRetryAction = Boolean(retryMessage) && isCorrect !== true;
+  const showHintButton = (wrongAttempts ?? 0) >= 2 && isCorrect !== true && !hintUsed;
+  const showHintText = hintUsed && isCorrect !== true;
+  const hintText = (showHintButton || showHintText) ? defaultHint(exercise) : null;
 
   const surfaceStateClass = wasChecked
     ? isCorrect
-      ? "surface-success"
+      ? hintUsed ? "surface-hint" : "surface-success"
       : "surface-error"
     : "";
 
   const correctRingClass = wasChecked && isCorrect
-    ? "ring-2 ring-green-400 ring-offset-2"
+    ? hintUsed
+      ? "ring-2 ring-amber-400 ring-offset-2"
+      : "ring-2 ring-green-400 ring-offset-2"
     : "";
 
   return (
@@ -115,6 +127,27 @@ export function ExerciseBox({
               נַסּוּ שׁוּב
             </button>
           ) : null}
+        </div>
+      ) : null}
+      {showHintButton ? (
+        <button
+          data-testid={testIds.component.exerciseBox.hint(exercise.id)}
+          type="button"
+          className="touch-button mt-2 w-full rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+          onClick={onRevealHint}
+        >
+          💡 צְרִיכִים רֶמֶז?
+        </button>
+      ) : null}
+      {showHintText && hintText ? (
+        <div
+          data-testid={testIds.component.exerciseBox.hintText(exercise.id)}
+          className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900"
+          dir="rtl"
+          role="status"
+          aria-live="polite"
+        >
+          💡 {hintText}
         </div>
       ) : null}
       {showCheckButton ? (
