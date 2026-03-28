@@ -7,7 +7,12 @@ import { getCookieConsentAccepted, setCookieConsentAccepted } from "@/lib/cookie
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 
-/** In-flow strip above the footer so links stay clickable (no viewport overlap). */
+/**
+ * Fixed bottom overlay: does not reserve flex space (footer sits at the real bottom on short pages).
+ * z-40: above `.progress-sticky` (30), below `.star-reward-overlay` (90) so rewards/modals stay on top.
+ * Opaque background + normal pointer events so taps do not hit footer links underneath.
+ * DOM stays before SiteFooter so Tab / SR order reaches consent actions before footer links.
+ */
 export function CookieConsentBanner() {
   const root = testIds.layout.cookieConsent.root();
   const [hydrated, setHydrated] = useState(false);
@@ -30,13 +35,13 @@ export function CookieConsentBanner() {
   return (
     <div
       data-testid={root}
-      className="w-full shrink-0 border-t border-violet-200/90 bg-gradient-to-b from-white to-violet-50/40 px-3 py-3 shadow-[0_-6px_28px_rgba(91,33,182,0.1)] sm:px-4 sm:py-4"
+      className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-violet-200/95 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_32px_rgba(91,33,182,0.12)] motion-safe:animate-cookie-banner-in motion-reduce:animate-none"
       role="region"
       aria-label="הודעה על עוגיות ואחסון מקומי"
     >
       <div
         data-testid={childTid(root, "panel")}
-        className="mx-auto flex w-full max-w-[720px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        className="mx-auto flex w-full max-w-[720px] flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3.5"
       >
         <p
           data-testid={childTid(root, "message")}

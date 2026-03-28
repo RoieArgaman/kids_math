@@ -31,6 +31,7 @@ export default function RootLayout({
         <div data-testid={testIds.layout.mainSlot()} className="w-full min-w-0 grow">
           {children}
         </div>
+        {/* Cookie banner before footer in DOM so keyboard/linear SR order hits consent before footer links */}
         <CookieConsentBanner />
         <SiteFooter />
       </body>
