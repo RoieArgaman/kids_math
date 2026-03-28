@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Chip } from "@/components/ui/Chip";
+import { childTid, testIds } from "@/lib/testIds";
 import type { StreakBadgeId } from "@/lib/streak/types";
 import { STREAK_BADGE_LABELS } from "@/lib/streak/types";
 
@@ -23,11 +24,12 @@ export function StreakBadge({
   }, [newlyEarnedBadge, onDismissBadge]);
 
   const streakLabel = currentStreak === 1 ? "יום 1 ברצף" : `${currentStreak} ימים ברצף`;
+  const rootTid = testId ?? testIds.component.streakBadge.root();
 
   return (
-    <div data-testid={testId}>
+    <div data-testid={rootTid}>
       <Chip tone="warning">🔥 {streakLabel}</Chip>
-      <div aria-live="polite">
+      <div data-testid={childTid(rootTid, "liveRegion")} aria-live="polite">
         {newlyEarnedBadge && (
           <Chip tone="success">{STREAK_BADGE_LABELS[newlyEarnedBadge]}</Chip>
         )}

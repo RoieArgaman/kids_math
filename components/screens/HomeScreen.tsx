@@ -194,9 +194,12 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       />
 
       {streakState !== null && (
-        <div className="mb-4 flex justify-start">
+        <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "streakRow")}
+          className="mb-4 flex justify-start"
+        >
           <StreakBadge
-            data-testid="streak-badge"
+            data-testid={childTid(testIds.screen.home.root(effectiveGrade), "streakBadge")}
             currentStreak={streakState.currentStreak}
             newlyEarnedBadge={newlyEarnedBadge}
             onDismissBadge={handleDismissBadge}

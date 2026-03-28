@@ -246,6 +246,9 @@ export const testIds = {
       dialog: () => tid("component", "trophyUnlock", "dialog"),
       confirm: () => tid("component", "trophyUnlock", "cta", "confirm"),
     },
+    streakBadge: {
+      root: () => tid("component", "streakBadge"),
+    },
   },
 } as const;
 
