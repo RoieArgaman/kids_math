@@ -1,0 +1,22 @@
+import type { DayConcept } from "../engine/day-builder";
+
+export const concept: DayConcept = {
+  dayNumber: 24,
+  title: "מִסְפָּרִים עַד 50",
+  objective:
+    "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יַשְׁוֶה וִיקַרְאָה מִסְפָּרִים בִּטְוַח עַד 50.",
+  mainTags: ["number-recognition", "comparing"],
+  spiralReviewTags: ["place-value", "patterns"],
+  arithmeticPrompt: "אֵיזֶה גָּדוֹל יוֹתֵר: 47 אוֹ 39? כִּתְבוּ אֶת הַגָּדוֹל.",
+  arithmeticAnswer: 47,
+  arithmeticMcOptions: ["39", "47", "שָׁווִים"],
+  arithmeticMcAnswer: "47",
+  verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר: 44",
+  verbalAnswer: "אַרְבָּעִים וְאַרְבַּע",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 50 גָּדוֹל מִ-49",
+  reviewAnswer: true,
+  challengePrompt: "הַשְׁלִימוּ: 40, 42, 44, __",
+  challengeAnswer: 46,
+  geometryPrompt: "אֵיזוֹ צוּרָה יֵשׁ לָהּ 4 פִּנּוֹת יְשָׁרוֹת וְכָל הַצְלָעוֹת שָׁווֹת?",
+  geometryAnswer: "square",
+};

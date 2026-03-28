@@ -1,0 +1,21 @@
+import type { DayConcept } from "../engine/day-builder";
+
+export const concept: DayConcept = {
+  dayNumber: 29,
+  title: "מִבְחָן מְסַכֵּם — כִּיתָּה ב׳",
+  objective: "בְּסוֹף הַמִּבְחָן הַתַּלְמִיד/ה יַרְאֶה שְׁלִיטָה בְּחוֹמֶר שֶׁנִּלְמַד בְּכִיתָּה ב׳ — בִּשְׁאֵלוֹת מִבַּנְק שֶׁמִּתְחַלֵּף.",
+  mainTags: [ "counting", "number-recognition", "number-line", "addition", "subtraction", "comparing", "word-problems", "geometry-shapes", "patterns", "place-value", "measurement-length", "measurement-time", "symmetry-transform", "gematria-letters", "multiplication-intro", "multiplication-tables", "number-bonds", "division-equal-groups", "fractions-parts", "measurement-area", "measurement-weight", "geometry-solids", "money-shekel", ],
+  spiralReviewTags: ["addition", "subtraction", "place-value", "multiplication-tables"],
+  arithmeticPrompt: "מִבְחָן מְסַכֵּם כִּיתָּה ב׳: מַתְחִילִים!",
+  arithmeticAnswer: 0,
+  arithmeticMcOptions: ["0", "1", "2"],
+  arithmeticMcAnswer: "0",
+  verbalPrompt: "כִּתְבוּ בִּמִילִים: 100",
+  verbalAnswer: "מֵאָה",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 10 גָּדוֹל מִ-9",
+  reviewAnswer: true,
+  challengePrompt: "מִבְחָן מְסַכֵּם: שְׁאֵלוֹת מִבַּנְק.",
+  challengeAnswer: 0,
+  geometryPrompt: "אֵיזוֹ צוּרָה הִיא מְשֻׁלָּשׁ?",
+  geometryAnswer: "triangle",
+};

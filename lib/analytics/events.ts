@@ -23,6 +23,7 @@ const VALID_EVENT_NAMES: ReadonlySet<AnalyticsEventName> = new Set<AnalyticsEven
   "state_loaded",
   "state_saved",
   "state_load_failed",
+  "storage_quota_warning",
   "gmat_challenge_rules_viewed",
   "gmat_challenge_started",
   "gmat_challenge_section_completed",

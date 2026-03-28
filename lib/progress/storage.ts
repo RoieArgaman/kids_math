@@ -3,6 +3,9 @@ import type { GradeId } from "@/lib/grades";
 import { DEFAULT_GRADE } from "@/lib/grades";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
 
+/** Current v2 storage schema version. Increment when the persisted shape changes. */
+export const STORAGE_SCHEMA_VERSION = 2;
+
 const LEGACY_PROGRESS_STORAGE_KEY = "kids_math.workbook_progress.v1";
 const GRADE_A_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.a";
 const GRADE_B_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.b";
@@ -41,7 +44,7 @@ function withDefaultsForDayState(value: DayProgressState): DayProgressState {
   };
 }
 
-function sanitizeState(value: unknown): WorkbookProgressState {
+export function sanitizeState(value: unknown): WorkbookProgressState {
   const fallback = createInitialWorkbookProgressState();
 
   if (!isObject(value) || value.version !== 1 || !isObject(value.days)) {
@@ -189,8 +192,17 @@ export function saveProgressState(state: WorkbookProgressState, options: Progres
       updatedAt: new Date().toISOString(),
     };
     window.localStorage.setItem(key, JSON.stringify(nextState));
-  } catch {
-    // Intentionally no-op to keep UI responsive even if storage is unavailable.
+  } catch (err) {
+    // QuotaExceededError — storage is full. Dispatch a DOM event so the
+    // StorageErrorBoundary (or any listener) can surface this to the user.
+    if (err instanceof DOMException && err.name === "QuotaExceededError") {
+      try {
+        window.dispatchEvent(new CustomEvent("kids_math:storage_quota_exceeded", { detail: { grade } }));
+      } catch {
+        // dispatchEvent failed — ignore
+      }
+    }
+    // Keep UI responsive regardless.
   }
 }
 

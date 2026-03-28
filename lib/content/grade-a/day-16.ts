@@ -1,0 +1,24 @@
+import type { DayConcept } from "../engine/day-builder";
+
+export const concept: DayConcept = {
+  dayNumber: 16,
+  title: "מְדִידַת אֹרֶךְ בְּסִיסִית",
+  objective:
+    "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְקַשֵּׁר סְפִירָה וַחֲלוּקָה פְּשׁוּטָה לְמִדַּת אֹרֶךְ (ס״מ) וּלְפָתוֹר מְשִׂימוֹת מְחוֹבֵרוֹת לָאֹרֶךְ.",
+  mainTags: ["measurement-length", "counting"],
+  spiralReviewTags: ["addition", "subtraction", "number-recognition"],
+  arithmeticPrompt:
+    "סַרְגֵּל בָּאֹרֶךְ 10 ס״מ. שָׂמִים אוֹתוֹ 3 פְּעָמִים זֶה אַחַר זֶה בְּקַו יָשָׁר. כַּמָּה ס״מ בַּסַּךְ הַכֹּל?",
+  arithmeticAnswer: 30,
+  arithmeticMcOptions: ["20", "30", "40"],
+  arithmeticMcAnswer: "30",
+  verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
+  verbalAnswer: "שְׁלוֹשִׁים",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 15 ס״מ + 15 ס״מ = 30 ס״מ",
+  reviewAnswer: true,
+  challengePrompt:
+    "עַל קַו מִסְפָּרִים לְהַמְחָשָׁה: מִ-0 עַד 30, כָּל קְפִיצָה הִיא 10 יְחִידוֹת. כַּמָּה קְפִיצוֹת עָשִׂינוּ?",
+  challengeAnswer: 3,
+  geometryPrompt: "אֵיזוֹ צוּרָה נִרְאֵית כְּמוֹ מִסְגֶּרֶת לָרִבּוּעַ?",
+  geometryAnswer: "square",
+};
