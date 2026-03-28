@@ -62,5 +62,7 @@ export const routes = {
   gradeGmatChallenge: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/gmat-challenge`, opts),
   adminProgress: (opts?: RouteOpts) => withQuery("/admin/progress", opts),
+  privacy: (opts?: RouteOpts) => withQuery("/privacy", opts),
+  cookies: (opts?: RouteOpts) => withQuery("/cookies", opts),
 };
 

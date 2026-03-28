@@ -143,6 +143,9 @@ test("admin reset day-29 clears final exam and GMAT storage; exam starts fresh",
 
   await page.getByTestId(testIds.screen.adminProgress.reset("a", "day-29")).click();
   await page.getByTestId(testIds.screen.adminProgress.resetConfirm("a", "day-29")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.statusMessage())).toContainText("כיתה ב׳ ננעלה", {
+    timeout: 15_000,
+  });
 
   const clearedBeforeReEnter = await page.evaluate(() => ({
     finalExam: window.localStorage.getItem("kids_math.final_exam.v1.grade.a"),
