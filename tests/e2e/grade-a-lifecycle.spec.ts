@@ -3,11 +3,12 @@ import {
   createCompletedDayProgressState,
   createFinalExamState,
   createProgressState,
+  dismissDayCompletionCelebration,
   exerciseByIdForGrade,
   seedFinalExamState,
   seedProgressState,
 } from "./testUtils";
-import { testIds } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 
 test.beforeEach(async ({ page, context }) => {
   await context.clearCookies();
@@ -43,6 +44,7 @@ test.describe("grade A lifecycle", () => {
 
     await page.getByTestId(testIds.screen.day.completeCta("a", "day-1")).click();
     await page.getByTestId(testIds.component.starReward.confirm()).click();
+    await dismissDayCompletionCelebration(page);
     await expect(page).toHaveURL(/\/grade\/a\/?$/);
 
     // Refresh should preserve completion.
@@ -95,8 +97,18 @@ test.describe("grade A lifecycle", () => {
 
     // Retry should reset the UI (no results panel).
     await page.getByTestId(testIds.screen.finalExam.retryCta("a")).click();
+    await expect.poll(async () => {
+      const raw = await page.evaluate(() => window.localStorage.getItem("kids_math.final_exam.v1.grade.a"));
+      if (!raw) return false;
+      try {
+        const parsed = JSON.parse(raw) as { submittedAt?: string };
+        return parsed.submittedAt == null || parsed.submittedAt === "";
+      } catch {
+        return false;
+      }
+    }).toBe(true);
+    await expect(page.getByTestId(childTid(testIds.screen.finalExam.finishPanel("a"), "results"))).toHaveCount(0);
     await expect(page.getByTestId(testIds.screen.finalExam.finishCta("a"))).toBeHidden();
-    await expect(page.getByText("לא עבר — אפשר להיבחן שוב.")).toBeHidden();
     await expect(
       finalExamRootA.locator('[data-testid^="km.component.exerciseBox.exercise."][data-testid$=".check"]'),
     ).toHaveCount(0);
