@@ -15,7 +15,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "deploy:firebase": "./deploy.sh --project kids-learing-hub",
-    "deploy:firebase:quick": "./deploy.sh --project kids-learing-hub --skip-tests"
+    "deploy:firebase:quick": "./deploy.sh --project kids-learing-hub --skip-tests",
+    "deploy:firebase:upload-only": "./deploy.sh --project kids-learing-hub --skip-tests --skip-build"
   },
   "dependencies": {
     "@types/node": "^20",

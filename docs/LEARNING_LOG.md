@@ -6,6 +6,12 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-03-29 (Faster deployment: CI caches + deploy policy)
+- **Trigger:** Plan to speed CI/deploy without duplicating quality gates (Playwright + Next cache, concurrency, quick vs upload-only policy).
+- **What changed / where:** `.github/workflows/ci.yml` (`.next/cache`, `.playwright-browsers` caches, `PLAYWRIGHT_BROWSERS_PATH`, concurrency), `deploy.sh` (`--skip-build` with `--skip-tests`), `package.json` (`deploy:firebase:upload-only`), `firebase.json` (ignore `.next`, `.playwright-browsers`, `coverage`), `docs/DEPLOYMENT.md`.
+- **What we learned:** Lockfile-keyed Playwright cache avoids stale cross-major reuse; Next cache keys include `next.config.mjs`. **`--skip-build`** is gated to `--skip-tests` and documented as same-SHA-green + Node parity with App Hosting.
+- **How to reuse next time:** Keep one deploy “authority” (GitHub vs CLI); measure E2E duration before adding Playwright sharding + blob merge.
+
 ### 2026-03-29 (Grade home / plan: reload progress on resume)
 - **Trigger:** Day completed (100%, הושלם) but grade home day cards did not show completion until hard refresh.
 - **What changed / where:** `lib/progress/storage.ts` (`workbookProgressStorageKey`), `lib/client/loadGradeScreenState.ts`, `lib/hooks/useReloadOnStorageResume.ts`, `components/screens/HomeScreen.tsx`, `components/screens/PlanScreen.tsx`, `tests/e2e/grade-a-lifecycle.spec.ts`.
