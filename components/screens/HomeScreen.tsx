@@ -28,6 +28,23 @@ import { normalizeAnswerValue } from "@/lib/utils/exercise";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import type { BadgeId } from "@/lib/badges/types";
+import { BADGE_DEFINITIONS_MAP } from "@/lib/badges/definitions";
+
+const BADGE_CATEGORY_ORDER: BadgeId[] = [
+  "first-day-done", "halfway-there", "streak-3-days", "streak-5-days", "streak-10-days",
+  "week-1-complete", "week-2-complete", "week-3-complete", "week-4-complete",
+  "zero-mistakes", "sharp-mind", "flawless-five", "zero-hero",
+  "perfect-week", "perfect-two-weeks",
+  "speed-runner", "lightning-fast", "speed-trio",
+  "comeback-kid", "iron-will", "ten-and-done",
+  "early-bird", "weekend-warrior",
+  "calendar-streak-3", "calendar-streak-7",
+  "strand-numbers", "strand-operations", "strand-geometry", "strand-advanced",
+  "exam-high-score", "exam-ace",
+  "hundred-answers", "five-hundred-answers",
+  "grand-master", "grade-a-graduate", "grade-b-graduate",
+];
 
 type DayCardState = "locked" | "open" | "complete";
 
@@ -91,6 +108,11 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   const [newlyEarnedBadge, setNewlyEarnedBadge] = useState<StreakBadgeId | null>(null);
   const [showTrophy, setShowTrophy] = useState(false);
   const { newlyUnlockedIds, markAllSeen, badgeState, allBadges } = useBadges(effectiveGrade);
+
+  const unlockedBadgeIdSet = new Set(badgeState.unlocked.map((u) => u.id));
+  const nextBadge = BADGE_CATEGORY_ORDER
+    .map((id) => BADGE_DEFINITIONS_MAP[id])
+    .find((def) => def !== undefined && !unlockedBadgeIdSet.has(def.id)) ?? null;
 
   const handleDismissBadge = useCallback(() => setNewlyEarnedBadge(null), []);
 
@@ -222,6 +244,26 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           </Link>
         </div>
       ) : null}
+
+      {nextBadge && !showTrophy && (
+        <div
+          className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
+          dir="rtl"
+        >
+          <span className="text-3xl">{nextBadge.icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold text-amber-700">הפרס הבא שאפשר להשיג:</div>
+            <div className="truncate text-sm font-bold text-amber-900">{nextBadge.name}</div>
+            <div className="truncate text-xs text-amber-700">{nextBadge.description}</div>
+          </div>
+          <Link
+            href={routes.gradeBadges(effectiveGrade)}
+            className="shrink-0 text-xs font-semibold text-violet-600 hover:underline"
+          >
+            כל הפרסים ←
+          </Link>
+        </div>
+      )}
 
       {Object.entries(weeks).map(([week, weekDays]) => {
         const weekNum = Number(week);

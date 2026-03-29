@@ -26,9 +26,11 @@ import { useDayAnswers } from "@/lib/hooks/useDayAnswers";
 import { useDayReset } from "@/lib/hooks/useDayReset";
 import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
+import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
+import { isAnswerCorrect } from "@/lib/utils/exercise";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import type { DayId, WorkbookDay } from "@/lib/types";
+import type { DayId, Exercise, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 
 export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
@@ -36,6 +38,13 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
     return <FinalExamScreen grade={effectiveGrade} />;
   }
   return <RegularDayScreen grade={effectiveGrade} dayId={dayId} />;
+}
+
+function formatMs(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
@@ -51,7 +60,13 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
   const [showReward, setShowReward] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
-  const { newlyUnlockedIds, markAllSeen } = useBadges(grade, { evaluateTrigger: isComplete });
+  // Incremented each time a speed-run sets a new record so useBadges re-evaluates
+  // speed badges even though isComplete hasn't changed.
+  const [badgeEvalCounter, setBadgeEvalCounter] = useState(0);
+  const { newlyUnlockedIds, markAllSeen } = useBadges(grade, {
+    evaluateTrigger: isComplete,
+    evaluateCounter: badgeEvalCounter,
+  });
 
   const allExercises = useMemo(
     () => (day ? day.sections.flatMap((section) => section.exercises) : []),
@@ -75,11 +90,82 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
   const { focusNextInput, setFocusRef } = useExerciseFocus(allExercises);
 
+  // Speed-run state
+  const [isSpeedRun, setIsSpeedRun] = useState(false);
+  const [speedRunStartMs, setSpeedRunStartMs] = useState<number | null>(null);
+  const [speedRunCorrect, setSpeedRunCorrect] = useState<Record<string, boolean>>({});
+  const [speedRunAnswers, setSpeedRunAnswers] = useState<Record<string, string>>({});
+  const [speedRunResult, setSpeedRunResult] = useState<{
+    elapsedMs: number;
+    isNewRecord: boolean;
+    prevBestMs: number | null;
+  } | null>(null);
+  const [liveTimerMs, setLiveTimerMs] = useState(0);
+
+  // For speed-run best-time updates we need direct access to progress state
+  const [rawProgress, setRawProgress] = useState<WorkbookProgressState | null>(null);
+
   useEffect(() => {
     if (day) {
       logEvent("day_viewed", { dayId: day.id, payload: { grade } });
     }
   }, [day, grade]);
+
+  useEffect(() => {
+    setRawProgress(loadProgressState({ grade }));
+  }, [grade]);
+
+  // Live timer effect
+  useEffect(() => {
+    if (!isSpeedRun || speedRunStartMs === null) return;
+    const interval = setInterval(() => {
+      setLiveTimerMs(Date.now() - speedRunStartMs);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isSpeedRun, speedRunStartMs]);
+
+  const submitSpeedRunExercise = useCallback(
+    (exercise: Exercise) => {
+      const userAnswer = speedRunAnswers[exercise.id] ?? "";
+      const correct = isAnswerCorrect(exercise, userAnswer);
+      setSpeedRunCorrect((prev) => {
+        const next = { ...prev, [exercise.id]: correct };
+        // Check if ALL exercises are now correctly answered
+        const allDone =
+          allExercises.length > 0 &&
+          allExercises.every((ex) => next[ex.id] === true);
+        if (allDone && speedRunStartMs !== null) {
+          const elapsed = Date.now() - speedRunStartMs;
+          const prevBest = rawProgress?.days[dayId]?.bestTimeMs ?? null;
+          const isNewRecord = prevBest === null || elapsed < prevBest;
+          // Update bestTimeMs in persistent storage if improved
+          if (isNewRecord) {
+            const currentProgress = loadProgressState({ grade });
+            const dayProg = currentProgress.days[dayId];
+            if (dayProg) {
+              const updatedProgress = {
+                ...currentProgress,
+                days: {
+                  ...currentProgress.days,
+                  [dayId]: { ...dayProg, bestTimeMs: elapsed },
+                },
+                updatedAt: new Date().toISOString(),
+              };
+              saveProgressState(updatedProgress, { grade });
+              setRawProgress(updatedProgress);
+              // Re-trigger badge evaluation so speed badges reflect the new best time.
+              setBadgeEvalCounter((c) => c + 1);
+            }
+          }
+          setSpeedRunResult({ elapsedMs: elapsed, isNewRecord, prevBestMs: prevBest });
+          setIsSpeedRun(false);
+          setSpeedRunStartMs(null);
+        }
+        return next;
+      });
+    },
+    [allExercises, speedRunStartMs, rawProgress, dayId, grade, speedRunAnswers],
+  );
 
   if (!day) {
     return (
@@ -187,7 +273,7 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       <details data-testid={testIds.screen.day.howWeWork(grade, dayId)} className="surface mb-4 rounded-2xl border border-violet-100 bg-violet-50/50 p-4 text-sm shadow-sm">
         <summary data-testid={childTid(testIds.screen.day.howWeWork(grade, dayId), "summary")} className="cursor-pointer select-none font-semibold text-violet-900">
-          אֵיךְ נַעֲבוֹד הַיּוֹם? (אַרְבַּעָה שְׁלָבִים)
+          אֵיךְ נַעֲבוֹד הַיּוֹם? (אַרְבַּעָה שְׁלָבִים)
         </summary>
         <ol data-testid={childTid(testIds.screen.day.howWeWork(grade, dayId), "steps")} className="mt-3 list-decimal list-inside space-y-2 pr-1 leading-relaxed text-slate-700">
           {LEARNING_ROUTINE_STEPS.map((step, i) => (
@@ -205,6 +291,14 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
         </div>
       ) : null}
 
+      {/* Speed-run banner */}
+      {isSpeedRun && (
+        <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-center font-bold text-amber-900" dir="rtl">
+          🏃 מצב מהירות — ענה על כל השאלות מחדש!
+          <span className="ml-4 font-mono text-amber-700">⏱️ {formatMs(liveTimerMs)}</span>
+        </div>
+      )}
+
       {/* Sections */}
       {day.sections.map((section) => (
         <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "sectionWrap", section.id)} key={section.id} className="mb-6">
@@ -221,18 +315,18 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
                 screenRootTestId={testIds.screen.day.root(grade, dayId)}
                 key={exercise.id}
                 exercise={exercise}
-                value={answers[exercise.id] ?? ""}
-                retryMessage={feedback[exercise.id]}
-                isCorrect={correctMap[exercise.id]}
-                wasChecked={(attempts[exercise.id] ?? 0) > 0}
+                value={isSpeedRun ? (speedRunAnswers[exercise.id] ?? "") : (answers[exercise.id] ?? "")}
+                retryMessage={isSpeedRun ? undefined : feedback[exercise.id]}
+                isCorrect={isSpeedRun ? (speedRunCorrect[exercise.id] === true ? true : undefined) : correctMap[exercise.id]}
+                wasChecked={isSpeedRun ? (speedRunCorrect[exercise.id] !== undefined) : (attempts[exercise.id] ?? 0) > 0}
                 setFocusRef={setFocusRef}
-                wrongAttempts={wrongAttempts[exercise.id] ?? 0}
-                hintUsed={hintUsed[exercise.id] ?? false}
-                onRevealHint={onRevealHint}
-                onChangeValue={onChangeValue}
-                onSubmitExercise={submitExercise}
+                wrongAttempts={isSpeedRun ? 0 : (wrongAttempts[exercise.id] ?? 0)}
+                hintUsed={isSpeedRun ? false : (hintUsed[exercise.id] ?? false)}
+                onRevealHint={isSpeedRun ? () => {} : onRevealHint}
+                onChangeValue={isSpeedRun ? (exerciseId, value) => setSpeedRunAnswers((prev) => ({ ...prev, [exerciseId]: value })) : onChangeValue}
+                onSubmitExercise={isSpeedRun ? submitSpeedRunExercise : submitExercise}
                 onNextInput={focusNextInput}
-                onRetryExercise={onRetryExercise}
+                onRetryExercise={isSpeedRun ? () => {} : onRetryExercise}
               />
             ))}
           </SectionBlock>
@@ -301,6 +395,92 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
         </div>
       )}
 
+      {/* Beat Your Time panel */}
+      {isComplete && !isSpeedRun && speedRunResult === null && (
+        <div className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 text-center shadow-sm" dir="rtl">
+          {rawProgress?.days[dayId]?.bestTimeMs !== undefined && (
+            <p className="mb-2 text-sm font-semibold text-violet-700">
+              ⏱️ הזמן הכי טוב שלך: <strong>{formatMs(rawProgress.days[dayId].bestTimeMs!)}</strong>
+            </p>
+          )}
+          <button
+            type="button"
+            className="touch-button w-full rounded-2xl bg-violet-600 py-4 text-lg font-semibold text-white shadow-md hover:bg-violet-700 active:bg-violet-800"
+            onClick={() => {
+              setSpeedRunCorrect({});
+              setSpeedRunAnswers({});
+              setSpeedRunResult(null);
+              setSpeedRunStartMs(Date.now());
+              setLiveTimerMs(0);
+              setIsSpeedRun(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            🏃 נסה לשפר את הזמן!
+          </button>
+        </div>
+      )}
+
+      {/* Speed-run result panel */}
+      {isComplete && speedRunResult !== null && (
+        <div
+          className={`mb-6 rounded-3xl p-5 text-center shadow-md border ${
+            speedRunResult.isNewRecord
+              ? "bg-emerald-50 border-emerald-300"
+              : "bg-amber-50 border-amber-300"
+          }`}
+          dir="rtl"
+        >
+          {speedRunResult.isNewRecord ? (
+            <>
+              <p className="text-3xl mb-1">🏆</p>
+              <p className="text-lg font-extrabold text-emerald-800 mb-1">שיא חדש!</p>
+              <p className="text-sm font-semibold text-emerald-700">
+                הזמן שלך: <strong>{formatMs(speedRunResult.elapsedMs)}</strong>
+                {speedRunResult.prevBestMs !== null && (
+                  <span className="text-emerald-600"> (שיפרת מ-{formatMs(speedRunResult.prevBestMs)})</span>
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-3xl mb-1">😊</p>
+              <p className="text-lg font-extrabold text-amber-800 mb-1">ניסיון טוב!</p>
+              <p className="text-sm font-semibold text-amber-700">
+                הזמן שלך: <strong>{formatMs(speedRunResult.elapsedMs)}</strong>
+                {speedRunResult.prevBestMs !== null && (
+                  <span> (השיא הוא: {formatMs(speedRunResult.prevBestMs)})</span>
+                )}
+              </p>
+            </>
+          )}
+          <div className="mt-4 flex gap-3 justify-center">
+            <button
+              type="button"
+              className="touch-button rounded-2xl border border-violet-300 bg-white px-5 py-3 text-sm font-semibold text-violet-700"
+              onClick={() => {
+                setSpeedRunCorrect({});
+                setSpeedRunAnswers({});
+                setSpeedRunResult(null);
+                setSpeedRunStartMs(Date.now());
+                setLiveTimerMs(0);
+                setIsSpeedRun(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              🔄 נסה שוב
+            </button>
+            <button
+              type="button"
+              className="touch-button rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white"
+              onClick={() => router.push(routes.gradeHome(grade, { previewAll }))}
+            >
+              🏠 חזרה לבית
+            </button>
+          </div>
+        </div>
+      )}
+
       <StarReward
         visible={showReward}
         onConfirm={() => {
@@ -323,4 +503,3 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
     </main>
   );
 }
-

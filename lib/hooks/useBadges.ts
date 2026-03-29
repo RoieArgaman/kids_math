@@ -17,7 +17,15 @@ import type { BadgeDefinition, BadgeId, BadgeState } from "@/lib/badges";
 
 export function useBadges(
   grade: GradeId,
-  options?: { evaluateTrigger?: boolean },
+  options?: {
+    evaluateTrigger?: boolean;
+    /**
+     * Increment this counter to force a badge re-evaluation even when
+     * `evaluateTrigger` has not changed. Used by DayScreen to re-check
+     * speed badges after a speed-run improves `bestTimeMs`.
+     */
+    evaluateCounter?: number;
+  },
 ): {
   badgeState: BadgeState;
   newlyUnlockedIds: BadgeId[];
@@ -60,7 +68,7 @@ export function useBadges(
       logEvent("badge_unlocked", { payload: { badgeId, grade } });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grade, options?.evaluateTrigger]);
+  }, [grade, options?.evaluateTrigger, options?.evaluateCounter]);
 
   const newlyUnlockedIds = badgeState.unlocked
     .filter((u) => !badgeState.seenIds.includes(u.id))
