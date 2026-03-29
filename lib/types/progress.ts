@@ -16,6 +16,7 @@ export interface DayProgressState {
   wrongCount: number;
   attempts: ExerciseAttempt[];
   completedAt?: string;
+  bestTimeMs?: number;  // personal best completion time in ms; undefined until first completion
   percentDone: number;
   isComplete: boolean;
 }

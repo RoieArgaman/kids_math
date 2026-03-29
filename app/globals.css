@@ -328,3 +328,12 @@ a:focus-visible {
   .animate-wiggle     { animation: wiggle 0.4s ease; }
   .animate-float      { animation: float 3s ease-in-out infinite; }
 }
+
+@keyframes badge-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+.badge-new-glow {
+  animation: badge-glow 1.2s ease-out 2;
+}

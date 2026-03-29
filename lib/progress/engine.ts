@@ -123,10 +123,22 @@ export function markDayComplete(
     return state;
   }
 
+  // Compute bestTimeMs for first-time completion.
+  // Only record a time when there are actual attempts to measure from; an empty
+  // attempts array means the day was force-completed without user input and a
+  // synthesised elapsed time of 0 would incorrectly qualify for every speed badge.
+  const now = Date.now();
+  let nextBestTimeMs = dayState.bestTimeMs;
+  if (nextBestTimeMs === undefined && dayState.attempts.length > 0) {
+    const firstAttemptTime = new Date(dayState.attempts[0].attemptedAt).getTime();
+    nextBestTimeMs = now - firstAttemptTime;
+  }
+
   const nextDayState: DayProgressState = {
     ...dayState,
     isComplete: true,
     completedAt: dayState.completedAt ?? new Date().toISOString(),
+    bestTimeMs: nextBestTimeMs,
   };
 
   return {
