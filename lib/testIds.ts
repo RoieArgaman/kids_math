@@ -65,6 +65,7 @@ export const testIds = {
       planCta: (grade: string) => tid("screen", "home", "cta", "plan", "grade", grade),
       adminCta: (grade: string) => tid("screen", "home", "cta", "admin", "grade", grade),
       dayCard: (dayId: string) => tid("screen", "home", "dayCard", "day", dayId),
+      dayCardRecordTime: (dayId: string) => childTid(tid("screen", "home", "dayCard", "day", dayId), "recordTime"),
       dayCardCta: (dayId: string) => tid("screen", "home", "dayCard", "day", dayId, "cta", "open"),
       gmatChallengeCta: (grade: string) => tid("screen", "home", "cta", "gmatChallenge", "grade", grade),
     },
@@ -97,6 +98,7 @@ export const testIds = {
     },
     day: {
       root: (grade: string, dayId: string) => tid("screen", "day", "grade", grade, "day", dayId),
+      dayHeader: (grade: string, dayId: string) => tid("screen", "day", "dayHeader", "grade", grade, "day", dayId),
       nav: (grade: string, dayId: string) => tid("screen", "day", "nav", "grade", grade, "day", dayId),
       stickyHeader: (grade: string, dayId: string) => tid("screen", "day", "stickyHeader", "grade", grade, "day", dayId),
       howWeWork: (grade: string, dayId: string) => tid("screen", "day", "howWeWork", "grade", grade, "day", dayId),

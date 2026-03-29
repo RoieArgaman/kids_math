@@ -10,8 +10,13 @@ const LEGACY_PROGRESS_STORAGE_KEY = "kids_math.workbook_progress.v1";
 const GRADE_A_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.a";
 const GRADE_B_PROGRESS_STORAGE_KEY_V1 = "kids_math.workbook_progress.v1.grade.b";
 
-function progressStorageKeyForGrade(grade: GradeId): string {
+/** Exposed for cross-tab `storage` listeners (must match `loadProgressState` / `saveProgressState`). */
+export function workbookProgressStorageKey(grade: GradeId): string {
   return `kids_math.workbook_progress.v2.grade.${grade}`;
+}
+
+function progressStorageKeyForGrade(grade: GradeId): string {
+  return workbookProgressStorageKey(grade);
 }
 
 function isBrowser(): boolean {
