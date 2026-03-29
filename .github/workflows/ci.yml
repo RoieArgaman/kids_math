@@ -1,9 +1,17 @@
 name: CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master]
   pull_request:
+
+env:
+  # Align with deploy.sh / local: predictable path for actions/cache + playwright install
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
   build-and-test:
@@ -15,6 +23,21 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+
+      - name: Cache Next.js compiler cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json', 'next.config.mjs') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: .playwright-browsers
+          # Strict key: invalidates when lockfile (incl. @playwright/test) changes — no broad restore-keys
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
 
       - name: Install
         run: npm ci

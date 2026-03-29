@@ -6,6 +6,9 @@
       "ignore": [
         "node_modules",
         ".git",
+        ".next",
+        ".playwright-browsers",
+        "coverage",
         "firebase-debug.log",
         "firebase-debug.*.log",
         "playwright-report",

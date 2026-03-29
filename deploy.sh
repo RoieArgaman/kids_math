@@ -2,11 +2,15 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: ./deploy.sh --project <firebaseProjectId> [--backend <backendId>] [--skip-tests]"
+  echo "Usage: ./deploy.sh --project <firebaseProjectId> [--backend <backendId>] [--skip-tests] [--skip-build]"
   echo ""
   echo "Examples:"
   echo "  ./deploy.sh --project my-firebase-project"
   echo "  ./deploy.sh --project my-firebase-project --backend kids-math"
+  echo "  ./deploy.sh --project my-firebase-project --skip-tests   # after green CI on same commit"
+  echo ""
+  echo "  --skip-build  Only with --skip-tests. Skips local 'npm run build' (upload-only)."
+  echo "                Use only when the same commit passed full CI and Node matches App Hosting."
   echo ""
   echo "Environment overrides (optional):"
   echo "  PLAYWRIGHT_BASE_URL / PLAYWRIGHT_WEB_SERVER_URL / PLAYWRIGHT_WEB_SERVER_COMMAND / PLAYWRIGHT_COOKIE_URL"
@@ -15,6 +19,7 @@ usage() {
 PROJECT_ID=""
 BACKEND_ID="kids-math"
 SKIP_TESTS="0"
+SKIP_BUILD="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,6 +33,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-tests)
       SKIP_TESTS="1"
+      shift
+      ;;
+    --skip-build)
+      SKIP_BUILD="1"
       shift
       ;;
     -h|--help)
@@ -44,6 +53,12 @@ done
 
 if [[ -z "$PROJECT_ID" ]]; then
   echo "Missing required --project <firebaseProjectId>"
+  usage
+  exit 2
+fi
+
+if [[ "$SKIP_BUILD" == "1" && "$SKIP_TESTS" != "1" ]]; then
+  echo "--skip-build requires --skip-tests (quick / upload-only path)."
   usage
   exit 2
 fi
@@ -81,8 +96,16 @@ if [[ "$SKIP_TESTS" != "1" ]]; then
   CI=1 npm run test:e2e
 else
   echo "Skipping tests (--skip-tests)"
-  echo "Building"
-  npm run build
+  if [[ "$SKIP_BUILD" == "1" ]]; then
+    echo ""
+    echo "Skipping local build (--skip-build)."
+    echo "Policy: use only when this commit already passed full CI on main (same SHA) and Node/tooling matches Firebase App Hosting."
+    echo "App Hosting still runs a cloud build from uploaded source."
+    echo ""
+  else
+    echo "Building"
+    npm run build
+  fi
 fi
 
 echo "Deploying to Firebase App Hosting"
