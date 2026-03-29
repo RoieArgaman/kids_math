@@ -10,16 +10,19 @@ import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import type { BadgeId, BadgeTier, BadgeDefinition } from "@/lib/badges/types";
 
-const BADGE_CATEGORIES: { label: string; ids: BadgeId[] }[] = [
+const BADGE_CATEGORIES: { id: string; label: string; ids: BadgeId[] }[] = [
   {
+    id: "progress",
     label: "📈 התקדמות",
     ids: ["first-day-done", "halfway-there", "streak-3-days", "streak-5-days", "streak-10-days"],
   },
   {
+    id: "weeks",
     label: "📅 שבועות",
     ids: ["week-1-complete", "week-2-complete", "week-3-complete", "week-4-complete"],
   },
   {
+    id: "accuracy",
     label: "🎯 דיוק",
     ids: [
       "zero-mistakes", "sharp-mind", "flawless-five", "zero-hero",
@@ -27,34 +30,42 @@ const BADGE_CATEGORIES: { label: string; ids: BadgeId[] }[] = [
     ],
   },
   {
+    id: "speed",
     label: "⚡ מהירות",
     ids: ["speed-runner", "lightning-fast", "speed-trio"],
   },
   {
+    id: "perseverance",
     label: "💪 התמדה",
     ids: ["comeback-kid", "iron-will", "ten-and-done"],
   },
   {
+    id: "timing",
     label: "⏰ תזמון",
     ids: ["early-bird", "weekend-warrior"],
   },
   {
+    id: "streak",
     label: "🗓️ ימים רצופים",
     ids: ["calendar-streak-3", "calendar-streak-7"],
   },
   {
+    id: "strands",
     label: "📚 תחומי לימוד",
     ids: ["strand-numbers", "strand-operations", "strand-geometry", "strand-advanced"],
   },
   {
+    id: "exam",
     label: "📝 מבחן",
     ids: ["exam-high-score", "exam-ace"],
   },
   {
+    id: "effort",
     label: "💬 מאמץ",
     ids: ["hundred-answers", "five-hundred-answers"],
   },
   {
+    id: "champion",
     label: "🏆 מצטיין",
     ids: ["grand-master", "grade-a-graduate", "grade-b-graduate"],
   },
@@ -150,12 +161,13 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Empty state — shown only when nothing is unlocked yet */}
       {badgeState.unlocked.length === 0 && (
         <div
+          data-testid={childTid(badgesRoot, "emptyState")}
           className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center"
           dir="rtl"
         >
-          <div className="mb-2 text-4xl">🌟</div>
-          <div className="mb-1 text-base font-bold text-amber-800">הפרסים מחכים לך!</div>
-          <div className="text-sm text-amber-600">
+          <div data-testid={childTid(badgesRoot, "emptyState", "icon")} className="mb-2 text-4xl">🌟</div>
+          <div data-testid={childTid(badgesRoot, "emptyState", "title")} className="mb-1 text-base font-bold text-amber-800">הפרסים מחכים לך!</div>
+          <div data-testid={childTid(badgesRoot, "emptyState", "hint")} className="text-sm text-amber-600">
             השלם ימים והצלח בתרגילים כדי לאסוף פרסים
           </div>
         </div>
@@ -163,11 +175,12 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
 
       {/* Progress counter */}
       <div
+        data-testid={childTid(badgesRoot, "progressCounter")}
         className="mb-6 flex items-center justify-between rounded-xl bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700"
         dir="rtl"
       >
-        <span>🏅 הפרסים שלי</span>
-        <span>
+        <span data-testid={childTid(badgesRoot, "progressCounter", "label")}>🏅 הפרסים שלי</span>
+        <span data-testid={childTid(badgesRoot, "progressCounter", "count")}>
           {badgeState.unlocked.length} / {allBadges.length}
         </span>
       </div>
@@ -181,8 +194,8 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
         if (catBadges.length === 0) return null;
 
         return (
-          <section key={cat.label} className="mb-8" dir="rtl">
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+          <section key={cat.label} data-testid={childTid(badgesRoot, "category", cat.id)} className="mb-8" dir="rtl">
+            <h2 data-testid={childTid(badgesRoot, "category", cat.id, "heading")} className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
               {cat.label}
             </h2>
             <div
@@ -217,12 +230,13 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     }}
                   >
                     {/* Tier label */}
-                    <span className="absolute right-2 top-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <span data-testid={childTid(cardTid, "tier")} className="absolute right-2 top-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                       {TIER_LABEL[badge.tier]}
                     </span>
 
                     {/* Hover / tap tooltip */}
                     <div
+                      data-testid={childTid(cardTid, "tooltip")}
                       className={[
                         "pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-48",
                         "-translate-x-1/2 rounded-xl bg-slate-800 px-3 py-2 text-center",
@@ -232,7 +246,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       dir="rtl"
                     >
                       {badge.description}
-                      <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                      <div data-testid={childTid(cardTid, "tooltip", "arrow")} className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
                     </div>
 
                     {/* Icon with lock overlay */}
@@ -240,9 +254,9 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       data-testid={childTid(cardTid, "icon")}
                       className="relative mb-2 inline-block"
                     >
-                      <span className="text-4xl">{badge.icon}</span>
+                      <span data-testid={childTid(cardTid, "icon", "emoji")} className="text-4xl">{badge.icon}</span>
                       {!isUnlocked && (
-                        <span className="absolute -bottom-1 -right-1 text-base">🔒</span>
+                        <span data-testid={childTid(cardTid, "icon", "lock")} className="absolute -bottom-1 -right-1 text-base">🔒</span>
                       )}
                     </div>
 
@@ -264,6 +278,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                           {formatUnlockDate(unlockedAt)}
                         </div>
                         <div
+                          data-testid={childTid(cardTid, "description")}
                           className="mt-1 text-xs leading-snug text-slate-500"
                           dir="rtl"
                         >

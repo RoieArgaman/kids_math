@@ -293,9 +293,9 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       {/* Speed-run banner */}
       {isSpeedRun && (
-        <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-center font-bold text-amber-900" dir="rtl">
+        <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunBanner")} className="mb-4 rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-center font-bold text-amber-900" dir="rtl">
           🏃 מצב מהירות — ענה על כל השאלות מחדש!
-          <span className="ml-4 font-mono text-amber-700">⏱️ {formatMs(liveTimerMs)}</span>
+          <span data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunBanner", "timer")} className="ml-4 font-mono text-amber-700">⏱️ {formatMs(liveTimerMs)}</span>
         </div>
       )}
 
@@ -397,13 +397,14 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       {/* Beat Your Time panel */}
       {isComplete && !isSpeedRun && speedRunResult === null && (
-        <div className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 text-center shadow-sm" dir="rtl">
+        <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel")} className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 text-center shadow-sm" dir="rtl">
           {rawProgress?.days[dayId]?.bestTimeMs !== undefined && (
-            <p className="mb-2 text-sm font-semibold text-violet-700">
-              ⏱️ הזמן הכי טוב שלך: <strong>{formatMs(rawProgress.days[dayId].bestTimeMs!)}</strong>
+            <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "bestTime")} className="mb-2 text-sm font-semibold text-violet-700">
+              ⏱️ הזמן הכי טוב שלך: <strong data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "bestTime", "value")}>{formatMs(rawProgress.days[dayId].bestTimeMs!)}</strong>
             </p>
           )}
           <button
+            data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "startCta")}
             type="button"
             className="touch-button w-full rounded-2xl bg-violet-600 py-4 text-lg font-semibold text-white shadow-md hover:bg-violet-700 active:bg-violet-800"
             onClick={() => {
@@ -424,6 +425,7 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
       {/* Speed-run result panel */}
       {isComplete && speedRunResult !== null && (
         <div
+          data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult")}
           className={`mb-6 rounded-3xl p-5 text-center shadow-md border ${
             speedRunResult.isNewRecord
               ? "bg-emerald-50 border-emerald-300"
@@ -433,29 +435,30 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
         >
           {speedRunResult.isNewRecord ? (
             <>
-              <p className="text-3xl mb-1">🏆</p>
-              <p className="text-lg font-extrabold text-emerald-800 mb-1">שיא חדש!</p>
-              <p className="text-sm font-semibold text-emerald-700">
-                הזמן שלך: <strong>{formatMs(speedRunResult.elapsedMs)}</strong>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "newRecord", "icon")} className="text-3xl mb-1">🏆</p>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "newRecord", "title")} className="text-lg font-extrabold text-emerald-800 mb-1">שיא חדש!</p>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "newRecord", "desc")} className="text-sm font-semibold text-emerald-700">
+                הזמן שלך: <strong data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "newRecord", "time")}>{formatMs(speedRunResult.elapsedMs)}</strong>
                 {speedRunResult.prevBestMs !== null && (
-                  <span className="text-emerald-600"> (שיפרת מ-{formatMs(speedRunResult.prevBestMs)})</span>
+                  <span data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "newRecord", "prevBest")} className="text-emerald-600"> (שיפרת מ-{formatMs(speedRunResult.prevBestMs)})</span>
                 )}
               </p>
             </>
           ) : (
             <>
-              <p className="text-3xl mb-1">😊</p>
-              <p className="text-lg font-extrabold text-amber-800 mb-1">ניסיון טוב!</p>
-              <p className="text-sm font-semibold text-amber-700">
-                הזמן שלך: <strong>{formatMs(speedRunResult.elapsedMs)}</strong>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "goodTry", "icon")} className="text-3xl mb-1">😊</p>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "goodTry", "title")} className="text-lg font-extrabold text-amber-800 mb-1">ניסיון טוב!</p>
+              <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "goodTry", "desc")} className="text-sm font-semibold text-amber-700">
+                הזמן שלך: <strong data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "goodTry", "time")}>{formatMs(speedRunResult.elapsedMs)}</strong>
                 {speedRunResult.prevBestMs !== null && (
-                  <span> (השיא הוא: {formatMs(speedRunResult.prevBestMs)})</span>
+                  <span data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "goodTry", "prevBest")}> (השיא הוא: {formatMs(speedRunResult.prevBestMs)})</span>
                 )}
               </p>
             </>
           )}
-          <div className="mt-4 flex gap-3 justify-center">
+          <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "actions")} className="mt-4 flex gap-3 justify-center">
             <button
+              data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "retryCta")}
               type="button"
               className="touch-button rounded-2xl border border-violet-300 bg-white px-5 py-3 text-sm font-semibold text-violet-700"
               onClick={() => {
@@ -471,6 +474,7 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
               🔄 נסה שוב
             </button>
             <button
+              data-testid={childTid(testIds.screen.day.root(grade, dayId), "speedRunResult", "homeCta")}
               type="button"
               className="touch-button rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white"
               onClick={() => router.push(routes.gradeHome(grade, { previewAll }))}

@@ -247,14 +247,15 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
       {nextBadge && !showTrophy && (
         <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge")}
           className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
           dir="rtl"
         >
-          <span className="text-3xl">{nextBadge.icon}</span>
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-amber-700">הפרס הבא שאפשר להשיג:</div>
-            <div className="truncate text-sm font-bold text-amber-900">{nextBadge.name}</div>
-            <div className="truncate text-xs text-amber-700">{nextBadge.description}</div>
+          <span data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "icon")} className="text-3xl">{nextBadge.icon}</span>
+          <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "body")} className="min-w-0 flex-1">
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "label")} className="text-xs font-semibold text-amber-700">הפרס הבא שאפשר להשיג:</div>
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "name")} className="truncate text-sm font-bold text-amber-900">{nextBadge.name}</div>
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "description")} className="truncate text-xs text-amber-700">{nextBadge.description}</div>
           </div>
           <Link
             href={routes.gradeBadges(effectiveGrade)}
