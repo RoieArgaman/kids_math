@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { HeroHeader } from "@/components/ui/HeroHeader";
 import { Surface } from "@/components/ui/Surface";
@@ -20,10 +20,10 @@ import {
 import { getWorkbookDays, getWorkbookDaysById } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { gradeLabel } from "@/lib/grades";
+import { loadPlanScreenResumeState } from "@/lib/client/loadGradeScreenState";
 import { createInitialWorkbookProgressState } from "@/lib/progress/engine";
-import { loadProgressState } from "@/lib/progress/storage";
+import { useReloadOnStorageResume } from "@/lib/hooks/useReloadOnStorageResume";
 import { routes } from "@/lib/routes";
-import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 import { childTid, testIds } from "@/lib/testIds";
 import type { WorkbookProgressState } from "@/lib/types";
 
@@ -41,9 +41,18 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
   const [previewAll, setPreviewAll] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
+  const reloadResumeBundle = useCallback(() => {
+    const bundle = loadPlanScreenResumeState(effectiveGrade);
+    setProgress(bundle.progress);
+    setPreviewAll(bundle.previewAll);
+  }, [effectiveGrade]);
+
+  useReloadOnStorageResume(effectiveGrade, reloadResumeBundle);
+
   useEffect(() => {
-    setProgress(loadProgressState({ grade: effectiveGrade }));
-    setPreviewAll(getPreviewAllFromLocation());
+    const bundle = loadPlanScreenResumeState(effectiveGrade);
+    setProgress(bundle.progress);
+    setPreviewAll(bundle.previewAll);
     logEvent("plan_viewed", { payload: { grade: effectiveGrade } });
     setIsHydrated(true);
   }, [effectiveGrade]);

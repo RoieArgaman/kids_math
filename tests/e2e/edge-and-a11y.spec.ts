@@ -270,5 +270,33 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     await page.reload();
     await expect(page.getByText("💥 0/10")).toBeVisible();
   });
+
+  test("after sticky completion, 10 wrong answers do not auto-reset the day", async ({ page }) => {
+    const day = getWorkbookDaysById("a")["day-1"];
+    const ex = day ? findFirstInputExercise(day) : null;
+    if (!day || !ex) {
+      test.skip(true, "day-1 has no input exercise to validate sticky completion");
+    }
+
+    const progress = createProgressState({
+      days: {
+        "day-1": createCompletedDayProgressState("day-1"),
+      },
+    });
+    await seedProgressState(page, "a", progress);
+
+    await page.goto("/grade/a/day/day-1");
+
+    for (let i = 0; i < 10; i += 1) {
+      await answerExerciseWrongly(page, ex!);
+    }
+
+    await expect(
+      page.getByText("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ."),
+    ).toHaveCount(0);
+
+    const wrongBadge = page.getByTestId(childTid(testIds.screen.day.stickyHeader("a", "day-1"), "wrongBadge"));
+    await expect(wrongBadge).toContainText("💥 0/10");
+  });
 });
 

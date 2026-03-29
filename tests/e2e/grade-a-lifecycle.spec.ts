@@ -47,6 +47,10 @@ test.describe("grade A lifecycle", () => {
     await dismissDayCompletionCelebration(page);
     await expect(page).toHaveURL(/\/grade\/a\/?$/);
 
+    const day1Card = page.getByTestId(testIds.screen.home.dayCard("day-1"));
+    await expect(day1Card).toHaveClass(/surface-success/);
+    await expect(day1Card).toContainText("הוּשְׁלַם");
+
     // Refresh should preserve completion.
     await page.reload();
     await expect(page).toHaveURL(/\/grade\/a\/?$/);
@@ -59,6 +63,42 @@ test.describe("grade A lifecycle", () => {
       return Boolean(parsed?.days?.["day-1"]?.isComplete);
     });
     expect(isComplete).toBe(true);
+  });
+
+  test("home day card shows completion after browser back from day", async ({ page }) => {
+    await page.evaluate(() => {
+      const key = "kids_math.workbook_progress.v2.grade.a";
+      const state = {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        days: {
+          "day-1": {
+            dayId: "day-1",
+            answers: {},
+            correctAnswers: {},
+            wrongCount: 0,
+            attempts: [],
+            percentDone: 100,
+            isComplete: false,
+          },
+        },
+      };
+      window.localStorage.setItem(key, JSON.stringify(state));
+    });
+
+    await page.goto("/grade/a/day/day-1");
+    await page.getByTestId(testIds.screen.day.completeCta("a", "day-1")).click();
+    await page.getByTestId(testIds.component.starReward.confirm()).click();
+    await dismissDayCompletionCelebration(page);
+    await expect(page).toHaveURL(/\/grade\/a\/?$/);
+
+    await page.goto("/grade/a/day/day-1");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/grade\/a\/?$/);
+
+    const day1Card = page.getByTestId(testIds.screen.home.dayCard("day-1"));
+    await expect(day1Card).toHaveClass(/surface-success/);
+    await expect(day1Card).toContainText("הוּשְׁלַם");
   });
 
   test("final exam: fail, retry, then pass unlocks grade B via real flow", async ({ page }) => {

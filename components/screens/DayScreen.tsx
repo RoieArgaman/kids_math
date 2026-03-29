@@ -26,11 +26,11 @@ import { useDayAnswers } from "@/lib/hooks/useDayAnswers";
 import { useDayReset } from "@/lib/hooks/useDayReset";
 import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
-import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import { isAnswerCorrect } from "@/lib/utils/exercise";
+import { formatMs } from "@/lib/utils/formatMs";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import type { DayId, Exercise, WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import type { DayId, Exercise, WorkbookDay } from "@/lib/types";
 
 export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
@@ -40,16 +40,20 @@ export function DayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   return <RegularDayScreen grade={effectiveGrade} dayId={dayId} />;
 }
 
-function formatMs(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
 function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   const router = useRouter();
-  const { setAnswer, markComplete, resetDay, percentDone, isComplete, wrongCount } = useProgress(dayId, {
+  const {
+    setAnswer,
+    markComplete,
+    resetDay,
+    improveBestTime,
+    percentDone,
+    isComplete,
+    wrongCount,
+    completedAt,
+    firstAttemptedAt,
+    bestTimeMs,
+  } = useProgress(dayId, {
     grade,
   });
   const day = useMemo<WorkbookDay | undefined>(
@@ -102,18 +106,13 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
   } | null>(null);
   const [liveTimerMs, setLiveTimerMs] = useState(0);
 
-  // For speed-run best-time updates we need direct access to progress state
-  const [rawProgress, setRawProgress] = useState<WorkbookProgressState | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     if (day) {
       logEvent("day_viewed", { dayId: day.id, payload: { grade } });
     }
   }, [day, grade]);
-
-  useEffect(() => {
-    setRawProgress(loadProgressState({ grade }));
-  }, [grade]);
 
   // Live timer effect
   useEffect(() => {
@@ -124,47 +123,57 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
     return () => clearInterval(interval);
   }, [isSpeedRun, speedRunStartMs]);
 
+  useEffect(() => {
+    if (isSpeedRun) {
+      return;
+    }
+    if (!firstAttemptedAt) {
+      return;
+    }
+    if (percentDone >= 100) {
+      return;
+    }
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isSpeedRun, firstAttemptedAt, percentDone]);
+
+  const headerSessionMs = useMemo(() => {
+    if (isSpeedRun) {
+      return null;
+    }
+    if (!firstAttemptedAt) {
+      return null;
+    }
+    const start = new Date(firstAttemptedAt).getTime();
+    if (percentDone >= 100 && completedAt) {
+      return Math.max(0, new Date(completedAt).getTime() - start);
+    }
+    return Math.max(0, nowTick - start);
+  }, [isSpeedRun, firstAttemptedAt, percentDone, completedAt, nowTick]);
+
   const submitSpeedRunExercise = useCallback(
     (exercise: Exercise) => {
       const userAnswer = speedRunAnswers[exercise.id] ?? "";
       const correct = isAnswerCorrect(exercise, userAnswer);
-      setSpeedRunCorrect((prev) => {
-        const next = { ...prev, [exercise.id]: correct };
-        // Check if ALL exercises are now correctly answered
-        const allDone =
-          allExercises.length > 0 &&
-          allExercises.every((ex) => next[ex.id] === true);
-        if (allDone && speedRunStartMs !== null) {
-          const elapsed = Date.now() - speedRunStartMs;
-          const prevBest = rawProgress?.days[dayId]?.bestTimeMs ?? null;
-          const isNewRecord = prevBest === null || elapsed < prevBest;
-          // Update bestTimeMs in persistent storage if improved
-          if (isNewRecord) {
-            const currentProgress = loadProgressState({ grade });
-            const dayProg = currentProgress.days[dayId];
-            if (dayProg) {
-              const updatedProgress = {
-                ...currentProgress,
-                days: {
-                  ...currentProgress.days,
-                  [dayId]: { ...dayProg, bestTimeMs: elapsed },
-                },
-                updatedAt: new Date().toISOString(),
-              };
-              saveProgressState(updatedProgress, { grade });
-              setRawProgress(updatedProgress);
-              // Re-trigger badge evaluation so speed badges reflect the new best time.
-              setBadgeEvalCounter((c) => c + 1);
-            }
-          }
-          setSpeedRunResult({ elapsedMs: elapsed, isNewRecord, prevBestMs: prevBest });
-          setIsSpeedRun(false);
-          setSpeedRunStartMs(null);
+      const nextCorrect = { ...speedRunCorrect, [exercise.id]: correct };
+      setSpeedRunCorrect(nextCorrect);
+      const allDone =
+        allExercises.length > 0 &&
+        allExercises.every((ex) => nextCorrect[ex.id] === true);
+      if (allDone && speedRunStartMs !== null) {
+        const elapsed = Date.now() - speedRunStartMs;
+        const prevBest = bestTimeMs ?? null;
+        const isNewRecord = prevBest === null || elapsed < prevBest;
+        if (isNewRecord) {
+          improveBestTime(elapsed);
+          setBadgeEvalCounter((c) => c + 1);
         }
-        return next;
-      });
+        setSpeedRunResult({ elapsedMs: elapsed, isNewRecord, prevBestMs: prevBest });
+        setIsSpeedRun(false);
+        setSpeedRunStartMs(null);
+      }
     },
-    [allExercises, speedRunStartMs, rawProgress, dayId, grade, speedRunAnswers],
+    [allExercises, speedRunCorrect, speedRunStartMs, bestTimeMs, improveBestTime, speedRunAnswers],
   );
 
   if (!day) {
@@ -268,7 +277,13 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
 
       {/* Day header */}
       <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "header")} className="mb-4 mt-2">
-        <DayHeader day={day} />
+        <DayHeader
+          day={day}
+          rootTestId={testIds.screen.day.dayHeader(grade, dayId)}
+          showSessionTimer={!isSpeedRun && Boolean(firstAttemptedAt)}
+          sessionTimerMs={headerSessionMs}
+          sessionTimerTestId={childTid(testIds.screen.day.dayHeader(grade, dayId), "sessionTimer")}
+        />
       </div>
 
       <details data-testid={testIds.screen.day.howWeWork(grade, dayId)} className="surface mb-4 rounded-2xl border border-violet-100 bg-violet-50/50 p-4 text-sm shadow-sm">
@@ -398,9 +413,9 @@ function RegularDayScreen({ grade, dayId }: { grade: GradeId; dayId: DayId }) {
       {/* Beat Your Time panel */}
       {isComplete && !isSpeedRun && speedRunResult === null && (
         <div data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel")} className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 text-center shadow-sm" dir="rtl">
-          {rawProgress?.days[dayId]?.bestTimeMs !== undefined && (
+          {bestTimeMs !== undefined && (
             <p data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "bestTime")} className="mb-2 text-sm font-semibold text-violet-700">
-              ⏱️ הזמן הכי טוב שלך: <strong data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "bestTime", "value")}>{formatMs(rawProgress.days[dayId].bestTimeMs!)}</strong>
+              ⏱️ הזמן הכי טוב שלך: <strong data-testid={childTid(testIds.screen.day.root(grade, dayId), "beatYourTimePanel", "bestTime", "value")}>{formatMs(bestTimeMs)}</strong>
             </p>
           )}
           <button

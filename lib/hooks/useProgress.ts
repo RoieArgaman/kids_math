@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  applyBestTimeMsIfImproved,
   COMPLETION_GATE_PERCENT,
   createInitialWorkbookProgressState,
   getOrCreateDayProgress,
@@ -25,9 +26,13 @@ interface UseProgressApi {
   setAnswer: (args: SetAnswerArgs) => void;
   markComplete: () => boolean;
   resetDay: () => void;
+  improveBestTime: (elapsedMs: number) => void;
   isComplete: boolean;
   percentDone: number;
   wrongCount: number;
+  completedAt: string | undefined;
+  firstAttemptedAt: string | undefined;
+  bestTimeMs: number | undefined;
 }
 
 export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): UseProgressApi {
@@ -101,12 +106,23 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
     setState((current) => resetDayProgress(current, dayId));
   }, [dayId]);
 
+  const improveBestTime = useCallback(
+    (elapsedMs: number) => {
+      setState((current) => applyBestTimeMsIfImproved(current, dayId, elapsedMs));
+    },
+    [dayId],
+  );
+
   return {
     setAnswer,
     markComplete,
     resetDay,
+    improveBestTime,
     isComplete: dayProgress.isComplete,
     percentDone: dayProgress.percentDone,
     wrongCount: dayProgress.wrongCount,
+    completedAt: dayProgress.completedAt,
+    firstAttemptedAt: dayProgress.attempts[0]?.attemptedAt,
+    bestTimeMs: dayProgress.bestTimeMs,
   };
 }

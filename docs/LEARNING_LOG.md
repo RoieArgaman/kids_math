@@ -6,6 +6,22 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-03-29 (Grade home / plan: reload progress on resume)
+- **Trigger:** Day completed (100%, הושלם) but grade home day cards did not show completion until hard refresh.
+- **What changed / where:** `lib/progress/storage.ts` (`workbookProgressStorageKey`), `lib/client/loadGradeScreenState.ts`, `lib/hooks/useReloadOnStorageResume.ts`, `components/screens/HomeScreen.tsx`, `components/screens/PlanScreen.tsx`, `tests/e2e/grade-a-lifecycle.spec.ts`.
+- **What we learned:** `loadProgressState` ran only on mount / grade change. BFCache, browser back, and cross-tab writes can show **stale React state** while `localStorage` is already updated. Re-read workbook progress (and the same bundle as home: final exam, events, `previewAll`) on `pageshow` when `persisted`, on `storage` for the grade key, and debounced `visibilitychange`.
+- **How to reuse next time:** Any screen that mirrors `localStorage` in React state and must stay in sync after navigation or tab switches should subscribe to the same resume pattern, not only `useEffect([deps])` on first paint.
+
+### 2026-03-29 (Per-day record time + `bestTimeMs`)
+- **Trigger:** Plan to measure session length from first answer to first 100% gate, show PB on home, live timer in day header; unify speed-run writes with `useProgress`.
+- **What changed / where:** `lib/progress/engine.ts` (`computeElapsedMsForCompletedDay`, `applyBestTimeMsIfImproved`; `markDayComplete` uses `completedAt` − `attempts[0]`; no `wrongCount` after sticky `isComplete`), `lib/hooks/useProgress.ts` (`improveBestTime`, `completedAt`/`firstAttemptedAt`/`bestTimeMs`), `components/DayHeader.tsx`, `components/screens/DayScreen.tsx`, `components/screens/HomeScreen.tsx`, `lib/utils/formatMs.ts`, `lib/testIds.ts`.
+- **What we learned:**
+  - Persisted PB updates for speed-run should go through **`applyBestTimeMsIfImproved` + `useProgress`** so a single `saveProgressState` path avoids races with direct storage writes.
+  - Post-complete practice should not increment **`wrongCount`** or the 10-wrong auto-reset can wipe sticky completion.
+- **How to reuse next time:** Elapsed display = `computeElapsedMsForCompletedDay` or live `Date.now() − firstAttempt` until `percentDone === 100`, then freeze using `completedAt`.
+- **Follow-up:** `mergeBestTimeMs` in `lib/progress/engine.ts` centralizes PB min logic for `markDayComplete` + `applyBestTimeMsIfImproved`. E2E `edge-and-a11y.spec.ts` covers “sticky completion + 10 wrongs” does not show reset notice.
+
+
 ### 2026-03-27 (Firebase App Hosting + `NODE_ENV=production` installs)
 - **Trigger:** Cloud Build for App Hosting failed: missing `tailwindcss`, bogus `@/` resolutions, then local prod simulation failed on ESLint + `vitest.config.ts` typecheck.
 - **What changed / where:** `package.json` (move `tailwindcss`, `postcss`, `typescript`, `@types/*` to `dependencies`), `next.config.mjs` (`eslint.ignoreDuringBuilds`), `tsconfig.json` exclude `tests`/Vitest/Playwright configs from app typecheck.

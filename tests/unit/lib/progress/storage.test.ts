@@ -201,6 +201,20 @@ describe("saveProgressState", () => {
     expect(parsed.updatedAt).not.toBe("2020-01-01T00:00:00.000Z");
   });
 
+
+  it("round-trips bestTimeMs on a day", () => {
+    const day = makeDay("day-1");
+    const withBest: typeof day = { ...day, bestTimeMs: 90_000 };
+    const state = {
+      version: 1 as const,
+      days: { "day-1": withBest },
+      updatedAt: "2020-01-01T00:00:00.000Z",
+    };
+    saveProgressState(state, { grade: "a" });
+    const loaded = loadProgressState({ grade: "a" });
+    expect(loaded.days["day-1"]?.bestTimeMs).toBe(90_000);
+  });
+
   it("persists grade B to v2 key", () => {
     const state = {
       version: 1 as const,

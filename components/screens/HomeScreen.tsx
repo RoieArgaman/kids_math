@@ -6,18 +6,17 @@ import { AppNavLink } from "@/components/ui/AppNavLink";
 import { Chip } from "@/components/ui/Chip";
 import { HeroHeader } from "@/components/ui/HeroHeader";
 import { Surface } from "@/components/ui/Surface";
-import { logEvent, loadEvents } from "@/lib/analytics/events";
+import { logEvent } from "@/lib/analytics/events";
 import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { gradeLabel } from "@/lib/grades";
 import { FINAL_EXAM_DAY_ID, FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
-import { loadFinalExamState } from "@/lib/final-exam/storage";
 import type { FinalExamState } from "@/lib/final-exam/types";
+import { loadGradeHomeResumeState } from "@/lib/client/loadGradeScreenState";
 import { canUnlockNextDay, createInitialWorkbookProgressState } from "@/lib/progress/engine";
-import { loadProgressState } from "@/lib/progress/storage";
+import { useReloadOnStorageResume } from "@/lib/hooks/useReloadOnStorageResume";
 import { routes } from "@/lib/routes";
-import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 import { loadStreakState, saveStreakState } from "@/lib/streak/storage";
 import { computeNextStreakState, getTodayDate } from "@/lib/streak/engine";
 import type { StreakState } from "@/lib/streak/types";
@@ -25,6 +24,7 @@ import type { StreakBadgeId } from "@/lib/streak/types";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { TrophyUnlock } from "@/components/TrophyUnlock";
 import { normalizeAnswerValue } from "@/lib/utils/exercise";
+import { formatMs } from "@/lib/utils/formatMs";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
@@ -100,7 +100,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   const workbookDaysList = getWorkbookDays(effectiveGrade);
 
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
-  const [finalExam, setFinalExam] = useState<ReturnType<typeof loadFinalExamState>>(null);
+  const [finalExam, setFinalExam] = useState<FinalExamState | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -116,12 +116,23 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
   const handleDismissBadge = useCallback(() => setNewlyEarnedBadge(null), []);
 
+  const reloadResumeBundle = useCallback(() => {
+    const bundle = loadGradeHomeResumeState(effectiveGrade);
+    setProgress(bundle.progress);
+    setFinalExam(bundle.finalExam);
+    setEvents(bundle.events);
+    setPreviewAll(bundle.previewAll);
+  }, [effectiveGrade]);
+
+  useReloadOnStorageResume(effectiveGrade, reloadResumeBundle);
+
   useEffect(() => {
-    setPreviewAll(getPreviewAllFromLocation());
+    const bundle = loadGradeHomeResumeState(effectiveGrade);
+    setPreviewAll(bundle.previewAll);
     logEvent("home_viewed", { payload: { grade: effectiveGrade } });
-    setProgress(loadProgressState({ grade: effectiveGrade }));
-    setFinalExam(loadFinalExamState(effectiveGrade));
-    setEvents(loadEvents());
+    setProgress(bundle.progress);
+    setFinalExam(bundle.finalExam);
+    setEvents(bundle.events);
 
     // Streak — global, not grade-specific
     const loaded = loadStreakState();
@@ -330,7 +341,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                       : "";
 
                 return (
-                  <article data-testid="km.autogen.homescreen.node.idx.17"
+                  <article data-testid={testIds.screen.home.dayCard(day.id)}
                     key={day.id}
                     className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
                   >
@@ -380,6 +391,26 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
                         />
                       </div>
                     </div>
+
+                    {!isFinalExamDay && state !== "locked" && typeof dayProgress?.bestTimeMs === "number" ? (
+                      <p
+                        data-testid={testIds.screen.home.dayCardRecordTime(day.id)}
+                        className="muted mb-3 flex items-center justify-center gap-2 text-center text-xs"
+                        dir="rtl"
+                      >
+                        <span
+                          data-testid={childTid(testIds.screen.home.dayCardRecordTime(day.id), "label")}
+                          className="text-slate-500"
+                        >
+                          הזמן הכי טוב
+                        </span>
+                        <span
+                          data-testid={childTid(testIds.screen.home.dayCardRecordTime(day.id), "value")}
+                          dir="ltr" className="font-mono text-sm font-semibold tabular-nums text-slate-700">
+                          {formatMs(dayProgress.bestTimeMs)}
+                        </span>
+                      </p>
+                    ) : null}
 
                     {/* CTA */}
                     {state === "locked" ? (

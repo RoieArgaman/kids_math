@@ -66,6 +66,50 @@ export function passesCompletionGate(
   return percentDone >= thresholdPercent;
 }
 
+/** Personal best = lower elapsed time. Used by `markDayComplete` and `applyBestTimeMsIfImproved`. */
+export function mergeBestTimeMs(previousBestMs: number | undefined, candidateMs: number): number {
+  return previousBestMs === undefined ? candidateMs : Math.min(previousBestMs, candidateMs);
+}
+
+export function computeElapsedMsForCompletedDay(dayState: DayProgressState): number | null {
+  if (!dayState.completedAt || dayState.attempts.length === 0) {
+    return null;
+  }
+  if (!passesCompletionGate(dayState.percentDone)) {
+    return null;
+  }
+  const start = new Date(dayState.attempts[0].attemptedAt).getTime();
+  const end = new Date(dayState.completedAt).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return null;
+  }
+  return Math.max(0, end - start);
+}
+
+export function applyBestTimeMsIfImproved(
+  state: WorkbookProgressState,
+  dayId: DayId,
+  elapsedMs: number,
+): WorkbookProgressState {
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
+    return state;
+  }
+  const dayState = getOrCreateDayProgress(state, dayId);
+  const prev = dayState.bestTimeMs;
+  const next = mergeBestTimeMs(prev, elapsedMs);
+  if (next === prev) {
+    return state;
+  }
+  return {
+    ...state,
+    days: {
+      ...state.days,
+      [dayId]: { ...dayState, bestTimeMs: next },
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function setAnswerForDay(
   state: WorkbookProgressState,
   input: SetAnswerInput,
@@ -87,7 +131,8 @@ export function setAnswerForDay(
     ...dayState.correctAnswers,
     [input.exerciseId]: input.isCorrect,
   };
-  const wrongCount = dayState.wrongCount + (input.isCorrect ? 0 : 1);
+  const wrongIncrement = input.isCorrect || dayState.isComplete ? 0 : 1;
+  const wrongCount = dayState.wrongCount + wrongIncrement;
   const correctCount = Object.values(nextCorrectAnswers).filter(Boolean).length;
   const percentDone = calculatePercentDone(correctCount, input.totalExercises);
   const canComplete = passesCompletionGate(percentDone);
@@ -99,7 +144,6 @@ export function setAnswerForDay(
     wrongCount,
     attempts: [...dayState.attempts, attempt],
     percentDone,
-    // Completion is sticky once achieved for stable unlock behavior.
     isComplete: dayState.isComplete || canComplete,
     completedAt: dayState.completedAt ?? (canComplete ? new Date().toISOString() : undefined),
   };
@@ -123,15 +167,10 @@ export function markDayComplete(
     return state;
   }
 
-  // Compute bestTimeMs for first-time completion.
-  // Only record a time when there are actual attempts to measure from; an empty
-  // attempts array means the day was force-completed without user input and a
-  // synthesised elapsed time of 0 would incorrectly qualify for every speed badge.
-  const now = Date.now();
+  const elapsed = computeElapsedMsForCompletedDay(dayState);
   let nextBestTimeMs = dayState.bestTimeMs;
-  if (nextBestTimeMs === undefined && dayState.attempts.length > 0) {
-    const firstAttemptTime = new Date(dayState.attempts[0].attemptedAt).getTime();
-    nextBestTimeMs = now - firstAttemptTime;
+  if (elapsed !== null) {
+    nextBestTimeMs = mergeBestTimeMs(dayState.bestTimeMs, elapsed);
   }
 
   const nextDayState: DayProgressState = {
