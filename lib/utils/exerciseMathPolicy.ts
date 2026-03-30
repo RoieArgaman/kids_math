@@ -15,7 +15,12 @@ function ensureQuestionFormTokens(tokens: MathExpressionToken[]): MathExpression
   const hasQuestion = tokens.some((token) => token.type === "question");
   const next = [...tokens];
   if (!hasEquals) {
-    next.push({ type: "equals", value: "=" });
+    if (hasQuestion) {
+      const qIdx = next.findIndex((token) => token.type === "question");
+      next.splice(qIdx, 0, { type: "equals", value: "=" });
+    } else {
+      next.push({ type: "equals", value: "=" });
+    }
   }
   if (!hasQuestion) {
     next.push({ type: "question", value: "?" });
