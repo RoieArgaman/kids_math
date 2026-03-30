@@ -28,6 +28,18 @@ describe("getRenderableMathTokens", () => {
     ]);
   });
 
+  it("inserts = before ? when prompt has a + b? (Hebrew style) so display is a + b = ?", () => {
+    const exercise = baseExercise({ kind: "multiple_choice" });
+    const tokens = tokenizeMathExpression("6 + 4?");
+    expect(getRenderableMathTokens(exercise, tokens)).toEqual([
+      { type: "number", value: "6" },
+      { type: "operator", value: "+" },
+      { type: "number", value: "4" },
+      { type: "equals", value: "=" },
+      { type: "question", value: "?" },
+    ]);
+  });
+
   it("removes trailing question token for true_false", () => {
     const exercise = baseExercise({ kind: "true_false", answer: true });
     const tokens = tokenizeMathExpression("10 - 2 = ?");

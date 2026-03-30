@@ -6,9 +6,11 @@ import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { pickFinalExamExerciseIds } from "@/lib/final-exam/picker";
 import { FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
 import type { FinalExamStateV1 } from "@/lib/final-exam/types";
+import type { BadgeState } from "@/lib/badges/types";
 
 const PROGRESS_KEY_PREFIX = "kids_math.workbook_progress.v2.grade.";
 const FINAL_EXAM_KEY_PREFIX = "kids_math.final_exam.v1.grade.";
+const BADGE_KEY_PREFIX = "kids_math.badges.v1.grade.";
 
 function progressKeyForGrade(grade: GradeId): string {
   return `${PROGRESS_KEY_PREFIX}${grade}`;
@@ -16,6 +18,10 @@ function progressKeyForGrade(grade: GradeId): string {
 
 function finalExamKeyForGrade(grade: GradeId): string {
   return `${FINAL_EXAM_KEY_PREFIX}${grade}`;
+}
+
+function badgeKeyForGrade(grade: GradeId): string {
+  return `${BADGE_KEY_PREFIX}${grade}`;
 }
 
 export async function seedLocalStorage(page: Page, entries: Record<string, unknown>): Promise<void> {
@@ -159,6 +165,10 @@ export function createFinalExamState(params: {
 
 export async function seedFinalExamState(page: Page, grade: GradeId, state: FinalExamStateV1): Promise<void> {
   await seedLocalStorage(page, { [finalExamKeyForGrade(grade)]: state });
+}
+
+export async function seedBadgeState(page: Page, grade: GradeId, state: BadgeState): Promise<void> {
+  await seedLocalStorage(page, { [badgeKeyForGrade(grade)]: state });
 }
 
 /**

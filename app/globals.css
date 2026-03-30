@@ -257,6 +257,14 @@ a:focus-visible {
   animation: bounce-in 460ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Trophy-only: cap height so long badge lists scroll inside the shell; StarReward omits this class. */
+.star-reward-modal--trophy {
+  max-height: min(
+    92dvh,
+    calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)
+  );
+}
+
 .star-reward-confetti {
   pointer-events: none;
   position: absolute;
