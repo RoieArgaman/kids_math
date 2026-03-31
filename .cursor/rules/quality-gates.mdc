@@ -1,72 +1,138 @@
 ---
-description: Verification and PR-quality gates for this repo
+description: Quality gates, verification report, severity levels, security gate — aligned with AGENTS.md modes
 alwaysApply: true
 ---
 
 # Quality Gates (kids_math)
 
-Run these checks when code behavior might be affected, especially for routing, gating, storage/progress, or UI changes.
+> **Canonical source: `AGENTS.md`** — this file provides Cursor-specific details.
 
-## Pre-merge Automated Checks
+## Quality Gates by Mode
 
-1. Lint
-- `npm run lint`
+### PRO
+```bash
+npm run lint
+npm run check:testids
+# If behavior changed: npm run build
+# If logic changed: npm run test:unit -- <specific-test-file>
+```
 
-2. Test ID coverage (align with CI)
-- `npm run check:testids`
+### ULTRA
+```bash
+npm run lint
+npm run check:testids
+npm run build
+npm run test:unit
+npm run test:e2e -- <SPECIFIC-spec-files>   # MUST name exact specs
+# Then: MCP Playwright visual check (if ANY UI changed)
+# Then: npm run test:qa  (full CI suite — must all pass before READY)
+```
 
-3. Build
-- `npm run build`
+### MAX
+```bash
+npm run test:qa   # Full suite, no exceptions
+# Then: MCP Playwright visual check (ALWAYS — all changed screens)
+# CI is already covered by test:qa
+```
 
-4. Unit tests (when logic changed)
-- `npm run test:unit`
+## Mandatory Test Targeting (specific, not "targeted")
 
-5. E2E tests (when routes/gates were touched)
-- `npm run test:e2e`
+| Changed Area | Must Run |
+|-------------|----------|
+| UI copy/layout | `tests/e2e/day-smoke.spec.ts` |
+| Routing/gates/middleware | `tests/e2e/grade-b.spec.ts tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/admin-progress.spec.ts` |
+| Progress/storage | `tests/unit/lib/progress/` AND `tests/e2e/grade-a-lifecycle.spec.ts` |
+| Final exam | `tests/unit/lib/final-exam/` AND `tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/grade-b-lifecycle.spec.ts` |
+| Content/days | `tests/unit/lib/content/content-validity.test.ts` AND `tests/e2e/day-smoke.spec.ts` |
+| GMAT | `tests/unit/lib/gmat-challenge/` AND `tests/e2e/gmat-challenge.spec.ts` |
 
-## Risk-based command matrix (fast + accurate)
+## Security Gate (mandatory, all modes)
 
-Use the smallest set that matches changed risk surface:
+```
+SECURITY GATE
+[ ] No hardcoded secrets (grep: API_KEY, SECRET, TOKEN, PASSWORD, sk-, pk_)
+[ ] No console.log in production code (non-test .ts/.tsx)
+[ ] No sensitive data in data-testid values
+[ ] No unvalidated user input reaching storage or DOM
+[ ] Cookie operations use proper flags
+[ ] API route handlers validate inputs
+[ ] No TODO/FIXME/HACK in security-critical code
 
-- **UI copy/layout in isolated component (no routing/storage logic)**
-  - `npm run lint`
-  - `npm run check:testids`
-  - Targeted E2E spec for touched flow
-- **Routing/gates/middleware/unlock behavior**
-  - `npm run lint && npm run check:testids && npm run build`
-  - `npm run test:e2e -- tests/e2e/grade-b.spec.ts tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/admin-progress.spec.ts tests/e2e/gmat-challenge.spec.ts`
-- **Progress/storage schema/engine**
-  - `npm run lint && npm run check:testids`
-  - `npm run test:unit -- tests/unit/lib/progress/engine.test.ts tests/unit/lib/progress/storage.test.ts`
-  - Add route/lifecycle e2e if gate behavior changed
-- **Final exam logic/state**
-  - `npm run lint && npm run check:testids`
-  - `npm run test:unit -- tests/unit/lib/final-exam/grading.test.ts tests/unit/lib/final-exam/picker.test.ts tests/unit/lib/final-exam/storage.test.ts`
-  - `npm run test:e2e -- tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/grade-b-lifecycle.spec.ts`
-- **Content/day generation**
-  - `npm run lint && npm run check:testids`
-  - `npm run test:unit -- tests/unit/lib/content/content-validity.test.ts`
-  - `npm run test:e2e -- tests/e2e/day-smoke.spec.ts` (promote to full completion checks before merge)
+Result: [PASS / FAIL — findings with severity]
+```
 
-## Full vs partial policy
+If CRITICAL finding → auto-BLOCK, STOP, fix immediately.
+If HIGH finding → BLOCK merge, must fix.
 
-- **Partial runs are allowed** during local iteration when risk is scoped.
-- **Full confidence run is required before merge** for medium/high-risk changes:
-  - `npm run lint && npm run check:testids && npm run test:unit && npm run build && npm run test:e2e`
-- `npm run test:qa` remains a convenient near-full bundle for local pre-merge confidence.
+## Verification Report (ULTRA/MAX mandatory, PRO recommended)
 
-## Manual Spot Checks (fast)
+```
+VERIFICATION REPORT (kids_math)
+================================
+Mode:        [PRO/ULTRA/MAX]
+Changed:     [description]
 
-- Verify critical flows in RTL:
-  - Home -> plan -> day/grade navigation
-  - Any “locked/unlocked” gate behavior (cookies/storage)
-- Keyboard navigation (Tab/Shift+Tab) for key UI elements that gained changes.
-- Touch target size for primary buttons (should feel ~44-52px tall).
+Lint:        [PASS/FAIL]
+TestIDs:     [PASS/FAIL]
+Build:       [PASS/FAIL/SKIPPED — reason]
+Unit:        [PASS/FAIL/SKIPPED — reason] (X passed, Y failed)
+E2E:         [PASS/FAIL/SKIPPED — reason] (X passed, Y failed; specs: list)
+Security:    [PASS/FAIL] (findings with severity)
+Visual:      [PASS/FAIL/SKIPPED — reason] (screens checked: list)
+CI Suite:    [PASS/FAIL] (lint ✓, testids ✓, build ✓, unit X/X ✓, e2e X/X ✓)
+Diff:        [X files, Y insertions, Z deletions]
 
-## Reviewer Checklist
+Self-Review: [CLEAN / X issues caught and fixed]
+Learning:    [YES — summary / NO — reason]
 
-- Was the change minimal and typed (no `any`)?
-- Did we avoid breaking persisted shapes (or include migration/version bump)?
-- Are UI/UX changes consistent with existing Tailwind tokens?
-- Does the app still pass gates above?
+Overall:     [READY / NOT READY]
+```
 
+### READY Decision Tree
+
+READY if ALL true:
+- Zero CRITICAL issues
+- Zero HIGH issues
+- All gates PASS (or SKIPPED with valid reason)
+- Security gate PASS
+- Visual verification PASS (or SKIPPED with valid reason)
+- CI Suite PASS (ULTRA/MAX: full test:qa must pass)
+- Report 100% filled (no blanks)
+- Self-review completed
+- Learning updated (ULTRA/MAX) or justified skip
+
+NOT READY if ANY: CRITICAL, HIGH, gate FAIL, report incomplete.
+
+**SKIPPED must have reason:** `SKIPPED [PRO, only copy changed]` not just `SKIPPED`.
+
+## Review Severity Levels
+
+| Level | Meaning | Action | Auto-block? |
+|-------|---------|--------|------------|
+| **CRITICAL** | Security vuln, data loss, broken gate | BLOCK, no exceptions | YES |
+| **HIGH** | Bug, test failure, type error, broken flow | BLOCK before merge | YES |
+| **MEDIUM** | Warning, missing test, a11y concern | Should fix | NO |
+| **LOW** | Style, suggestion | Optional | NO |
+
+### Security Severity (specific)
+| Finding | Severity |
+|---------|----------|
+| Hardcoded secret / credential | CRITICAL |
+| XSS vector | CRITICAL |
+| console.log in prod | HIGH |
+| Sensitive data in testid/analytics | HIGH |
+| Weak validation | MEDIUM |
+
+## Manual RTL Checklist (ULTRA/MAX)
+
+### ULTRA:
+- [ ] Home → plan → day navigation
+- [ ] Keyboard (Tab/Shift+Tab) on changed elements
+- [ ] Touch targets >= 44px
+
+### MAX (add):
+- [ ] All grades navigation
+- [ ] Locked/unlocked gate behavior
+- [ ] Error/empty states
+- [ ] BFCache state sync
+- [ ] Cross-tab storage sync

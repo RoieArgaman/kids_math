@@ -1,5 +1,5 @@
 ---
-description: Standard prompt blocks for consistent agent output
+description: Standard prompt blocks and output templates for consistent agent work
 alwaysApply: true
 ---
 
@@ -7,62 +7,303 @@ alwaysApply: true
 
 Use these templates to keep agent responses consistent, reviewable, and easy to validate.
 
+> **Canonical source: `AGENTS.md`** — this file provides ready-to-use prompt blocks.
+
+---
+
 ## 1) Implementation Request Template
 
-When the user asks to “implement”, “fix”, or “add feature”, structure your prompt as:
+When asked to "implement", "fix", or "add feature":
 
-**Task**
+```
+Mode: [PRO/ULTRA/MAX] — [reason]
+
+Task
 - What the user wants (one sentence).
 
-**Context**
-- Relevant files/paths (if known).
+Research Done (mandatory before writing)
+- Files read: [list]
+- Patterns found: [existing similar implementations]
+- Helpers to reuse: [from lib/]
+- Cross-file deps: [grep results — list files importing changed modules]
+
+Context
+- Relevant files/paths.
 - Existing behavior (brief).
 
-**Constraints**
-- Must follow existing conventions (Next.js App Router, TS strict, RTL UI).
-- Avoid breaking persisted schemas unless migration is included.
+Constraints
+- Follow existing conventions (Next.js App Router, TS strict, RTL UI)
+- Avoid breaking persisted schemas unless migration is included
+- Never weaken configs to suppress errors
+- Diff size: PRO ≤50 lines, ULTRA ≤300 lines, MAX no limit (each file needs rationale)
 
-**Acceptance Criteria**
-- List 3-6 concrete outcomes (how we know it’s correct).
+Acceptance Criteria
+- (1) [Specific observable outcome]
+- (2) [Specific observable outcome]
+- (3) Quality gates pass for selected mode
+- (4) No CRITICAL or HIGH issues in review
+- (5) MCP Playwright visual check passes (if UI changed)
+- (6) CI suite passes (ULTRA/MAX)
 
-**Quality Gates**
-- Follow `quality-gates.mdc` (risk-based matrix + required checks).
+Quality Gates
+- Follow quality-gates.mdc (mode-specific) + MCP Playwright + CI Final
 
-**Output Format**
-- Follow the canonical handoff contract in `multi-agent-playbook.mdc`.
+Output Format
+- Use handoff format from multi-agent-playbook.mdc
+- Include verification report for ULTRA/MAX
+```
+
+---
 
 ## 2) Debugging / Investigation Template
 
-When the user asks “why is it failing” or “what’s wrong”:
+When asked "why is it failing" or "what's wrong":
 
-**Symptoms**
+```
+Mode: [PRO/ULTRA/MAX] — [reason]
+
+Symptoms
 - Error text, logs, and repro steps.
 
-**Hypotheses**
-- 1-3 plausible causes (based on code reading).
+Hypotheses
+- 1-3 plausible causes (based on code reading, not guessing).
 
-**What to Check**
+What to Check
 - Exact files/functions to inspect.
-- Any runtime assumptions (cookies, storage keys, routing gates).
+- Runtime assumptions (cookies, storage keys, routing gates).
+- Cross-file impact: does this affect other modules?
 
-**Verification**
+Verification
 - How you will confirm the fix (tests/commands/manual steps).
+- If logic changed: npm run test:unit -- <specific-test-file>
+- If routes/gates: npm run test:e2e -- tests/e2e/<specific>.spec.ts
+```
 
-## 3) PR Review / Risk Assessment Template
+---
+
+## 3) Code Review Template
 
 When asked to review:
 
-**High-risk areas to inspect**
-- Storage/schema changes.
-- Route gating/middleware.
-- RTL/a11y regressions.
-- Typed payloads and error handling.
+```
+Mode: [PRO/ULTRA/MAX] — [reason]
 
-**Checklist**
-- What changed and why.
-- Edge cases and failure modes.
-- Test plan adequacy.
+Security Gate
+[ ] No hardcoded secrets (grep: API_KEY, SECRET, TOKEN, PASSWORD, sk-, pk_)
+[ ] No console.log in production code
+[ ] No sensitive data in data-testid values
+[ ] User input validated at boundaries
+[ ] Cookie operations safe
+[ ] API route handlers validate inputs
+[ ] No TODO/FIXME/HACK in security-critical code
+Result: [PASS / FAIL — list findings]
 
-**Reviewer Output**
-- Use the canonical handoff contract in `multi-agent-playbook.mdc`.
+Code Quality Check
+[ ] TypeScript strict — no any, proper type guards
+[ ] Functions focused and small
+[ ] No deep nesting (>4 levels)
+[ ] Error handling explicit, not swallowed
+[ ] Follows existing conventions (@/* imports, naming, structure)
+[ ] RTL preserved, dir="ltr" only for math inputs
+[ ] data-testid on all interactive elements
+[ ] Routes via lib/routes.ts (no hardcoded paths)
+[ ] Storage schemas unchanged OR migration included
 
+Review Output:
+---
+CODE REVIEW (kids_math)
+========================
+Mode:      [PRO/ULTRA/MAX]
+Files:     [X files reviewed]
+
+Issues Found:
+[CRITICAL] file:line — description
+[HIGH]     file:line — description
+[MEDIUM]   file:line — description
+[LOW]      file:line — description
+
+Cross-File Impact:
+- [X files import from changed modules]
+
+What's Good:
+- [specific positive observations]
+
+Role Participation: [table — ULTRA/MAX only]
+
+Verdict:   [APPROVE / CHANGES REQUESTED / BLOCK]
+---
+
+Verdict Rules:
+- APPROVE: Zero CRITICAL, zero HIGH, security gate PASS
+- CHANGES REQUESTED: HIGH issues found — must fix before merge
+- BLOCK: CRITICAL issues found — no merge under any circumstances
+```
+
+---
+
+## 4) Plan Template
+
+When asked to plan:
+
+```
+Mode: [PRO/ULTRA/MAX] — [reason]
+
+Requirements Restatement
+- What the user wants (1-3 sentences).
+
+Risk Assessment
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Storage schema change | CRITICAL | Version bump + migration + MAX mode |
+| RTL regression | HIGH | Manual RTL checklist + MCP Playwright |
+| Cross-file impact >5 | HIGH | Explore phase first |
+
+Files to Touch
+- List every file, with reason.
+
+Implementation Steps
+1. [Step — concrete, testable, reversible]
+2. ...
+
+Multi-role Input (ULTRA/MAX)
+
+**SeniorDev_TechLead:**
+"Architecture: [concrete input]"
+
+**SeniorFrontEnd_TechLead:**
+"UI/RTL: [concrete input]"
+
+**Dev_Architect:**
+"Data flow: [concrete input]"
+
+**QA_Architect:**
+"Test strategy: [specific test files]"
+
+**SeniorAutomation_Engineer:**
+"Automation: [specific tests to add]"
+
+Quality Gates
+- PRO: lint + testids + targeted tests
+- ULTRA: lint + testids + build + unit + targeted E2E + MCP Playwright + npm run test:qa
+- MAX: npm run test:qa (full suite, no exceptions) + MCP Playwright (all screens)
+
+MCP Playwright Plan
+- Screens to visually verify: [list]
+- Critical paths to test: [list]
+
+Definition of Done
+- [ ] [acceptance criterion 1]
+- [ ] Quality gates pass for mode
+- [ ] MCP Playwright visual check passes
+- [ ] CI suite (npm run test:qa) passes
+- [ ] Security gate PASS
+- [ ] No CRITICAL or HIGH issues
+
+> ⛔ CHECKPOINT: Plan Review
+> Status: COMPLETE
+> Awaiting your confirmation to proceed to Explore phase.
+> Options: (proceed / revise / different approach / escalate mode)
+```
+
+---
+
+## 5) Escalation Template
+
+When discovering the task needs a higher mode:
+
+```
+⚠️ MODE ESCALATION
+
+Current mode: [PRO/ULTRA]
+Recommended: [ULTRA/MAX]
+
+Reason:
+- [Concrete finding that triggered escalation]
+- [Which rule or mandatory behavior requires the higher mode]
+
+Impact of escalation:
+- Quality gates will add: [specific commands]
+- Review team will expand to: [list roles]
+- Additional checkpoints: [list]
+- MCP Playwright: [required or not for new mode]
+- CI suite: [required or not for new mode]
+
+Next step: Should I replan in [mode]? (yes / stay in current mode with justification)
+```
+
+---
+
+## 6) Security Escalation Template
+
+When a CRITICAL security finding is discovered:
+
+```
+🚨 CRITICAL SECURITY FINDING
+
+Finding: [description]
+Location: [file:line]
+Severity: CRITICAL
+
+Actions taken:
+1. STOPPED all implementation immediately
+2. Auto-escalating to MAX mode
+3. Will fix security issue BEFORE any other work
+
+Fix plan:
+- [concrete steps to fix]
+
+After fix: will re-run full security gate before proceeding.
+```
+
+---
+
+## 7) Verification Report Template
+
+```
+VERIFICATION REPORT (kids_math)
+================================
+Mode:        [PRO/ULTRA/MAX]
+Changed:     [brief description]
+
+Lint:        [PASS/FAIL] (details if fail)
+TestIDs:     [PASS/FAIL] (details if fail)
+Build:       [PASS/FAIL/SKIPPED — reason]
+Unit:        [PASS/FAIL/SKIPPED — reason] (X passed, Y failed)
+E2E:         [PASS/FAIL/SKIPPED — reason] (X passed, Y failed; specs: list.spec.ts)
+Security:    [PASS/FAIL] (findings with severity)
+Visual:      [PASS/FAIL/SKIPPED — reason] (screens checked: list)
+CI Suite:    [PASS/FAIL] (lint ✓, testids ✓, build ✓, unit X/X ✓, e2e X/X ✓)
+Diff:        [X files, Y insertions, Z deletions]
+
+Learning:    [YES — summary / NO — reason skipped]
+
+Overall:     [READY / NOT READY]
+```
+
+READY requires: zero CRITICAL, zero HIGH, all gates PASS, CI suite PASS, Visual PASS, Security PASS, report complete.
+SKIPPED fields MUST include reason: `Unit: SKIPPED [PRO mode, only copy changed]` — never just `SKIPPED`.
+
+---
+
+## 8) Checkpoint Template
+
+For every ⛔ blocking checkpoint:
+
+```
+---
+⛔ CHECKPOINT: [Phase Name]
+Status: [COMPLETE / NEEDS REVISION]
+
+Summary: [1-2 sentence description of what was done]
+
+Checklist:
+[X] [requirement 1]
+[X] [requirement 2]
+[ ] [requirement not met — explain why]
+
+Roles participated: [list — ULTRA/MAX only]
+
+Ready for next phase? Awaiting your confirmation.
+Options: (proceed / revise / different approach / escalate mode)
+---
+```
