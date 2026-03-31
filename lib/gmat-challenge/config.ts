@@ -9,6 +9,12 @@ export const SECTION_QUESTION_COUNTS: Record<GmatSectionKey, number> = {
   data: 7,
 };
 
+export const SECTION_POOL_COUNTS: Record<GmatSectionKey, number> = {
+  quant: 14,
+  verbal: 16,
+  data: 14,
+};
+
 /** Official GMAT Focus question counts per section type (for timing ratio). */
 export const OFFICIAL_GMAT_FOCUS_COUNTS: Record<GmatSectionKey, number> = {
   quant: 21,

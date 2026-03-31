@@ -10,7 +10,7 @@ import {
 
 describe("gmat-challenge storage", () => {
   it("save/load round-trip for pickOrder phase", () => {
-    const items = pickGmatChallengeItems({ grade: "a", seed: "stor", pickerVersion: 1 });
+    const items = pickGmatChallengeItems({ grade: "a", seed: "stor", pickerVersion: 6 });
     const state = createStateAfterPick({ grade: "a", itemsBySection: items });
     saveGmatChallengeState("a", state);
     const loaded = loadGmatChallengeState("a");

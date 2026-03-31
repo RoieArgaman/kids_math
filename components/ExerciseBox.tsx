@@ -16,6 +16,7 @@ interface ExerciseBoxProps {
   wasChecked?: boolean;
   /** When false, hides the per-question check button (e.g. final exam until bulk grade). */
   showCheckButton?: boolean;
+  disableRetry?: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onNextInput: () => void;
@@ -42,6 +43,7 @@ export function ExerciseBox({
   onRetry,
   wrongAttempts,
   hintUsed,
+  disableRetry,
   onRevealHint,
 }: ExerciseBoxProps) {
   const promptLabel = exercise.prompt.replace(/\s+/g, " ").trim();
@@ -58,7 +60,7 @@ export function ExerciseBox({
   const promptParts = splitMathExpression(exercise.prompt);
   const mathTokens = promptParts.math ? tokenizeMathExpression(promptParts.math) : null;
   const renderableMathTokens = getRenderableMathTokens(exercise, mathTokens);
-  const showRetryAction = Boolean(retryMessage) && isCorrect !== true;
+  const showRetryAction = Boolean(retryMessage) && isCorrect !== true && !disableRetry;
   const showHintButton = (wrongAttempts ?? 0) >= 2 && isCorrect !== true && !hintUsed;
   const showHintText = hintUsed && isCorrect !== true;
   const hintText = (showHintButton || showHintText) ? defaultHint(exercise) : null;

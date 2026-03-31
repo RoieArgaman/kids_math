@@ -10,14 +10,12 @@ import { TimedExamSectionHeader } from "@/components/timed-exam/TimedExamSection
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
-import { SectionBlock } from "@/components/SectionBlock";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { DEFAULT_MAX_REVIEW_DIVERGENCES, countReviewDivergences, wouldExceedReviewLimit } from "@/lib/exam-session";
-import { gmatBreakDurationMs, gmatSectionDurationMs } from "@/lib/gmat-challenge/config";
+import { gmatBreakDurationMs, gmatSectionDurationMs, SECTION_QUESTION_COUNTS } from "@/lib/gmat-challenge/config";
 import { gradeGmatChallenge } from "@/lib/gmat-challenge/grading";
-import { pickGmatChallengeItems } from "@/lib/gmat-challenge/picker";
+import { pickGmatChallengePool } from "@/lib/gmat-challenge/picker";
 import {
-  clearGmatChallengeState,
   createInitialRulesState,
   createStateAfterPick,
   loadGmatChallengeState,
@@ -30,7 +28,7 @@ import { logEvent } from "@/lib/analytics/events";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { routes } from "@/lib/routes";
 import { usePreviewAll } from "@/lib/hooks/usePreviewAll";
-import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { isAnswerCorrect } from "@/lib/utils/exercise";
 import { childTid, testIds } from "@/lib/testIds";
 
 function createSeed(): string {
@@ -58,6 +56,45 @@ const SECTION_LABELS: Record<GmatSectionKey, string> = {
   data: "פיענוח נתונים",
 };
 
+/** Picks the best unused exercise from a pool closest to the target difficulty. */
+function selectNextFromPool(
+  pool: ExerciseId[],
+  usedIds: Set<ExerciseId>,
+  targetDifficulty: number,
+  exerciseById: Map<ExerciseId, Exercise>,
+): ExerciseId | null {
+  const available = pool.filter((id) => !usedIds.has(id));
+  if (available.length === 0) return null;
+  return available.reduce((best, id) => {
+    const dBest = Math.abs((exerciseById.get(best)?.meta.difficulty ?? 3) - targetDifficulty);
+    const dCur = Math.abs((exerciseById.get(id)?.meta.difficulty ?? 3) - targetDifficulty);
+    return dCur < dBest ? id : best;
+  });
+}
+
+function startSectionFromState(
+  s: GmatChallengeStateV1,
+  sectionKey: GmatSectionKey,
+  orderIndex: number,
+  exerciseById: Map<ExerciseId, Exercise>,
+  shortT: boolean,
+): GmatChallengeStateV1 {
+  const pool = s.poolBySection?.[sectionKey] ?? [];
+  const difficulty = s.adaptiveDifficulty ?? 3;
+  const firstId = selectNextFromPool(pool, new Set(), difficulty, exerciseById);
+  const newItems = firstId ? [firstId] : [];
+  return {
+    ...s,
+    phase: "sectionActive",
+    orderIndex,
+    breakEndsAt: null,
+    sectionEndsAt: Date.now() + gmatSectionDurationMs(sectionKey, shortT),
+    itemsBySection: { ...s.itemsBySection, [sectionKey]: newItems },
+    sectionQuestionIndex: 0,
+    adaptiveDifficulty: 3,
+  };
+}
+
 export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   const { previewAll, isRouteReady } = usePreviewAll();
   const stateRef = useRef<GmatChallengeStateV1 | null>(null);
@@ -66,6 +103,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   const [state, setState] = useState<GmatChallengeStateV1 | null>(null);
   const [tick, setTick] = useState(0);
   const [gateAllowed, setGateAllowed] = useState<boolean | null>(null);
+  const [reviewQuestionIndex, setReviewQuestionIndex] = useState<number | null>(null);
 
   const persist = useCallback(
     (next: GmatChallengeStateV1) => {
@@ -89,7 +127,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   useEffect(() => {
     if (!isRouteReady || gateAllowed !== true) return;
     const existing = loadGmatChallengeState(grade);
-    if (existing) {
+    if (existing && existing.phase !== "results") {
       setState(existing);
       return;
     }
@@ -105,6 +143,26 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     return () => window.clearInterval(id);
   }, []);
 
+  // Reset review selection when leaving review phase
+  useEffect(() => {
+    if (state?.phase !== "sectionReview") {
+      setReviewQuestionIndex(null);
+    }
+  }, [state?.phase]);
+
+  const exerciseById = useMemo(() => {
+    const map = new Map<ExerciseId, Exercise>();
+    const days = getWorkbookDaysById(grade);
+    for (const day of Object.values(days)) {
+      for (const section of day.sections) {
+        for (const ex of section.exercises) {
+          map.set(ex.id, ex);
+        }
+      }
+    }
+    return map;
+  }, [grade]);
+
   const reconcileTimers = useCallback(() => {
     const s = stateRef.current;
     if (!s) return;
@@ -116,19 +174,11 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
       for (const exId of ids) {
         snap[exId] = s.answers[exId] ?? "";
       }
-      const nextCorrect = { ...s.correctMap };
-      const nextAttempts = { ...s.attempts };
-      for (const exId of ids) {
-        delete nextCorrect[exId];
-        delete nextAttempts[exId];
-      }
       persist({
         ...s,
         phase: "sectionReview",
         sectionEndsAt: null,
         reviewSnapshot: snap,
-        correctMap: nextCorrect,
-        attempts: nextAttempts,
       });
       return;
     }
@@ -136,46 +186,28 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
       const nextIndex = s.orderIndex + 1;
       const nextKey = s.sectionOrder[nextIndex];
       const shortT = shortTimersEnabled();
-      persist({
-        ...s,
-        phase: "sectionActive",
-        orderIndex: nextIndex,
-        breakEndsAt: null,
-        reviewSnapshot: null,
-        sectionEndsAt: now + gmatSectionDurationMs(nextKey, shortT),
-      });
+      persist(startSectionFromState(s, nextKey, nextIndex, exerciseById, shortT));
     }
-  }, [persist]);
+  }, [exerciseById, persist]);
 
   useEffect(() => {
     reconcileTimers();
   }, [tick, reconcileTimers]);
 
-  useEffect(() => {
-    if (state?.phase === "rules" && !rulesLoggedRef.current) {
-      rulesLoggedRef.current = true;
-      logEvent("gmat_challenge_rules_viewed", { payload: { grade } });
-    }
-  }, [state?.phase, grade]);
-
-  const exerciseById = useMemo(() => {
-    const map = new Map<ExerciseId, Exercise>();
-    for (const day of Object.values(getWorkbookDaysById(grade))) {
-      for (const section of day.sections) {
-        for (const ex of section.exercises) {
-          map.set(ex.id, ex);
-        }
-      }
-    }
-    return map;
-  }, [grade]);
+  const currentKey = state ? state.sectionOrder[state.orderIndex] : null;
 
   const onRulesContinue = useCallback(() => {
     const s = stateRef.current;
     if (!s || s.phase !== "rules") return;
+    if (!rulesLoggedRef.current) {
+      logEvent("gmat_challenge_rules_viewed", { payload: { grade } });
+      rulesLoggedRef.current = true;
+    }
     const seed = createSeed();
-    const items = pickGmatChallengeItems({ grade, seed, pickerVersion: 1 });
-    persist(createStateAfterPick({ grade, itemsBySection: items }));
+    const pool = pickGmatChallengePool({ grade, seed, pickerVersion: 6 });
+    // itemsBySection starts empty; questions are added adaptively as sections start
+    const emptyItems = { quant: [], verbal: [], data: [] } as Record<GmatSectionKey, ExerciseId[]>;
+    persist(createStateAfterPick({ grade, itemsBySection: emptyItems, poolBySection: pool, adaptiveDifficulty: 3 }));
   }, [grade, persist]);
 
   const onConfirmOrder = useCallback(() => {
@@ -184,36 +216,8 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     const shortT = shortTimersEnabled();
     const firstKey = s.sectionOrder[s.orderIndex];
     logEvent("gmat_challenge_started", { payload: { grade } });
-    persist({
-      ...s,
-      phase: "sectionActive",
-      sectionEndsAt: Date.now() + gmatSectionDurationMs(firstKey, shortT),
-      reviewSnapshot: null,
-    });
-  }, [grade, persist]);
-
-  const currentKey = state ? state.sectionOrder[state.orderIndex] : null;
-
-  const selectedExercises = useMemo((): Exercise[] => {
-    if (!state || !currentKey) return [];
-    const ids = state.itemsBySection[currentKey];
-    return ids.map((id) => exerciseById.get(id)).filter((ex): ex is Exercise => Boolean(ex));
-  }, [state, currentKey, exerciseById]);
-
-  const setFocusRef = useCallback((exerciseId: ExerciseId, node: HTMLElement | null) => {
-    refs.current[exerciseId] = node;
-  }, []);
-
-  const focusNextInput = useCallback(
-    (currentId: ExerciseId) => {
-      const order = selectedExercises.map((e) => e.id);
-      const idx = order.indexOf(currentId);
-      const nextId = order[idx + 1];
-      if (!nextId) return;
-      refs.current[nextId]?.focus();
-    },
-    [selectedExercises],
-  );
+    persist(startSectionFromState(s, firstKey, s.orderIndex, exerciseById, shortT));
+  }, [exerciseById, grade, persist]);
 
   const onChangeValue = useCallback(
     (exerciseId: ExerciseId, value: string) => {
@@ -242,65 +246,60 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     [currentKey, persist],
   );
 
-  const onRetryExercise = useCallback(
-    (exerciseId: ExerciseId) => {
-      const s = stateRef.current;
-      if (!s || s.phase !== "sectionActive") return;
-      persist({
-        ...s,
-        answers: { ...s.answers, [exerciseId]: "" },
-      });
-    },
-    [persist],
-  );
-
-  const submitExercise = useCallback(
-    (exercise: Exercise) => {
-      const s = stateRef.current;
-      if (!s || s.phase !== "sectionActive") return;
-      const userAnswer = s.answers[exercise.id] ?? "";
-      const normalizedAnswer = normalizeAnswerValue(userAnswer);
-      const previousAttempts = s.attempts[exercise.id] ?? 0;
-      if (normalizedAnswer === null) {
-        persist({
-          ...s,
-          correctMap: { ...s.correctMap, [exercise.id]: false },
-        });
-        return;
-      }
-      const success = isAnswerCorrect(exercise, userAnswer);
-      persist({
-        ...s,
-        attempts: { ...s.attempts, [exercise.id]: previousAttempts + 1 },
-        correctMap: { ...s.correctMap, [exercise.id]: success },
-      });
-    },
-    [persist],
-  );
-
-  const goToReview = useCallback(() => {
+  const onNextQuestion = useCallback(() => {
     const s = stateRef.current;
     if (!s || s.phase !== "sectionActive" || !currentKey) return;
-    const ids = s.itemsBySection[currentKey];
-    const snap: Record<string, string> = {};
-    for (const exId of ids) {
-      snap[exId] = s.answers[exId] ?? "";
+    const qIdx = s.sectionQuestionIndex ?? 0;
+    const total = shortTimersEnabled() ? 1 : SECTION_QUESTION_COUNTS[currentKey];
+
+    // Silently grade current question and update adaptive difficulty
+    const currentExId = s.itemsBySection[currentKey][qIdx];
+    const currentAnswer = currentExId ? (s.answers[currentExId] ?? "") : "";
+    const currentEx = currentExId ? exerciseById.get(currentExId) : null;
+    const correct = currentEx ? isAnswerCorrect(currentEx, currentAnswer) : false;
+    const newDifficulty = Math.max(1, Math.min(5, (s.adaptiveDifficulty ?? 3) + (correct ? 1 : -1)));
+
+    const goToReview = () => {
+      const ids = s.itemsBySection[currentKey];
+      const snap: Record<string, string> = {};
+      for (const exId of ids) {
+        snap[exId] = s.answers[exId] ?? "";
+      }
+      persist({
+        ...s,
+        adaptiveDifficulty: newDifficulty,
+        phase: "sectionReview",
+        sectionEndsAt: null,
+        reviewSnapshot: snap,
+      });
+    };
+
+    if (qIdx >= total - 1) {
+      // Last question by configured total — go to review
+      goToReview();
+      return;
     }
-    const nextCorrect = { ...s.correctMap };
-    const nextAttempts = { ...s.attempts };
-    for (const exId of ids) {
-      delete nextCorrect[exId];
-      delete nextAttempts[exId];
+
+    // Pick next question from pool adaptively
+    const usedIds = new Set<ExerciseId>(s.itemsBySection[currentKey]);
+    const pool = s.poolBySection?.[currentKey] ?? [];
+    const nextId = selectNextFromPool(pool, usedIds, newDifficulty, exerciseById);
+
+    if (!nextId) {
+      // Pool exhausted early — treat current question as last and go to review
+      goToReview();
+      return;
     }
+
+    const newItems = [...s.itemsBySection[currentKey], nextId];
+
     persist({
       ...s,
-      phase: "sectionReview",
-      sectionEndsAt: null,
-      reviewSnapshot: snap,
-      correctMap: nextCorrect,
-      attempts: nextAttempts,
+      itemsBySection: { ...s.itemsBySection, [currentKey]: newItems },
+      sectionQuestionIndex: qIdx + 1,
+      adaptiveDifficulty: newDifficulty,
     });
-  }, [currentKey, persist]);
+  }, [currentKey, exerciseById, persist]);
 
   const onConfirmReview = useCallback(() => {
     const s = stateRef.current;
@@ -345,14 +344,8 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     const nextIndex = s.orderIndex + 1;
     const nextKey = s.sectionOrder[nextIndex];
     const shortT = shortTimersEnabled();
-    persist({
-      ...s,
-      phase: "sectionActive",
-      orderIndex: nextIndex,
-      breakEndsAt: null,
-      sectionEndsAt: Date.now() + gmatSectionDurationMs(nextKey, shortT),
-    });
-  }, [persist]);
+    persist(startSectionFromState(s, nextKey, nextIndex, exerciseById, shortT));
+  }, [exerciseById, persist]);
 
   const toggleBookmark = useCallback(
     (exerciseId: ExerciseId) => {
@@ -370,12 +363,18 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   );
 
   const restart = useCallback(() => {
-    clearGmatChallengeState(grade);
     const initial = createInitialRulesState(grade);
-    saveGmatChallengeState(grade, initial);
-    setState(initial);
+    persist(initial);
     rulesLoggedRef.current = false;
-  }, [grade]);
+  }, [grade, persist]);
+
+  const setFocusRef = useCallback((exerciseId: ExerciseId, node: HTMLElement | null) => {
+    refs.current[exerciseId] = node;
+  }, []);
+
+  const focusNextInput = useCallback(() => {
+    // In sequential mode, focus is on single question — no-op
+  }, []);
 
   if (!isRouteReady || gateAllowed === null) {
     return (
@@ -415,10 +414,6 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   }
 
   const root = testIds.screen.gmatChallenge.root(grade);
-  const divergences =
-    state.phase === "sectionReview" && state.reviewSnapshot && currentKey
-      ? countReviewDivergences(state.answers, state.reviewSnapshot, state.itemsBySection[currentKey])
-      : 0;
 
   let sectionRemainingSeconds = 0;
   if (state.phase === "sectionActive" && state.sectionEndsAt) {
@@ -429,6 +424,9 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
   if (state.phase === "break" && state.breakEndsAt) {
     breakRemainingSeconds = Math.max(0, Math.ceil((state.breakEndsAt - Date.now()) / 1000));
   }
+
+  // Use tick to drive timer re-renders
+  void tick;
 
   return (
     <main data-testid={root} className="pb-10">
@@ -464,96 +462,38 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
         />
       ) : null}
 
-      {state.phase === "sectionActive" && currentKey ? (
-        <>
-          <TimedExamSectionHeader
-            rootTestId={testIds.screen.gmatChallenge.sectionHeader(grade)}
-            sectionTitle={SECTION_LABELS[currentKey]}
-            remainingSeconds={sectionRemainingSeconds}
-          />
-          {state.bookmarks[currentKey]?.length ? (
-            <p data-testid={childTid(root, "bookmarks", "hint")} className="muted mt-2 text-sm">
-              סימונים לבדיקה: {state.bookmarks[currentKey].length}
-            </p>
-          ) : null}
-          <SectionBlock
-            sectionId={`gmat.${currentKey}.active`}
-            data-testid={childTid(root, "section", currentKey, "active")}
-            title="שאלות המקטע"
-            type="review"
-            learningGoal="עונים על השאלות לפני שקוראים לסיום המקטע."
-          >
-            {selectedExercises.map((exercise) => {
-              const value = state.answers[exercise.id] ?? "";
-              const attempts = state.attempts[exercise.id] ?? 0;
-              const wasChecked = exercise.id in state.correctMap;
-              const isCorrect = state.correctMap[exercise.id];
-              const retryMessage = wasChecked ? getRetryFeedbackText(exercise, value, attempts) : undefined;
-              const marked = state.bookmarks[currentKey]?.includes(exercise.id);
-              return (
-                <div key={exercise.id} data-testid={childTid(root, "exerciseRow", exercise.id)}>
-                  <button
-                    type="button"
-                    data-testid={childTid(root, "bookmark", "toggle", exercise.id)}
-                    className="mb-2 touch-button rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
-                    onClick={() => toggleBookmark(exercise.id)}
-                  >
-                    {marked ? "הסר סימון לבדיקה" : "סמן לבדיקה"}
-                  </button>
-                  <ExerciseItem
-                    screenRootTestId={root}
-                    exercise={exercise}
-                    value={value}
-                    wasChecked={wasChecked}
-                    isCorrect={isCorrect}
-                    retryMessage={retryMessage}
-                    isReadOnly={false}
-                    setFocusRef={setFocusRef}
-                    wrongAttempts={0}
-                    hintUsed={false}
-                    onRevealHint={() => undefined}
-                    onChangeValue={onChangeValue}
-                    onSubmitExercise={submitExercise}
-                    onNextInput={focusNextInput}
-                    onRetryExercise={onRetryExercise}
-                  />
-                </div>
-              );
-            })}
-          </SectionBlock>
-          <div data-testid={childTid(root, "finishSectionPanel")} className="surface mt-4 rounded-3xl p-5">
-            <button
-              type="button"
-              data-testid={testIds.screen.gmatChallenge.finishSectionCta(grade)}
-              className="touch-button btn-accent w-full"
-              onClick={goToReview}
-            >
-              סיום מקטע ומעבר לסקירה
-            </button>
-          </div>
-        </>
-      ) : null}
+      {state.phase === "sectionActive" && currentKey ? (() => {
+        const qIdx = state.sectionQuestionIndex ?? 0;
+        const total = shortTimersEnabled() ? 1 : SECTION_QUESTION_COUNTS[currentKey];
+        const exId = state.itemsBySection[currentKey][qIdx];
+        const exercise = exId ? exerciseById.get(exId) : null;
+        const value = exId ? (state.answers[exId] ?? "") : "";
+        const isBookmarked = exId ? (state.bookmarks[currentKey]?.includes(exId) ?? false) : false;
+        const bookmarkedNums = (state.bookmarks[currentKey] ?? [])
+          .map((id) => state.itemsBySection[currentKey].indexOf(id) + 1)
+          .filter((n) => n > 0)
+          .sort((a, b) => a - b);
+        const hasAnswer = value.trim().length > 0;
 
-      {state.phase === "sectionReview" && currentKey && state.reviewSnapshot ? (
-        <>
-          <header data-testid={childTid(root, "reviewHeader")} className="progress-sticky mb-4 rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md">
-            <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-slate-900">סקירת מקטע — {SECTION_LABELS[currentKey]}</h1>
-            <p data-testid={childTid(root, "review", "divergences")} className="muted mt-1 text-sm">
-              שינויים מהמצב בסוף המקטע: {divergences} מתוך {DEFAULT_MAX_REVIEW_DIVERGENCES} מותרים
-            </p>
-          </header>
-          <SectionBlock
-            sectionId={`gmat.${currentKey}.review`}
-            data-testid={childTid(root, "section", currentKey, "review")}
-            title="בדקו והתאימו עד שלוש תשובות שונות מהמצב הקודם"
-            type="review"
-            learningGoal="רק שאלות שמשתנות נספרות כלפי מגבלת השלוש."
-          >
-            {selectedExercises.map((exercise) => {
-              const value = state.answers[exercise.id] ?? "";
-              return (
+        return (
+          <>
+            <TimedExamSectionHeader
+              rootTestId={testIds.screen.gmatChallenge.sectionHeader(grade)}
+              sectionTitle={SECTION_LABELS[currentKey]}
+              remainingSeconds={sectionRemainingSeconds}
+            />
+            <div data-testid={childTid(root, "questionHud")} className="surface mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-2 text-sm font-semibold">
+              <span data-testid={childTid(root, "questionCounter")}>שאלה {qIdx + 1} מתוך {total}</span>
+              {bookmarkedNums.length > 0 ? (
+                <span data-testid={childTid(root, "bookmarkHint")} className="text-amber-700">
+                  ⭐ מסומנות: {bookmarkedNums.join(", ")}
+                </span>
+              ) : null}
+            </div>
+
+            {exercise ? (
+              <div data-testid={childTid(root, "activeQuestion")}>
                 <ExerciseItem
-                  key={exercise.id}
                   screenRootTestId={root}
                   exercise={exercise}
                   value={value}
@@ -567,23 +507,162 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                   onChangeValue={onChangeValue}
                   onSubmitExercise={() => undefined}
                   onNextInput={focusNextInput}
+                  showCheckButton={false}
+                  disableRetry={true}
                   onRetryExercise={() => undefined}
                 />
-              );
-            })}
-          </SectionBlock>
-          <div data-testid={childTid(root, "confirmReviewPanel")} className="surface mt-4 rounded-3xl p-5">
-            <button
-              type="button"
-              data-testid={testIds.screen.gmatChallenge.confirmReviewCta(grade)}
-              className="touch-button btn-accent w-full"
-              onClick={onConfirmReview}
-            >
-              אישור סקירה והמשך
-            </button>
-          </div>
-        </>
-      ) : null}
+                <div data-testid={childTid(root, "activeQuestion", "actions")} className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    data-testid={childTid(root, "bookmark", "toggle", exId ?? "")}
+                    className="touch-button rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                    onClick={() => exId && toggleBookmark(exId)}
+                  >
+                    {isBookmarked ? "הסר סימון ⭐" : "סמן לבדיקה ☆"}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid={qIdx >= total - 1
+                      ? testIds.screen.gmatChallenge.finishSectionCta(grade)
+                      : childTid(root, "nextQuestion")}
+                    className={`touch-button flex-1 ${hasAnswer ? "btn-accent" : "opacity-60"}`}
+                    onClick={onNextQuestion}
+                  >
+                    {qIdx >= total - 1 ? "סיום מקטע →" : "הבאה →"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                data-testid={childTid(root, "activeQuestion", "loading")}
+                className="surface rounded-2xl p-4 text-center text-sm text-slate-500"
+              >
+                טוֹעֲנִים שְׁאֵלָה...
+              </div>
+            )}
+          </>
+        );
+      })() : null}
+
+      {state.phase === "sectionReview" && currentKey && state.reviewSnapshot ? (() => {
+        const ids = state.itemsBySection[currentKey];
+        const divergences = countReviewDivergences(state.answers, state.reviewSnapshot, ids);
+        const atLimit = divergences >= DEFAULT_MAX_REVIEW_DIVERGENCES;
+
+        return (
+          <>
+            <header data-testid={childTid(root, "reviewHeader")} className="progress-sticky mb-4 rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md">
+              <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-slate-900">
+                סקירת מקטע — {SECTION_LABELS[currentKey]}
+              </h1>
+              <p data-testid={childTid(root, "review", "divergences")} className="muted mt-1 text-sm">
+                שינויים: {divergences} מתוך {DEFAULT_MAX_REVIEW_DIVERGENCES} מותרים
+              </p>
+            </header>
+
+            {reviewQuestionIndex !== null ? (
+              // Show selected question for editing
+              (() => {
+                const exId = ids[reviewQuestionIndex];
+                const exercise = exId ? exerciseById.get(exId) : null;
+                const value = exId ? (state.answers[exId] ?? "") : "";
+                const originalValue = exId ? (state.reviewSnapshot?.[exId] ?? "") : "";
+                const wasChanged = value !== originalValue;
+                const isLocked = atLimit && !wasChanged;
+                return (
+                  <div data-testid={childTid(root, "reviewQuestion", String(reviewQuestionIndex))}>
+                    <button
+                      type="button"
+                      data-testid={childTid(root, "reviewBackToGrid")}
+                      className="mb-3 touch-button rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      onClick={() => setReviewQuestionIndex(null)}
+                    >
+                      ← חזרה לרשימת השאלות
+                    </button>
+                    <p
+                      data-testid={childTid(root, "reviewQuestionNumber", String(reviewQuestionIndex))}
+                      className="mb-2 text-sm font-semibold text-slate-600"
+                    >
+                      שאלה {reviewQuestionIndex + 1}
+                    </p>
+                    {exercise ? (
+                      <ExerciseItem
+                        screenRootTestId={root}
+                        exercise={exercise}
+                        value={value}
+                        wasChecked={false}
+                        isCorrect={undefined}
+                        isReadOnly={isLocked}
+                        setFocusRef={setFocusRef}
+                        wrongAttempts={0}
+                        hintUsed={false}
+                        onRevealHint={() => undefined}
+                        onChangeValue={isLocked ? () => undefined : onChangeValue}
+                        onSubmitExercise={() => undefined}
+                        onNextInput={focusNextInput}
+                        showCheckButton={false}
+                        disableRetry={true}
+                        onRetryExercise={() => undefined}
+                      />
+                    ) : null}
+                    {isLocked ? (
+                      <p data-testid={childTid(root, "reviewLockMessage")} className="mt-2 text-sm text-rose-600">
+                        הגעתם למגבלת {DEFAULT_MAX_REVIEW_DIVERGENCES} שינויים.
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })()
+            ) : (
+              // Show question grid
+              <div data-testid={childTid(root, "reviewGrid")} className="surface rounded-3xl p-4">
+                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-slate-600">
+                  לחצו על שאלה כדי לעיין בה או לשנות את תשובתכם.
+                </p>
+                <div data-testid={childTid(root, "reviewGrid", "tiles")} className="grid grid-cols-4 gap-2">
+                  {ids.map((exId, i) => {
+                    const answered = Boolean(state.answers[exId]?.trim());
+                    const bookmarked = state.bookmarks[currentKey]?.includes(exId);
+                    const changed = state.answers[exId] !== state.reviewSnapshot?.[exId];
+                    return (
+                      <button
+                        key={exId}
+                        type="button"
+                        data-testid={childTid(root, "reviewTile", exId)}
+                        onClick={() => setReviewQuestionIndex(i)}
+                        className={`touch-button rounded-xl border-2 py-3 text-sm font-bold ${
+                          changed
+                            ? "border-blue-400 bg-blue-50 text-blue-800"
+                            : answered
+                              ? "border-green-300 bg-green-50 text-green-800"
+                              : "border-slate-200 bg-white text-slate-500"
+                        }`}
+                      >
+                        {i + 1}
+                        {bookmarked ? " ⭐" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p data-testid={childTid(root, "reviewLegend")} className="mt-3 text-xs text-slate-500">
+                  ירוק = נענה · כחול = שונה · ⭐ = מסומן
+                </p>
+              </div>
+            )}
+
+            <div data-testid={childTid(root, "confirmReviewPanel")} className="surface mt-4 rounded-3xl p-5">
+              <button
+                type="button"
+                data-testid={testIds.screen.gmatChallenge.confirmReviewCta(grade)}
+                className="touch-button btn-accent w-full"
+                onClick={onConfirmReview}
+              >
+                אישור סקירה והמשך
+              </button>
+            </div>
+          </>
+        );
+      })() : null}
 
       {state.phase === "results" ? (
         <div data-testid={testIds.screen.gmatChallenge.results(grade)} className="surface rounded-3xl p-6">
@@ -592,9 +671,9 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ציון כולל: {state.scorePercent ?? 0}%
           </p>
           <ul data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection")} className="muted mt-3 list-disc space-y-1 pr-5 text-sm">
-            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "quant")}>חשיבה כמותית: {state.scoreBySection?.quant ?? 0}%</li>
-            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "verbal")}>חשיבה מילולית: {state.scoreBySection?.verbal ?? 0}%</li>
-            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "data")}>פיענוח נתונים: {state.scoreBySection?.data ?? 0}%</li>
+            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "quant")}>חשיבה כמותית: {state.correctBySection?.quant ?? 0} / {SECTION_QUESTION_COUNTS.quant} נכון</li>
+            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "verbal")}>חשיבה מילולית: {state.correctBySection?.verbal ?? 0} / {SECTION_QUESTION_COUNTS.verbal} נכון</li>
+            <li data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "bySection", "data")}>פיענוח נתונים: {state.correctBySection?.data ?? 0} / {SECTION_QUESTION_COUNTS.data} נכון</li>
           </ul>
           <p data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "footnote")} className="muted mt-3 text-xs">זכרו: זה תרגול רשות — הכי חשוב מה שלמדתם בכיתה.</p>
           <button

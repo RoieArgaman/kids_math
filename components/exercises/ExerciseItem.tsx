@@ -21,6 +21,7 @@ interface ExerciseItemProps {
   onRetryExercise: (exerciseId: ExerciseId) => void;
   wrongAttempts: number;
   hintUsed: boolean;
+  disableRetry?: boolean;
   onRevealHint: (exerciseId: ExerciseId) => void;
 }
 
@@ -40,6 +41,7 @@ function ExerciseItemBase({
   onRetryExercise,
   wrongAttempts,
   hintUsed,
+  disableRetry,
   onRevealHint,
 }: ExerciseItemProps) {
   const onChange = useCallback(
@@ -84,6 +86,7 @@ function ExerciseItemBase({
         showCheckButton={showCheckButton}
         wrongAttempts={wrongAttempts}
         hintUsed={hintUsed}
+        disableRetry={disableRetry}
         onRevealHint={onHint}
         onChange={onChange}
         onSubmit={onSubmit}
