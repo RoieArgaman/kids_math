@@ -1,298 +1,166 @@
 ---
-description: Multi-agent playbook (roles, handoffs, definition of done)
+description: Multi-agent playbook — roles, checkpoints, review loops, handoff — aligned with AGENTS.md
 alwaysApply: true
 ---
 
-# Multi-agent playbook
+# Multi-Agent Playbook
 
-Use parallel agents when it reduces latency or risk (broad codebase search, UI + logic + tests, or uncertain architecture). Every agent must return actionable outputs that the Implementer can apply directly.
+> **Canonical source: `AGENTS.md`** — this file provides Cursor-specific details.
 
-## Workflow scaling policy (speed vs rigor)
+## Mode Determines Team Size and Checkpoints
 
-Choose the smallest workflow that keeps risk controlled:
+| Mode | Roles | Checkpoints | Review Cycles | Final Gates |
+|------|-------|------------|---------------|-------------|
+| **PRO** | Implementer + self-review | 0 | Self-review | lint + testids |
+| **ULTRA** | Planner + Explorer + Implementer + 5 core Reviewers + Tester | 3 blocking | 1 cycle | MCP Playwright (if UI) + CI test:qa |
+| **MAX** | All roles (8-12) | 6+ blocking | 2 cycles | MCP Playwright (always) + CI test:qa |
 
-- **Small task** (single file/small diff/copy or local UI tweak, no routing/storage gates):
-  - Single Implementer + targeted Tester checks.
-  - No full multi-role review loop required unless user asks for deep review.
-- **Medium task** (multiple files, logic changes, moderate UX impact):
-  - 2-3 roles (typically Implementer + Reviewer + Tester).
-  - Run targeted automation plus manual RTL checks.
-- **High-risk task** (routing, middleware/gates, persisted schema/migrations, final-exam flow, broad refactor):
-  - Full multi-role workflow with iterative Review & Fix loop.
-  - Full tester phase and stronger quality gates.
+## Blocking Checkpoints (⛔)
 
-If scope is unclear, start at medium and escalate to high-risk when touching gated routes, persistence, or unlock logic.
+Every checkpoint uses this template:
+```
+---
+⛔ CHECKPOINT: [Phase Name]
+Status: [COMPLETE / NEEDS REVISION]
+Summary: [1-2 sentences]
+Roles participated: [list]
+Ready for next phase? (proceed / revise / different approach / escalate)
+---
+```
 
-## Standard roles (default set)
+**Agent MUST stop and wait for user at every ⛔ checkpoint.** No auto-advancing.
+
+## Standard Roles
 
 ### Planner
-
-- Clarify the goal, constraints, and “definition of done”.
-- Identify likely files, risks (storage schema, RTL, accessibility), and validation steps.
-- Produce: a short plan + checklist.
+- Clarify goal, constraints, definition of done
+- Identify files, risks, cross-file impact
+- **Output**: plan + risk table + role input + WAIT for user
 
 ### Explorer
-
-- Search/skim the codebase to find the real patterns (routing, storage, analytics, UI tokens).
-- Prefer citing concrete file paths and existing helpers.
-- Produce: “where to change” map + constraints discovered.
+- Search codebase for patterns, check cross-file dependencies
+- Cite concrete file paths and existing helpers
+- **Output**: "where to change" map + dependency impact + WAIT for user
 
 ### Implementer
-
-- Make the smallest correct change that matches existing conventions.
-- Keep diffs readable; avoid drive-by refactors.
-- If you surface a **stable, repeated** project pattern that future agents should follow, capture it per `learning-loop.mdc` (`docs/LEARNING_LOG.md` and/or `.cursor/rules/*.mdc`).
-- Produce: code changes + brief rationale + any follow-up TODOs.
-- Run tester scope according to the **Workflow scaling policy** above (targeted checks for small/medium, full QA team for high-risk).
+- Research before writing (read files, grep, check helpers, check learning log, check deps)
+- Make smallest correct change matching conventions
+- Run Self-Review Protocol before handoff
+- **Output**: code + rationale + self-review findings
 
 ### Reviewer
-
-- Review the diff for correctness, edge cases, readability, and alignment with project conventions.
-- Look for: schema breakage, accidental `"use client"` spread, RTL regressions, a11y issues, and untyped payloads.
-- Produce: punch-list of fixes + approval when done.
-- Multi-role invariant (always): when a review is part of the multi-role workflow, the review must include and keep the full maintained team:
-  - `SeniorDev_TechLead`
-  - `SeniorFrontEnd_TechLead`
-  - `Dev_Architect`
-  - `QA_Architect`
-  - `SeniorAutomation_Engineer`
-  - `SeniorQA_Engineer`
-  - `SeniorProductDesigner`
-  - `SeniorProductManager`
-- Approval requires agreement from all roles in the maintained team; if any role reports a blocking issue, the review is not approved yet.
-- Run tester scope according to the **Workflow scaling policy** above.
+- Review with severity levels (CRITICAL/HIGH/MEDIUM/LOW) per `AGENTS.md`
+- Check: schema breakage, `"use client"` spread, RTL, a11y, security, console.log, config weakening
+- **ULTRA**: 5 core roles, 1 cycle, all must participate
+- **MAX**: full team, 2 cycles, all must approve
+- **Output**: punch-list with severity + role participation table + verdict
 
 ### Tester (QA)
-
-- For **high-risk tasks**, run as a multi-QA team (`Tester Phase (QA Multi-role Team)`):
-  - `SeniorAutomation_Engineer`
-  - `SeniorAutomation_TechLead`
-  - `SeniorManualQA_Engineer`
-  - `UX_QA_Engineer`
-  - `QA_Architect`
-- For **small/medium tasks**, run targeted QA checks mapped to touched risk surface (unit/e2e/manual).
-- Attempt to add or modify related tests/coverage (unit/e2e) and any required test helpers/mocks.
-- Run available checks (at minimum `npm run lint`; add `npm run build` and relevant tests when change is non-trivial).
-- Add a manual RTL test plan that a human can follow quickly (touch targets, keyboard navigation, core flows).
-- Produce: executed commands + results + repro steps for any failures (when applicable).
-
-### Release/PR
-
-- Prepare PR text: summary + test plan + risk notes (storage/analytics).
-- Ensure scope is right (no secrets, no accidental large generated files).
-- Produce: PR body draft and merge readiness checklist.
-
-## Specialist roles (use as needed)
-
-### QA_Architect (qa architect)
-
-- Define test strategy for risky changes (state persistence, progress engine, analytics).
-- Suggest minimal automated coverage when feasible.
-
-### SeniorDev_TechLead (Senior tech lead)
-
-- Ensure architecture boundaries are respected (avoid leaking UI concerns into `lib/`, keep routing helpers in `lib/routes.ts`, etc.).
-- Push for simplicity and long-term maintainability.
-
-### SeniorFrontEnd_TechLead (Senior Front end tech lead)
-
-- Ensure UI implementation details match existing component patterns (Tailwind classes, layout primitives, state management).
-- Validate RTL correctness and accessibility expectations (focus order, keyboard navigation, aria where needed).
-- Keep diffs minimal and avoid “new UI frameworks” inside the repo.
-
-### Dev_Architect (Dev architect)
-
-- Ensure the design respects boundaries between `app/`, `components/`, and `lib/` (server vs client concerns).
-- Validate data-flow and side effects (cookies/storage, route gating, serialization formats).
-- Call out where a refactor would be required vs where a localized change is safe.
-
-### SeniorAutomation_Engineer (senior automation engineer)
-
-- Propose the most valuable automated coverage (unit vs e2e) for the exact risk being changed.
-- Specify test hooks and what should be asserted (no brittle selectors; focus on behaviors).
-- If the repo already has a test for the flow, prefer extending it over adding duplicate coverage.
-
-### SeniorAutomation_TechLead (senior automation tech lead)
-
-- Ensure automated tests use stable strategies (avoid brittle selectors; prefer data-testid/semantic selectors).
-- Propose any shared test helpers/utilities to keep the suite maintainable.
-- Validate that test timing/flakiness risks are mitigated (deterministic setup, explicit waits, clear assertions).
-
-### SeniorManualQA_Engineer (senior manual QA engineer)
-
-- Write a short, step-by-step manual test script tailored to the changed user journey(s) in RTL.
-- Cover edge cases and failure states (loading, empty states, locked/unlocked gates).
-- Ensure manual steps are reproducible and do not require fragile “guessing” by a tester.
-
-### UX_QA_Engineer (UX QA engineer)
-
-- Verify UX/a11y behavior relevant to the change: focus order, keyboard navigation, touch ergonomics, and visibility.
-- Check error messaging clarity and input affordances (RTL readability, truncation, and contrast).
-- Ensure interactive elements meet expected touch target sizes for primary actions.
-
-### SeniorQA_Engineer (senior qa engineer)
-
-- Provide edge cases and failure modes to test manually (especially around gates, storage, and error states).
-- Add a short manual test checklist that a human can execute quickly in RTL.
-- Ensure the manual plan complements (not duplicates) automation.
-
-### SeniorProductDesigner (senior product designer)
-
-- Ensure visual/interaction consistency with existing tokens in `app/globals.css` and Tailwind theme.
-- Validate accessibility and touch-first ergonomics.
-
-### SeniorProductManager (senior product manager)
-
-- Confirm the feature matches user value and scope; reduce overbuilding.
-- Define acceptance criteria and analytics event intent (only when needed).
-
-### MoE_PedagogyLead (רכז_פדגוגי_משרד_החינוך)
-
-- Validate exercises/wording/learning progressions and age appropriateness.
-- Check for clarity in Hebrew, misconception targeting, and proper scaffolding.
-
-## Planner Phase (Multi-role Team)
-
-When the task is executed as “Planner” (see `agent-definer.mdc`), the plan output must include multi-role contributions from the full team below (each role gets 1 short subsection).
-
-### Required multi-role contributions (Planner)
-
-### Conditional education specialist (only when educational content changes)
-
-If the request changes or adds educational material (lesson/exercise wording, learning objectives, explanations, progression/difficulty, or pedagogical approach), the plan output must also include:
-- `MoE_PedagogyLead` (מורה ותיקה / יועצת פתגוגית / רכזת חינוך)
-- a required verification step that the updated content matches the relevant Israeli Ministry of Education syllabus/program.
-
-### SeniorDev_TechLead (Senior tech lead)
-- Core architecture direction + top risks.
-
-### SeniorFrontEnd_TechLead (Senior Front end tech lead)
-- UI/component patterns to use and where UI state should live.
-
-### Dev_Architect (Dev architect)
-- Data flow + boundaries (server/client, IO boundaries, serialization).
-
-### QA_Architect (qa architect)
-- Minimal test strategy for correctness + regressions.
-
-### SeniorAutomation_Engineer (senior automation engineer)
-- Which automation to add/update (unit vs e2e) and what to assert.
-
-### SeniorQA_Engineer (senior qa engineer)
-- Edge cases + quick RTL manual checklist.
-
-### SeniorProductDesigner (senior product designer)
-- UX/a11y expectations + touch-first ergonomics constraints.
-
-### SeniorProductManager (senior product manager)
-- Acceptance criteria (definition of done) aligned with user value.
-
-## Explorer Phase (Multi-role Team)
-
-When the task is executed as “Explorer” (see `agent-definer.mdc`), the exploration output must include multi-role contributions optimized for “where to change” (each role gets 1 short subsection).
-
-### Required multi-role contributions (Explorer)
-
-### Conditional education specialist (only when educational content changes)
-
-If the request changes or adds educational material (lesson/exercise wording, learning objectives, explanations, progression/difficulty, or pedagogical approach), the exploration output must also include:
-- `MoE_PedagogyLead` (מורה ותיקה / יועצת פתגוגית / רכזת חינוך)
-- a required verification step that the updated content matches the relevant Israeli Ministry of Education syllabus/program.
-
-### SeniorDev_TechLead (Senior tech lead)
-- Where in the runtime/routing architecture the change should land.
-
-### SeniorFrontEnd_TechLead (Senior Front end tech lead)
-- Which pages/components should change or be reused.
-
-### Dev_Architect (Dev architect)
-- Which `lib/` modules/contracts are affected and what boundaries must be preserved.
-
-### QA_Architect (qa architect)
-- Which test surfaces must be covered.
-
-### SeniorAutomation_Engineer (senior automation engineer)
-- Which automated checks cover the touched surfaces.
-
-### SeniorQA_Engineer (senior qa engineer)
-- Which manual checks must be run in RTL to validate behavior.
-
-### SeniorProductDesigner (senior product designer)
-- Which UI tokens/layout/a11y expectations might shift.
-
-### SeniorProductManager (senior product manager)
-- Which user journeys must remain correct.
-
-## Tester Phase (QA Multi-role Team)
-
-When the workflow includes `Tester (QA)` (see `agent-definer.mdc`), the tester phase must run as a multi-QA team and attempt to add or modify the related tests/coverage.
-
-### Required multi-role contributions (Tester)
-
-### SeniorAutomation_Engineer (senior automation engineer)
-- Propose and implement the most valuable unit/e2e test additions or modifications.
-- Specify what to assert (behavior-first) and where to place the assertions.
-
-### SeniorAutomation_TechLead (senior automation tech lead)
-- Ensure test maintainability (stable selectors, shared helpers/utilities if needed).
-- Flag flakiness risks and propose mitigations.
-
-### QA_Architect (qa architect)
-- Confirm the test strategy is sufficient for correctness and regression coverage.
-- Suggest minimal automated coverage to achieve meaningful confidence.
-
-### SeniorManualQA_Engineer (senior manual QA engineer)
-- Provide a step-by-step RTL manual checklist targeted to the change.
-- Include edge cases and expected results for gate/storage-related behavior.
-
-### UX_QA_Engineer (UX QA engineer)
-- Validate UX/a11y expectations relevant to the change (focus order, keyboard nav, touch ergonomics).
-- Ensure error/empty states are understandable and usable in RTL.
-
-## Review & Fix Loop (iterate-until-approved)
-
-After the Planner/Explorer output, run an iterative review where the same roles review and produce a punch-list of fixes.
-
-### Iteration rules
-- Default max cycles: 2.
-- Each cycle: each role provides “what to fix” as actionable bullets (what/where/why).
-- Stop early if all roles approve.
-- Team invariance (always): each review cycle must include feedback from all 8 maintained roles; roles may not be dropped between cycles.
-- Tester mandatory each cycle: after each review cycle’s fixes are incorporated (or, if implementation is not yet applied, after the punch-list is produced), run `Tester Phase (QA Multi-role Team)` with:
-  - `SeniorAutomation_Engineer`
-  - `SeniorAutomation_TechLead`
-  - `SeniorManualQA_Engineer`
-  - `UX_QA_Engineer`
-  - `QA_Architect`
-
-### Review checklist (all roles)
-- Is the plan/exploration correct and aligned with repo conventions?
-- Are risks called out (storage schema, route gating, typed payloads, RTL/a11y)?
-- Is the next implementation step minimal and safe?
-- Does the response include/keep the `Learning update` requirement (append to `docs/LEARNING_LOG.md`), and when a convention is stable, should `.cursor/rules` be updated (see `learning-loop.mdc`)?
-- Conditional syllabus/program check:
-  - If educational content was changed or added, the review must include verification against the relevant Israeli Ministry of Education syllabus/program (via `MoE_PedagogyLead`).
-
-## Handoff format (required)
-
-This is the canonical handoff contract for this repo. Other guidance files should reference this section instead of duplicating it.
-
-Every agent output should include:
-
-- **Findings**: 3–7 bullets, concrete and specific.
-- **Files**: exact file paths to touch (or that were inspected).
-- **Decisions**: any trade-offs chosen.
-- **Next actions**: ordered list that another agent can execute.
-- **Learning update**: when something new was learned, append a short entry to `docs/LEARNING_LOG.md`. If the lesson is ongoing guidance for all agents, also update the relevant `.cursor/rules` file per `learning-loop.mdc` (prefer small edits; avoid duplicating long text).
-
-## Canonical quality gates reference
-
-Use `quality-gates.mdc` as the single source of truth for command-level verification requirements (risk matrix, required checks, and manual spot checks).
-
-## Definition of done (project baseline)
-
-- Code matches repo conventions (TS strict, `@/*` imports, RTL-aware UI).
-- Lint passes (`npm run lint`).
-- Build passes for non-trivial changes (`npm run build`).
-- Analytics changes (if any) use `lib/analytics/events.ts` and avoid sensitive payloads.
-
+- Run quality gates per mode, specify EXACT spec files
+- **PRO**: targeted checks
+- **ULTRA**: gates + targeted E2E (name the specs) + MCP Playwright visual check (if UI changed) + `npm run test:qa`
+- **MAX**: QA Multi-role Team (5 QA roles: SeniorAutomation_Engineer, SeniorAutomation_TechLead, SeniorManualQA_Engineer, UX_QA_Engineer, QA_Architect) + MCP Playwright full visual check + `npm run test:qa`
+
+## Role Participation Tracking (ULTRA/MAX mandatory)
+
+Every review must include:
+```
+| Role | Participated | Finding | Verdict |
+|------|-------------|---------|---------|
+| SeniorDev_TechLead | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorFrontEnd_TechLead | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Dev_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| QA_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorAutomation_Engineer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+```
+
+**Rules:**
+- ULTRA: ALL 5 core roles must participate
+- MAX: ALL roles in full team must participate
+- One BLOCK(CRITICAL) → entire review BLOCKED
+- One BLOCK(HIGH) → entire review BLOCKED
+
+## Multi-Role Plan Input (ULTRA/MAX)
+
+Each role contributes 1-3 bullets with attribution:
+
+```
+**SeniorDev_TechLead:**
+"Architecture: [concrete technical input about the plan]"
+
+**SeniorFrontEnd_TechLead:**
+"UI: [concrete UI/RTL/a11y input]"
+
+**Dev_Architect:**
+"Data flow: [concrete data/storage/boundary input]"
+
+**QA_Architect:**
+"Test strategy: [specific test files and assertions]"
+
+**SeniorAutomation_Engineer:**
+"Automation: [specific test additions, selectors, coverage gaps]"
+```
+
+## Review & Fix Loop (MAX only)
+
+1. Review Cycle 1 → all roles review, produce punch-list with severity
+2. Agent fixes CRITICAL and HIGH issues
+3. ⛔ CHECKPOINT → list fixes, wait for user
+4. Review Cycle 2 → re-review flagged items, all roles approve
+
+### If Cycle 2 Still Has Issues:
+- CRITICAL remaining → **BLOCK**, escalate to user
+- HIGH remaining → ask user: "Allow Cycle 3 OR defer change?"
+- Roles disagree on severity → `SeniorProductManager` makes final call
+
+## Self-Review Protocol (ALL modes)
+
+Before EVERY response, run mentally:
+```
+[ ] Read files before changing?
+[ ] Checked existing patterns/helpers?
+[ ] Cross-file deps checked?
+[ ] Diff minimal (within mode limits)?
+[ ] No config weakening?
+[ ] No console.log in prod?
+[ ] No secrets?
+[ ] data-testid on all interactive elements?
+[ ] Routes via lib/routes.ts?
+[ ] Storage unchanged OR migration included?
+[ ] RTL preserved?
+[ ] Quality gates passed?
+[ ] Verification report filled (ULTRA/MAX)?
+[ ] Learning log updated (ULTRA/MAX) or justified skip?
+```
+
+## Handoff Format (mandatory)
+
+Every response must include (see `AGENTS.md` → Handoff Format for full spec):
+
+- **Mode** — PRO/ULTRA/MAX + reason
+- **Findings** — 3-7 CONCRETE bullets (file path + function + decision)
+- **Files** — exact paths
+- **Cross-File Impact** — dependency check results
+- **Decisions** — trade-offs + WHY
+- **Self-Review** — issues caught, or "clean"
+- **Review Team** — role participation table (ULTRA/MAX)
+- **Verification Report** — full report (ULTRA/MAX)
+- **Caveats & Open Questions** — what wasn't done + why + open questions
+- **Next Actions** — ordered list for next agent
+- **For Next Agent** — context, files to read, known issues, what to verify
+- **Learning Update** — entry or justified skip (ULTRA/MAX mandatory)
+
+## Definition of Done
+
+- [ ] Code matches conventions (TS strict, `@/*`, RTL, no any, no console.log)
+- [ ] Lint passes
+- [ ] TestID coverage passes
+- [ ] Build passes (if non-trivial)
+- [ ] Security gate PASS
+- [ ] MCP Playwright visual check PASS (ULTRA if UI changed, MAX always)
+- [ ] CI suite (`npm run test:qa`) PASS (ULTRA/MAX mandatory)
+- [ ] Self-review completed
+- [ ] Verification report filled (ULTRA/MAX — includes Visual + CI Suite fields)
+- [ ] Learning log updated (ULTRA/MAX) or justified skip
+- [ ] All checkpoints completed (ULTRA/MAX)
+- [ ] All roles participated in review (ULTRA/MAX)

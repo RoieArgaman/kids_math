@@ -1,61 +1,79 @@
 ---
-description: Decide which agent role to use for a given request
+description: Decide workflow mode, role, and enforce checkpoints — MUST read AGENTS.md
 alwaysApply: true
 ---
 
 # Agent Definer
 
-This rule helps choose the best agent role based on the user request type.
+## Step 1: Select Workflow Mode (mandatory first step — no exceptions)
 
-## Role Selection
+**Before doing ANYTHING, determine the correct mode using `AGENTS.md` → Mode Selection Rules.**
+
+| Mode | When | Checkpoints | Review | Quality Gates |
+|------|------|------------|--------|--------------|
+| **PRO** | Single file, isolated, no routing/storage/gates | None | Self-review | lint + testids + targeted |
+| **ULTRA** | Multi-file, logic changes, new features | 3 blocking | 5-role core (1 cycle) | lint + testids + build + unit + targeted E2E |
+| **MAX** | Routes, gates, schema, grades, security, broad | 6+ blocking | Full team (2 cycles) | Full `test:qa` |
+
+**State your mode at the start of EVERY response.** When in doubt, go one level up.
+
+### Auto-Escalation (no user approval needed — just inform)
+- Editing `lib/*/storage.ts` → auto-escalate to MAX
+- Diff exceeds mode size limit → +1 level
+- CRITICAL security finding → auto-escalate to MAX
+- Cross-file impact >5 files → ULTRA minimum
+
+## Step 2: Select Role
 
 ### Planner
-Use when:
-- The task is broad/ambiguous.
-- You need a multi-step plan with risks and validation steps.
-- You must decide approach before touching code.
-- Follow `multi-agent-playbook.mdc` workflow scaling policy; use full multi-role Planner workflow only for high-risk or explicitly requested deep planning.
+- Task is broad/ambiguous, needs multi-step plan
+- ULTRA/MAX: full multi-role plan per `AGENTS.md` + `multi-agent-playbook.mdc`
+- **MUST wait for user confirmation before Explore or Implement phase**
 
 ### Explorer
-Use when:
-- You need to locate existing patterns (routing, UI components, storage keys, analytics).
-- You want a “where to change” map before implementing.
-- Follow `multi-agent-playbook.mdc` workflow scaling policy; use full multi-role Explorer workflow for medium/high-risk discovery.
+- Need to find patterns, create "where to change" map
+- Include cross-file dependency check
+- **MUST wait for user confirmation before Implement phase**
 
 ### Implementer
-Use when:
-- The change is well-scoped and you know what to modify.
-- The goal is to implement, refactor, or add code with minimal diffs.
-- When adding a new grade (workbook split, routing, gates, final exam): follow `add-grade.mdc` for the ordered checklist and risks.
-- After implementing, run tester scope based on risk level per `multi-agent-playbook.mdc` and `quality-gates.mdc`.
+- Change is well-scoped and approach is confirmed
+- **Research before writing**: read file, grep patterns, check helpers, check learning log, check cross-file deps
+- Run Self-Review Protocol before handoff
+- Adding a new grade: follow `add-grade.mdc` (always MAX mode)
 
 ### Reviewer
-Use when:
-- The user asks for a code review or “is this correct?”.
-- There are potential regressions (storage, RTL/a11y, type safety).
-- For any review that follows the multi-role workflow, run the full multi-role review workflow from `multi-agent-playbook.mdc` and require input from all maintained roles (tech, front-end tech, architecture, qa, automation, design, product).
-- Run tester scope according to risk level per `multi-agent-playbook.mdc`.
+- Code review or "is this correct?"
+- Use severity levels for ALL findings (CRITICAL/HIGH/MEDIUM/LOW)
+- Include role participation table (ULTRA/MAX)
+- PRO: self-review. ULTRA: 5 core roles. MAX: full team.
 
 ### Tester (QA)
-Use when:
-- The user asks for verification.
-- You need to run `npm run lint`, `npm run build`, unit tests, or E2E tests.
-- You need a manual test plan (touch, keyboard navigation, RTL layout).
-- Run the tester workflow and team size from `multi-agent-playbook.mdc` based on risk level.
-- Always follow `quality-gates.mdc` command matrix and try to add/modify related tests/coverage.
+- Verification or test execution
+- Specify EXACT test files run (not "targeted E2E")
+- Follow quality gates per mode + Security Gate
 
 ### Release/PR
-Use when:
-- The user asks to prepare PR text, summary, or merge-readiness checklist.
+- PR text, summary, merge readiness checklist
+
+## Step 3: Enforce Checkpoints
+
+⛔ **Checkpoints are BLOCKING** — stop and wait for user confirmation. Use the checkpoint template from `AGENTS.md` → Phase Checkpoints.
+
+## Step 4: Self-Review
+
+Before EVERY response, run the Self-Review Protocol from `AGENTS.md`. Fix issues before responding.
 
 ## Specialization Triggers
 
-- If there is persisted progress/state risk: also involve QA_Architect mindset.
-- If architecture boundaries are involved: also use SeniorDev_TechLead mindset.
-- If UI/interaction consistency is involved: also use SeniorProductDesigner mindset.
-- If educational material is changed or added (lesson/exercise wording, learning objectives, explanations, progression/difficulty, pedagogical approach): also use MoE_PedagogyLead mindset and always verify the content against the relevant Israeli Ministry of Education syllabus/program.
+- Storage/progress risk → `QA_Architect` mindset + auto-escalate if editing storage.ts
+- Architecture boundaries → `SeniorDev_TechLead` mindset
+- UI/interaction → `SeniorProductDesigner` mindset
+- Educational content → `MoE_PedagogyLead` mindset + MoE syllabus verification
 
 ## Output Format (enforced)
 
-Use the canonical handoff format from `multi-agent-playbook.mdc` (including `Learning update` expectations).
-
+1. **State mode** (PRO / ULTRA / MAX) and why
+2. **Self-review findings** (issues caught and fixed)
+3. **Role participation table** (ULTRA/MAX)
+4. **Verification report** (ULTRA/MAX)
+5. **Full handoff format** from `AGENTS.md` → Handoff Format (including: Caveats, For Next Agent, Learning Update)

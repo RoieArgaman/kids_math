@@ -1,5 +1,5 @@
 ---
-description: Learning loop instructions (append updates to markdown)
+description: Learning loop — capture patterns, update rules, evolve the workflow
 alwaysApply: true
 ---
 
@@ -7,43 +7,82 @@ alwaysApply: true
 
 The goal of this repo is not only to ship changes, but to keep teaching future runs.
 
-## While developing: capture patterns for the future
+## Mandatory for ULTRA/MAX
 
-While you work, if you notice a **project pattern** that is not written down yet (or is wrong in the rules), feed it forward:
+Every ULTRA/MAX task MUST produce at least 1 learning entry OR explicitly state:
+> "No new learning — [reason: e.g., mechanical change, well-documented pattern]"
 
-1. **`docs/LEARNING_LOG.md`** — Default place for a short entry: what you saw, where, and how to reuse it. Use this for one-off discoveries, bug gotchas, and “we always do X here” notes.
-2. **`.cursor/rules/*.mdc`** — When the pattern is **stable**, **repeated**, and should constrain *every* future agent (naming, folder placement, routing, testing strategy, gates), update or add a rule:
-   - Prefer **small edits** to the closest existing rule (e.g. `agent-guidelines.mdc`, `quality-gates.mdc`, `add-grade.mdc`) instead of a new file unless the topic is large.
-   - New topic file: use `alwaysApply: false` + a clear `description` so Cursor pulls it in when relevant.
-   - Do not duplicate long prose across many files; link from one rule to another when it helps.
+This is tracked in the verification report `Learning:` field and handoff `Learning Update` section.
+**PRO mode**: learning is recommended but optional.
 
-If the insight is trivial or obvious from the code alone, skip. If you are unsure, a learning-log entry alone is enough.
+---
+
+## While Developing: Capture Patterns for the Future
+
+If you notice a **project pattern** not written down yet, feed it forward:
+
+1. **`docs/LEARNING_LOG.md`** — Default place for a short entry: what you saw, where, and how to reuse it. Use for one-off discoveries, bug gotchas, and "we always do X here" notes.
+
+2. **`.cursor/rules/*.mdc`** — When the pattern is **stable**, **repeated**, and should constrain *every* future agent, update or add a rule:
+   - Prefer **small edits** to the closest existing rule (e.g. `agent-guidelines.mdc`, `quality-gates.mdc`) instead of a new file unless the topic is large.
+   - New topic file: use `alwaysApply: false` + a clear `description`.
+   - Do not duplicate long prose across many files; link from one rule to another.
+
+3. **`AGENTS.md`** — When the pattern applies across ALL agents (Claude Code, Cursor, Devin), update the canonical source. Includes: new mandatory behaviors, mode selection rules, quality gate changes, role updates.
+
+If the insight is trivial or obvious from the code alone, skip. When unsure, a learning-log entry alone is enough.
+
+---
 
 ## When to Write a Learning Entry
 
-Append a new entry to `docs/LEARNING_LOG.md` when you:
-- Discover a new repo convention (routing pattern, storage approach, component usage).
-- Fix a tricky bug (especially cookie gating, storage versioning, or RTL issues).
-- Learn something that reduces future investigation time.
-- Make a decision due to constraints (performance, test flakiness, schema compatibility).
+Append to `docs/LEARNING_LOG.md` when you:
+- Discover a new repo convention (routing pattern, storage approach, component usage)
+- Fix a tricky bug (especially cookie gating, storage versioning, or RTL issues)
+- Learn something that reduces future investigation time
+- Make a decision due to constraints (performance, test flakiness, schema compatibility)
+- Discover a gap in the agent workflow itself
 
-If the change is purely mechanical and teaches nothing new, skip writing a log entry.
+If the change is purely mechanical and teaches nothing new, skip (but document the skip in ULTRA/MAX).
 
-## Learning Entry Format (copy/paste)
+---
 
-Add a new entry under the most recent date section or at the top under an `Unreleased` heading:
+## Learning Entry Format
 
-### YYYY-MM-DD
+```markdown
+### YYYY-MM-DD (short title)
 - **Trigger:** (what request led to this learning)
 - **What changed / where:** (file paths or feature area)
 - **What we learned:** (1-4 bullets, concrete)
 - **Why it matters:** (how it affects correctness/quality)
 - **How to reuse next time:** (a small rule of thumb)
 - **Open questions (optional):** (if something is still unclear)
+```
 
-## Quality Rules
+Keep entries short (aim for 8-20 lines). No sensitive data. Prefer actionable statements over vague commentary.
 
-- Keep the entry short (aim for 8-20 lines).
-- Avoid sensitive data (no cookies/session IDs, no user PII).
-- Prefer actionable statements over vague commentary.
+---
 
+## Cross-Agent Rule Update Hierarchy
+
+When a learning is stable and should propagate, update in this order:
+
+1. **`AGENTS.md`** — universal (ALL agents read this first)
+2. **`.cursor/rules/*.mdc`** — Cursor-specific details (also read by Devin and Claude as reference)
+3. **`CLAUDE.md`** — Claude Code entry point (reference to AGENTS.md, Claude-specific hooks)
+4. **`.devin/guidelines.md`** — Devin entry point (reference to AGENTS.md, Devin-specific notes)
+5. **`docs/AI_PROMPT_LIBRARY.md`** — Prompt templates (update if output format changed)
+
+**Rule**: if a rule should apply to ALL agents, update `AGENTS.md` FIRST, then reference it from agent-specific files.
+
+Do NOT write conflicting rules — agent-specific files supplement, never override, `AGENTS.md` mandatory behaviors.
+
+---
+
+## Quality Rules for Entries
+
+- Keep entries short (8-20 lines)
+- Avoid sensitive data (no cookies/session IDs, no user PII)
+- Prefer actionable statements over vague commentary
+- Include file paths for traceability
+- If learning leads to a rule change, reference the rule file updated
