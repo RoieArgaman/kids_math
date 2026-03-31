@@ -11,7 +11,7 @@ export interface GmatChallengeStateV1 {
   version: GmatChallengeVersion;
   grade: GradeId;
   createdAt: string;
-  pickerVersion: 1;
+  pickerVersion: 1 | 2 | 3 | 4 | 5 | 6;
   phase: ExamPhase;
   sectionOrder: GmatSectionKey[];
   /** Index into sectionOrder for the current (or next-after-break) section. */
@@ -28,4 +28,7 @@ export interface GmatChallengeStateV1 {
   scoreBySection?: Record<GmatSectionKey, number>;
   correctBySection?: Record<GmatSectionKey, number>;
   totalQuestions?: number;
+  poolBySection?: Record<GmatSectionKey, ExerciseId[]>;
+  sectionQuestionIndex?: number;
+  adaptiveDifficulty?: number;
 }

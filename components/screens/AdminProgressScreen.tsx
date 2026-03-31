@@ -83,6 +83,10 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
   }
 
   function handleMarkComplete(dayId: string): void {
+    if (dayId === FINAL_EXAM_DAY_ID) {
+      void handleForceFinalExamComplete();
+      return;
+    }
     const day = days.find((item) => item.id === dayId);
     const next = forceMarkDayComplete(progress, dayId as DayId, { day, fillAnswers: true });
     setResetArmedDayId(null);

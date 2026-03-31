@@ -73,7 +73,7 @@ function sanitizeItemsBySection(
   }
   const keys: GmatSectionKey[] = ["quant", "verbal", "data"];
   for (const k of keys) {
-    if (out[k].length !== SECTION_QUESTION_COUNTS[k]) {
+    if (out[k].length > SECTION_QUESTION_COUNTS[k]) {
       return null;
     }
   }
@@ -86,6 +86,16 @@ function sanitizeBookmarks(value: unknown): Record<GmatSectionKey, ExerciseId[]>
   }
   const out: Record<GmatSectionKey, ExerciseId[]> = { quant: [], verbal: [], data: [] };
   for (const k of ["quant", "verbal", "data"] as const) {
+    out[k] = sanitizeSectionIds(value[k]);
+  }
+  return out;
+}
+
+function sanitizePoolBySection(value: unknown): Record<GmatSectionKey, ExerciseId[]> | undefined {
+  if (!isRecord(value)) return undefined;
+  const out: Record<GmatSectionKey, ExerciseId[]> = { quant: [], verbal: [], data: [] };
+  for (const k of ["quant", "verbal", "data"] as const) {
+    if (!(k in value)) return undefined;
     out[k] = sanitizeSectionIds(value[k]);
   }
   return out;
@@ -120,7 +130,7 @@ export function createInitialRulesState(grade: GradeId): GmatChallengeStateV1 {
     version: 1,
     grade,
     createdAt: new Date().toISOString(),
-    pickerVersion: 1,
+    pickerVersion: 6,
     phase: "rules",
     sectionOrder: [...GMAT_SECTION_ORDER_DEFAULT],
     orderIndex: 0,
@@ -138,12 +148,17 @@ export function createInitialRulesState(grade: GradeId): GmatChallengeStateV1 {
 export function createStateAfterPick(params: {
   grade: GradeId;
   itemsBySection: Record<GmatSectionKey, ExerciseId[]>;
+  poolBySection?: Record<GmatSectionKey, ExerciseId[]>;
+  adaptiveDifficulty?: number;
 }): GmatChallengeStateV1 {
   const base = createInitialRulesState(params.grade);
   return {
     ...base,
     phase: "pickOrder",
     itemsBySection: params.itemsBySection,
+    poolBySection: params.poolBySection,
+    adaptiveDifficulty: params.adaptiveDifficulty ?? 3,
+    sectionQuestionIndex: 0,
   };
 }
 
@@ -156,7 +171,7 @@ export function loadGmatChallengeState(grade: GradeId): GmatChallengeStateV1 | n
     if (!isRecord(parsed)) return null;
     if (parsed.version !== 1) return null;
     if (parsed.grade !== grade) return null;
-    if (parsed.pickerVersion !== 1) return null;
+    if (parsed.pickerVersion !== 6) return null;
     if (typeof parsed.phase !== "string" || !PHASES.has(parsed.phase as ExamPhase)) {
       return null;
     }
@@ -200,7 +215,7 @@ export function loadGmatChallengeState(grade: GradeId): GmatChallengeStateV1 | n
       version: 1,
       grade,
       createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : new Date().toISOString(),
-      pickerVersion: 1,
+      pickerVersion: 6,
       phase,
       sectionOrder,
       orderIndex,
@@ -228,6 +243,19 @@ export function loadGmatChallengeState(grade: GradeId): GmatChallengeStateV1 | n
         typeof parsed.totalQuestions === "number" && Number.isFinite(parsed.totalQuestions)
           ? parsed.totalQuestions
           : undefined,
+      poolBySection: sanitizePoolBySection(parsed.poolBySection),
+      sectionQuestionIndex:
+        typeof parsed.sectionQuestionIndex === "number" &&
+        Number.isFinite(parsed.sectionQuestionIndex) &&
+        parsed.sectionQuestionIndex >= 0
+          ? parsed.sectionQuestionIndex
+          : 0,
+      adaptiveDifficulty:
+        typeof parsed.adaptiveDifficulty === "number" &&
+        parsed.adaptiveDifficulty >= 1 &&
+        parsed.adaptiveDifficulty <= 5
+          ? parsed.adaptiveDifficulty
+          : 3,
     };
   } catch {
     return null;

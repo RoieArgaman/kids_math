@@ -23,7 +23,12 @@ function ensureQuestionFormTokens(tokens: MathExpressionToken[]): MathExpression
     }
   }
   if (!hasQuestion) {
-    next.push({ type: "question", value: "?" });
+    // Don't append "?" to a complete equation that already has a numeric answer
+    // (e.g. "39 + 2 = 40" — the input field below is sufficient).
+    const lastToken = next[next.length - 1];
+    if (lastToken?.type !== "number") {
+      next.push({ type: "question", value: "?" });
+    }
   }
   return next;
 }

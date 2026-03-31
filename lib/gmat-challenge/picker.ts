@@ -3,10 +3,10 @@ import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import type { GradeId } from "@/lib/grades";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { classifyGmatSection } from "./classifier";
-import { SECTION_QUESTION_COUNTS } from "./config";
+import { SECTION_POOL_COUNTS, SECTION_QUESTION_COUNTS } from "./config";
 import type { GmatSectionKey } from "./types";
 
-export type GmatPickerVersion = 1;
+export type GmatPickerVersion = 1 | 2 | 3 | 4 | 5 | 6;
 
 function hashStringToUint32(input: string): number {
   let hash = 0x811c9dc5;
@@ -37,16 +37,40 @@ function shuffle<T>(items: T[], rnd: () => number): T[] {
   return arr;
 }
 
+const GMAT_EXCLUDED_PROMPTS = new Set<string>([
+  "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
+  "פִּתְרוּ מְשִׂימַת בְּדִיקָה קְצָרָה.",
+  "בַּחֲרוּ דֶּרֶךְ פְּתִירָה מַתְאִימָה.",
+  "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים.",
+  "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
+  "אֵיזֶה מִשְׁפָּט מָתֵמָטִי מַתְאִים?",
+]);
+
+function isGmatEligible(ex: Exercise): boolean {
+  if (ex.kind === "verbal_input") return false;
+  const prompt = ex.prompt ?? "";
+  if (GMAT_EXCLUDED_PROMPTS.has(prompt)) return false;
+  // Exclude worked-example exercises that reveal the answer in the prompt
+  if (prompt.startsWith("דֻּגְמָה:")) return false;
+  return true;
+}
+
 export function buildGmatChallengeBank(grade: GradeId): Exercise[] {
   return getWorkbookDays(grade)
     .filter((d) => d.id !== FINAL_EXAM_DAY_ID)
-    .flatMap((d) => d.sections.flatMap((s) => s.exercises));
+    .flatMap((d) =>
+      d.sections
+        .filter((s) => s.type !== "warmup")
+        .flatMap((s) => s.exercises),
+    )
+    .filter(isGmatEligible);
 }
 
-export function pickGmatChallengeItems(params: {
+function pickWithCounts(params: {
   seed: string;
   pickerVersion: GmatPickerVersion;
   grade: GradeId;
+  targetCounts: Record<GmatSectionKey, number>;
 }): Record<GmatSectionKey, ExerciseId[]> {
   const rnd = mulberry32(hashStringToUint32(`${params.pickerVersion}:${params.seed}`));
   const bank = buildGmatChallengeBank(params.grade);
@@ -61,7 +85,7 @@ export function pickGmatChallengeItems(params: {
 
   const keys: GmatSectionKey[] = ["quant", "verbal", "data"];
   for (const key of keys) {
-    const need = SECTION_QUESTION_COUNTS[key];
+    const need = params.targetCounts[key];
     const pool = shuffle(byBucket[key], rnd);
     for (const ex of pool) {
       if (out[key].length >= need) break;
@@ -78,7 +102,7 @@ export function pickGmatChallengeItems(params: {
   );
 
   for (const key of keys) {
-    const need = SECTION_QUESTION_COUNTS[key];
+    const need = params.targetCounts[key];
     let i = 0;
     while (out[key].length < need && i < leftovers.length) {
       const ex = leftovers[i];
@@ -90,7 +114,7 @@ export function pickGmatChallengeItems(params: {
   }
 
   for (const key of keys) {
-    const need = SECTION_QUESTION_COUNTS[key];
+    const need = params.targetCounts[key];
     if (out[key].length < need) {
       throw new Error(`gmat-challenge: insufficient bank for section ${key} (grade ${params.grade})`);
     }
@@ -98,4 +122,20 @@ export function pickGmatChallengeItems(params: {
   }
 
   return out;
+}
+
+export function pickGmatChallengeItems(params: {
+  seed: string;
+  pickerVersion: GmatPickerVersion;
+  grade: GradeId;
+}): Record<GmatSectionKey, ExerciseId[]> {
+  return pickWithCounts({ ...params, targetCounts: SECTION_QUESTION_COUNTS });
+}
+
+export function pickGmatChallengePool(params: {
+  seed: string;
+  pickerVersion: GmatPickerVersion;
+  grade: GradeId;
+}): Record<GmatSectionKey, ExerciseId[]> {
+  return pickWithCounts({ ...params, targetCounts: SECTION_POOL_COUNTS });
 }
