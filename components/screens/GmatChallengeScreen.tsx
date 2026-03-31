@@ -14,7 +14,7 @@ import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { DEFAULT_MAX_REVIEW_DIVERGENCES, countReviewDivergences, wouldExceedReviewLimit } from "@/lib/exam-session";
 import { gmatBreakDurationMs, gmatSectionDurationMs, SECTION_QUESTION_COUNTS } from "@/lib/gmat-challenge/config";
 import { gradeGmatChallenge } from "@/lib/gmat-challenge/grading";
-import { pickGmatChallengeItems, pickGmatChallengePool } from "@/lib/gmat-challenge/picker";
+import { pickGmatChallengePool } from "@/lib/gmat-challenge/picker";
 import {
   createInitialRulesState,
   createStateAfterPick,
@@ -246,22 +246,6 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     [currentKey, persist],
   );
 
-  const goToReview = useCallback(() => {
-    const s = stateRef.current;
-    if (!s || s.phase !== "sectionActive" || !currentKey) return;
-    const ids = s.itemsBySection[currentKey];
-    const snap: Record<string, string> = {};
-    for (const exId of ids) {
-      snap[exId] = s.answers[exId] ?? "";
-    }
-    persist({
-      ...s,
-      phase: "sectionReview",
-      sectionEndsAt: null,
-      reviewSnapshot: snap,
-    });
-  }, [currentKey, persist]);
-
   const onNextQuestion = useCallback(() => {
     const s = stateRef.current;
     if (!s || s.phase !== "sectionActive" || !currentKey) return;
@@ -378,7 +362,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     refs.current[exerciseId] = node;
   }, []);
 
-  const focusNextInput = useCallback((_exerciseId: ExerciseId) => {
+  const focusNextInput = useCallback(() => {
     // In sequential mode, focus is on single question — no-op
   }, []);
 
