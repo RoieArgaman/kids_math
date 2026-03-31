@@ -259,8 +259,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     const correct = currentEx ? isAnswerCorrect(currentEx, currentAnswer) : false;
     const newDifficulty = Math.max(1, Math.min(5, (s.adaptiveDifficulty ?? 3) + (correct ? 1 : -1)));
 
-    if (qIdx >= total - 1) {
-      // Last question — go to review
+    const goToReview = () => {
       const ids = s.itemsBySection[currentKey];
       const snap: Record<string, string> = {};
       for (const exId of ids) {
@@ -273,6 +272,11 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
         sectionEndsAt: null,
         reviewSnapshot: snap,
       });
+    };
+
+    if (qIdx >= total - 1) {
+      // Last question by configured total — go to review
+      goToReview();
       return;
     }
 
@@ -280,8 +284,14 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     const usedIds = new Set<ExerciseId>(s.itemsBySection[currentKey]);
     const pool = s.poolBySection?.[currentKey] ?? [];
     const nextId = selectNextFromPool(pool, usedIds, newDifficulty, exerciseById);
-    const newItems = [...s.itemsBySection[currentKey]];
-    if (nextId) newItems.push(nextId);
+
+    if (!nextId) {
+      // Pool exhausted early — treat current question as last and go to review
+      goToReview();
+      return;
+    }
+
+    const newItems = [...s.itemsBySection[currentKey], nextId];
 
     persist({
       ...s,
