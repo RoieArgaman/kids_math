@@ -250,7 +250,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
     const s = stateRef.current;
     if (!s || s.phase !== "sectionActive" || !currentKey) return;
     const qIdx = s.sectionQuestionIndex ?? 0;
-    const total = SECTION_QUESTION_COUNTS[currentKey];
+    const total = shortTimersEnabled() ? 1 : SECTION_QUESTION_COUNTS[currentKey];
 
     // Silently grade current question and update adaptive difficulty
     const currentExId = s.itemsBySection[currentKey][qIdx];
@@ -464,7 +464,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
 
       {state.phase === "sectionActive" && currentKey ? (() => {
         const qIdx = state.sectionQuestionIndex ?? 0;
-        const total = SECTION_QUESTION_COUNTS[currentKey];
+        const total = shortTimersEnabled() ? 1 : SECTION_QUESTION_COUNTS[currentKey];
         const exId = state.itemsBySection[currentKey][qIdx];
         const exercise = exId ? exerciseById.get(exId) : null;
         const value = exId ? (state.answers[exId] ?? "") : "";
