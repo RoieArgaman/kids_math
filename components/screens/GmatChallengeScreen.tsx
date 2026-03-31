@@ -501,7 +501,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                   disableRetry={true}
                   onRetryExercise={() => undefined}
                 />
-                <div className="mt-3 flex gap-2">
+                <div data-testid={childTid(root, "activeQuestion", "actions")} className="mt-3 flex gap-2">
                   <button
                     type="button"
                     data-testid={childTid(root, "bookmark", "toggle", exId ?? "")}
@@ -523,7 +523,12 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                 </div>
               </div>
             ) : (
-              <div className="surface rounded-2xl p-4 text-center text-sm text-slate-500">טוֹעֲנִים שְׁאֵלָה...</div>
+              <div
+                data-testid={childTid(root, "activeQuestion", "loading")}
+                className="surface rounded-2xl p-4 text-center text-sm text-slate-500"
+              >
+                טוֹעֲנִים שְׁאֵלָה...
+              </div>
             )}
           </>
         );
@@ -558,12 +563,18 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                   <div data-testid={childTid(root, "reviewQuestion", String(reviewQuestionIndex))}>
                     <button
                       type="button"
+                      data-testid={childTid(root, "reviewBackToGrid")}
                       className="mb-3 touch-button rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
                       onClick={() => setReviewQuestionIndex(null)}
                     >
                       ← חזרה לרשימת השאלות
                     </button>
-                    <p className="mb-2 text-sm font-semibold text-slate-600">שאלה {reviewQuestionIndex + 1}</p>
+                    <p
+                      data-testid={childTid(root, "reviewQuestionNumber", String(reviewQuestionIndex))}
+                      className="mb-2 text-sm font-semibold text-slate-600"
+                    >
+                      שאלה {reviewQuestionIndex + 1}
+                    </p>
                     {exercise ? (
                       <ExerciseItem
                         screenRootTestId={root}
@@ -585,7 +596,9 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                       />
                     ) : null}
                     {isLocked ? (
-                      <p className="mt-2 text-sm text-rose-600">הגעתם למגבלת {DEFAULT_MAX_REVIEW_DIVERGENCES} שינויים.</p>
+                      <p data-testid={childTid(root, "reviewLockMessage")} className="mt-2 text-sm text-rose-600">
+                        הגעתם למגבלת {DEFAULT_MAX_REVIEW_DIVERGENCES} שינויים.
+                      </p>
                     ) : null}
                   </div>
                 );
@@ -593,8 +606,10 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ) : (
               // Show question grid
               <div data-testid={childTid(root, "reviewGrid")} className="surface rounded-3xl p-4">
-                <p className="mb-3 text-sm text-slate-600">לחצו על שאלה כדי לעיין בה או לשנות את תשובתכם.</p>
-                <div className="grid grid-cols-4 gap-2">
+                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-slate-600">
+                  לחצו על שאלה כדי לעיין בה או לשנות את תשובתכם.
+                </p>
+                <div data-testid={childTid(root, "reviewGrid", "tiles")} className="grid grid-cols-4 gap-2">
                   {ids.map((exId, i) => {
                     const answered = Boolean(state.answers[exId]?.trim());
                     const bookmarked = state.bookmarks[currentKey]?.includes(exId);
@@ -619,7 +634,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                     );
                   })}
                 </div>
-                <p className="mt-3 text-xs text-slate-500">
+                <p data-testid={childTid(root, "reviewLegend")} className="mt-3 text-xs text-slate-500">
                   ירוק = נענה · כחול = שונה · ⭐ = מסומן
                 </p>
               </div>
