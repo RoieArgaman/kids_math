@@ -65,7 +65,11 @@ Required companion references for pedagogical implementation and validation:
   - להפוך רמזים ל־strategy-based בהתאם ל־`skillTags` + `representation`.
 - **Progress gates**: `lib/progress/engine.ts`
   - שינוי gate/unlock הוא “high risk”: לשמור על יציבות unlock ולתכנן migration אם schema משתנה.
-- **Day UX**: `components/screens/DayScreen.tsx`, `components/ExerciseBox.tsx`
+- **Day UX**: `components/screens/DayOverviewScreen.tsx` (section-card hub), `components/screens/SectionScreen.tsx` (per-section exercises), `components/ExerciseBox.tsx`
+  - `DayScreen` is now a thin router — actual day logic lives in `DayOverviewScreen` + `SectionScreen`.
+  - Section unlock rules: warmup always open → middle sections unlock when warmup complete → last section unlocks when ALL others complete.
+  - Exercise count constraints: non-last sections 4–8, last section 6–10.
+  - `allExercisesCount` in `SectionScreen` must always equal the full-day exercise total, not the per-section count.
   - לשמור RTL, נגישות, ו־touch targets (44–52px).
 
 ### 5) Measure (מדידה)

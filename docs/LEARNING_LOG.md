@@ -6,6 +6,32 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-04-01 (Day Hub: section-card navigation layer)
+
+- **Trigger:** Add section-card hub between day list and exercises so users navigate section → exercise instead of directly to exercises.
+- **What changed / where:**
+  - `components/screens/DayScreen.tsx` — reduced to a thin router (~15 lines): routes to `FinalExamScreen` or `DayOverviewScreen`
+  - `components/screens/DayOverviewScreen.tsx` (NEW) — section-card hub; derives section states from `correctAnswers`
+  - `components/screens/SectionScreen.tsx` (NEW) — per-section exercises screen; `allExercisesCount` = full-day total (not section count) so `percentDone` is accurate
+  - `app/grade/[grade]/day/[id]/section/[sectionId]/page.tsx` (NEW) — route page
+  - `lib/utils/parseSectionId.ts` (NEW) — URL param validator for section IDs
+  - `lib/routes.ts` — added `gradeSection` route builder
+  - `lib/testIds.ts` — added `dayOverview` and `section` testId namespaces
+  - `lib/hooks/useProgress.ts` — exposed `correctAnswers` in the hook return value
+  - `lib/content/engine/day-builder.ts` — expanded `defaultSections` exercise counts + post-processing cap
+- **Section unlock rules (critical):**
+  - Section 0 (warmup): always open
+  - Middle sections (1 to N-2): open once warmup is complete
+  - Last section (N-1): open **only when ALL other sections are complete**
+  - This logic lives in `getSectionCardState()` in `DayOverviewScreen` AND in the gate at the top of `SectionScreen`
+- **Exercise count constraints:**
+  - Non-last sections: 4–8 exercises (min 4, max 8)
+  - Last section: 6–10 exercises (min 6, max 10)
+  - Enforced two ways: (1) `defaultSections` definition now meets minimums; (2) post-processing cap in `buildDayFromConcepts` trims any section exceeding the max (fixes days 8-14 expanded sections)
+- **`allExercisesCount` is sacred:** In `SectionScreen`, always pass the full day's exercise count to `useProgress`, not the current section's count. Otherwise `percentDone` only reflects the section rather than the whole day.
+- **`check:testids` strictness:** Every intrinsic HTML element (div, span, p, main, header, button) needs `data-testid`. Use `childTid(parentTestId, "subkey")` for nested elements.
+- **How to reuse next time:** When adding a new navigation layer (hub → sub-screen), always: (a) keep `allExercisesCount` = full day total in the sub-screen; (b) put gate logic in BOTH the hub (for card state) and the sub-screen (for direct URL access); (c) use `parseSectionId` for URL param validation.
+
 ### 2026-03-29 (Faster deployment: CI caches + deploy policy)
 - **Trigger:** Plan to speed CI/deploy without duplicating quality gates (Playwright + Next cache, concurrency, quick vs upload-only policy).
 - **What changed / where:** `.github/workflows/ci.yml` (`.next/cache`, `.playwright-browsers` caches, `PLAYWRIGHT_BROWSERS_PATH`, concurrency), `deploy.sh` (`--skip-build` with `--skip-tests`), `package.json` (`deploy:firebase:upload-only`), `firebase.json` (ignore `.next`, `.playwright-browsers`, `coverage`), `docs/DEPLOYMENT.md`.

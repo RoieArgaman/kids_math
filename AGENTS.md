@@ -803,6 +803,29 @@ Result: [PASS / FAIL — list findings with severity]
 - Grade B gated by middleware (`middleware.ts`) + cookie `kids_math.unlocked_grade_b=1`
 - Legacy day URLs (`/day/[id]`) are hardwired to grade A only
 
+### Day Hub Navigation Architecture
+- `/grade/[grade]/day/[id]` → `DayScreen` (thin router) → `DayOverviewScreen` (section-card hub)
+- `/grade/[grade]/day/[id]/section/[sectionId]` → `SectionScreen` (exercises for one section)
+- `DayScreen` is a **thin router only** — do not add exercise logic there
+- Section IDs validated via `lib/utils/parseSectionId.ts`; route built via `routes.gradeSection()`
+
+### Section Unlock Rules (enforced in DayOverviewScreen + SectionScreen)
+- Section index 0 (warmup): always open
+- Middle sections (1 to N-2): unlock when warmup (index 0) is complete
+- Last section (index N-1): unlock **only when ALL other sections are complete**
+- Gate logic must exist in BOTH the hub screen (card state) AND the section screen (direct URL protection)
+
+### Exercise Count Contracts
+- Non-last sections: **4–8 exercises** (min 4, max 8)
+- Last section: **6–10 exercises** (min 6, max 10)
+- Days 1-7: `buildExpandedExercisesForEarlyDays` — already compliant
+- Days 8-14: `buildExpandedExercisesForDay` — capped by post-processing in `buildDayFromConcepts`
+- Days 15-29: `defaultSections` in `day-builder.ts` — meets minimums by design
+- The post-processing cap at the end of `buildDayFromConcepts` is the enforcement backstop
+
+### `allExercisesCount` Rule (critical for progress accuracy)
+In `SectionScreen`, `allExercisesCount` passed to `useProgress` must always equal the **full day's exercise count** (sum across ALL sections), never the current section's count alone. Violating this breaks `percentDone`.
+
 ---
 
 ## UI & Accessibility
