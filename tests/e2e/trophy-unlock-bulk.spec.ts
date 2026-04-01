@@ -11,6 +11,10 @@ import { seedBadgeState } from "./testUtils";
 test.describe("trophy unlock bulk badges", () => {
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
+    // Navigate to app origin first so page.evaluate (used by seedBadgeState) sets
+    // localStorage on the correct origin, not about:blank.
+    await page.goto("/");
+    await page.evaluate(() => window.localStorage.clear());
     const now = new Date().toISOString();
     const unlocked = BADGE_DEFINITIONS.slice(0, 22).map((b) => ({
       id: b.id,
