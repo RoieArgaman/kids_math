@@ -76,8 +76,6 @@ export const isAnswerCorrect = (exercise: Exercise, rawAnswer: unknown): boolean
         normalized === exercise.answer &&
         exercise.start < exercise.end
       );
-    case "verbal_input":
-      return normalizeTextAnswer(String(normalized)) === normalizeTextAnswer(exercise.answer);
     case "shape_choice":
       return String(normalized) === exercise.answer;
     default: {
@@ -171,8 +169,6 @@ export const defaultHint = (exercise: Exercise): string => {
       return "קִרְאוּ אֶת הַמִּשְׁפָּט שׁוּב וּבִדְקוּ אִם הוּא תָּמִיד נָכוֹן.";
     case "number_line_jump":
       return "סַמְּנוּ נְקוּדַּת הַתְחָלָה וְקִפְצוּ לְפִי גֹּדֶל הַקְּפִיצָה עַד הַסּוֹף.";
-    case "verbal_input":
-      return "חִשְׁבוּ אֵיךְ כּוֹתְבִים אֶת הַמִּסְפָּר בְּמִלִּים בְּצוּרָה מְלֵאָה.";
     case "shape_choice":
       return "בִּדְקוּ אֶת מִסְפַּר הַצְּלָעוֹת אוֹ הַפִּינוֹת שֶׁל כָּל צוּרָה.";
     default: {

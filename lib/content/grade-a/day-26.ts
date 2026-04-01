@@ -19,9 +19,10 @@ export const concept: DayConcept = {
   arithmeticAnswer: 16,
   arithmeticMcOptions: ["14", "16", "18"],
   arithmeticMcAnswer: "16",
-  verbalPrompt:
-    "כִּתְבוּ בִּמִילִים: כַּמָּה צָרִיךְ לְהַחְסִיר מִ-18 כְּדֵי לְהַגִּיעַ לְ-10?",
-  verbalAnswer: "שְׁמוֹנֶה",
+  languagePrompt:
+    "בִּחְרוּ בִּמִילִים: כַּמָּה צָרִיךְ לְהַחְסִיר מִ-18 כְּדֵי לְהַגִּיעַ לְ-10?",
+  languageOptions: ["שֶׁבַע", "שְׁמוֹנֶה", "תֵּשַׁע"],
+  languageAnswer: "שְׁמוֹנֶה",
   reviewPrompt:
     "אֱמֶת אוֹ שֶׁקֶר: רִיבּוּעַ נִשְׁאָר דּוֹמֶה לְעַצְמוֹ אַחֲרֵי שִׁיקּוּף אוֹפְקִי",
   reviewAnswer: true,

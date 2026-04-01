@@ -50,7 +50,7 @@ test("admin can complete/reset day and grade isolation is preserved", async ({ p
   const day1 = getWorkbookDaysById("a")["day-1"];
   const firstInputExercise = day1.sections
     .flatMap((section) => section.exercises)
-    .find((exercise) => exercise.kind === "number_input" || exercise.kind === "number_line_jump" || exercise.kind === "verbal_input");
+    .find((exercise) => exercise.kind === "number_input" || exercise.kind === "number_line_jump");
   if (firstInputExercise) {
     await page.goto("/grade/a/day/day-1");
     await expect(page.getByTestId(testIds.component.exerciseBox.input(firstInputExercise.id))).not.toHaveValue("");

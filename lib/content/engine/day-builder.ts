@@ -9,7 +9,6 @@ import {
   toDayId,
   toSectionId,
   trueFalse,
-  verbalInput,
 } from "./exercise-factories";
 import { buildExpandedExercisesForDay } from "./expanded-days";
 import { buildExpandedExercisesForEarlyDays } from "./expanded-early";
@@ -108,12 +107,13 @@ export function buildDayFromConcepts(
       learningGoal: "לְהַסְבִּיר וּלְנַסֵּחַ יֶדַע מָתֵמָטִי בְּמִילִּים וּבְיִיצּוּגִים.",
       prerequisiteSkillTags: concept.mainTags,
       exercises: [
-        verbalInput(
+        multipleChoice(
           concept.dayNumber,
           3,
           1,
-          concept.verbalPrompt,
-          concept.verbalAnswer,
+          concept.languagePrompt,
+          concept.languageOptions,
+          concept.languageAnswer,
           ["number-recognition"],
           dayDifficulty,
           "pictorial",

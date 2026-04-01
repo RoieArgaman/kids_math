@@ -16,9 +16,6 @@ const DATA_TAGS = new Set<SkillTag>([
 ]);
 
 export function classifyGmatSection(exercise: Exercise): GmatSectionKey {
-  if (exercise.kind === "verbal_input") {
-    return "verbal";
-  }
   const tags = exercise.meta?.skillTags ?? [];
   if (tags.some((t) => VERBAL_TAGS.has(t))) {
     return "verbal";

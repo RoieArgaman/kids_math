@@ -11,8 +11,9 @@ export const concept: DayConcept = {
   arithmeticAnswer: 3,
   arithmeticMcOptions: ["2", "3", "4"],
   arithmeticMcAnswer: "3",
-  verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁמִּשְׁלִים אֶת 4 לְ-10:",
-  verbalAnswer: "שִׁשָּׁה",
+  languagePrompt: "בִּחְרוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁמִּשְׁלִים אֶת 4 לְ-10:",
+  languageOptions: ["חָמֵשׁ", "שִׁשָּׁה", "שֶׁבַע"],
+  languageAnswer: "שִׁשָּׁה",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 9 + 1 = 10",
   reviewAnswer: true,
   challengePrompt:

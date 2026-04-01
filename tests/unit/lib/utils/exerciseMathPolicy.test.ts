@@ -52,7 +52,7 @@ describe("getRenderableMathTokens", () => {
   });
 
   it("returns undefined for non-numeric exercise kinds", () => {
-    const exercise = baseExercise({ kind: "verbal_input", answer: "בדיקה" });
+    const exercise = baseExercise({ kind: "shape_choice", options: ["circle", "square", "triangle"], answer: "circle" });
     const tokens = tokenizeMathExpression("1 + 1");
     expect(getRenderableMathTokens(exercise, tokens)).toBeUndefined();
   });

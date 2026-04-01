@@ -246,8 +246,6 @@ function answerValueForExercise(exercise: Exercise): AnswerValue {
       return exercise.answer;
     case "multiple_choice":
       return exercise.answer;
-    case "verbal_input":
-      return exercise.answer;
     case "true_false":
       return exercise.answer;
     case "shape_choice":

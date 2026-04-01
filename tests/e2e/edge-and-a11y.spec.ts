@@ -10,7 +10,7 @@ import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathTex
 function findFirstInputExercise(day: WorkbookDay): Exercise | null {
   for (const section of day.sections) {
     for (const ex of section.exercises) {
-      if (ex.kind === "number_input" || ex.kind === "number_line_jump" || ex.kind === "verbal_input") {
+      if (ex.kind === "number_input" || ex.kind === "number_line_jump") {
         return ex;
       }
     }
@@ -152,7 +152,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     const inputs: Exercise[] = [];
     for (const section of day!.sections) {
       for (const ex of section.exercises) {
-        if (ex.kind === "number_input" || ex.kind === "number_line_jump" || ex.kind === "verbal_input") {
+        if (ex.kind === "number_input" || ex.kind === "number_line_jump") {
           inputs.push(ex);
         }
       }
@@ -168,12 +168,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     const input1 = page.getByTestId(testIds.component.exerciseBox.input(ex1.id));
     const input2 = page.getByTestId(testIds.component.exerciseBox.input(ex2.id));
 
-    const value1 =
-      ex1.kind === "verbal_input"
-        ? ex1.answer
-        : ex1.kind === "number_input"
-          ? String(ex1.answer)
-          : String(ex1.answer);
+    const value1 = String(ex1.answer);
     await input1.fill(value1);
     await input1.press("Enter");
 
@@ -190,12 +185,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     await page.goto("/grade/a/day/day-1");
     const input = page.getByTestId(testIds.component.exerciseBox.input(ex!.id));
 
-    const value =
-      ex!.kind === "verbal_input"
-        ? ex!.answer
-        : ex!.kind === "number_input"
-          ? String(ex!.answer)
-          : String(ex!.answer);
+    const value = String(ex!.answer);
     await input.fill(value);
     await page.getByTestId(testIds.component.exerciseBox.check(ex!.id)).click();
 

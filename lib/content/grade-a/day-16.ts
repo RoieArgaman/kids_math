@@ -12,8 +12,9 @@ export const concept: DayConcept = {
   arithmeticAnswer: 30,
   arithmeticMcOptions: ["20", "30", "40"],
   arithmeticMcAnswer: "30",
-  verbalPrompt: "כִּתְבוּ בִּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
-  verbalAnswer: "שְׁלוֹשִׁים",
+  languagePrompt: "בִּחְרוּ בִּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
+  languageOptions: ["עֶשְׂרִים", "שְׁלוֹשִׁים", "אַרְבָּעִים"],
+  languageAnswer: "שְׁלוֹשִׁים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 15 ס״מ + 15 ס״מ = 30 ס״מ",
   reviewAnswer: true,
   challengePrompt:
