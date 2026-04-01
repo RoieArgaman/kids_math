@@ -146,6 +146,28 @@ export const testIds = {
       root: () => tid("screen", "cookies"),
       navBack: () => tid("screen", "cookies", "nav", "back"),
     },
+    dayOverview: {
+      root: (grade: string, dayId: string) => tid("screen", "dayOverview", "grade", grade, "day", dayId),
+      nav: (grade: string, dayId: string) => tid("screen", "dayOverview", "nav", "grade", grade, "day", dayId),
+      sectionCard: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "dayOverview", "sectionCard", "grade", grade, "day", dayId, "section", sectionId),
+      sectionCardCta: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "dayOverview", "sectionCard", "grade", grade, "day", dayId, "section", sectionId, "cta"),
+      completionPanel: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "completionPanel", "grade", grade, "day", dayId),
+      completeCta: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "cta", "complete", "grade", grade, "day", dayId),
+    },
+    section: {
+      root: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "section", "grade", grade, "day", dayId, "section", sectionId),
+      nav: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "section", "nav", "grade", grade, "day", dayId, "section", sectionId),
+      stickyHeader: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "section", "stickyHeader", "grade", grade, "day", dayId, "section", sectionId),
+      completionPanel: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "section", "completionPanel", "grade", grade, "day", dayId, "section", sectionId),
+    },
   },
   layout: {
     mainSlot: () => tid("layout", "mainSlot"),

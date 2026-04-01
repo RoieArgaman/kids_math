@@ -59,6 +59,8 @@ export const routes = {
   gradePlan: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/grade/${grade}/plan`, opts),
   gradeDay: (grade: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/day/${dayId}`, opts),
+  gradeSection: (grade: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/grade/${grade}/day/${dayId}/section/${sectionId}`, opts),
   gradeGmatChallenge: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/gmat-challenge`, opts),
   gradeBadges: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
