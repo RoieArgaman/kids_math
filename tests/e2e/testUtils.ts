@@ -45,6 +45,39 @@ export function createCompletedDayProgressState(dayId: DayId): DayProgressState 
   };
 }
 
+/**
+ * Creates a progress state where every exercise in the day is marked correct
+ * (so DayOverviewScreen sees allSectionsComplete = true and shows the completeCta).
+ * isComplete defaults to false so the CTA can still be clicked to mark the day done.
+ */
+export function createFullyAnsweredDayProgressState(
+  dayId: DayId,
+  grade: GradeId,
+  opts?: { isComplete?: boolean },
+): DayProgressState {
+  const workbookDays = getWorkbookDaysById(grade) as Record<string, WorkbookDay>;
+  const day = workbookDays[dayId];
+  const correctAnswers: Record<ExerciseId, boolean> = {} as Record<ExerciseId, boolean>;
+  if (day) {
+    for (const section of day.sections) {
+      for (const ex of section.exercises) {
+        correctAnswers[ex.id] = true;
+      }
+    }
+  }
+  const isComplete = opts?.isComplete ?? false;
+  return {
+    dayId,
+    answers: {},
+    correctAnswers,
+    wrongCount: 0,
+    attempts: [],
+    percentDone: 100,
+    isComplete,
+    ...(isComplete ? { completedAt: new Date().toISOString() } : {}),
+  };
+}
+
 export function createProgressState(params: { days?: Record<DayId, DayProgressState> }): WorkbookProgressState {
   return {
     version: 1,

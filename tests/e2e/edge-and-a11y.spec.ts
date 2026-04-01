@@ -3,7 +3,7 @@ import type { Exercise, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { answerExerciseWrongly } from "./answering";
-import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
+import { createFullyAnsweredDayProgressState, createProgressState, seedProgressState } from "./testUtils";
 import { childTid, testIds } from "@/lib/testIds";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
 
@@ -18,42 +18,42 @@ function findFirstInputExercise(day: WorkbookDay): Exercise | null {
   return null;
 }
 
-function findMathExercise(): { dayId: string; exercise: Exercise } | null {
+function findMathExercise(): { dayId: string; sectionId: string; exercise: Exercise } | null {
   const byDay = getWorkbookDaysById("a");
   for (const [dayId, day] of Object.entries(byDay)) {
-    for (const section of day.sections) {
-      for (const ex of section.exercises) {
-        if (
-          ex.kind !== "number_input" &&
-          ex.kind !== "number_line_jump" &&
-          ex.kind !== "multiple_choice"
-        ) {
-          continue;
-        }
-        const parts = splitMathExpression(ex.prompt);
-        const tokens = parts.math ? tokenizeMathExpression(parts.math) : null;
-        if (tokens && tokens.length > 0) {
-          return { dayId, exercise: ex };
-        }
+    // Only search warmup (index 0) — always accessible without seeding progress
+    const warmupSection = day.sections[0];
+    if (!warmupSection) continue;
+    for (const ex of warmupSection.exercises) {
+      if (
+        ex.kind !== "number_input" &&
+        ex.kind !== "number_line_jump" &&
+        ex.kind !== "multiple_choice"
+      ) {
+        continue;
+      }
+      const parts = splitMathExpression(ex.prompt);
+      const tokens = parts.math ? tokenizeMathExpression(parts.math) : null;
+      if (tokens && tokens.length > 0) {
+        return { dayId, sectionId: warmupSection.id, exercise: ex };
       }
     }
   }
   return null;
 }
 
-function findTrueFalseMathExercise(): { dayId: string; exercise: Exercise } | null {
+function findTrueFalseMathExercise(): { dayId: string; sectionId: string; exercise: Exercise } | null {
   const byDay = getWorkbookDaysById("a");
   for (const [dayId, day] of Object.entries(byDay)) {
-    for (const section of day.sections) {
-      for (const ex of section.exercises) {
-        if (ex.kind !== "true_false") {
-          continue;
-        }
-        const parts = splitMathExpression(ex.prompt);
-        const tokens = parts.math ? tokenizeMathExpression(parts.math) : null;
-        if (tokens && tokens.length > 0) {
-          return { dayId, exercise: ex };
-        }
+    // Only search warmup (index 0) — always accessible without seeding progress
+    const warmupSection = day.sections[0];
+    if (!warmupSection) continue;
+    for (const ex of warmupSection.exercises) {
+      if (ex.kind !== "true_false") continue;
+      const parts = splitMathExpression(ex.prompt);
+      const tokens = parts.math ? tokenizeMathExpression(parts.math) : null;
+      if (tokens && tokens.length > 0) {
+        return { dayId, sectionId: warmupSection.id, exercise: ex };
       }
     }
   }
@@ -83,7 +83,7 @@ test.describe("edge routes", () => {
 
   test("valid-but-nonexistent day shows day-not-found panel", async ({ page }) => {
     await page.goto("/grade/a/day/day-9999");
-    await expect(page.getByTestId(testIds.screen.day.root("a", "day-9999.not-found"))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-9999.not-found"))).toBeVisible();
   });
 });
 
@@ -91,10 +91,10 @@ test.describe("keyboard + persistence basics (RTL)", () => {
   test("true/false prompts render full expression tokens without question token", async ({ page }) => {
     const match = findTrueFalseMathExercise();
     if (!match) {
-      test.skip(true, "No true/false math-tokenizable exercise found in workbook");
+      test.skip(true, "No true/false math-tokenizable exercise found in warmup sections");
     }
 
-    await page.goto(`/grade/a/day/${match!.dayId}`);
+    await page.goto(`/grade/a/day/${match!.dayId}/section/${match!.sectionId}`);
     const rootTid = testIds.component.exerciseBox.root(match!.exercise.id);
     const containerTid = childTid(rootTid, "mathTokens");
     await expect(page.getByTestId(containerTid)).toBeVisible();
@@ -108,10 +108,10 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     test.skip(process.platform !== "darwin", "Visual snapshot baseline is currently maintained on darwin.");
     const match = findMathExercise();
     if (!match) {
-      test.skip(true, "No math-tokenizable numeric exercise found in workbook");
+      test.skip(true, "No math-tokenizable numeric exercise found in warmup sections");
     }
 
-    await page.goto(`/grade/a/day/${match!.dayId}`);
+    await page.goto(`/grade/a/day/${match!.dayId}/section/${match!.sectionId}`);
     const rootTid = testIds.component.exerciseBox.root(match!.exercise.id);
     const containerTid = childTid(rootTid, "mathTokens");
     const firstToken = page
@@ -133,7 +133,8 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "day-1 has no input exercise to validate retry behavior");
     }
 
-    await page.goto("/grade/a/day/day-1");
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
     await answerExerciseWrongly(page, ex!);
     await expect(page.getByTestId(testIds.component.exerciseBox.retry(ex!.id))).toBeVisible();
 
@@ -143,32 +144,34 @@ test.describe("keyboard + persistence basics (RTL)", () => {
 
   test("Enter submits and moves focus to next input (day-1)", async ({ page }) => {
     const day = getWorkbookDaysById("a")["day-1"];
-    const first = day ? findFirstInputExercise(day) : null;
-    if (!day || !first) {
-      test.skip(true, "day-1 has no input exercise to verify focus behavior");
+    if (!day) {
+      test.skip(true, "day-1 not found");
     }
 
-    // Find a second input to validate focus progression.
-    const inputs: Exercise[] = [];
+    // Find a section with at least 2 input exercises so focus can progress within it.
+    let sectionWithInputs: (typeof day.sections)[0] | null = null;
+    let ex1: Exercise | null = null;
+    let ex2: Exercise | null = null;
     for (const section of day!.sections) {
-      for (const ex of section.exercises) {
-        if (ex.kind === "number_input" || ex.kind === "number_line_jump") {
-          inputs.push(ex);
-        }
+      const inputs = section.exercises.filter(
+        (e) => e.kind === "number_input" || e.kind === "number_line_jump",
+      );
+      if (inputs.length >= 2) {
+        sectionWithInputs = section;
+        ex1 = inputs[0]!;
+        ex2 = inputs[1]!;
+        break;
       }
     }
-    if (inputs.length < 2) {
-      test.skip(true, "day-1 has fewer than 2 input exercises");
+    if (!ex1 || !ex2 || !sectionWithInputs) {
+      test.skip(true, "day-1 has no section with 2 input exercises");
     }
 
-    const ex1 = inputs[0]!;
-    const ex2 = inputs[1]!;
+    await page.goto(`/grade/a/day/day-1/section/${sectionWithInputs!.id}`);
+    const input1 = page.getByTestId(testIds.component.exerciseBox.input(ex1!.id));
+    const input2 = page.getByTestId(testIds.component.exerciseBox.input(ex2!.id));
 
-    await page.goto("/grade/a/day/day-1");
-    const input1 = page.getByTestId(testIds.component.exerciseBox.input(ex1.id));
-    const input2 = page.getByTestId(testIds.component.exerciseBox.input(ex2.id));
-
-    const value1 = String(ex1.answer);
+    const value1 = String(ex1!.answer);
     await input1.fill(value1);
     await input1.press("Enter");
 
@@ -182,7 +185,8 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "day-1 has no input exercise to validate persistence");
     }
 
-    await page.goto("/grade/a/day/day-1");
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
     const input = page.getByTestId(testIds.component.exerciseBox.input(ex!.id));
 
     const value = String(ex!.answer);
@@ -212,20 +216,20 @@ test.describe("keyboard + persistence basics (RTL)", () => {
 
   test("locked later day shows locked UI on fresh progress", async ({ page }) => {
     await page.goto("/grade/a/day/day-2");
-    await expect(page.getByTestId(testIds.screen.day.root("a", "day-2.locked"))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2.locked"))).toBeVisible();
   });
 
   test("after completing previous day, next day is accessible", async ({ page }) => {
     const progress = createProgressState({
       days: {
-        "day-1": createCompletedDayProgressState("day-1"),
+        "day-1": createFullyAnsweredDayProgressState("day-1", "a", { isComplete: true }),
       },
     });
     await seedProgressState(page, "a", progress);
 
     await page.goto("/grade/a/day/day-2");
-    await expect(page.getByTestId(testIds.screen.day.root("a", "day-2.locked"))).toHaveCount(0);
-    await expect(page.getByTestId(testIds.screen.day.root("a", "day-2"))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2.locked"))).toHaveCount(0);
+    await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2"))).toBeVisible();
   });
 
   test("Plan screen shows non-zero completion after a completed day", async ({ page }) => {
@@ -249,7 +253,8 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "day-1 has no input exercise to validate auto-reset");
     }
 
-    await page.goto("/grade/a/day/day-1");
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
 
     for (let i = 0; i < 10; i += 1) {
       await answerExerciseWrongly(page, ex!);
@@ -268,14 +273,17 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "day-1 has no input exercise to validate sticky completion");
     }
 
+    // Seed with all exercises correct + isComplete:true so sections are accessible
+    // and sticky completion is active (wrongCount won't increment after isComplete).
     const progress = createProgressState({
       days: {
-        "day-1": createCompletedDayProgressState("day-1"),
+        "day-1": createFullyAnsweredDayProgressState("day-1", "a", { isComplete: true }),
       },
     });
     await seedProgressState(page, "a", progress);
 
-    await page.goto("/grade/a/day/day-1");
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
 
     for (let i = 0; i < 10; i += 1) {
       await answerExerciseWrongly(page, ex!);
@@ -285,7 +293,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       page.getByText("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ."),
     ).toHaveCount(0);
 
-    const wrongBadge = page.getByTestId(childTid(testIds.screen.day.stickyHeader("a", "day-1"), "wrongBadge"));
+    const wrongBadge = page.getByTestId(childTid(testIds.screen.section.stickyHeader("a", "day-1", sectionId), "wrongBadge"));
     await expect(wrongBadge).toContainText("💥 0/10");
   });
 });
