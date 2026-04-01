@@ -50,7 +50,6 @@ export type ExerciseKind =
   | "multiple_choice"
   | "true_false"
   | "number_line_jump"
-  | "verbal_input"
   | "shape_choice";
 
 interface BaseExercise {
@@ -88,11 +87,6 @@ export interface NumberLineJumpExercise extends BaseExercise {
   answer: number;
 }
 
-export interface VerbalInputExercise extends BaseExercise {
-  kind: "verbal_input";
-  answer: string;
-}
-
 export interface ShapeChoiceExercise extends BaseExercise {
   kind: "shape_choice";
   options: Array<"circle" | "square" | "triangle" | "rectangle">;
@@ -104,7 +98,6 @@ export type Exercise =
   | MultipleChoiceExercise
   | TrueFalseExercise
   | NumberLineJumpExercise
-  | VerbalInputExercise
   | ShapeChoiceExercise;
 
 export interface WorkedExample {

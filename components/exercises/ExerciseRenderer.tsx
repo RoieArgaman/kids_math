@@ -2,10 +2,15 @@
 
 import { NumberLine } from "@/components/NumberLine";
 import { RandomizedChoiceButtons } from "@/components/exercises/RandomizedChoiceButtons";
-import { VerbalQuestion } from "@/components/VerbalQuestion";
 import { childTid, testIds } from "@/lib/testIds";
 import type { Exercise } from "@/lib/types";
 import { getChoiceOptionsForExercise } from "@/lib/utils/choiceOptions";
+
+const SHAPE_NAMES = new Set(["circle", "square", "triangle", "rectangle"]);
+
+function hasAllShapeOptions(options: string[]): boolean {
+  return options.length > 0 && options.every((o) => SHAPE_NAMES.has(o));
+}
 
 interface ExerciseRendererProps {
   exercise: Exercise;
@@ -48,27 +53,15 @@ export function ExerciseRenderer({
     );
   }
 
-  if (exercise.kind === "verbal_input") {
-    return (
-      <VerbalQuestion
-        value={value}
-        onChange={onChange}
-        onEnter={onEnter}
-        placeholder={exercise.hint}
-        ariaLabel={inputLabel}
-        data-testid={testIds.component.exerciseBox.input(exercise.id)}
-        data-exercise-focus="true"
-      />
-    );
-  }
-
   if (exercise.kind === "multiple_choice") {
+    const isShapeQuestion = hasAllShapeOptions(exercise.options);
     return (
       <RandomizedChoiceButtons
         exerciseId={exercise.id}
         options={getChoiceOptionsForExercise(exercise)}
         selected={value}
         onSelect={onChange}
+        renderAsShapes={isShapeQuestion}
       />
     );
   }
@@ -80,6 +73,7 @@ export function ExerciseRenderer({
         options={getChoiceOptionsForExercise(exercise)}
         selected={value}
         onSelect={onChange}
+        renderAsShapes
       />
     );
   }

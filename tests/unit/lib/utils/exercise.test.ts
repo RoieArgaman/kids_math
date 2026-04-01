@@ -35,11 +35,12 @@ describe("getRetryFeedbackText hinting", () => {
 });
 
 describe("isAnswerCorrect", () => {
-  it("accepts numeric string answers for verbal_input when answer is numeric text", () => {
+  it("accepts correct answer for multiple_choice", () => {
     const ex: Exercise = {
       id: makeId(3),
-      kind: "verbal_input",
-      prompt: "כתבו במילה אחת: קפיצה ב-___",
+      kind: "multiple_choice",
+      prompt: "בִּחְרוּ: בְּכַמָּה קוֹפְצִים בַּסִּדְרָה 2, 4, 6, 8?",
+      options: ["1", "2", "3"],
       answer: "2",
       meta: { skillTags: ["patterns"], difficulty: 1, representation: "abstract" },
     };

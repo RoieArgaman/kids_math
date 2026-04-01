@@ -12,9 +12,10 @@ export const concept: DayConcept = {
   arithmeticAnswer: 7,
   arithmeticMcOptions: ["6", "7", "8"],
   arithmeticMcAnswer: "7",
-  verbalPrompt:
-    "לְרִיבּוּעַ יֵשׁ אַרְבַּע צְלָעוֹת שָׁווֹת. אַחֲרֵי שִׁיקּוּף אוֹפְקִי — עוֹדֶנּוּ רִיבּוּעַ? כִּתְבוּ רַק: כֵּן אוֹ לֹא.",
-  verbalAnswer: "כן",
+  languagePrompt:
+    "לְרִיבּוּעַ יֵשׁ אַרְבַּע צְלָעוֹת שָׁווֹת. אַחֲרֵי שִׁיקּוּף אוֹפְקִי — עוֹדֶנּוּ רִיבּוּעַ? בִּחְרוּ: כֵּן אוֹ לֹא.",
+  languageOptions: ["כן", "לא", "אולי"],
+  languageAnswer: "כן",
   reviewPrompt:
     "אֱמֶת אוֹ שֶׁקֶר: הַזָּזָה לְצַד הִיא תָּמִיד מְשַׁנָּה אֶת גֹּדֶל הַצוּרָה",
   reviewAnswer: false,

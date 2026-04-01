@@ -67,6 +67,7 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 7. Never weaken configs — fix code, not eslint/tsconfig
 8. No console.log — in production code
 9. No secrets — flag immediately if found
+10. Numbers only — students type digits or click buttons. **No text/character input.** Use `number_input` or `multiple_choice`, never free-text fields
 
 ### Self-Review (before every response)
 Run the Self-Review Protocol from `AGENTS.md` — catch your own mistakes before handing off.

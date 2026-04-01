@@ -28,7 +28,6 @@ describe("gradeGmatChallenge", () => {
     if (ex.kind === "number_input" || ex.kind === "number_line_jump") correct = String(ex.answer);
     else if (ex.kind === "multiple_choice") correct = ex.answer;
     else if (ex.kind === "true_false") correct = ex.answer ? "true" : "false";
-    else if (ex.kind === "verbal_input") correct = ex.answer;
     else if (ex.kind === "shape_choice") correct = ex.answer;
 
     const answers: Record<string, string> = {};

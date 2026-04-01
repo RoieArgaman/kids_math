@@ -12,9 +12,10 @@ export const concept: DayConcept = {
   arithmeticAnswer: 12,
   arithmeticMcOptions: ["10", "11", "12"],
   arithmeticMcAnswer: "12",
-  verbalPrompt:
-    "כִּתְבוּ בִּמִילִים אֶת הַתּוֹצָאָה: 5 + 5 + 5 + 5 (אַרְבַּע פְּעָמִים חָמֵשׁ):",
-  verbalAnswer: "עֶשְׂרִים",
+  languagePrompt:
+    "בִּחְרוּ בִּמִילִים אֶת הַתּוֹצָאָה: 5 + 5 + 5 + 5 (אַרְבַּע פְּעָמִים חָמֵשׁ):",
+  languageOptions: ["חֲמֵשׁ עֶשְׂרֵה", "עֶשְׂרִים", "עֶשְׂרִים וַחֲמֵשׁ"],
+  languageAnswer: "עֶשְׂרִים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 2 × 6 שָׁוֶה לְ 6 + 6",
   reviewAnswer: true,
   challengePrompt:

@@ -115,7 +115,7 @@ test.describe("grade B lifecycle", () => {
     const firstExerciseId = parsed?.selectedExerciseIds?.[0];
     const firstExercise = typeof firstExerciseId === "string" ? byId.get(firstExerciseId as any) : null;
     if (firstExercise) {
-      if (firstExercise.kind === "number_input" || firstExercise.kind === "number_line_jump" || firstExercise.kind === "verbal_input") {
+      if (firstExercise.kind === "number_input" || firstExercise.kind === "number_line_jump") {
         await page.getByTestId(testIds.component.exerciseBox.input(firstExercise.id)).fill("123");
       } else if (firstExercise.kind === "true_false") {
         await page.getByTestId(testIds.component.exerciseBox.choice(firstExercise.id, "true")).click();

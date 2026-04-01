@@ -22,16 +22,6 @@ describe("classifyGmatSection", () => {
     expect(classifyGmatSection(ex)).toBe("verbal");
   });
 
-  it("routes verbal_input kind to verbal", () => {
-    const ex = {
-      id: "day-1-section-1-exercise-1",
-      kind: "verbal_input" as const,
-      prompt: "p",
-      answer: "x",
-      meta: baseMeta([]),
-    };
-    expect(classifyGmatSection(ex)).toBe("verbal");
-  });
 
   it("defaults to quant", () => {
     const ex: NumberInputExercise = {

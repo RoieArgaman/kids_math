@@ -18,8 +18,9 @@ export type DayConcept = {
   arithmeticAnswer: number;
   arithmeticMcOptions: string[];
   arithmeticMcAnswer: string;
-  verbalPrompt: string;
-  verbalAnswer: string;
+  languagePrompt: string;
+  languageOptions: [string, string, string];
+  languageAnswer: string;
   reviewPrompt: string;
   reviewAnswer: boolean;
   challengePrompt: string;
@@ -105,23 +106,6 @@ export const trueFalse = (
 ): ExerciseByKind<"true_false"> => ({
   id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
   kind: "true_false",
-  prompt,
-  answer,
-  meta: meta(skillTags, difficulty, representation),
-});
-
-export const verbalInput = (
-  dayNumber: number,
-  sectionNumber: number,
-  exerciseNumber: number,
-  prompt: string,
-  answer: string,
-  skillTags: SkillTag[],
-  difficulty: DifficultyLevel,
-  representation: RepresentationType,
-): ExerciseByKind<"verbal_input"> => ({
-  id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
-  kind: "verbal_input",
   prompt,
   answer,
   meta: meta(skillTags, difficulty, representation),

@@ -36,8 +36,6 @@ function correctUiValue(ex: Exercise): { fillValue?: string; clickKey?: string }
       return { clickKey: resolveChoiceKey(ex.options, ex.answer) };
     case "true_false":
       return { clickKey: ex.answer ? "true" : "false" };
-    case "verbal_input":
-      return { fillValue: ex.answer };
     case "shape_choice":
       return { clickKey: ex.answer };
     default: {
@@ -59,8 +57,6 @@ function wrongUiValue(ex: Exercise): { fillValue?: string; clickKey?: string } {
     }
     case "true_false":
       return { clickKey: ex.answer ? "false" : "true" };
-    case "verbal_input":
-      return { fillValue: `${ex.answer}x` };
     case "shape_choice": {
       const wrong = ex.options.find((o) => o !== ex.answer) ?? "circle";
       return { clickKey: wrong };
@@ -80,7 +76,7 @@ export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise
   if (fillValue != null) {
     const input = root.getByTestId(testIds.component.exerciseBox.input(ex.id));
     const retryButton = root.getByTestId(testIds.component.exerciseBox.retry(ex.id));
-    const candidates = ex.kind === "verbal_input" ? buildVerbalCandidates(fillValue) : [fillValue];
+    const candidates = [fillValue];
 
     for (const candidate of candidates) {
       await input.fill(candidate);
@@ -110,17 +106,6 @@ export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise
     await clickChoiceUntilCorrect(root, allChoices, checkButton, ex.id);
     return;
   }
-}
-
-function buildVerbalCandidates(value: string): string[] {
-  const normalized = value
-    .normalize("NFKD")
-    .replace(/[\u0591-\u05C7]/g, "")
-    .trim();
-  const compact = normalized.replace(/\s+/g, "");
-  const noPunctuation = normalized.replace(/[\"'׳״.,!?]/g, "");
-  const candidates = [value, normalized, noPunctuation, compact];
-  return Array.from(new Set(candidates.filter(Boolean)));
 }
 
 export async function answerExerciseWrongly(page: Page, ex: Exercise): Promise<void> {

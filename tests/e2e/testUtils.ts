@@ -80,8 +80,6 @@ function toAnswerString(ex: Exercise, mode: "correct" | "wrong"): string {
         return ex.answer;
       case "true_false":
         return ex.answer ? "true" : "false";
-      case "verbal_input":
-        return ex.answer;
       case "shape_choice":
         return ex.answer;
       default: {
@@ -104,8 +102,6 @@ function toAnswerString(ex: Exercise, mode: "correct" | "wrong"): string {
     }
     case "true_false":
       return ex.answer ? "false" : "true";
-    case "verbal_input":
-      return `${ex.answer}x`;
     case "shape_choice": {
       const firstDifferent = ex.options.find((o) => o !== ex.answer);
       return firstDifferent ?? "circle";

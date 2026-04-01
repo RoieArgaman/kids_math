@@ -715,6 +715,12 @@ If a CRITICAL security finding is discovered at any point:
 - No Hebrew/localized text in test IDs
 - Run `npm run check:testids` before handoff
 
+### Exercise Input Policy
+- **Numbers only** — students interact via digit inputs (`number_input`) or button clicks (`multiple_choice`, `true_false`, `shape_choice`)
+- **No text/character input** — the `verbal_input` type has been removed. Never re-introduce free-text fields
+- When content requires a Hebrew word answer, use `multiple_choice` with 3 options
+- `DayConcept` uses `languagePrompt` / `languageOptions` / `languageAnswer` (not `verbalPrompt` / `verbalAnswer`)
+
 ### Analytics
 - Use `lib/analytics/events.ts` only — no new storage keys or event pipelines
 - Keep payloads small and typed, never log sensitive data

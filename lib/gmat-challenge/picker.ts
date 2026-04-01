@@ -47,7 +47,6 @@ const GMAT_EXCLUDED_PROMPTS = new Set<string>([
 ]);
 
 function isGmatEligible(ex: Exercise): boolean {
-  if (ex.kind === "verbal_input") return false;
   const prompt = ex.prompt ?? "";
   if (GMAT_EXCLUDED_PROMPTS.has(prompt)) return false;
   // Exclude worked-example exercises that reveal the answer in the prompt

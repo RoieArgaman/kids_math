@@ -11,9 +11,10 @@ export const concept: DayConcept = {
   arithmeticAnswer: 14,
   arithmeticMcOptions: ["13", "14", "15"],
   arithmeticMcAnswer: "14",
-  verbalPrompt:
-    "כְּשֶׁכָּתוּב 'נִשְׁאֲרוּ' אַחֲרֵי שֶׁיֹּדְעִים כַּמָּה הָיוּ בַּהַתְחָלָה — כִּתְבוּ: חִיבּוּר אוֹ חִיסּוּר.",
-  verbalAnswer: "חִיסּוּר",
+  languagePrompt:
+    "כְּשֶׁכָּתוּב 'נִשְׁאֲרוּ' אַחֲרֵי שֶׁיֹּדְעִים כַּמָּה הָיוּ בַּהַתְחָלָה — בִּחְרוּ: חִיבּוּר אוֹ חִיסּוּר.",
+  languageOptions: ["חִיבּוּר", "חִיסּוּר", "כֶּפֶל"],
+  languageAnswer: "חִיסּוּר",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 20 + 10 - 5 = 25",
   reviewAnswer: true,
   challengePrompt: "נַעַר קִבֵּל 9 מַדְבֵּקוֹת, הִפְסִיד 4, וְקִבֵּל עוֹד 6. כַּמָּה יֵשׁ לוֹ עַכְשָׁיו?",

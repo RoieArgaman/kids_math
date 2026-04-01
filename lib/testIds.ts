@@ -238,6 +238,13 @@ export const testIds = {
       hintText: (exerciseId: string) =>
         tid("component", "exerciseBox", "exercise", exerciseId, "hintText"),
     },
+    shapeIcon: {
+      root: (shape: string) => tid("component", "shapeIcon", shape),
+      svg: (shape: string) => tid("component", "shapeIcon", shape, "svg"),
+      fallback: () => tid("component", "shapeIcon", "fallback"),
+    },
+    mathLabel: (exerciseId: string, optionKey: string) =>
+      tid("component", "exerciseBox", "exercise", exerciseId, "mathLabel", optionKey),
     starReward: {
       overlay: () => tid("component", "starReward", "overlay"),
       dialog: () => tid("component", "starReward", "dialog"),
