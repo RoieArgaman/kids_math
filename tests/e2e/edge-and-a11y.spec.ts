@@ -235,7 +235,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
   test("Plan screen shows non-zero completion after a completed day", async ({ page }) => {
     const progress = createProgressState({
       days: {
-        "day-1": createCompletedDayProgressState("day-1"),
+        "day-1": createFullyAnsweredDayProgressState("day-1", "a", { isComplete: true }),
       },
     });
     await seedProgressState(page, "a", progress);
