@@ -25,7 +25,11 @@ function badgeKeyForGrade(grade: GradeId): string {
 }
 
 export async function seedLocalStorage(page: Page, entries: Record<string, unknown>): Promise<void> {
-  await page.addInitScript((payload) => {
+  // Use page.evaluate (not page.addInitScript) so localStorage is set immediately and
+  // is NOT re-applied on subsequent page.goto / page.reload calls.
+  // addInitScript would reset localStorage on every navigation, breaking tests that
+  // navigate internally (e.g. answerDayCorrectly iterating through section URLs).
+  await page.evaluate((payload) => {
     for (const [k, v] of Object.entries(payload)) {
       window.localStorage.setItem(k, JSON.stringify(v));
     }
