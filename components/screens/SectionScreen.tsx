@@ -130,31 +130,62 @@ export function SectionScreen({
     );
   }
 
-  // Warmup gate: non-warmup sections require warmup complete
+  // Section gate checks
   if (sectionIdx > 0) {
-    const warmupSection = day.sections[0];
-    const warmupComplete =
-      warmupSection?.exercises.every((ex) => correctAnswers[ex.id as ExerciseId] === true) ?? false;
-    if (!warmupComplete) {
-      return (
-        <main
-          data-testid={testIds.screen.section.root(effectiveGrade, dayId, `${sectionId}.warmup-locked`)}
-        >
-          <CenteredPanel
-            emoji="🔒"
-            title="צָרִיךְ לְהַשְׁלִים חִימּוּם תְּחִילָה"
-            description="הַשְׁלֵם אֶת שְׁלַב הַחִימּוּם כְּדֵי לִפְתֹּחַ חֵלֶק זֶה."
-            actions={
-              <ButtonLink
-                href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
-                className="w-full text-center"
-              >
-                חֲזָרָה לַיּוֹם
-              </ButtonLink>
-            }
-          />
-        </main>
-      );
+    const isLastSection = sectionIdx === day.sections.length - 1;
+
+    if (isLastSection) {
+      // Last section: all other sections must be complete
+      const allOthersComplete = day.sections
+        .slice(0, -1)
+        .every((s) => s.exercises.every((ex) => correctAnswers[ex.id as ExerciseId] === true));
+      if (!allOthersComplete) {
+        return (
+          <main
+            data-testid={testIds.screen.section.root(effectiveGrade, dayId, `${sectionId}.all-locked`)}
+          >
+            <CenteredPanel
+              emoji="🔒"
+              title="יֵשׁ לְהַשְׁלִים אֶת כָּל הַחֲלָקִים תְּחִילָה"
+              description="הַשְׁלֵם אֶת כָּל הַחֲלָקִים הַקּוֹדְמִים כְּדֵי לִפְתֹּחַ אֶת הַחֵלֶק הָאַחֲרוֹן."
+              actions={
+                <ButtonLink
+                  href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
+                  className="w-full text-center"
+                >
+                  חֲזָרָה לַיּוֹם
+                </ButtonLink>
+              }
+            />
+          </main>
+        );
+      }
+    } else {
+      // Middle sections: warmup must be complete
+      const warmupSection = day.sections[0];
+      const warmupComplete =
+        warmupSection?.exercises.every((ex) => correctAnswers[ex.id as ExerciseId] === true) ?? false;
+      if (!warmupComplete) {
+        return (
+          <main
+            data-testid={testIds.screen.section.root(effectiveGrade, dayId, `${sectionId}.warmup-locked`)}
+          >
+            <CenteredPanel
+              emoji="🔒"
+              title="צָרִיךְ לְהַשְׁלִים חִימּוּם תְּחִילָה"
+              description="הַשְׁלֵם אֶת שְׁלַב הַחִימּוּם כְּדֵי לִפְתֹּחַ חֵלֶק זֶה."
+              actions={
+                <ButtonLink
+                  href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
+                  className="w-full text-center"
+                >
+                  חֲזָרָה לַיּוֹם
+                </ButtonLink>
+              }
+            />
+          </main>
+        );
+      }
     }
   }
 

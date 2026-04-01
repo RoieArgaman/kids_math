@@ -38,28 +38,28 @@ export function buildDayFromConcepts(
   const defaultSections: Section[] = [
     {
       id: toSectionId(concept.dayNumber, 1),
-      title: "חִימּוּם וַחֲזָרַת סְפִּירָלָה",
+      title: "חִימּוּם וַחֲזָרַת סְפִּירָלָה",
       type: "warmup",
-      learningGoal: "לְהִיזָּכֵר בְּנוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
+      learningGoal: "לְהִיזָּכֵר בְּנוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
       exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
     },
     {
       id: toSectionId(concept.dayNumber, 2),
-      title: "מוּשָׂג הַיּוֹם - מִתְנַסִּים",
+      title: "מוּשָׂג הַיּוֹם - מִתְנַסִּים",
       type: "arithmetic",
-      learningGoal: "לְהָבִין אֶת מוּשַׂג הַיּוֹם בְּמַעֲבָר מִמּוּחָשִׁי, לְיִיצּוּגִי, וּלְסִמְלִי.",
+      learningGoal: "לְהָבִין אֶת מוּשַׂג הַיּוֹם בְּמַעֲבָר מִמּוּחָשִׁי, לְיִיצּוּגִי, וּלְסִמְלִי.",
       prerequisiteSkillTags: concept.mainTags,
       example: {
-        title: "דֻּגְמָה פְּתוּרָה",
+        title: "דֻּגְמָה פְּתוּרָה",
         prompt: concept.arithmeticPrompt,
         steps: [
-          "קוֹרְאִים אֶת הַשְּׁאֵלָה וּמְזַהִים מָה יָדוּעַ.",
-          "בוֹחֲרִים דֶּרֶךְ פְּתִירָה מַתְאִימָה (סְפִירָה, קַו מִסְפָּרִים אוֹ פֵּרוּק).",
-          `פּוֹתְרִים שָׁלָב אַחַר שָׁלָב וּמְקַבְּלִים: ${concept.arithmeticAnswer}.`,
-          "בּוֹדְקִים שֶׁהַתְּשׁוּבָה הַגְיוֹנִית לְפִי הַשְּׁאֵלָה.",
+          "קוֹרְאִים אֶת הַשְּׁאֵלָה וּמְזַהִים מָה יָדוּעַ.",
+          "בוֹחֲרִים דֶּרֶךְ פְּתִירָה מַתְאִימָה (סְפִירָה, קַו מִסְפָּרִים אוֹ פֵּרוּק).",
+          `פּוֹתְרִים שָׁלָב אַחַר שָׁלָב וּמְקַבְּלִים: ${concept.arithmeticAnswer}.`,
+          "בּוֹדְקִים שֶׁהַתְּשׁוּבָה הַגְיוֹנִית לְפִי הַשְּׁאֵלָה.",
         ],
-        takeaway: "רַעְיוֹן מֶרְכָּזִי: פּוֹתְרִים בִּשְׁלָבִים קְצָרִים וּבוֹדְקִים אֶת הַתּוֹצָאָה.",
+        takeaway: "רַעְיוֹן מֶרְכָּזִי: פּוֹתְרִים בִּשְׁלָבִים קְצָרִים וּבוֹדְקִים אֶת הַתּוֹצָאָה.",
       },
       exercises: [
         numberInput(
@@ -76,7 +76,7 @@ export function buildDayFromConcepts(
           concept.dayNumber,
           2,
           2,
-          "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
+          "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
           concept.arithmeticMcOptions,
           concept.arithmeticMcAnswer,
           concept.mainTags,
@@ -88,8 +88,8 @@ export function buildDayFromConcepts(
           2,
           3,
           concept.dayNumber <= 8
-            ? "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים."
-            : "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
+            ? "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים."
+            : "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
           concept.dayNumber <= 5 ? 0 : concept.dayNumber <= 8 ? concept.dayNumber : 0,
           concept.dayNumber <= 8 ? 10 : 20,
           concept.dayNumber <= 8 ? 1 : 2,
@@ -98,13 +98,23 @@ export function buildDayFromConcepts(
           dayDifficulty,
           "abstract",
         ),
+        trueFalse(
+          concept.dayNumber,
+          2,
+          4,
+          concept.reviewPrompt,
+          concept.reviewAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "abstract",
+        ),
       ],
     },
     {
       id: toSectionId(concept.dayNumber, 3),
-      title: concept.geometryPrompt ? "שָׂפָה מָתֵמָטִית וְצוּרוֹת" : "שָׂפָה מָתֵמָטִית",
+      title: concept.geometryPrompt ? "שָׂפָה מָתֵמָטִית וְצוּרוֹת" : "שָׂפָה מָתֵמָטִית",
       type: concept.geometryPrompt ? "geometry" : "verbal",
-      learningGoal: "לְהַסְבִּיר וּלְנַסֵּחַ יֶדַע מָתֵמָטִי בְּמִילִּים וּבְיִיצּוּגִים.",
+      learningGoal: "לְהַסְבִּיר וּלְנַסֵּחַ יֶדַע מָתֵמָטִי בְּמִילִּים וּבְיִיצּוּגִים.",
       prerequisiteSkillTags: concept.mainTags,
       exercises: [
         multipleChoice(
@@ -133,20 +143,40 @@ export function buildDayFromConcepts(
               concept.dayNumber,
               3,
               2,
-              "אֵיזֶה מִשְׁפָּט מָתֵמָטִי מַתְאִים?",
-              ["הַמִּסְפָּר גָּדֵל", "הַמִּסְפָּר קָטֵן", "הַמִּסְפָּר נִשְׁאָר קָבוּעַ"],
-              "הַמִּסְפָּר גָּדֵל",
+              "אֵיזֶה מִשְׁפָּט מָתֵמָטִי מַתְאִים?",
+              ["הַמִּסְפָּר גָּדֵל", "הַמִּסְפָּר קָטֵן", "הַמִּסְפָּר נִשְׁאָר קָבוּעַ"],
+              "הַמִּסְפָּר גָּדֵל",
               ["word-problems", "comparing"],
               dayDifficulty,
               "abstract",
             ),
+        numberInput(
+          concept.dayNumber,
+          3,
+          3,
+          concept.challengePrompt,
+          concept.challengeAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "abstract",
+        ),
+        trueFalse(
+          concept.dayNumber,
+          3,
+          4,
+          concept.reviewPrompt,
+          concept.reviewAnswer,
+          concept.spiralReviewTags,
+          dayDifficulty,
+          "abstract",
+        ),
       ],
     },
     {
       id: toSectionId(concept.dayNumber, 4),
-      title: "בְּדִיקַת הֲבָנָה",
+      title: "בְּדִיקַת הֲבָנָה",
       type: "review",
-      learningGoal: "לְזַהוֹת טָעוּיוֹת נְפוֹצוֹת וּלְבַסֵּס הֲבָנָה מְדוּיֶּקֶת.",
+      learningGoal: "לְזַהוֹת טָעוּיוֹת נְפוֹצוֹת וּלְבַסֵּס הֲבָנָה מְדוּיֶּקֶת.",
       prerequisiteSkillTags: [...concept.spiralReviewTags, ...concept.mainTags],
       exercises: [
         trueFalse(
@@ -163,9 +193,30 @@ export function buildDayFromConcepts(
           concept.dayNumber,
           4,
           2,
-          "פִּתְרוּ מְשִׂימַת בְּדִיקָה קְצָרָה.",
+          "פִּתְרוּ מְשִׂימַת בְּדִיקָה קְצָרָה.",
           concept.arithmeticAnswer,
           concept.mainTags,
+          dayDifficulty,
+          "abstract",
+        ),
+        multipleChoice(
+          concept.dayNumber,
+          4,
+          3,
+          "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
+          concept.arithmeticMcOptions,
+          concept.arithmeticMcAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "pictorial",
+        ),
+        numberInput(
+          concept.dayNumber,
+          4,
+          4,
+          concept.challengePrompt,
+          concept.challengeAnswer,
+          [...concept.mainTags, ...concept.spiralReviewTags],
           dayDifficulty,
           "abstract",
         ),
@@ -173,9 +224,9 @@ export function buildDayFromConcepts(
     },
     {
       id: toSectionId(concept.dayNumber, 5),
-      title: "אֶתְגָּר מְסַכֵּם",
+      title: "אֶתְגָּר מְסַכֵּם",
       type: "challenge",
-      learningGoal: "לְיַישֵׂם אֶת הַמּוּשָׂגִים בִּמְשִׂימָה מְאַתְגֶּרֶת בְּרָמַת עַצְמָאוּת גְּבוֹהָה.",
+      learningGoal: "לְיַישֵׂם אֶת הַמּוּשָׂגִים בִּמְשִׂימָה מְאַתְגֶּרֶת בְּרָמַת עַצְמָאוּת גְּבוֹהָה.",
       prerequisiteSkillTags: [...concept.mainTags, ...concept.spiralReviewTags],
       exercises: [
         numberInput(
@@ -192,12 +243,56 @@ export function buildDayFromConcepts(
           concept.dayNumber,
           5,
           2,
-          "בַּחֲרוּ דֶּרֶךְ פְּתִירָה מַתְאִימָה.",
-          ["סְפִירָה בָּאֶצְבָּעוֹת", "קַו מִסְפָּרִים", "פֵּרוּק לַעֲשָׂרוֹת וַאֲחָדוֹת"],
-          concept.dayNumber >= 10 ? "פֵּרוּק לַעֲשָׂרוֹת וַאֲחָדוֹת" : "קַו מִסְפָּרִים",
+          "בַּחֲרוּ דֶּרֶךְ פְּתִירָה מַתְאִימָה.",
+          ["סְפִירָה בָּאֶצְבָּעוֹת", "קַו מִסְפָּרִים", "פֵּרוּק לַעֲשָׂרוֹת וַאֲחָדוֹת"],
+          concept.dayNumber >= 10 ? "פֵּרוּק לַעֲשָׂרוֹת וַאֲחָדוֹת" : "קַו מִסְפָּרִים",
           ["word-problems", "number-line", "place-value"],
           dayDifficulty,
           "abstract",
+        ),
+        trueFalse(
+          concept.dayNumber,
+          5,
+          3,
+          concept.reviewPrompt,
+          concept.reviewAnswer,
+          concept.spiralReviewTags,
+          dayDifficulty,
+          "abstract",
+        ),
+        numberLineJump(
+          concept.dayNumber,
+          5,
+          4,
+          "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
+          0,
+          20,
+          2,
+          10,
+          ["number-line", ...concept.mainTags],
+          dayDifficulty,
+          "abstract",
+        ),
+        numberInput(
+          concept.dayNumber,
+          5,
+          5,
+          concept.arithmeticPrompt,
+          concept.arithmeticAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "concrete",
+        ),
+        multipleChoice(
+          concept.dayNumber,
+          5,
+          6,
+          concept.languagePrompt,
+          concept.languageOptions,
+          concept.languageAnswer,
+          ["number-recognition", ...concept.mainTags],
+          dayDifficulty,
+          "pictorial",
         ),
       ],
     },
@@ -219,6 +314,14 @@ export function buildDayFromConcepts(
   } else {
     sections = defaultSections;
   }
+
+  // Enforce exercise count constraints: non-last sections capped at 8, last section capped at 10
+  const lastIdx = sections.length - 1;
+  sections = sections.map((s, idx) => {
+    const max = idx === lastIdx ? 10 : 8;
+    if (s.exercises.length <= max) return s;
+    return { ...s, exercises: s.exercises.slice(0, max) };
+  });
 
   return {
     id: toDayId(concept.dayNumber),

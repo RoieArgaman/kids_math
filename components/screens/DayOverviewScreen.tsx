@@ -60,7 +60,16 @@ function getSectionCardState(
   const isComplete = section.exercises.every((ex) => correctAnswers[ex.id] === true);
   if (isComplete) return "complete";
   if (sectionIdx === 0) return "open";
-  // Non-warmup sections are locked until warmup is complete
+
+  // Last section unlocks only when ALL other sections are complete
+  if (sectionIdx === allSections.length - 1) {
+    const allOthersComplete = allSections
+      .slice(0, -1)
+      .every((s) => s.exercises.every((ex) => correctAnswers[ex.id] === true));
+    return allOthersComplete ? "open" : "locked";
+  }
+
+  // Middle sections unlock once warmup is complete
   const warmup = allSections[0];
   const warmupComplete = warmup?.exercises.every((ex) => correctAnswers[ex.id] === true) ?? false;
   return warmupComplete ? "open" : "locked";
