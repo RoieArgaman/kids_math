@@ -54,7 +54,7 @@ export function RandomizedChoiceButtons({
           {renderAsShapes ? (
             <ShapeIcon shape={option.value} />
           ) : isMathLabel(option.label) ? (
-            <span dir="ltr" style={{ unicodeBidi: "isolate" }}>{option.label}</span>
+            <span data-testid={testIds.component.mathLabel(exerciseId, option.key)} dir="ltr" style={{ unicodeBidi: "isolate" }}>{option.label}</span>
           ) : (
             option.label
           )}
