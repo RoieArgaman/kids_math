@@ -246,7 +246,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     await expect(pct).not.toHaveText("0%");
   });
 
-  test("after 10 wrong answers, the day auto-resets and stays reset after reload", async ({ page }) => {
+  test("after 3 wrong answers, the day auto-resets and stays reset after reload", async ({ page }) => {
     const day = getWorkbookDaysById("a")["day-1"];
     const ex = day ? findFirstInputExercise(day) : null;
     if (!day || !ex) {
@@ -256,17 +256,17 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
     await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
 
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
       await answerExerciseWrongly(page, ex!);
     }
 
-    await expect(page.getByText("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.")).toBeVisible();
+    await expect(page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.")).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText("💥 0/10")).toBeVisible();
+    await expect(page.getByText("💥 0/3")).toBeVisible();
   });
 
-  test("after sticky completion, 10 wrong answers do not auto-reset the day", async ({ page }) => {
+  test("after sticky completion, 3 wrong answers do not auto-reset the day", async ({ page }) => {
     const day = getWorkbookDaysById("a")["day-1"];
     const ex = day ? findFirstInputExercise(day) : null;
     if (!day || !ex) {
@@ -286,16 +286,16 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
     await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
 
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
       await answerExerciseWrongly(page, ex!);
     }
 
     await expect(
-      page.getByText("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ."),
+      page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ."),
     ).toHaveCount(0);
 
     const wrongBadge = page.getByTestId(childTid(testIds.screen.section.stickyHeader("a", "day-1", sectionId), "wrongBadge"));
-    await expect(wrongBadge).toContainText("💥 0/10");
+    await expect(wrongBadge).toContainText("💥 0/3");
   });
 });
 

@@ -10,7 +10,7 @@ import {
 } from "@/lib/types";
 
 export const COMPLETION_GATE_PERCENT = 100;
-export const MAX_DAILY_WRONG_ANSWERS = 10;
+export const MAX_DAILY_WRONG_ANSWERS = 3;
 
 export interface SetAnswerInput {
   dayId: DayId;
