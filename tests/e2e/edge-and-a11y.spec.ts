@@ -3,7 +3,7 @@ import type { Exercise, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { answerExerciseWrongly } from "./answering";
-import { createFullyAnsweredDayProgressState, createProgressState, seedProgressState } from "./testUtils";
+import { createFullyAnsweredDayProgressState, createProgressState, dismissStarRewardIfVisible, seedProgressState } from "./testUtils";
 import { childTid, testIds } from "@/lib/testIds";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
 
@@ -284,6 +284,9 @@ test.describe("keyboard + persistence basics (RTL)", () => {
 
     const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
     await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
+
+    // StarReward may appear on load because the section is already complete — dismiss it first
+    await dismissStarRewardIfVisible(page);
 
     for (let i = 0; i < 10; i += 1) {
       await answerExerciseWrongly(page, ex!);

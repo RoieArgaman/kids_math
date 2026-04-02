@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { DayId, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
-import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
+import { createCompletedDayProgressState, createProgressState, dismissStarRewardIfVisible, seedProgressState } from "./testUtils";
 import { testIds } from "@/lib/testIds";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 
@@ -253,6 +253,9 @@ test.describe("Day Hub scenarios", () => {
       await answerExerciseCorrectly(page, exercise);
     }
 
+    // StarReward overlay appears on section completion — dismiss before navigating
+    await dismissStarRewardIfVisible(page);
+
     // Navigate back
     await page
       .getByTestId(testIds.screen.section.nav(grade, dayId, warmupSection.id))
@@ -288,6 +291,9 @@ test.describe("Day Hub scenarios", () => {
     for (const exercise of warmupSection.exercises) {
       await answerExerciseCorrectly(page, exercise);
     }
+
+    // StarReward overlay appears on section completion — dismiss before navigating
+    await dismissStarRewardIfVisible(page);
 
     // Navigate back
     await page
