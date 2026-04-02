@@ -174,9 +174,9 @@ export function buildDayFromConcepts(
     },
     {
       id: toSectionId(concept.dayNumber, 4),
-      title: "בְּדִיקַת הֲבָנָה",
+      title: "סִכּוּם וּבְדִיקַת עַצְמִי",
       type: "review",
-      learningGoal: "לְזַהוֹת טָעוּיוֹת נְפוֹצוֹת וּלְבַסֵּס הֲבָנָה מְדוּיֶּקֶת.",
+      learningGoal: "לְוַדֵּא הֲבָנָה בִּתְרַגִּילִים מְשֻׁלָּבִים.",
       prerequisiteSkillTags: [...concept.spiralReviewTags, ...concept.mainTags],
       exercises: [
         trueFalse(
@@ -220,13 +220,54 @@ export function buildDayFromConcepts(
           dayDifficulty,
           "abstract",
         ),
+        trueFalse(
+          concept.dayNumber,
+          4,
+          5,
+          concept.reviewPrompt,
+          concept.reviewAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "abstract",
+        ),
+        numberInput(
+          concept.dayNumber,
+          4,
+          6,
+          concept.arithmeticPrompt,
+          concept.arithmeticAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "concrete",
+        ),
+        multipleChoice(
+          concept.dayNumber,
+          4,
+          7,
+          "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
+          concept.arithmeticMcOptions,
+          concept.arithmeticMcAnswer,
+          [...concept.mainTags, ...concept.spiralReviewTags],
+          dayDifficulty,
+          "abstract",
+        ),
+        numberInput(
+          concept.dayNumber,
+          4,
+          8,
+          concept.challengePrompt,
+          concept.challengeAnswer,
+          concept.mainTags,
+          dayDifficulty,
+          "abstract",
+        ),
       ],
     },
     {
       id: toSectionId(concept.dayNumber, 5),
-      title: "אֶתְגָּר מְסַכֵּם",
+      title: "תִּרְגּוּל מְמוּקָּד בְּנוֹשֵׂא הַיּוֹם",
       type: "challenge",
-      learningGoal: "לְיַישֵׂם אֶת הַמּוּשָׂגִים בִּמְשִׂימָה מְאַתְגֶּרֶת בְּרָמַת עַצְמָאוּת גְּבוֹהָה.",
+      learningGoal: "לְבַסֵּס שְׁטִיפוּת בְּנוֹשֵׂא הַיּוֹם עִם 8 מְשִׂימוֹת נוֹסָפוֹת.",
       prerequisiteSkillTags: [...concept.mainTags, ...concept.spiralReviewTags],
       exercises: [
         numberInput(
@@ -294,6 +335,26 @@ export function buildDayFromConcepts(
           dayDifficulty,
           "pictorial",
         ),
+        trueFalse(
+          concept.dayNumber,
+          5,
+          7,
+          concept.reviewPrompt,
+          concept.reviewAnswer,
+          [...concept.spiralReviewTags, ...concept.mainTags],
+          dayDifficulty,
+          "abstract",
+        ),
+        numberInput(
+          concept.dayNumber,
+          5,
+          8,
+          concept.arithmeticPrompt,
+          concept.arithmeticAnswer,
+          [...concept.mainTags, ...concept.spiralReviewTags],
+          dayDifficulty,
+          "abstract",
+        ),
       ],
     },
   ];
@@ -316,11 +377,9 @@ export function buildDayFromConcepts(
   }
 
   // Enforce exercise count constraints: non-last sections capped at 8, last section capped at 10
-  const lastIdx = sections.length - 1;
-  sections = sections.map((s, idx) => {
-    const max = idx === lastIdx ? 10 : 8;
-    if (s.exercises.length <= max) return s;
-    return { ...s, exercises: s.exercises.slice(0, max) };
+  sections = sections.map((s) => {
+    if (s.exercises.length <= 8) return s;
+    return { ...s, exercises: s.exercises.slice(0, 8) };
   });
 
   return {
