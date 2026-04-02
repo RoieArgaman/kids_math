@@ -147,6 +147,11 @@ export async function answerDayCorrectly(page: Page, params: { grade: GradeId; d
   // Navigate section-by-section: sections unlock in order (warmup first, last section after all others).
   for (const section of day.sections) {
     await page.goto(`/grade/${params.grade}/day/${params.dayId}/section/${section.id}`);
+    // SectionScreen renders a loading state until useDayUnlockStatus resolves (two React effect
+    // cycles after hydration). Wait for the first exercise to appear before answering any.
+    if (section.exercises.length > 0) {
+      await page.getByTestId(testIds.component.exerciseBox.root(section.exercises[0].id)).waitFor({ state: "attached" });
+    }
     for (const ex of section.exercises) {
       await answerExerciseCorrectly(page, ex);
     }
