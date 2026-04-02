@@ -144,7 +144,9 @@ export async function answerDayCorrectly(page: Page, params: { grade: GradeId; d
     throw new Error(`Unknown workbook day: ${params.grade}:${params.dayId}`);
   }
 
+  // Navigate section-by-section: sections unlock in order (warmup first, last section after all others).
   for (const section of day.sections) {
+    await page.goto(`/grade/${params.grade}/day/${params.dayId}/section/${section.id}`);
     for (const ex of section.exercises) {
       await answerExerciseCorrectly(page, ex);
     }

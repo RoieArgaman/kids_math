@@ -36,7 +36,7 @@ test("admin can complete/reset day and grade isolation is preserved", async ({ p
   await expect(page).not.toHaveURL(/\/grade\/b\/locked/);
 
   await page.goto("/grade/a/day/day-2");
-  await expect(page.getByTestId(testIds.screen.day.root("a", "day-2.locked"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2.locked"))).toBeVisible();
 
   await page.goto("/admin/progress?grade=a");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
@@ -44,15 +44,16 @@ test("admin can complete/reset day and grade isolation is preserved", async ({ p
   await page.getByTestId(testIds.screen.adminProgress.markComplete("a", "day-1")).click();
 
   await page.goto("/grade/a/day/day-2");
-  await expect(page.getByTestId(testIds.screen.day.root("a", "day-2.locked"))).toHaveCount(0);
-  await expect(page.getByTestId(testIds.screen.day.root("a", "day-2"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2.locked"))).toHaveCount(0);
+  await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2"))).toBeVisible();
 
   const day1 = getWorkbookDaysById("a")["day-1"];
   const firstInputExercise = day1.sections
     .flatMap((section) => section.exercises)
     .find((exercise) => exercise.kind === "number_input" || exercise.kind === "number_line_jump");
   if (firstInputExercise) {
-    await page.goto("/grade/a/day/day-1");
+    const sectionId = firstInputExercise.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
     await expect(page.getByTestId(testIds.component.exerciseBox.input(firstInputExercise.id))).not.toHaveValue("");
   }
 
@@ -71,7 +72,7 @@ test("admin can complete/reset day and grade isolation is preserved", async ({ p
   });
 
   await page.goto("/grade/a/day/day-2");
-  await expect(page.getByTestId(testIds.screen.day.root("a", "day-2.locked"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.dayOverview.root("a", "day-2.locked"))).toBeVisible();
 
   await page.goto("/admin/progress?grade=b");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");

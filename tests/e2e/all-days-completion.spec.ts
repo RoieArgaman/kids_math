@@ -56,12 +56,13 @@ test.describe("all days completion", () => {
         ) as Record<DayId, ReturnType<typeof createCompletedDayProgressState>>;
         await seedProgressState(page, grade, createProgressState({ days: completedDays }));
         await page.goto(`/grade/${grade}/day/${dayId}`);
-        await expect(page.getByTestId(testIds.screen.day.root(grade, dayId))).toBeVisible();
+        await expect(page.getByTestId(testIds.screen.dayOverview.root(grade, dayId))).toBeVisible();
 
         await answerDayCorrectly(page, { grade, dayId });
-        await expect(page.getByTestId(testIds.screen.day.completeCta(grade, dayId))).toBeVisible();
+        await page.goto(`/grade/${grade}/day/${dayId}`);
+        await expect(page.getByTestId(testIds.screen.dayOverview.completeCta(grade, dayId))).toBeVisible();
 
-        await page.getByTestId(testIds.screen.day.completeCta(grade, dayId)).click();
+        await page.getByTestId(testIds.screen.dayOverview.completeCta(grade, dayId)).click();
         await page.getByTestId(testIds.component.starReward.confirm()).click();
         await dismissDayCompletionCelebration(page);
         await expect(page).toHaveURL(new RegExp(`/grade/${grade}/?$`));

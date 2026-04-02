@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   createCompletedDayProgressState,
   createFinalExamState,
+  createFullyAnsweredDayProgressState,
   createProgressState,
   dismissDayCompletionCelebration,
   exerciseByIdForGrade,
@@ -18,31 +19,18 @@ test.beforeEach(async ({ page, context }) => {
 
 test.describe("grade A lifecycle", () => {
   test("can complete day-1 and progress persists after refresh", async ({ page }) => {
-    // Seed day-1 as 100% done but not yet marked complete, to exercise the completion UI without answering dozens of exercises.
-    await page.evaluate(() => {
-      const key = "kids_math.workbook_progress.v2.grade.a";
-      const state = {
-        version: 1,
-        updatedAt: new Date().toISOString(),
-        days: {
-          "day-1": {
-            dayId: "day-1",
-            answers: {},
-            correctAnswers: {},
-            wrongCount: 0,
-            attempts: [],
-            percentDone: 100,
-            isComplete: false,
-          },
-        },
-      };
-      window.localStorage.setItem(key, JSON.stringify(state));
-    });
+    // Seed day-1 as 100% done (all exercises correct) but not yet marked complete,
+    // so DayOverviewScreen shows allSectionsComplete = true and the completeCta appears.
+    await seedProgressState(
+      page,
+      "a",
+      createProgressState({ days: { "day-1": createFullyAnsweredDayProgressState("day-1", "a") } }),
+    );
 
     await page.goto("/grade/a/day/day-1");
-    await expect(page.getByTestId(testIds.screen.day.completeCta("a", "day-1"))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.completeCta("a", "day-1"))).toBeVisible();
 
-    await page.getByTestId(testIds.screen.day.completeCta("a", "day-1")).click();
+    await page.getByTestId(testIds.screen.dayOverview.completeCta("a", "day-1")).click();
     await page.getByTestId(testIds.component.starReward.confirm()).click();
     await dismissDayCompletionCelebration(page);
     await expect(page).toHaveURL(/\/grade\/a\/?$/);
@@ -66,28 +54,14 @@ test.describe("grade A lifecycle", () => {
   });
 
   test("home day card shows completion after browser back from day", async ({ page }) => {
-    await page.evaluate(() => {
-      const key = "kids_math.workbook_progress.v2.grade.a";
-      const state = {
-        version: 1,
-        updatedAt: new Date().toISOString(),
-        days: {
-          "day-1": {
-            dayId: "day-1",
-            answers: {},
-            correctAnswers: {},
-            wrongCount: 0,
-            attempts: [],
-            percentDone: 100,
-            isComplete: false,
-          },
-        },
-      };
-      window.localStorage.setItem(key, JSON.stringify(state));
-    });
+    await seedProgressState(
+      page,
+      "a",
+      createProgressState({ days: { "day-1": createFullyAnsweredDayProgressState("day-1", "a") } }),
+    );
 
     await page.goto("/grade/a/day/day-1");
-    await page.getByTestId(testIds.screen.day.completeCta("a", "day-1")).click();
+    await page.getByTestId(testIds.screen.dayOverview.completeCta("a", "day-1")).click();
     await page.getByTestId(testIds.component.starReward.confirm()).click();
     await dismissDayCompletionCelebration(page);
     await expect(page).toHaveURL(/\/grade\/a\/?$/);

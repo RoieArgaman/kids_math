@@ -30,6 +30,7 @@ interface UseProgressApi {
   isComplete: boolean;
   percentDone: number;
   wrongCount: number;
+  correctAnswers: Record<ExerciseId, boolean>;
   completedAt: string | undefined;
   firstAttemptedAt: string | undefined;
   bestTimeMs: number | undefined;
@@ -121,6 +122,7 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
     isComplete: dayProgress.isComplete,
     percentDone: dayProgress.percentDone,
     wrongCount: dayProgress.wrongCount,
+    correctAnswers: dayProgress.correctAnswers,
     completedAt: dayProgress.completedAt,
     firstAttemptedAt: dayProgress.attempts[0]?.attemptedAt,
     bestTimeMs: dayProgress.bestTimeMs,

@@ -519,9 +519,9 @@ export const buildExpandedExercisesForDay = (
     },
     {
       id: toSectionId(d, 4),
-      title: "בְּדִיקַת הֲבָנָה",
+      title: "סִכּוּם וּבְדִיקַת עַצְמִי",
       type: "review",
-      learningGoal: "לְזַהוֹת טָעוּיוֹת נְפוֹצוֹת וּלְתַקֵּן בְּאֹפֶן עַצְמָאִי.",
+      learningGoal: "לְוַדֵּא הֲבָנָה בִּתְרַגִּילִים מְשֻׁלָּבִים.",
       prerequisiteSkillTags: [...concept.spiralReviewTags, ...concept.mainTags],
       exercises: [
         trueFalse(
@@ -740,9 +740,9 @@ export const buildExpandedExercisesForDay = (
     },
     {
       id: toSectionId(d, 5),
-      title: "אֶתְגָּר מְסַכֵּם",
+      title: "תִּרְגּוּל מְמוּקָּד בְּנוֹשֵׂא הַיּוֹם",
       type: "challenge",
-      learningGoal: "לְיַישֵׂם בְּעָיוֹת מִילּוּלִיּוֹת וּתַרְגִּילִים מְשֻׁלָּבִים בְּרָמָה עוֹלָה.",
+      learningGoal: "לְבַסֵּס שְׁטִיפוּת בְּנוֹשֵׂא הַיּוֹם עִם 8 מְשִׂימוֹת נוֹסָפוֹת.",
       prerequisiteSkillTags: [...concept.mainTags, ...concept.spiralReviewTags],
       exercises: [
         numberInput(
