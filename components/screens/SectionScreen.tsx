@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
@@ -8,6 +9,7 @@ import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
+import { StarReward } from "@/components/StarReward";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { COMPLETION_GATE_PERCENT, MAX_DAILY_WRONG_ANSWERS } from "@/lib/progress/engine";
@@ -30,6 +32,8 @@ export function SectionScreen({
   sectionId: SectionId;
 }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
+  const router = useRouter();
+  const [showReward, setShowReward] = useState(false);
 
   const {
     setAnswer,
@@ -80,6 +84,21 @@ export function SectionScreen({
   const { resetNotice } = useDayReset({ wrongCount, resetDay, onReset: handleReset });
 
   const { focusNextInput, setFocusRef } = useExerciseFocus(section?.exercises ?? []);
+
+  const sectionComplete = useMemo(
+    () => !!section && section.exercises.every((ex) => correctAnswers[ex.id as ExerciseId] === true),
+    [section, correctAnswers],
+  );
+
+  const hasMounted = useRef(false);
+  const prevSectionComplete = useRef(false);
+  useEffect(() => {
+    if (hasMounted.current && sectionComplete && !prevSectionComplete.current) {
+      setShowReward(true);
+    }
+    prevSectionComplete.current = sectionComplete;
+    hasMounted.current = true;
+  }, [sectionComplete]);
 
   if (!day || !section) {
     return (
@@ -189,10 +208,6 @@ export function SectionScreen({
     }
   }
 
-  const sectionComplete = section.exercises.every(
-    (ex) => correctAnswers[ex.id as ExerciseId] === true,
-  );
-
   const stickyHeaderId = testIds.screen.section.stickyHeader(effectiveGrade, dayId, sectionId);
   const completionPanelId = testIds.screen.section.completionPanel(effectiveGrade, dayId, sectionId);
   const sectionRootId = testIds.screen.section.root(effectiveGrade, dayId, sectionId);
@@ -276,8 +291,8 @@ export function SectionScreen({
         </SectionBlock>
       </div>
 
-      {/* Section complete panel */}
-      {sectionComplete && (
+      {/* Section complete panel — shown when revisiting a completed section */}
+      {sectionComplete && !showReward && (
         <div
           data-testid={completionPanelId}
           className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200 p-6 text-center shadow-md"
@@ -305,6 +320,12 @@ export function SectionScreen({
           </ButtonLink>
         </div>
       )}
+
+      <StarReward
+        visible={showReward}
+        text="הִשְׁלַמְתֶּם אֶת הַחֵלֶק בְּהַצְלָחָה."
+        onConfirm={() => router.push(routes.gradeDay(effectiveGrade, dayId, { previewAll }))}
+      />
     </main>
   );
 }
