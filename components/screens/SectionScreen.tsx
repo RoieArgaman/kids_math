@@ -41,6 +41,7 @@ export function SectionScreen({
     percentDone,
     wrongCount,
     correctAnswers,
+    isHydrated,
   } = useProgress(dayId, { grade: effectiveGrade });
 
   const day = useMemo(
@@ -90,15 +91,19 @@ export function SectionScreen({
     [section, correctAnswers],
   );
 
-  const hasMounted = useRef(false);
-  const prevSectionComplete = useRef(false);
+  // Capture whether the section was already complete at the moment progress first loads
+  // from localStorage, so we don't fire the reward for sections completed in a previous session.
+  const baselineComplete = useRef<boolean | null>(null);
   useEffect(() => {
-    if (hasMounted.current && sectionComplete && !prevSectionComplete.current) {
+    if (!isHydrated) return;
+    if (baselineComplete.current === null) {
+      baselineComplete.current = sectionComplete;
+      return;
+    }
+    if (!baselineComplete.current && sectionComplete) {
       setShowReward(true);
     }
-    prevSectionComplete.current = sectionComplete;
-    hasMounted.current = true;
-  }, [sectionComplete]);
+  }, [isHydrated, sectionComplete]);
 
   if (!day || !section) {
     return (

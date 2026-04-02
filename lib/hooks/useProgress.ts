@@ -28,6 +28,7 @@ interface UseProgressApi {
   resetDay: () => void;
   improveBestTime: (elapsedMs: number) => void;
   isComplete: boolean;
+  isHydrated: boolean;
   percentDone: number;
   wrongCount: number;
   correctAnswers: Record<ExerciseId, boolean>;
@@ -120,6 +121,7 @@ export function useProgress(dayId: DayId, options: { grade?: GradeId } = {}): Us
     resetDay,
     improveBestTime,
     isComplete: dayProgress.isComplete,
+    isHydrated,
     percentDone: dayProgress.percentDone,
     wrongCount: dayProgress.wrongCount,
     correctAnswers: dayProgress.correctAnswers,
