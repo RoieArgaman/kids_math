@@ -26,7 +26,7 @@ export function useDayReset({ wrongCount, resetDay, onReset }: UseDayResetOption
     }
     resetDay();
     onReset();
-    setResetNotice("הִגַּעַתְּ לְ-10 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.");
+    setResetNotice("הִגַּעַתְּ לְ-3 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.");
 
     if (resetNoticeTimeoutRef.current) {
       clearTimeout(resetNoticeTimeoutRef.current);
