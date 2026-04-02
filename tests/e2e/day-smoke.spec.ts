@@ -202,9 +202,9 @@ test.describe("Day Hub scenarios", () => {
       await answerExerciseCorrectly(page, exercise);
     }
 
-    // Section complete panel appears
+    // StarReward overlay appears confirming section completion
     await expect(
-      page.getByTestId(testIds.screen.section.completionPanel(grade, dayId, warmupSection.id)),
+      page.getByTestId(testIds.component.starReward.overlay()),
     ).toBeVisible();
   });
 
@@ -253,12 +253,8 @@ test.describe("Day Hub scenarios", () => {
       await answerExerciseCorrectly(page, exercise);
     }
 
-    // Navigate back
-    await page
-      .getByTestId(testIds.screen.section.nav(grade, dayId, warmupSection.id))
-      .getByRole("link", { name: /חֲזָרָה לַיּוֹם/i })
-      .click();
-
+    // StarReward confirm navigates to day overview; use goto to bypass the overlay reliably
+    await page.goto(`/grade/${grade}/day/${dayId}`);
     await expect(page.getByTestId(testIds.screen.dayOverview.root(grade, dayId))).toBeVisible();
 
     // Warmup card CTA shows "תִּרְגּוּל חוֹזֵר" (replay), confirming complete state
@@ -289,12 +285,8 @@ test.describe("Day Hub scenarios", () => {
       await answerExerciseCorrectly(page, exercise);
     }
 
-    // Navigate back
-    await page
-      .getByTestId(testIds.screen.section.nav(grade, dayId, warmupSection.id))
-      .getByRole("link", { name: /חֲזָרָה לַיּוֹם/i })
-      .click();
-
+    // StarReward confirm navigates to day overview; use goto to bypass the overlay reliably
+    await page.goto(`/grade/${grade}/day/${dayId}`);
     await expect(page.getByTestId(testIds.screen.dayOverview.root(grade, dayId))).toBeVisible();
 
     // Second section CTA is now visible (unlocked)

@@ -205,6 +205,21 @@ export async function seedBadgeState(page: Page, grade: GradeId, state: BadgeSta
 }
 
 /**
+ * Dismiss the StarReward overlay if it is currently visible.
+ * The overlay intercepts pointer events and will block any click beneath it.
+ * Call this after completing exercises in a section, before navigating away.
+ */
+export async function dismissStarRewardIfVisible(page: Page): Promise<void> {
+  const confirm = page.getByTestId(testIds.component.starReward.confirm());
+  try {
+    await confirm.waitFor({ state: "visible", timeout: 2000 });
+    await confirm.click();
+  } catch {
+    // No star reward modal visible — continue.
+  }
+}
+
+/**
  * After confirming the star reward on day completion, a trophy modal may appear when new badges unlock.
  * Dismiss it so navigation to the grade home can finish (see DayScreen StarReward / TrophyUnlock).
  */

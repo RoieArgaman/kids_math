@@ -3,7 +3,7 @@ import type { Exercise, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { answerExerciseWrongly } from "./answering";
-import { createFullyAnsweredDayProgressState, createProgressState, seedProgressState } from "./testUtils";
+import { createCompletedDayProgressState, createFullyAnsweredDayProgressState, createProgressState, seedProgressState } from "./testUtils";
 import { childTid, testIds } from "@/lib/testIds";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
 
@@ -273,12 +273,13 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "day-1 has no input exercise to validate sticky completion");
     }
 
-    // Seed with all exercises correct + isComplete:true so sections are accessible
-    // and sticky completion is active (wrongCount won't increment after isComplete).
+    // Seed isComplete:true (sticky completion) without correctAnswers.
+    // The first input exercise is in day-1-section-1 (warmup, index 0) which has no gate,
+    // so correctAnswers are not needed to unlock the section.
+    // Omitting correctAnswers keeps sectionComplete=false, preventing the StarReward overlay
+    // that would otherwise appear due to async localStorage hydration.
     const progress = createProgressState({
-      days: {
-        "day-1": createFullyAnsweredDayProgressState("day-1", "a", { isComplete: true }),
-      },
+      days: { "day-1": createCompletedDayProgressState("day-1") },
     });
     await seedProgressState(page, "a", progress);
 
