@@ -7,6 +7,9 @@ import { getRenderableMathTokens } from "@/lib/utils/exerciseMathPolicy";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
 import { defaultHint } from "@/lib/utils/exercise";
 import type { Exercise } from "@/lib/types";
+import { TapToPlayTtsButton } from "@/components/ui/TapToPlayTtsButton";
+import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
+import { buildExercisePromptSpeakText } from "@/lib/utils/exercisePromptSpeakText";
 
 interface ExerciseBoxProps {
   exercise: Exercise;
@@ -51,13 +54,17 @@ export function ExerciseBox({
   const inputLabel = `תְּשׁוּבָה לַשְּׁאֵלָה: ${promptLabel}`;
   const baseTestId = testIds.component.exerciseBox.root(exercise.id);
 
+  const { ttsEnabled, hydrated } = useAdminTtsEnabled();
+  const promptParts = splitMathExpression(exercise.prompt);
+  const ttsSpeakText = buildExercisePromptSpeakText(promptParts);
+  const showTts = hydrated && ttsEnabled;
+
   const onEnter = () => {
     if (showCheckButton) {
       onSubmit();
     }
     onNextInput();
   };
-  const promptParts = splitMathExpression(exercise.prompt);
   const mathTokens = promptParts.math ? tokenizeMathExpression(promptParts.math) : null;
   const renderableMathTokens = getRenderableMathTokens(exercise, mathTokens);
   const showRetryAction = Boolean(retryMessage) && isCorrect !== true && !disableRetry;
@@ -82,14 +89,25 @@ export function ExerciseBox({
       data-testid={baseTestId}
       className={`surface mb-3 p-4 ${surfaceStateClass} ${correctRingClass}`}
     >
-      <p
-        data-testid={childTid(baseTestId, "prompt")}
-        className="mb-2 text-lg font-semibold"
+      <div
+        data-testid={childTid(baseTestId, "promptRow")}
+        className="mb-2 flex flex-wrap items-start justify-between gap-2"
         dir="rtl"
-        style={{ unicodeBidi: "plaintext" }}
       >
-        {promptParts.text}
-      </p>
+        <TapToPlayTtsButton
+          text={ttsSpeakText}
+          dataTestId={testIds.component.exerciseBox.tts(exercise.id)}
+          featureEnabled={showTts}
+        />
+        <p
+          data-testid={childTid(baseTestId, "prompt")}
+          className="min-w-0 flex-1 text-lg font-semibold"
+          dir="rtl"
+          style={{ unicodeBidi: "plaintext" }}
+        >
+          {promptParts.text}
+        </p>
+      </div>
       {renderableMathTokens ? (
         <MathExpressionTokens tokens={renderableMathTokens} baseTestId={baseTestId} />
       ) : promptParts.math ? (

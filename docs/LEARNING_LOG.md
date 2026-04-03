@@ -244,3 +244,11 @@ Append-only record of what we learned while working on this repo.
 
 - Initial learning-log scaffolding for consistent future agent behavior.
 
+
+### 2026-04-03 (Hebrew TTS + admin toggle)
+- **Trigger:** Tap-to-play vocal instructions with admin on/off (per browser).
+- **What changed / where:** `lib/tts/engine.ts`, `lib/admin/prefs.ts`, `lib/hooks/useAdminTtsEnabled.ts`, `components/ui/TapToPlayTtsButton.tsx`, `components/ExerciseBox.tsx`, `components/screens/AdminProgressScreen.tsx`, `lib/testIds.ts`.
+- **What we learned:** Prefer `localStorage` + `CustomEvent` for same-tab pref sync; `storage` event only fires cross-tab. E2E should wrap native `speechSynthesis.speak` after navigation (init scripts can lose to Next hydration).
+- **How to reuse next time:** Add `data-testid` on new layout wrappers early — `check:testids` flags bare `<div>` rows.
+
+- **Follow-up (2026-04-03):** TTS string now uses `buildExercisePromptSpeakText` (`lib/utils/exercisePromptSpeakText.ts`) so audio follows visible text + math line; admin TTS state moved to `AdminTtsProvider` in root layout (`AppProviders`) so listeners are not duplicated per `ExerciseBox`.

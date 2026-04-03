@@ -299,3 +299,72 @@ test.describe("keyboard + persistence basics (RTL)", () => {
   });
 });
 
+
+test.describe("tts tap-to-play", () => {
+  test("exercise TTS control is hidden when admin pref is off", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { speechSynthesis?: unknown }).speechSynthesis = {
+        speak: () => {},
+        cancel: () => {},
+        pause: () => {},
+        resume: () => {},
+        getVoices: () => [],
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      };
+      (window as unknown as { SpeechSynthesisUtterance?: unknown }).SpeechSynthesisUtterance = function SpeechSynthesisUtterance() {
+        return {};
+      };
+    });
+
+    const day = getWorkbookDaysById("a")["day-1"];
+    const ex = day ? findFirstInputExercise(day) : null;
+    if (!day || !ex) {
+      test.skip(true, "day-1 needs an input exercise");
+    }
+
+    await page.goto("/");
+    await page.evaluate(() => {
+      window.localStorage.setItem("kids_math.admin_prefs.v1", JSON.stringify({ ttsEnabled: false }));
+    });
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
+
+    await expect(page.getByTestId(testIds.component.exerciseBox.tts(ex!.id))).toHaveCount(0);
+  });
+
+  test("exercise TTS control speaks on click when admin pref is on", async ({ page }) => {
+    const day = getWorkbookDaysById("a")["day-1"];
+    const ex = day ? findFirstInputExercise(day) : null;
+    if (!day || !ex) {
+      test.skip(true, "day-1 needs an input exercise");
+    }
+
+    await page.goto("/");
+    await page.evaluate(() => {
+      window.localStorage.setItem("kids_math.admin_prefs.v1", JSON.stringify({ ttsEnabled: true }));
+    });
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
+
+    await page.evaluate(() => {
+      const w = window as unknown as { __ttsSpeakCalls?: number };
+      w.__ttsSpeakCalls = 0;
+      const synth = window.speechSynthesis;
+      const inner = synth.speak.bind(synth);
+      synth.speak = (utterance: SpeechSynthesisUtterance) => {
+        w.__ttsSpeakCalls = (w.__ttsSpeakCalls ?? 0) + 1;
+        try {
+          inner(utterance);
+        } catch {
+          // Stubbed/minimal environments may still count the user gesture path.
+        }
+      };
+    });
+
+    await page.getByTestId(testIds.component.exerciseBox.tts(ex!.id)).click();
+    const count = await page.evaluate(() => (window as unknown as { __ttsSpeakCalls?: number }).__ttsSpeakCalls ?? 0);
+    expect(count).toBeGreaterThan(0);
+  });
+});
+

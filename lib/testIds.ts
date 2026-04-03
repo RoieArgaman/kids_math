@@ -88,6 +88,7 @@ export const testIds = {
       markAllDaysComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "markAllDaysComplete"),
       forceFinalExamComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "forceFinalExamComplete"),
       statusMessage: () => tid("screen", "adminProgress", "statusMessage"),
+      ttsToggle: () => tid("screen", "adminProgress", "tts", "toggle"),
     },
     plan: {
       root: (grade: string) => tid("screen", "plan", "grade", grade),
@@ -259,6 +260,7 @@ export const testIds = {
         tid("component", "exerciseBox", "exercise", exerciseId, "hint"),
       hintText: (exerciseId: string) =>
         tid("component", "exerciseBox", "exercise", exerciseId, "hintText"),
+      tts: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId, "tts"),
     },
     shapeIcon: {
       root: (shape: string) => tid("component", "shapeIcon", shape),

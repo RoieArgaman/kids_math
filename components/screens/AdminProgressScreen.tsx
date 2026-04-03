@@ -17,6 +17,7 @@ import type { DayId, WorkbookProgressState } from "@/lib/types";
 import { resetAdminDayProgress } from "@/lib/admin/resetDayProgress";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
 import { wipeGradeBClientState } from "@/lib/admin/wipeGradeBClientState";
+import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
 
 type StatusState = { kind: "success" | "error"; message: string } | null;
 
@@ -30,6 +31,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
   const [status, setStatus] = useState<StatusState>(null);
   const [resetArmedDayId, setResetArmedDayId] = useState<string | null>(null);
   const [resetBusy, setResetBusy] = useState(false);
+  const { ttsEnabled, setTtsEnabled, hydrated: ttsHydrated } = useAdminTtsEnabled();
 
   useEffect(() => {
     setSelectedGrade(initialGrade);
@@ -281,6 +283,26 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
               </option>
             </select>
           </section>
+
+          {ttsHydrated ? (
+            <section data-testid={childTid(rootTid, "ttsPanel")} className="flex flex-wrap items-center gap-3 px-4">
+              <label
+                data-testid={childTid(rootTid, "ttsLabel")}
+                htmlFor="admin-tts-toggle"
+                className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800"
+              >
+                <input
+                  id="admin-tts-toggle"
+                  type="checkbox"
+                  data-testid={testIds.screen.adminProgress.ttsToggle()}
+                  className="h-5 w-5 rounded border-slate-300"
+                  checked={ttsEnabled}
+                  onChange={(event) => setTtsEnabled(event.target.checked)}
+                />
+                השמעת הנחיות בקול (למכשיר זה בלבד)
+              </label>
+            </section>
+          ) : null}
 
           <section data-testid={childTid(rootTid, "gradeActions")} className="flex flex-wrap items-center gap-3 px-4">
             <Button

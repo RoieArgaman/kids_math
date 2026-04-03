@@ -171,6 +171,36 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/* Compact icon controls (e.g. TTS): 44px min touch target without full .touch-button chrome */
+.touch-icon-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.625rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  border-width: 2px;
+  border-style: solid;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.touch-icon-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, white);
+  outline-offset: 2px;
+}
+
+.touch-icon-button:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
 .btn-accent {
   background: linear-gradient(135deg, #8b75cc 0%, #a78bfa 100%);
   color: #ffffff;
