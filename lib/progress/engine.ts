@@ -5,15 +5,19 @@ import {
   type DayProgressState,
   type ExerciseId,
   type ExerciseAttempt,
+  type SectionId,
   type WorkbookDay,
   type WorkbookProgressState,
 } from "@/lib/types";
 
 export const COMPLETION_GATE_PERCENT = 100;
-export const MAX_DAILY_WRONG_ANSWERS = 3;
+export const MAX_SECTION_WRONG_ANSWERS = 3;
+/** @deprecated Use MAX_SECTION_WRONG_ANSWERS (mistake limit is per section). */
+export const MAX_DAILY_WRONG_ANSWERS = MAX_SECTION_WRONG_ANSWERS;
 
 export interface SetAnswerInput {
   dayId: DayId;
+  sectionId: SectionId;
   exerciseId: ExerciseId;
   answer: AnswerValue;
   isCorrect: boolean;
@@ -35,10 +39,15 @@ export function createInitialDayProgressState(dayId: DayId): DayProgressState {
     answers: {},
     correctAnswers: {},
     wrongCount: 0,
+    wrongBySection: {},
     attempts: [],
     percentDone: 0,
     isComplete: false,
   };
+}
+
+function countIncorrectAttempts(attempts: ExerciseAttempt[]): number {
+  return attempts.filter((a) => !a.isCorrect).length;
 }
 
 export function getOrCreateDayProgress(
@@ -131,8 +140,15 @@ export function setAnswerForDay(
     ...dayState.correctAnswers,
     [input.exerciseId]: input.isCorrect,
   };
-  const wrongIncrement = input.isCorrect || dayState.isComplete ? 0 : 1;
-  const wrongCount = dayState.wrongCount + wrongIncrement;
+  const nextAttempts = [...dayState.attempts, attempt];
+  const wrongCount = countIncorrectAttempts(nextAttempts);
+
+  let wrongBySection = { ...dayState.wrongBySection };
+  if (!input.isCorrect && !dayState.isComplete) {
+    const prev = wrongBySection[input.sectionId] ?? 0;
+    wrongBySection = { ...wrongBySection, [input.sectionId]: prev + 1 };
+  }
+
   const correctCount = Object.values(nextCorrectAnswers).filter(Boolean).length;
   const percentDone = calculatePercentDone(correctCount, input.totalExercises);
   const canComplete = passesCompletionGate(percentDone);
@@ -142,7 +158,8 @@ export function setAnswerForDay(
     answers: nextAnswers,
     correctAnswers: nextCorrectAnswers,
     wrongCount,
-    attempts: [...dayState.attempts, attempt],
+    wrongBySection,
+    attempts: nextAttempts,
     percentDone,
     isComplete: dayState.isComplete || canComplete,
     completedAt: dayState.completedAt ?? (canComplete ? new Date().toISOString() : undefined),
@@ -223,9 +240,84 @@ export function forceMarkDayComplete(
     correctAnswers,
     attempts,
     wrongCount: 0,
+    wrongBySection: {},
     percentDone: 100,
     isComplete: true,
     completedAt,
+  };
+
+  return {
+    ...state,
+    days: {
+      ...state.days,
+      [dayId]: nextDayState,
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function forceMarkSectionComplete(
+  state: WorkbookProgressState,
+  dayId: DayId,
+  sectionId: SectionId,
+  options?: { day?: WorkbookDay },
+): WorkbookProgressState {
+  const day = options?.day;
+  if (!day || day.id !== dayId) {
+    return state;
+  }
+  const targetSection = day.sections.find((s) => s.id === sectionId);
+  if (!targetSection) {
+    return state;
+  }
+  if (targetSection.exercises.length === 0) {
+    return state;
+  }
+
+  const totalExercisesInDay = day.sections.reduce((sum, s) => sum + s.exercises.length, 0);
+  if (totalExercisesInDay <= 0) {
+    return state;
+  }
+
+  const dayState = getOrCreateDayProgress(state, dayId);
+  const now = new Date().toISOString();
+  const targetExerciseIds = new Set<ExerciseId>(targetSection.exercises.map((e) => e.id));
+
+  const nextAnswers = { ...dayState.answers };
+  const nextCorrectAnswers = { ...dayState.correctAnswers };
+  for (const exercise of targetSection.exercises) {
+    const value = answerValueForExercise(exercise);
+    nextAnswers[exercise.id] = value;
+    nextCorrectAnswers[exercise.id] = true;
+  }
+
+  const nextAttempts = [
+    ...dayState.attempts.filter((a) => !targetExerciseIds.has(a.exerciseId)),
+    ...targetSection.exercises.map((exercise) => ({
+      exerciseId: exercise.id,
+      answer: answerValueForExercise(exercise),
+      isCorrect: true as const,
+      attemptedAt: now,
+    })),
+  ];
+
+  const wrongCount = countIncorrectAttempts(nextAttempts);
+  const wrongBySection = { ...dayState.wrongBySection, [sectionId]: 0 };
+
+  const correctCount = Object.values(nextCorrectAnswers).filter(Boolean).length;
+  const percentDone = calculatePercentDone(correctCount, totalExercisesInDay);
+  const canComplete = passesCompletionGate(percentDone);
+
+  const nextDayState: DayProgressState = {
+    ...dayState,
+    answers: nextAnswers,
+    correctAnswers: nextCorrectAnswers,
+    wrongCount,
+    wrongBySection,
+    attempts: nextAttempts,
+    percentDone,
+    isComplete: dayState.isComplete || canComplete,
+    completedAt: dayState.completedAt ?? (canComplete ? now : undefined),
   };
 
   return {
@@ -266,6 +358,55 @@ export function resetDayProgress(
     days: {
       ...state.days,
       [dayId]: createInitialDayProgressState(dayId),
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function resetSectionProgress(
+  state: WorkbookProgressState,
+  dayId: DayId,
+  sectionId: SectionId,
+  exerciseIds: ExerciseId[],
+  totalExercises: number,
+): WorkbookProgressState {
+  const dayState = getOrCreateDayProgress(state, dayId);
+  const idSet = new Set<ExerciseId>(exerciseIds);
+
+  const nextAnswers = { ...dayState.answers };
+  const nextCorrectAnswers = { ...dayState.correctAnswers };
+  for (const id of exerciseIds) {
+    delete nextAnswers[id];
+    delete nextCorrectAnswers[id];
+  }
+
+  const nextAttempts = dayState.attempts.filter((a) => !idSet.has(a.exerciseId));
+  const wrongCount = countIncorrectAttempts(nextAttempts);
+
+  const wrongBySection = { ...dayState.wrongBySection, [sectionId]: 0 };
+
+  const correctCount = Object.values(nextCorrectAnswers).filter(Boolean).length;
+  const percentDone = calculatePercentDone(correctCount, totalExercises);
+  const nextIsComplete = passesCompletionGate(percentDone);
+
+  const nextDayState: DayProgressState = {
+    ...dayState,
+    answers: nextAnswers,
+    correctAnswers: nextCorrectAnswers,
+    attempts: nextAttempts,
+    wrongCount,
+    wrongBySection,
+    percentDone,
+    isComplete: nextIsComplete,
+    completedAt: nextIsComplete ? dayState.completedAt : undefined,
+    bestTimeMs: nextIsComplete ? dayState.bestTimeMs : undefined,
+  };
+
+  return {
+    ...state,
+    days: {
+      ...state.days,
+      [dayId]: nextDayState,
     },
     updatedAt: new Date().toISOString(),
   };

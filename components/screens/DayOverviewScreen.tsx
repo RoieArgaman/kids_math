@@ -7,6 +7,7 @@ import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { DayHeader } from "@/components/DayHeader";
+import { DayTeachingPrimer } from "@/components/DayTeachingPrimer";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
@@ -207,6 +208,8 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           sessionTimerTestId={childTid(root, "dayHeader", "timer")}
         />
       </div>
+
+      <DayTeachingPrimer day={day} grade={effectiveGrade} dayId={dayId} />
 
       {/* Section cards */}
       <div data-testid={childTid(root, "sections")} className="mb-6 flex flex-col gap-4">

@@ -300,4 +300,54 @@ test.describe("Day Hub scenarios", () => {
       page.getByTestId(testIds.screen.dayOverview.sectionCardCta(grade, dayId, secondSection.id)),
     ).toBeVisible();
   });
+
+  test("day teaching primer visible when content exists", async ({ page }) => {
+    await page.goto(`/grade/${grade}/day/${dayId}`);
+    await expect(page.getByTestId(testIds.screen.dayOverview.teachingPrimer(grade, dayId))).toBeVisible();
+    await expect(page.getByRole("heading", { name: /לִפְנֵי שֶׁמַּתְחִילִים/i })).toBeVisible();
+  });
+
+  test("day without teaching primer omits panel", async ({ page, context }) => {
+    await context.addCookies([
+      {
+        name: "kids_math.unlocked_grade_b",
+        value: "1",
+        url: getCookieUrl(),
+      },
+    ]);
+    const g = "b" as const;
+    const noPrimerDay: DayId = "day-1";
+    await page.goto("/");
+    await seedProgressState(page, g, createProgressState({ days: {} }));
+    await page.goto(`/grade/${g}/day/${noPrimerDay}`);
+    await expect(page.getByTestId(testIds.screen.dayOverview.root(g, noPrimerDay))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.teachingPrimer(g, noPrimerDay))).toHaveCount(0);
+  });
+
+  test("day teaching primer TTS tap calls speak when enabled", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      window.localStorage.setItem("kids_math.admin_prefs.v1", JSON.stringify({ ttsEnabled: true }));
+    });
+    await page.goto(`/grade/${grade}/day/${dayId}`);
+    await expect(page.getByTestId(testIds.screen.dayOverview.teachingPrimer(grade, dayId))).toBeVisible();
+    await page.evaluate(() => {
+      const w = window as unknown as { __primerTtsCalls?: number };
+      w.__primerTtsCalls = 0;
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      const inner = synth.speak.bind(synth);
+      synth.speak = (utterance: SpeechSynthesisUtterance) => {
+        w.__primerTtsCalls = (w.__primerTtsCalls ?? 0) + 1;
+        try {
+          inner(utterance);
+        } catch {
+          // Stubbed/minimal environments may still count the user gesture path.
+        }
+      };
+    });
+    await page.getByTestId(testIds.screen.dayOverview.teachingPrimerTts(grade, dayId)).click();
+    const count = await page.evaluate(() => (window as unknown as { __primerTtsCalls?: number }).__primerTtsCalls ?? 0);
+    expect(count).toBeGreaterThan(0);
+  });
 });

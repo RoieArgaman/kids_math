@@ -4,19 +4,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { GradeId } from "@/lib/grades";
 import { loadProgressState } from "@/lib/progress/storage";
-import type { Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
+import type { Exercise, ExerciseId, SectionId, WorkbookDay } from "@/lib/types";
 import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
 
 interface UseDayAnswersOptions {
   day: WorkbookDay | undefined;
   grade: GradeId;
+  sectionId: SectionId;
   allExercisesCount: number;
   setAnswer: (input: {
     exerciseId: ExerciseId;
+    sectionId: SectionId;
     answer: string;
     isCorrect: boolean;
     totalExercises: number;
   }) => void;
+}
+
+function withoutExerciseKeys<T extends Record<string, unknown>>(prev: T, exerciseIds: string[]): T {
+  const next = { ...prev };
+  for (const id of exerciseIds) {
+    delete next[id];
+  }
+  return next;
 }
 
 export interface DayAnswersState {
@@ -27,6 +37,7 @@ export interface DayAnswersState {
   wrongAttempts: Record<string, number>;
   hintUsed: Record<string, boolean>;
   resetAnswerState: () => void;
+  resetAnswerStateForExerciseIds: (exerciseIds: string[]) => void;
   onChangeValue: (exerciseId: string, value: string) => void;
   onRetryExercise: (exerciseId: string) => void;
   onRevealHint: (exerciseId: string) => void;
@@ -36,6 +47,7 @@ export interface DayAnswersState {
 export function useDayAnswers({
   day,
   grade,
+  sectionId,
   allExercisesCount,
   setAnswer,
 }: UseDayAnswersOptions): DayAnswersState {
@@ -100,6 +112,15 @@ export function useDayAnswers({
     setHintUsed({});
   }, []);
 
+  const resetAnswerStateForExerciseIds = useCallback((exerciseIds: string[]) => {
+    setAnswers((prev) => withoutExerciseKeys(prev, exerciseIds));
+    setCorrectMap((prev) => withoutExerciseKeys(prev, exerciseIds));
+    setFeedback((prev) => withoutExerciseKeys(prev, exerciseIds));
+    setAttempts((prev) => withoutExerciseKeys(prev, exerciseIds));
+    setWrongAttempts((prev) => withoutExerciseKeys(prev, exerciseIds));
+    setHintUsed((prev) => withoutExerciseKeys(prev, exerciseIds));
+  }, []);
+
   const onChangeValue = useCallback((exerciseId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [exerciseId]: value }));
   }, []);
@@ -148,12 +169,13 @@ export function useDayAnswers({
       }));
       setAnswer({
         exerciseId: exercise.id as ExerciseId,
+        sectionId,
         answer: userAnswer,
         isCorrect: success,
         totalExercises: allExercisesCount,
       });
     },
-    [allExercisesCount, setAnswer],
+    [allExercisesCount, sectionId, setAnswer],
   );
 
   const onRevealHint = useCallback((exerciseId: string) => {
@@ -168,6 +190,7 @@ export function useDayAnswers({
     wrongAttempts,
     hintUsed,
     resetAnswerState,
+    resetAnswerStateForExerciseIds,
     onChangeValue,
     onRetryExercise,
     onRevealHint,

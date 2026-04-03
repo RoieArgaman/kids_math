@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getWorkbookDays } from "@/lib/content/workbook";
-import type { Exercise } from "@/lib/types";
+import type { Exercise, WorkbookDay } from "@/lib/types";
 
 const UNRESOLVED_PLACEHOLDER_REGEX = /=\s*\?|(\?\s*[+\-×÷])|([+\-×÷]\s+\?(?:\s|$))/;
 
@@ -29,6 +29,24 @@ function assertExercise(ex: Exercise): void {
   }
 }
 
+const MAX_TEACHING_SUMMARY_CHARS = 2000;
+const MAX_TEACHING_STEP_CHARS = 800;
+const MAX_TEACHING_STEPS = 12;
+
+function assertDayTeaching(day: WorkbookDay): void {
+  if (day.teachingSummary != null) {
+    expect(UNRESOLVED_PLACEHOLDER_REGEX.test(day.teachingSummary)).toBe(false);
+    expect(day.teachingSummary.length).toBeLessThanOrEqual(MAX_TEACHING_SUMMARY_CHARS);
+  }
+  if (day.teachingSteps != null) {
+    expect(day.teachingSteps.length).toBeLessThanOrEqual(MAX_TEACHING_STEPS);
+    for (const step of day.teachingSteps) {
+      expect(UNRESOLVED_PLACEHOLDER_REGEX.test(step)).toBe(false);
+      expect(step.length).toBeLessThanOrEqual(MAX_TEACHING_STEP_CHARS);
+    }
+  }
+}
+
 describe("content validity across grades", () => {
   it("grade A and B are non-empty and have valid exercises", () => {
     const grades = ["a", "b"] as const;
@@ -40,6 +58,7 @@ describe("content validity across grades", () => {
 
       for (const day of days) {
         expect(day.sections.length).toBeGreaterThan(0);
+        assertDayTeaching(day);
 
         for (const section of day.sections) {
           expect(section.exercises.length).toBeGreaterThan(0);

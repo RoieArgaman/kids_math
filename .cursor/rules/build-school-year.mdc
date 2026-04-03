@@ -13,6 +13,7 @@ Use this rule when the USER asks to:
 Required companion references for pedagogical implementation and validation:
 - `docs/PEDAGOGY_CODE_INJECTION_POINTS.md`
 - `docs/VALIDATION_PLAN_G1_G2_PEDAGOGY.md`
+- Day hub teaching primer (optional copy + TTS): `.cursor/rules/day-teaching-primer.mdc`
 
 ## Definition of done (מה יוצא בסוף)
 

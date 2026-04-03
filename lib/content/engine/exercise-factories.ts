@@ -12,6 +12,9 @@ export type DayConcept = {
   dayNumber: number;
   title: string;
   objective: string;
+  /** Optional day-hub teaching primer (Hebrew); surfaced on DayOverviewScreen. */
+  teachingSummary?: string;
+  teachingSteps?: string[];
   mainTags: SkillTag[];
   spiralReviewTags: SkillTag[];
   arithmeticPrompt: string;

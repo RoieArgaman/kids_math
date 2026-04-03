@@ -14,6 +14,7 @@ function makeDay(dayId: DayId): DayProgressState {
     answers: {},
     correctAnswers: {},
     wrongCount: 0,
+    wrongBySection: {},
     attempts: [],
     percentDone: 0,
     isComplete: false,
@@ -166,6 +167,28 @@ describe("loadProgressState", () => {
     );
     const loaded = loadProgressState({ grade: "a" });
     expect(loaded.days["day-1"]?.wrongCount).toBe(0);
+  });
+
+  it("sanitize defaults wrongBySection to {} when missing", () => {
+    const partial = {
+      dayId: "day-1" as DayId,
+      answers: {},
+      correctAnswers: {},
+      wrongCount: 0,
+      attempts: [],
+      percentDone: 0,
+      isComplete: false,
+    };
+    window.localStorage.setItem(
+      GRADE_A_KEY,
+      JSON.stringify({
+        version: 1,
+        days: { "day-1": partial },
+        updatedAt: "2020-01-01T00:00:00.000Z",
+      }),
+    );
+    const loaded = loadProgressState({ grade: "a" });
+    expect(loaded.days["day-1"]?.wrongBySection).toEqual({});
   });
 
   it("sanitize drops invalid day shapes", () => {

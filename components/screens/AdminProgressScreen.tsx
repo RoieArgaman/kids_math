@@ -9,17 +9,36 @@ import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { saveFinalExamState } from "@/lib/final-exam/storage";
 import { buildAdminForcedPassedFinalExamState } from "@/lib/admin/forcedFinalExam";
 import { gradeLabel, type GradeId } from "@/lib/grades";
-import { forceMarkDayComplete, createInitialWorkbookProgressState } from "@/lib/progress/engine";
+import {
+  createInitialWorkbookProgressState,
+  forceMarkDayComplete,
+  forceMarkSectionComplete,
+  resetSectionProgress,
+} from "@/lib/progress/engine";
 import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import type { DayId, WorkbookProgressState } from "@/lib/types";
+import type { DayId, Section, SectionId, WorkbookProgressState } from "@/lib/types";
 import { resetAdminDayProgress } from "@/lib/admin/resetDayProgress";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
 import { wipeGradeBClientState } from "@/lib/admin/wipeGradeBClientState";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
 
 type StatusState = { kind: "success" | "error"; message: string } | null;
+
+function sectionStatusLabel(section: Section, dayProgress: { correctAnswers: Record<string, boolean> } | undefined): string {
+  if (!dayProgress || section.exercises.length === 0) {
+    return "לא הושלם";
+  }
+  const correct = section.exercises.filter((ex) => dayProgress.correctAnswers[ex.id] === true).length;
+  if (correct === section.exercises.length) {
+    return "הושלם";
+  }
+  if (correct === 0) {
+    return "לא הושלם";
+  }
+  return "חלקי";
+}
 
 export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: GradeId }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -30,8 +49,28 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
   const [status, setStatus] = useState<StatusState>(null);
   const [resetArmedDayId, setResetArmedDayId] = useState<string | null>(null);
+  /** `dayId|sectionId` when section reset confirm is armed; mutually exclusive with day reset armed. */
+  const [resetArmedSectionKey, setResetArmedSectionKey] = useState<string | null>(null);
+  /** Day ids whose per-section lists are expanded (default: all collapsed). */
+  const [expandedDaySectionLists, setExpandedDaySectionLists] = useState<Set<DayId>>(() => new Set());
   const [resetBusy, setResetBusy] = useState(false);
   const { ttsEnabled, setTtsEnabled, hydrated: ttsHydrated } = useAdminTtsEnabled();
+
+  function toggleDaySectionsList(dayId: DayId): void {
+    setExpandedDaySectionLists((prev) => {
+      const willCollapse = prev.has(dayId);
+      if (willCollapse) {
+        setResetArmedSectionKey((k) => (k?.startsWith(`${dayId}|`) ? null : k));
+      }
+      const next = new Set(prev);
+      if (willCollapse) {
+        next.delete(dayId);
+      } else {
+        next.add(dayId);
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     setSelectedGrade(initialGrade);
@@ -92,7 +131,33 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     const day = days.find((item) => item.id === dayId);
     const next = forceMarkDayComplete(progress, dayId as DayId, { day, fillAnswers: true });
     setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
     persistNext(next, `יום ${dayId} סומן כהושלם.`);
+  }
+
+  function handleMarkSectionComplete(dayId: string, sectionId: SectionId): void {
+    const day = days.find((item) => item.id === dayId);
+    if (!day) {
+      return;
+    }
+    const next = forceMarkSectionComplete(progress, dayId as DayId, sectionId, { day });
+    setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
+    const sectionTitle = day.sections.find((s) => s.id === sectionId)?.title ?? sectionId;
+    persistNext(next, `מקטע סומן כהושלם: ${sectionTitle}`);
+  }
+
+  function handleResetSection(dayId: string, section: Section): void {
+    const day = days.find((item) => item.id === dayId);
+    if (!day || section.exercises.length === 0) {
+      return;
+    }
+    const totalExercises = day.sections.reduce((n, s) => n + s.exercises.length, 0);
+    const exerciseIds = section.exercises.map((e) => e.id);
+    const next = resetSectionProgress(progress, dayId as DayId, section.id, exerciseIds, totalExercises);
+    setResetArmedSectionKey(null);
+    setResetArmedDayId(null);
+    persistNext(next, `מקטע אופס: ${section.title}`);
   }
 
   async function handleReset(dayId: string): Promise<void> {
@@ -107,6 +172,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     saveProgressState(nextState, { grade: selectedGrade });
     setProgress(nextState);
     setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
 
     const baseMessage = `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`;
 
@@ -146,6 +212,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
       progress,
     );
     setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
     persistNext(next, `כל ימי הלימוד בכיתה ${gradeLabel(selectedGrade)} סומנו כהושלמו.`);
   }
 
@@ -186,6 +253,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
       return nextProgress;
     });
     setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
 
     setStatus({
       kind: "success",
@@ -271,6 +339,8 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
               value={selectedGrade}
               onChange={(event) => {
                 setResetArmedDayId(null);
+                setResetArmedSectionKey(null);
+                setExpandedDaySectionLists(new Set());
                 setStatus(null);
                 setSelectedGrade(event.target.value as GradeId);
               }}
@@ -337,8 +407,12 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
           <section data-testid={childTid(rootTid, "daysList")} className="space-y-3">
             {days.map((day) => {
               const rowTid = testIds.screen.adminProgress.dayRow(selectedGrade, day.id);
-              const isComplete = Boolean(progress.days[day.id as DayId]?.isComplete);
+              const dayIdTyped = day.id as DayId;
+              const isComplete = Boolean(progress.days[dayIdTyped]?.isComplete);
               const isResetArmed = resetArmedDayId === day.id;
+              const dayProgress = progress.days[dayIdTyped];
+              const sectionsExpanded = expandedDaySectionLists.has(dayIdTyped);
+              const sectionsPanelId = `admin-sections-panel-${selectedGrade}-${day.id}`;
               return (
                 <article data-testid={rowTid} key={day.id} className="rounded-2xl border border-slate-200 p-4">
                   <div data-testid={childTid(rowTid, "header")} className="mb-2 flex items-start justify-between gap-3">
@@ -357,6 +431,110 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                     {day.objective}
                   </p>
 
+                  {day.sections.length > 0 ? (
+                    <div
+                      data-testid={childTid(rowTid, "sectionsWrap")}
+                      className="mb-3 border-t border-slate-100 pt-3"
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-2 px-3 text-sm font-semibold"
+                        data-testid={testIds.screen.adminProgress.daySectionsToggle(selectedGrade, day.id)}
+                        aria-expanded={sectionsExpanded}
+                        aria-controls={sectionsPanelId}
+                        onClick={() => toggleDaySectionsList(dayIdTyped)}
+                      >
+                        <span data-testid={childTid(rowTid, "sectionsToggleLabel")}>
+                          מקטעים ({day.sections.length})
+                        </span>
+                        <span data-testid={childTid(rowTid, "sectionsToggleHint")}>
+                          {sectionsExpanded ? "הסתר מקטעים" : "הצג מקטעים"}
+                        </span>
+                      </Button>
+                      {sectionsExpanded ? (
+                        <ul
+                          id={sectionsPanelId}
+                          role="region"
+                          aria-label={`מקטעים ליום ${day.dayNumber}`}
+                          data-testid={childTid(rowTid, "sections")}
+                          className="space-y-2"
+                        >
+                          {day.sections.map((section) => {
+                            const secRowTid = testIds.screen.adminProgress.sectionRow(selectedGrade, day.id, section.id);
+                            const sectionKey = `${day.id}|${section.id}`;
+                            const isSectionResetArmed = resetArmedSectionKey === sectionKey;
+                            return (
+                              <li
+                                key={section.id}
+                                data-testid={secRowTid}
+                                className="rounded-xl bg-slate-50/80 px-3 py-2 text-right"
+                              >
+                                <div
+                                  data-testid={childTid(secRowTid, "header")}
+                                  className="mb-2 flex flex-wrap items-start justify-between gap-2"
+                                >
+                                  <span data-testid={childTid(secRowTid, "title")} className="text-sm font-semibold text-slate-800">
+                                    {section.title}
+                                  </span>
+                                  <span
+                                    data-testid={testIds.screen.adminProgress.sectionState(selectedGrade, day.id, section.id)}
+                                    className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-600"
+                                  >
+                                    {sectionStatusLabel(section, dayProgress)}
+                                  </span>
+                                </div>
+                                <div data-testid={childTid(secRowTid, "actions")} className="flex flex-wrap items-center gap-2">
+                                  <Button
+                                    data-testid={testIds.screen.adminProgress.markSectionComplete(selectedGrade, day.id, section.id)}
+                                    className="min-h-[44px] shrink-0 text-sm"
+                                    onClick={() => handleMarkSectionComplete(day.id, section.id)}
+                                  >
+                                    סמן מקטע
+                                  </Button>
+                                  {!isSectionResetArmed ? (
+                                    <Button
+                                      data-testid={testIds.screen.adminProgress.resetSection(selectedGrade, day.id, section.id)}
+                                      className="min-h-[44px] shrink-0 text-sm"
+                                      variant="outline"
+                                      disabled={resetBusy}
+                                      onClick={() => {
+                                        setResetArmedDayId(null);
+                                        setResetArmedSectionKey(sectionKey);
+                                      }}
+                                    >
+                                      אפס מקטע
+                                    </Button>
+                                  ) : (
+                                    <div data-testid={childTid(secRowTid, "resetConfirmPanel")} className="flex flex-wrap items-center gap-2">
+                                      <Button
+                                        data-testid={testIds.screen.adminProgress.resetSectionCancel(selectedGrade, day.id, section.id)}
+                                        className="min-h-[44px] text-sm"
+                                        variant="outline"
+                                        disabled={resetBusy}
+                                        onClick={() => setResetArmedSectionKey(null)}
+                                      >
+                                        ביטול
+                                      </Button>
+                                      <Button
+                                        data-testid={testIds.screen.adminProgress.resetSectionConfirm(selectedGrade, day.id, section.id)}
+                                        className="min-h-[44px] text-sm"
+                                        disabled={resetBusy}
+                                        onClick={() => handleResetSection(day.id, section)}
+                                      >
+                                        אישור איפוס מקטע
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   <div data-testid={childTid(rowTid, "actions")} className="flex flex-wrap items-center gap-3">
                     <Button
                       data-testid={testIds.screen.adminProgress.markComplete(selectedGrade, day.id)}
@@ -370,7 +548,10 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                         data-testid={testIds.screen.adminProgress.reset(selectedGrade, day.id)}
                         variant="outline"
                         disabled={resetBusy}
-                        onClick={() => setResetArmedDayId(day.id)}
+                        onClick={() => {
+                          setResetArmedSectionKey(null);
+                          setResetArmedDayId(day.id);
+                        }}
                       >
                         אפס התקדמות יום
                       </Button>

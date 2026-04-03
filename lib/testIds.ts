@@ -85,6 +85,20 @@ export const testIds = {
         tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "reset", "confirm"),
       resetCancel: (grade: string, dayId: string) =>
         tid("screen", "adminProgress", "grade", grade, "day", dayId, "cta", "reset", "cancel"),
+      sectionRow: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId),
+      sectionState: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId, "state"),
+      markSectionComplete: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId, "cta", "complete"),
+      resetSection: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId, "cta", "reset"),
+      resetSectionConfirm: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId, "cta", "reset", "confirm"),
+      resetSectionCancel: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "section", sectionId, "cta", "reset", "cancel"),
+      daySectionsToggle: (grade: string, dayId: string) =>
+        tid("screen", "adminProgress", "grade", grade, "day", dayId, "sections", "toggle"),
       markAllDaysComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "markAllDaysComplete"),
       forceFinalExamComplete: (grade: string) => tid("screen", "adminProgress", "grade", grade, "cta", "forceFinalExamComplete"),
       statusMessage: () => tid("screen", "adminProgress", "statusMessage"),
@@ -158,6 +172,12 @@ export const testIds = {
         tid("screen", "dayOverview", "completionPanel", "grade", grade, "day", dayId),
       completeCta: (grade: string, dayId: string) =>
         tid("screen", "dayOverview", "cta", "complete", "grade", grade, "day", dayId),
+      teachingPrimer: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "grade", grade, "day", dayId, "teachingPrimer"),
+      teachingPrimerTts: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "grade", grade, "day", dayId, "teachingPrimer", "tts"),
+      teachingPrimerExpand: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "grade", grade, "day", dayId, "teachingPrimer", "expand"),
     },
     section: {
       root: (grade: string, dayId: string, sectionId: string) =>

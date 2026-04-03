@@ -1,0 +1,44 @@
+---
+description: Day overview teaching primer (Hebrew copy, TTS, testIds) — optional authoring contract
+alwaysApply: false
+---
+
+# Day teaching primer (kids_math)
+
+## When this applies
+
+- Adding or editing **`teachingSummary` / `teachingSteps`** on a **`DayConcept`** (Grade A/B content under `lib/content/grade-*`).
+- Changing **`DayTeachingPrimer`** or day-hub layout.
+
+## UI modules
+
+- `components/DayTeachingPrimer.tsx` — re-exports `DayTeachingPrimer` (stable import path).
+- `components/teaching-primer/DayTeachingPrimer.tsx` — hub panel + collapse + TTS wiring.
+- `components/teaching-primer/TeachingPrimerExpandedContent.tsx` — summary + ordered steps.
+- `components/teaching-primer/TeachingPrimerExpandToggle.tsx` — expand/collapse control.
+
+## Authoring
+
+- **Hebrew only** in content fields; keep tone low-pressure and child-friendly.
+- **Align** with the day's section **`WorkedExample`** — no contradictory definitions vs. arithmetic/geometry prompts.
+- **Length:** aim short; very long text triggers **collapse** on the hub (`DAY_PRIMER_COLLAPSE_CHAR_THRESHOLD` in `lib/content/buildDayPrimerSpeakText.ts`, or **>4** steps).
+- **Optional:** omit both fields → **no** primer panel (empty state).
+
+## TTS
+
+- **No autoplay.** Uses `TapToPlayTtsButton` + admin **TTS** preference (`kids_math.admin_prefs.v1`).
+- Speak text = `buildDayPrimerSpeakText(day)` (summary + steps, joined for synthesis).
+
+## Test IDs
+
+- Tier-1: `testIds.screen.dayOverview.teachingPrimer(grade, dayId)` on the `Surface` root.
+- Nested: `childTid(primerRoot, "topRow" | "title" | "body" | "summary" | "steps" | "step", idx | "preview")`.
+- TTS: `testIds.screen.dayOverview.teachingPrimerTts(grade, dayId)`.
+- Expand: `testIds.screen.dayOverview.teachingPrimerExpand(grade, dayId)`.
+
+## Quality
+
+- Extend **`tests/unit/lib/content/content-validity.test.ts`** if adding new content constraints.
+- E2E coverage: **`tests/e2e/day-smoke.spec.ts`** (primer visible / absent / TTS).
+
+See also **`AGENTS.md`** (MoE alignment for curricular claims) and **`build-school-year.mdc`** for year-scale content workflow.

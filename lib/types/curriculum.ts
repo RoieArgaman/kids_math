@@ -123,6 +123,10 @@ export interface WorkbookDay {
   title: string;
   week: number;
   objective: string;
+  /** Optional hub primer: child-friendly explanation before sections (align with section WorkedExample). */
+  teachingSummary?: string;
+  /** Optional short steps (CPA-friendly); shown with teachingSummary on day overview. */
+  teachingSteps?: string[];
   spiralReviewTags: SkillTag[];
   unlockThresholdPercent: number;
   sections: Section[];
