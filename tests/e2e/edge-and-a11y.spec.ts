@@ -246,7 +246,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     await expect(pct).not.toHaveText("0%");
   });
 
-  test("after 3 wrong answers, the day auto-resets and stays reset after reload", async ({ page }) => {
+  test("after 3 wrong answers, the section auto-resets and stays reset after reload", async ({ page }) => {
     const day = getWorkbookDaysById("a")["day-1"];
     const ex = day ? findFirstInputExercise(day) : null;
     if (!day || !ex) {
@@ -260,7 +260,9 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       await answerExerciseWrongly(page, ex!);
     }
 
-    await expect(page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ.")).toBeVisible();
+    await expect(
+      page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת בַּחֵלֶק. מַתְחִילִים אֶת הַחֵלֶק מֵחָדָשׁ."),
+    ).toBeVisible();
 
     await page.reload();
     await expect(page.getByText("💥 0/3")).toBeVisible();
@@ -291,7 +293,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     }
 
     await expect(
-      page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת. הַיּוֹם אוּפַס וּמַתְחִילִים מֵחָדָשׁ."),
+      page.getByText("הִגַּעַתְּ לְ-3 טָעוּיוֹת בַּחֵלֶק. מַתְחִילִים אֶת הַחֵלֶק מֵחָדָשׁ."),
     ).toHaveCount(0);
 
     const wrongBadge = page.getByTestId(childTid(testIds.screen.section.stickyHeader("a", "day-1", sectionId), "wrongBadge"));

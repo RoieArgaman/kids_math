@@ -8,9 +8,11 @@ import {
   computeElapsedMsForCompletedDay,
   createInitialWorkbookProgressState,
   forceMarkDayComplete,
+  forceMarkSectionComplete,
   markDayComplete,
   mergeBestTimeMs,
   resetDayProgress,
+  resetSectionProgress,
   setAnswerForDay,
 } from "@/lib/progress/engine";
 
@@ -48,6 +50,7 @@ describe("setAnswerForDay / completion semantics", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -59,6 +62,7 @@ describe("setAnswerForDay / completion semantics", () => {
     // Now submit an incorrect answer; percent should drop but completion should remain true.
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 2,
       isCorrect: false,
@@ -72,6 +76,7 @@ describe("setAnswerForDay / completion semantics", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -87,6 +92,7 @@ describe("markDayComplete", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -119,7 +125,7 @@ describe("forceMarkDayComplete", () => {
     expect(twice.days["day-1"]?.percentDone).toBe(100);
     expect(twice.days["day-1"]?.completedAt).toBe(once.days["day-1"]?.completedAt);
     expect(Object.keys(twice.days["day-1"] ?? {}).sort()).toEqual(
-      ["answers", "attempts", "completedAt", "correctAnswers", "dayId", "isComplete", "percentDone", "wrongCount"].sort(),
+      ["answers", "attempts", "completedAt", "correctAnswers", "dayId", "isComplete", "percentDone", "wrongBySection", "wrongCount"].sort(),
     );
   });
 
@@ -136,11 +142,56 @@ describe("forceMarkDayComplete", () => {
   });
 });
 
+describe("forceMarkSectionComplete", () => {
+  const day1 = getWorkbookDaysById("a")["day-1"];
+
+  it("forcing only the first section leaves percentDone below 100 and not complete (from empty state)", () => {
+    const state = createInitialWorkbookProgressState();
+    const firstSectionId = day1.sections[0]!.id;
+    const next = forceMarkSectionComplete(state, "day-1", firstSectionId, { day: day1 });
+    const dayState = next.days["day-1"];
+    expect(dayState?.percentDone).toBeLessThan(100);
+    expect(dayState?.isComplete).toBe(false);
+  });
+
+  it("forcing all sections sequentially completes the day at 100%", () => {
+    let state: WorkbookProgressState = createInitialWorkbookProgressState();
+    for (const section of day1.sections) {
+      state = forceMarkSectionComplete(state, "day-1", section.id, { day: day1 });
+    }
+    const dayState = state.days["day-1"];
+    expect(dayState?.percentDone).toBe(100);
+    expect(dayState?.isComplete).toBe(true);
+  });
+
+  it("is idempotent when called twice on the same section", () => {
+    const state = createInitialWorkbookProgressState();
+    const sectionId = day1.sections[0]!.id;
+    const once = forceMarkSectionComplete(state, "day-1", sectionId, { day: day1 });
+    const twice = forceMarkSectionComplete(once, "day-1", sectionId, { day: day1 });
+    expect(twice.days["day-1"]?.percentDone).toBe(once.days["day-1"]?.percentDone);
+  });
+
+  it("returns unchanged state for a section id not present in the workbook day", () => {
+    const state = createInitialWorkbookProgressState();
+    const next = forceMarkSectionComplete(state, "day-1", "day-1-section-999-fake", { day: day1 });
+    expect(next).toBe(state);
+    expect(next.days["day-1"]).toBeUndefined();
+  });
+
+  it("returns unchanged when options.day is missing", () => {
+    const state = createInitialWorkbookProgressState();
+    const next = forceMarkSectionComplete(state, "day-1", day1.sections[0]!.id, {});
+    expect(next).toBe(state);
+  });
+});
+
 describe("resetDayProgress", () => {
   it("resets day fields to initial values", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -152,6 +203,7 @@ describe("resetDayProgress", () => {
     expect(reset.days["day-1"]?.isComplete).toBe(false);
     expect(reset.days["day-1"]?.percentDone).toBe(0);
     expect(reset.days["day-1"]?.wrongCount).toBe(0);
+    expect(reset.days["day-1"]?.wrongBySection).toEqual({});
     expect(reset.days["day-1"]?.attempts).toEqual([]);
   });
 });
@@ -163,6 +215,7 @@ describe("canUnlockNextDay", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -174,6 +227,7 @@ describe("canUnlockNextDay", () => {
     // Force 100% to make complete and pass threshold.
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-2",
       answer: 1,
       isCorrect: true,
@@ -193,6 +247,7 @@ describe("computeElapsedMsForCompletedDay", () => {
       answers: {},
       correctAnswers: {},
       wrongCount: 0,
+      wrongBySection: {},
       attempts: [
         {
           exerciseId: "e1",
@@ -214,6 +269,7 @@ describe("computeElapsedMsForCompletedDay", () => {
       answers: {},
       correctAnswers: {},
       wrongCount: 0,
+      wrongBySection: {},
       attempts: [],
       percentDone: 100,
       isComplete: true,
@@ -227,6 +283,7 @@ describe("computeElapsedMsForCompletedDay", () => {
       answers: {},
       correctAnswers: {},
       wrongCount: 0,
+      wrongBySection: {},
       attempts: [
         {
           exerciseId: "e1",
@@ -248,6 +305,7 @@ describe("computeElapsedMsForCompletedDay", () => {
       answers: {},
       correctAnswers: {},
       wrongCount: 0,
+      wrongBySection: {},
       attempts: [
         {
           exerciseId: "e1",
@@ -269,6 +327,7 @@ describe("applyBestTimeMsIfImproved", () => {
     let state = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -288,6 +347,7 @@ describe("applyBestTimeMsIfImproved", () => {
           answers: {},
           correctAnswers: {},
           wrongCount: 0,
+          wrongBySection: {},
           attempts: [],
           percentDone: 100,
           isComplete: true,
@@ -310,6 +370,7 @@ describe("applyBestTimeMsIfImproved", () => {
           answers: {},
           correctAnswers: {},
           wrongCount: 0,
+          wrongBySection: {},
           attempts: [],
           percentDone: 100,
           isComplete: true,
@@ -342,10 +403,11 @@ describe("mergeBestTimeMs", () => {
 });
 
 describe("setAnswerForDay wrongCount after sticky complete", () => {
-  it("does not increment wrongCount when isComplete is already true", () => {
+  it("does not increment wrongBySection when isComplete is already true; wrongCount follows attempts", () => {
     let state: WorkbookProgressState = createInitialWorkbookProgressState();
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 1,
       isCorrect: true,
@@ -354,13 +416,15 @@ describe("setAnswerForDay wrongCount after sticky complete", () => {
     expect(state.days["day-1"]?.wrongCount).toBe(0);
     state = setAnswerForDay(state, {
       dayId: "day-1",
+      sectionId: "day-1-section-1",
       exerciseId: "day-1-section-1-exercise-1",
       answer: 2,
       isCorrect: false,
       totalExercises: 1,
     });
     expect(state.days["day-1"]?.isComplete).toBe(true);
-    expect(state.days["day-1"]?.wrongCount).toBe(0);
+    expect(state.days["day-1"]?.wrongBySection["day-1-section-1"] ?? 0).toBe(0);
+    expect(state.days["day-1"]?.wrongCount).toBe(1);
   });
 });
 
@@ -374,6 +438,7 @@ describe("markDayComplete bestTimeMs", () => {
           answers: {},
           correctAnswers: {},
           wrongCount: 0,
+          wrongBySection: {},
           attempts: [
             {
               exerciseId: "e1",
@@ -402,6 +467,7 @@ describe("markDayComplete bestTimeMs", () => {
           answers: {},
           correctAnswers: {},
           wrongCount: 0,
+          wrongBySection: {},
           attempts: [
             {
               exerciseId: "e1",
@@ -419,5 +485,54 @@ describe("markDayComplete bestTimeMs", () => {
     };
     const next = markDayComplete(state, "day-1");
     expect(next.days["day-1"]?.bestTimeMs).toBe(60_000);
+  });
+});
+
+describe("wrongBySection / resetSectionProgress", () => {
+  it("tracks wrong answers per section independently", () => {
+    let state: WorkbookProgressState = createInitialWorkbookProgressState();
+    state = setAnswerForDay(state, {
+      dayId: "day-1",
+      sectionId: "day-1-section-0",
+      exerciseId: "day-1-section-0-exercise-1",
+      answer: 0,
+      isCorrect: false,
+      totalExercises: 4,
+    });
+    state = setAnswerForDay(state, {
+      dayId: "day-1",
+      sectionId: "day-1-section-1",
+      exerciseId: "day-1-section-1-exercise-1",
+      answer: 0,
+      isCorrect: false,
+      totalExercises: 4,
+    });
+    expect(state.days["day-1"]?.wrongBySection["day-1-section-0"]).toBe(1);
+    expect(state.days["day-1"]?.wrongBySection["day-1-section-1"]).toBe(1);
+  });
+
+  it("resetSectionProgress clears only the given section and zeros its mistake counter", () => {
+    let state: WorkbookProgressState = createInitialWorkbookProgressState();
+    state = setAnswerForDay(state, {
+      dayId: "day-1",
+      sectionId: "day-1-section-0",
+      exerciseId: "day-1-section-0-exercise-1",
+      answer: 1,
+      isCorrect: true,
+      totalExercises: 4,
+    });
+    state = setAnswerForDay(state, {
+      dayId: "day-1",
+      sectionId: "day-1-section-1",
+      exerciseId: "day-1-section-1-exercise-1",
+      answer: 0,
+      isCorrect: false,
+      totalExercises: 4,
+    });
+    const next = resetSectionProgress(state, "day-1", "day-1-section-1", ["day-1-section-1-exercise-1"], 4);
+    expect(next.days["day-1"]?.answers["day-1-section-0-exercise-1"]).toBe(1);
+    expect(next.days["day-1"]?.answers["day-1-section-1-exercise-1"]).toBeUndefined();
+    expect(next.days["day-1"]?.wrongBySection["day-1-section-1"] ?? 0).toBe(0);
+    expect(next.days["day-1"]?.wrongCount).toBe(0);
   });
 });

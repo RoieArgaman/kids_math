@@ -21,6 +21,7 @@ function seedState(): WorkbookProgressState {
         answers: {},
         correctAnswers: {},
         wrongCount: 0,
+        wrongBySection: {},
         attempts: [],
         percentDone: 50,
         isComplete: false,

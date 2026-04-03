@@ -43,9 +43,14 @@ function isDayProgressState(value: unknown): value is DayProgressState {
 }
 
 function withDefaultsForDayState(value: DayProgressState): DayProgressState {
+  const wrongBySection =
+    isObject(value.wrongBySection) && value.wrongBySection !== null
+      ? (value.wrongBySection as Record<string, number>)
+      : {};
   return {
     ...value,
     wrongCount: typeof value.wrongCount === "number" ? value.wrongCount : 0,
+    wrongBySection,
   };
 }
 

@@ -25,6 +25,10 @@ export function DayHeader({
       ? formatMs(sessionTimerMs)
       : null;
   const weekRowTestId = rootTestId ? childTid(rootTestId, "weekRow") : "km.autogen.dayheader.node.idx.weekRow";
+  const weekBadgeTestId = rootTestId ? childTid(rootTestId, "weekBadge") : "km.autogen.dayheader.node.idx.1";
+  const titleTestId = rootTestId ? childTid(rootTestId, "title") : "km.autogen.dayheader.node.idx.2";
+  const emojiTestId = rootTestId ? childTid(rootTestId, "emoji") : "km.autogen.dayheader.node.idx.3";
+  const objectiveTestId = rootTestId ? childTid(rootTestId, "objective") : "km.autogen.dayheader.node.idx.4";
 
   return (
     <header
@@ -34,7 +38,7 @@ export function DayHeader({
     >
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">
         <span
-          data-testid="km.autogen.dayheader.node.idx.1"
+          data-testid={weekBadgeTestId}
           className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs text-white"
         >
           שָׁבוּעַ {day.week}
@@ -50,13 +54,13 @@ export function DayHeader({
           </span>
         ) : null}
       </div>
-      <h1 data-testid="km.autogen.dayheader.node.idx.2" className="mt-3 text-3xl font-extrabold text-white">
-        <span data-testid="km.autogen.dayheader.node.idx.3" className="me-2" aria-hidden="true" style={{ unicodeBidi: "isolate" }}>
+      <h1 data-testid={titleTestId} className="mt-3 text-3xl font-extrabold text-white">
+        <span data-testid={emojiTestId} className="me-2" aria-hidden="true" style={{ unicodeBidi: "isolate" }}>
           {emoji}
         </span>
         יוֹם {day.dayNumber}: {day.title}
       </h1>
-      <p data-testid="km.autogen.dayheader.node.idx.4" className="mt-2 text-sm text-indigo-200">
+      <p data-testid={objectiveTestId} className="mt-2 text-sm text-indigo-200">
         {day.objective}
       </p>
     </header>

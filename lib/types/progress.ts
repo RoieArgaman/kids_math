@@ -14,6 +14,8 @@ export interface DayProgressState {
   answers: Record<ExerciseId, AnswerValue>;
   correctAnswers: Record<ExerciseId, boolean>;
   wrongCount: number;
+  /** Wrong submissions per section (limit + reset are per section). Keys are section ids (`day-*-section-*`). */
+  wrongBySection: Record<string, number>;
   attempts: ExerciseAttempt[];
   completedAt?: string;
   bestTimeMs?: number;  // personal best completion time in ms; undefined until first completion

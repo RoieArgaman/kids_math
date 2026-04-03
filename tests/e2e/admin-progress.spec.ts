@@ -216,6 +216,31 @@ test("admin reset day-29 clears final exam and GMAT for grade b", async ({ page,
   await expect(page.getByTestId(testIds.screen.finalExam.root("b"))).toBeVisible();
 });
 
+test("admin can mark and reset per section; day completes when all sections are marked", async ({ page }) => {
+  await page.goto("/admin/progress?grade=a");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  const day1 = getWorkbookDaysById("a")["day-1"];
+  expect(day1.sections.length).toBeGreaterThan(1);
+
+  await page.getByTestId(testIds.screen.adminProgress.daySectionsToggle("a", "day-1")).click();
+
+  const firstSectionId = day1.sections[0]!.id;
+  await page.getByTestId(testIds.screen.adminProgress.markSectionComplete("a", "day-1", firstSectionId)).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("a", "day-1"))).toContainText("לא הושלם");
+
+  for (let i = 1; i < day1.sections.length; i++) {
+    const sectionId = day1.sections[i]!.id;
+    await page.getByTestId(testIds.screen.adminProgress.markSectionComplete("a", "day-1", sectionId)).click();
+  }
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("a", "day-1"))).toContainText("הושלם");
+
+  await page.getByTestId(testIds.screen.adminProgress.resetSection("a", "day-1", firstSectionId)).click();
+  await page.getByTestId(testIds.screen.adminProgress.resetSectionConfirm("a", "day-1", firstSectionId)).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("a", "day-1"))).toContainText("לא הושלם");
+});
+
 test("admin back navigation returns to grade picker", async ({ page }) => {
   await page.goto("/admin/progress?grade=a");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");

@@ -6,6 +6,13 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-04-03 (Admin: per-section mark complete + reset)
+
+- **Trigger:** Admin needed to force-complete or reset one workbook section at a time; full day completes when all exercises reach the completion gate (100% in engine).
+- **What changed / where:** `lib/progress/engine.ts` — `forceMarkSectionComplete` merges correct answers/attempts for one section, mirrors `setAnswerForDay` completion semantics; `components/screens/AdminProgressScreen.tsx` — section rows with סמן מקטע / אפס מקטע (two-step confirm); `lib/testIds.ts` — `sectionRow`, `markSectionComplete`, `resetSection*` per section; `tests/unit/lib/progress/engine.test.ts`, `tests/e2e/admin-progress.spec.ts`.
+- **What we learned:** Reuse existing `resetSectionProgress` for admin section reset (no cascade, unlike `resetAdminDayProgress`). Keep day-level vs section-level “armed reset” mutually exclusive to avoid ambiguous confirms. `check:testids` requires `data-testid` on nested `div`/`span` in new section cards (use `childTid` for header/title).
+- **How to reuse next time:** For partial-day admin fills, always pass full-day `totalExercises` when calling `resetSectionProgress` / percent math, same as `SectionScreen`.
+
 ### 2026-04-01 (Day Hub: section-card navigation layer)
 
 - **Trigger:** Add section-card hub between day list and exercises so users navigate section → exercise instead of directly to exercises.
@@ -252,3 +259,23 @@ Append-only record of what we learned while working on this repo.
 - **How to reuse next time:** Add `data-testid` on new layout wrappers early — `check:testids` flags bare `<div>` rows.
 
 - **Follow-up (2026-04-03):** TTS string now uses `buildExercisePromptSpeakText` (`lib/utils/exercisePromptSpeakText.ts`) so audio follows visible text + math line; admin TTS state moved to `AdminTtsProvider` in root layout (`AppProviders`) so listeners are not duplicated per `ExerciseBox`.
+
+### 2026-04-03 (Day Hub: teaching primer + TTS)
+
+- **Trigger:** Plan to add “learn first” copy on the day overview before section cards, with optional Hebrew TTS, aligned with international CPA-style pedagogy.
+- **What changed / where:**
+  - `lib/types/curriculum.ts` — optional `teachingSummary` / `teachingSteps` on `WorkbookDay`
+  - `lib/content/engine/exercise-factories.ts` — optional fields on `DayConcept`
+  - `lib/content/engine/day-builder.ts` — maps concept fields onto `WorkbookDay`
+  - `lib/content/buildDayPrimerSpeakText.ts` — `hasDayTeachingPrimer`, `buildDayPrimerSpeakText`, collapse threshold constant
+  - `components/DayTeachingPrimer.tsx` — Surface panel under header; collapse when long; `TapToPlayTtsButton`; testIds
+  - `components/screens/DayOverviewScreen.tsx` — renders `DayTeachingPrimer`
+  - `components/DayHeader.tsx` — helper-based testIds when `rootTestId` is set (weekBadge, title, emoji, objective)
+  - `lib/testIds.ts` — `teachingPrimer`, `teachingPrimerTts`, `teachingPrimerExpand`
+  - Pilot content: `lib/content/grade-a/day-01.ts`, `day-02.ts`, `day-08.ts`
+  - Tests: `content-validity.test.ts`, `buildDayPrimerSpeakText.test.ts`, `day-smoke.spec.ts`
+- **How to reuse:** Author optional primer on `DayConcept`; keep copy consistent with section `WorkedExample`; run `check:testids` on any new DOM in the primer subtree.
+
+### 2026-04-03 (Teaching primer: full Grade A rollout + subcomponents)
+- **What changed:** All `lib/content/grade-a/day-*.ts` concepts now include optional `teachingSummary` / `teachingSteps` where missing; UI split into `components/teaching-primer/` (`TeachingPrimerExpandedContent`, `TeachingPrimerExpandToggle`, `DayTeachingPrimer`) with `components/DayTeachingPrimer.tsx` re-export.
+- **E2E:** "no primer" scenario uses **Grade B** `day-1` (no authored primer) + unlock cookie.

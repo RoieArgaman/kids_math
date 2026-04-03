@@ -11,10 +11,10 @@ import { SectionBlock } from "@/components/SectionBlock";
 import { StarReward } from "@/components/StarReward";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
-import { COMPLETION_GATE_PERCENT, MAX_DAILY_WRONG_ANSWERS } from "@/lib/progress/engine";
+import { COMPLETION_GATE_PERCENT, MAX_SECTION_WRONG_ANSWERS } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { useDayAnswers } from "@/lib/hooks/useDayAnswers";
-import { useDayReset } from "@/lib/hooks/useDayReset";
+import { useSectionReset } from "@/lib/hooks/useSectionReset";
 import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { routes } from "@/lib/routes";
@@ -35,11 +35,11 @@ export function SectionScreen({
 
   const {
     setAnswer,
-    resetDay,
     percentDone,
-    wrongCount,
+    sectionWrongCount,
     correctAnswers,
-  } = useProgress(dayId, { grade: effectiveGrade });
+    resetSection,
+  } = useProgress(dayId, { grade: effectiveGrade, sectionId });
 
   const day = useMemo(
     () => getWorkbookDays(effectiveGrade).find((d) => d.id === dayId),
@@ -67,19 +67,32 @@ export function SectionScreen({
     [day],
   );
 
-  const { answers, correctMap, feedback, attempts, wrongAttempts, hintUsed, resetAnswerState, onChangeValue, onRetryExercise, onRevealHint, submitExercise } =
+  const sectionExerciseIds = useMemo(
+    () => section?.exercises.map((ex) => ex.id as ExerciseId) ?? [],
+    [section],
+  );
+
+  const { answers, correctMap, feedback, attempts, wrongAttempts, hintUsed, resetAnswerStateForExerciseIds, onChangeValue, onRetryExercise, onRevealHint, submitExercise } =
     useDayAnswers({
       day,
       grade: effectiveGrade,
+      sectionId,
       allExercisesCount: allExercises.length,
       setAnswer,
     });
 
   const handleReset = useCallback(() => {
-    resetAnswerState();
-  }, [resetAnswerState]);
+    resetAnswerStateForExerciseIds(sectionExerciseIds);
+  }, [resetAnswerStateForExerciseIds, sectionExerciseIds]);
 
-  const { resetNotice } = useDayReset({ wrongCount, resetDay, onReset: handleReset });
+  const { resetNotice } = useSectionReset({
+    sectionWrongCount,
+    resetSection,
+    sectionId,
+    exerciseIds: sectionExerciseIds,
+    totalExercises: allExercises.length,
+    onReset: handleReset,
+  });
 
   const { focusNextInput, setFocusRef } = useExerciseFocus(section?.exercises ?? []);
 
@@ -243,7 +256,7 @@ export function SectionScreen({
             className="error-counter-badge items-center gap-1 px-4 py-1.5 text-sm font-semibold"
             aria-live="polite"
           >
-            💥 {wrongCount}/{MAX_DAILY_WRONG_ANSWERS}
+            💥 {sectionWrongCount}/{MAX_SECTION_WRONG_ANSWERS}
           </div>
         </div>
       </div>
@@ -252,6 +265,7 @@ export function SectionScreen({
       {resetNotice ? (
         <div
           data-testid={childTid(sectionRootId, "resetNotice")}
+          role="alert"
           className="mb-5 mt-3 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-800 shadow-sm"
         >
           ⚠️ {resetNotice}

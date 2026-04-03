@@ -382,12 +382,21 @@ export function buildDayFromConcepts(
     return { ...s, exercises: s.exercises.slice(0, 8) };
   });
 
+  const teachingSummary = concept.teachingSummary?.trim();
+  const teachingSteps = concept.teachingSteps?.map((s) => s.trim()).filter(Boolean);
+
   return {
     id: toDayId(concept.dayNumber),
     dayNumber: concept.dayNumber,
     title: concept.title,
     week,
     objective: concept.objective,
+    ...(teachingSummary || (teachingSteps && teachingSteps.length > 0)
+      ? {
+          ...(teachingSummary ? { teachingSummary } : {}),
+          ...(teachingSteps && teachingSteps.length > 0 ? { teachingSteps } : {}),
+        }
+      : {}),
     spiralReviewTags: concept.spiralReviewTags,
     unlockThresholdPercent: 90,
     sections,
