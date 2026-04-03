@@ -52,6 +52,7 @@ Mode: [PRO/ULTRA/MAX] — [one-line reason]
 - If you FIND a secret: **STOP, flag as CRITICAL, do not proceed**
 
 ### 6. Preserve Backward Compatibility
+- **User outcome:** Deploys must not wipe stored learner progress. Completed days/sections and **all** persisted domains (workbook, final exam, GMAT, badges, streak) must still load after new code unless a migration replaces an old shape. Full policy: **`AGENTS.md` → Data & Storage Rules** (authoritative).
 - localStorage schemas are versioned — additive changes only
 - If schema must change: version bump + migration + MAX mode
 - **Auto-escalate to MAX** if editing any `lib/*/storage.ts`
@@ -71,6 +72,7 @@ SELF-REVIEW
 [ ] All interactive elements have data-testid via lib/testIds.ts?
 [ ] Route references use lib/routes.ts (no hardcoded paths)?
 [ ] Storage schemas unchanged OR migration included?
+[ ] Existing persisted progress still loads (or migration covered); content IDs tied to storage not renamed without a plan?
 [ ] RTL preserved? dir="ltr" only for math inputs?
 [ ] "use client" only where necessary?
 [ ] @/* imports used?
@@ -151,6 +153,7 @@ Follow `quality-gates.mdc` for mode-specific quality gate requirements.
 
 ## Data + Progress Storage
 
+- **Backward compatibility is a user-visible requirement** (not only “schema version”): see **`AGENTS.md` → Data & Storage Rules** for principle, content-ID stability, anti-patterns, and tests when migrations change.
 - Treat persisted schemas as versioned: prefer additive changes
 - Breaking changes require version bump + migration + MAX mode
 - Key format: `kids_math.<domain>.v<schema>.grade.${grade}`

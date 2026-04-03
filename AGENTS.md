@@ -104,6 +104,7 @@ Every response that involves code changes must begin with:
 - If you FIND a secret in existing code: **STOP, flag it as CRITICAL, do not proceed**
 
 ### 6. Preserve Backward Compatibility (mandatory)
+- **User outcome:** Deploys must not wipe or silently discard stored learner progress. Completed days, sections, and all other persisted state (workbook, final exam, GMAT challenge, badges, streak — see [Data & Storage Rules](#data--storage-rules)) must still load after new code unless a deliberate migration replaces an old shape.
 - localStorage schemas are versioned — additive changes only
 - If schema must change: version bump + migration + MAX mode
 - **Storage file detection**: if you edit any file under `lib/*/storage.ts`, auto-escalate to MAX mode
@@ -442,6 +443,7 @@ SELF-REVIEW (before handoff)
 [ ] All interactive elements have data-testid via lib/testIds.ts?
 [ ] Route references use lib/routes.ts (no hardcoded paths)?
 [ ] Storage schemas unchanged OR migration included?
+[ ] Existing persisted progress still loads (or migration covered); content IDs tied to storage not renamed without a migration/content plan?
 [ ] RTL preserved? dir="ltr" only for math inputs?
 [ ] "use client" only where necessary?
 [ ] @/* imports used?
@@ -776,6 +778,17 @@ Result: [PASS / FAIL — list findings with severity]
 
 ## Data & Storage Rules
 
+Other agent entry points (`CLAUDE.md`, `.cursor/rules/`, `.devin/guidelines.md`) summarize this section in short form; **this section is authoritative** to avoid conflicting instructions.
+
+### Principle / user outcome (read first)
+
+- **Learner data survives deploys:** Existing users must keep their stored progress after an app update. Do not discard or reset persisted state in production code paths without a versioned migration and tests.
+- **All persisted domains:** Backward compatibility applies to every storage domain listed under `lib/*/storage.ts` below (workbook progress, final exam, GMAT challenge, badges, streak), not only workbook days/sections.
+- **Content IDs vs JSON schema:** A valid JSON schema is not enough. Renaming or renumbering `dayId`, section ids, or exercise ids in curriculum/content can orphan existing `localStorage` entries even when the storage file’s schema version is unchanged. Treat content refactors that touch identifiers with the same care as schema migrations (mapping, dual-read, or explicit data migration).
+- **Anti-patterns:** Do not call `localStorage.clear()` in product paths. Do not remove fields that loaders still read without a migration. Do not “reset persistence” to paper over bugs without assessing migration impact.
+
+### Technical rules
+
 - Persisted schemas are versioned — prefer additive changes
 - Breaking changes require version bump + migration path
 - Key format: `kids_math.<domain>.v<schema>.grade.${grade}`
@@ -793,6 +806,10 @@ Result: [PASS / FAIL — list findings with severity]
 - [ ] Migration function written for old → new shape
 - [ ] Migration unit test added
 - [ ] Backward compatibility verified (old data still loads)
+
+### Tests when storage or migrations change
+
+Run migration/unit tests and the specs that apply to the touched domain — see [Quality Gates by Mode](#quality-gates-by-mode) (Mandatory Test Targeting table) and `.cursor/rules/quality-gates.mdc` (do not duplicate the full matrix here).
 
 ---
 

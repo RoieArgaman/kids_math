@@ -50,7 +50,7 @@ Ready for next phase? (proceed / revise / different approach / escalate)
 
 ### Reviewer
 - Review with severity levels (CRITICAL/HIGH/MEDIUM/LOW) per `AGENTS.md`
-- Check: schema breakage, `"use client"` spread, RTL, a11y, security, console.log, config weakening
+- Check: schema breakage, **`AGENTS.md` → Data & Storage Rules** (backward compat: old data loads; content-ID changes), `"use client"` spread, RTL, a11y, security, console.log, config weakening
 - **ULTRA**: 5 core roles, 1 cycle, all must participate
 - **MAX**: full team, 2 cycles, all must approve
 - **Output**: punch-list with severity + role participation table + verdict
@@ -127,6 +127,7 @@ Before EVERY response, run mentally:
 [ ] data-testid on all interactive elements?
 [ ] Routes via lib/routes.ts?
 [ ] Storage unchanged OR migration included?
+[ ] Backward compat: existing persisted data still loads; content IDs not renamed without plan (see `AGENTS.md` → Data & Storage Rules)?
 [ ] RTL preserved?
 [ ] Quality gates passed?
 [ ] Verification report filled (ULTRA/MAX)?

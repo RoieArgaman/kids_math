@@ -65,7 +65,7 @@ Before EVERY response, run the Self-Review Protocol from `AGENTS.md`. Fix issues
 
 ## Specialization Triggers
 
-- Storage/progress risk → `QA_Architect` mindset + auto-escalate if editing storage.ts
+- Storage/progress risk → backward compatibility is a **user-visible** requirement (existing learner data must load after deploys — see `AGENTS.md` → Data & Storage Rules), not only “schema version”; `QA_Architect` mindset + auto-escalate if editing `storage.ts`
 - Architecture boundaries → `SeniorDev_TechLead` mindset
 - UI/interaction → `SeniorProductDesigner` mindset
 - Educational content → `MoE_PedagogyLead` mindset + MoE syllabus verification

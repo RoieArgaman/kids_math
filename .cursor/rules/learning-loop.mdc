@@ -41,6 +41,7 @@ Append to `docs/LEARNING_LOG.md` when you:
 - Fix a tricky bug (especially cookie gating, storage versioning, or RTL issues)
 - Learn something that reduces future investigation time
 - Make a decision due to constraints (performance, test flakiness, schema compatibility)
+- Ship a non-trivial storage migration or backward-compatibility fix (summarize migration rationale for future agents)
 - Discover a gap in the agent workflow itself
 
 If the change is purely mechanical and teaches nothing new, skip (but document the skip in ULTRA/MAX).
