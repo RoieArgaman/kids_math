@@ -62,7 +62,7 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 2. No `any` — use type guards
 3. `data-testid` required — via `lib/testIds.ts`
 4. Route builders — `lib/routes.ts`, never hardcode
-5. Storage is sacred — schema changes auto-escalate to MAX
+5. **Storage backward compatibility** — Learner data in `localStorage` (all domains under `lib/*/storage.ts`: workbook, final exam, GMAT, badges, streak) must survive deploys; renaming content IDs (`dayId`, section/exercise ids) can orphan data without a plan. Full rules: **`AGENTS.md` → Data & Storage Rules**. Edits to `lib/*/storage.ts` → MAX (auto-escalate).
 6. RTL first — `dir="ltr"` only for math inputs
 7. Never weaken configs — fix code, not eslint/tsconfig
 8. No console.log — in production code

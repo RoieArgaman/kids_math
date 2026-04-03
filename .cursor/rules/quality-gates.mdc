@@ -46,6 +46,8 @@ npm run test:qa   # Full suite, no exceptions
 | Content/days | `tests/unit/lib/content/content-validity.test.ts` AND `tests/e2e/day-smoke.spec.ts` |
 | GMAT | `tests/unit/lib/gmat-challenge/` AND `tests/e2e/gmat-challenge.spec.ts` |
 
+**Storage / schema / content IDs:** Changes that affect persisted progress (including renaming `dayId` or section/exercise ids) must follow **`AGENTS.md` → Data & Storage Rules** and run the applicable rows in the table above.
+
 ## Security Gate (mandatory, all modes)
 
 ```

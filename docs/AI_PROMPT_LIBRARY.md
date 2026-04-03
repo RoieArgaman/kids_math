@@ -41,7 +41,7 @@ CI: GitHub Actions (lint, testids, build, unit, E2E)
 - Research before writing: read files, grep for patterns, check lib/ helpers
 - Check cross-file deps before changing any shared module
 - Never weaken configs (eslint, tsconfig, etc.) to suppress errors
-- Respect persisted schema compatibility (version bump + migration if needed)
+- **Storage backward compatibility:** Learner data must survive deploys across all `lib/*/storage.ts` domains (not only workbook days/sections). Renaming `dayId` / section or exercise ids without a migration plan can orphan `localStorage`. See **`AGENTS.md` → Data & Storage Rules** — version bump + migration when the persisted shape must change
 - Avoid breaking RTL/a11y
 - No console.log in production code
 - No hardcoded secrets

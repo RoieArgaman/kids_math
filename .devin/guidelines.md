@@ -53,6 +53,7 @@ Before modifying ANY file:
 - If you FIND a secret: **STOP, flag as CRITICAL, auto-escalate to MAX**
 
 ### Preserve Backward Compatibility
+- **User outcome:** Deploys must not wipe stored learner progress. Completed days/sections and **all** persisted domains (workbook, final exam, GMAT, badges, streak) must still load after new code unless a migration replaces an old shape. Authoritative policy: **`AGENTS.md` → Data & Storage Rules** (principle, content IDs, anti-patterns, tests).
 - localStorage schemas are versioned — additive changes only
 - Schema changes require version bump + migration + MAX mode
 - **Auto-escalate to MAX** when editing any `lib/*/storage.ts`
@@ -72,6 +73,7 @@ SELF-REVIEW
 [ ] All interactive elements have data-testid via lib/testIds.ts?
 [ ] Route references use lib/routes.ts?
 [ ] Storage schemas unchanged OR migration included?
+[ ] Existing persisted progress still loads (or migration covered); content IDs tied to storage not renamed without a plan?
 [ ] RTL preserved? dir="ltr" only for math inputs?
 [ ] Quality gates ran and pass?
 [ ] Verification report filled (ULTRA/MAX)?
