@@ -206,6 +206,12 @@ test.describe("Day Hub scenarios", () => {
     await expect(
       page.getByTestId(testIds.component.starReward.overlay()),
     ).toBeVisible();
+    await page.getByTestId(testIds.component.starReward.confirm()).click();
+    await expect(page.getByTestId(testIds.component.starReward.overlay())).toHaveCount(0);
+    await expect(
+      page.getByTestId(testIds.screen.section.root(grade, dayId, warmupSection.id)),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/grade/${grade}/day/${dayId}/section/${warmupSection.id}`));
   });
 
   test("navigate back to Day Hub from section", async ({ page }) => {

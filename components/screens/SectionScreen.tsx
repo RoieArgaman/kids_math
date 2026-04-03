@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
@@ -32,7 +31,6 @@ export function SectionScreen({
   sectionId: SectionId;
 }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
-  const router = useRouter();
   const [showReward, setShowReward] = useState(false);
 
   const {
@@ -324,7 +322,7 @@ export function SectionScreen({
       <StarReward
         visible={showReward}
         text="הִשְׁלַמְתֶּם אֶת הַחֵלֶק בְּהַצְלָחָה."
-        onConfirm={() => router.push(routes.gradeDay(effectiveGrade, dayId, { previewAll }))}
+        onConfirm={() => setShowReward(false)}
       />
     </main>
   );
