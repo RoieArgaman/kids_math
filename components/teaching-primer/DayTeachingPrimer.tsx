@@ -7,7 +7,7 @@ import { useAdminTtsEnabled } from "@/components/providers/AdminTtsProvider";
 import { TeachingPrimerExpandToggle } from "@/components/teaching-primer/TeachingPrimerExpandToggle";
 import { TeachingPrimerExpandedContent } from "@/components/teaching-primer/TeachingPrimerExpandedContent";
 import {
-  buildDayPrimerSpeakText,
+  buildDayPrimerSpeakChunks,
   DAY_PRIMER_COLLAPSE_CHAR_THRESHOLD,
   hasDayTeachingPrimer,
 } from "@/lib/content/buildDayPrimerSpeakText";
@@ -27,7 +27,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
   const { ttsEnabled, hydrated } = useAdminTtsEnabled();
   const g = grade;
   const primerRoot = testIds.screen.dayOverview.teachingPrimer(g, dayId);
-  const speakText = useMemo(() => buildDayPrimerSpeakText(day), [day]);
+  const speakChunks = useMemo(() => buildDayPrimerSpeakChunks(day), [day]);
 
   const combinedForMeasure = useMemo(() => {
     const parts: string[] = [];
@@ -77,7 +77,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
           לִפְנֵי שֶׁמַּתְחִילִים
         </h2>
         <TapToPlayTtsButton
-          text={speakText}
+          chunks={speakChunks}
           dataTestId={testIds.screen.dayOverview.teachingPrimerTts(g, dayId)}
           featureEnabled={hydrated && ttsEnabled}
           ariaLabel="הַשְׁמַע הַסְבָּר קָצָר"

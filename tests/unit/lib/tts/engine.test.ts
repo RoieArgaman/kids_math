@@ -1,5 +1,12 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { isTtsSupported, normalizeTextForHebrewTts, speakHebrew, stopSpeech } from "@/lib/tts/engine";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CHILD_TTS_RATE } from "@/lib/tts/constants";
+import {
+  isTtsSupported,
+  normalizeTextForHebrewTts,
+  speakHebrew,
+  speakHebrewChunks,
+  stopSpeech,
+} from "@/lib/tts/engine";
 
 /** Matches dash class in `lib/tts/engine.ts` — keep in sync for regression coverage. */
 const DASH_CODEPOINTS: readonly { label: string; dash: string }[] = [
@@ -15,7 +22,12 @@ const DASH_CODEPOINTS: readonly { label: string; dash: string }[] = [
 ];
 
 describe("tts engine", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     // @ts-expect-error cleanup
     delete window.speechSynthesis;
@@ -82,6 +94,8 @@ describe("tts engine", () => {
     class MockUtterance {
       text: string;
       lang = "";
+      rate = 1;
+      pitch = 1;
       voice: SpeechSynthesisVoice | null = null;
       onend: (() => void) | null = null;
       onerror: (() => void) | null = null;
@@ -102,5 +116,44 @@ describe("tts engine", () => {
     const utterance = speak.mock.calls[0][0] as MockUtterance;
     expect(utterance.text).toBe("מֵ 1 עַד 4");
     expect(utterance.lang).toBe("he-IL");
+    expect(utterance.rate).toBe(CHILD_TTS_RATE);
+  });
+
+  it("speakHebrewChunks speaks each part with child rate", () => {
+    const speak = vi.fn();
+    const cancel = vi.fn();
+    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const addEventListener = vi.fn();
+
+    class MockUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      pitch = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    // @ts-expect-error test mock
+    window.speechSynthesis = { speak, cancel, getVoices, addEventListener };
+    // @ts-expect-error test mock
+    window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
+
+    const onEnd = vi.fn();
+    speakHebrewChunks(["א", "ב"], onEnd);
+    expect(speak).toHaveBeenCalledTimes(1);
+    const first = speak.mock.calls[0][0] as MockUtterance;
+    expect(first.rate).toBe(CHILD_TTS_RATE);
+    first.onend?.();
+    vi.runAllTimers();
+    expect(speak).toHaveBeenCalledTimes(2);
+    const second = speak.mock.calls[1][0] as MockUtterance;
+    second.onend?.();
+    expect(onEnd).toHaveBeenCalled();
   });
 });

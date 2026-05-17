@@ -1,3 +1,5 @@
+import type { GradeId } from "@/lib/grades";
+import { teachingPrimerFromCatalog } from "@/lib/content/teachingPrimerCatalog";
 import type { DifficultyLevel, Section, WorkbookDay } from "@/lib/types";
 
 import {
@@ -18,6 +20,7 @@ import { buildSpiralWarmupExercises } from "./warmup-generator";
 export type { DayConcept };
 
 export type BuildDaySectionOptions = {
+  grade: GradeId;
   simpleSections: boolean;
   /** כיתה ב׳ (וימים < 29): אחרי חימום — מקטע מושג היום מורחב שנבנה רק מ־DayConcept */
   progressiveConceptFocus?: boolean;
@@ -28,7 +31,7 @@ export function buildDayFromConcepts(
   concept: DayConcept,
   options: BuildDaySectionOptions,
 ): WorkbookDay {
-  const { simpleSections, progressiveConceptFocus } = options;
+  const { grade, simpleSections, progressiveConceptFocus } = options;
   const dayDifficulty = Math.min(5, Math.ceil(concept.dayNumber / 3)) as DifficultyLevel;
   const week = concept.dayNumber >= 29 ? 5 : Math.min(4, Math.ceil(concept.dayNumber / 7));
   const priorConcepts = allConcepts.filter(
@@ -382,8 +385,9 @@ export function buildDayFromConcepts(
     return { ...s, exercises: s.exercises.slice(0, 8) };
   });
 
-  const teachingSummary = concept.teachingSummary?.trim();
-  const teachingSteps = concept.teachingSteps?.map((s) => s.trim()).filter(Boolean);
+  const catalogPrimer = teachingPrimerFromCatalog(grade, concept.dayNumber);
+  const teachingSummary = catalogPrimer?.teachingSummary;
+  const teachingSteps = catalogPrimer?.teachingSteps;
 
   return {
     id: toDayId(concept.dayNumber),

@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { childTid } from "@/lib/testIds";
-import { isTtsSupported, speakHebrew, stopSpeech } from "@/lib/tts/engine";
+import { isTtsSupported, speakHebrew, speakHebrewChunks, stopSpeech } from "@/lib/tts/engine";
 
 type TapToPlayTtsButtonProps = {
-  text: string;
+  /** Single utterance (exercise prompts). Ignored when `chunks` is set. */
+  text?: string;
+  /** Primer: one chunk per summary/step with pauses between. */
+  chunks?: string[];
   dataTestId: string;
   featureEnabled: boolean;
   /** Screen reader label when idle */
@@ -72,7 +75,8 @@ function StopIcon({ baseTid }: { baseTid: string }) {
 }
 
 export function TapToPlayTtsButton({
-  text,
+  text = "",
+  chunks,
   dataTestId,
   featureEnabled,
   ariaLabel = DEFAULT_ARIA_IDLE,
@@ -108,10 +112,15 @@ export function TapToPlayTtsButton({
       return;
     }
     setIsSpeaking(true);
-    speakHebrew(text, () => {
+    const onDone = () => {
       setIsSpeaking(false);
-    });
-  }, [featureEnabled, isSpeaking, supported, text]);
+    };
+    if (chunks && chunks.length > 0) {
+      speakHebrewChunks(chunks, onDone);
+    } else {
+      speakHebrew(text, onDone);
+    }
+  }, [chunks, featureEnabled, isSpeaking, supported, text]);
 
   if (!featureEnabled || !supported) {
     return null;

@@ -307,7 +307,7 @@ test.describe("Day Hub scenarios", () => {
     await expect(page.getByRole("heading", { name: /לִפְנֵי שֶׁמַּתְחִילִים/i })).toBeVisible();
   });
 
-  test("day without teaching primer omits panel", async ({ page, context }) => {
+  test("grade B day-1 teaching primer visible", async ({ page, context }) => {
     await context.addCookies([
       {
         name: "kids_math.unlocked_grade_b",
@@ -316,12 +316,12 @@ test.describe("Day Hub scenarios", () => {
       },
     ]);
     const g = "b" as const;
-    const noPrimerDay: DayId = "day-1";
+    const bDay: DayId = "day-1";
     await page.goto("/");
     await seedProgressState(page, g, createProgressState({ days: {} }));
-    await page.goto(`/grade/${g}/day/${noPrimerDay}`);
-    await expect(page.getByTestId(testIds.screen.dayOverview.root(g, noPrimerDay))).toBeVisible();
-    await expect(page.getByTestId(testIds.screen.dayOverview.teachingPrimer(g, noPrimerDay))).toHaveCount(0);
+    await page.goto(`/grade/${g}/day/${bDay}`);
+    await expect(page.getByTestId(testIds.screen.dayOverview.root(g, bDay))).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.dayOverview.teachingPrimer(g, bDay))).toBeVisible();
   });
 
   test("day teaching primer TTS tap calls speak when enabled", async ({ page }) => {
@@ -344,10 +344,25 @@ test.describe("Day Hub scenarios", () => {
         } catch {
           // Stubbed/minimal environments may still count the user gesture path.
         }
+        queueMicrotask(() => {
+          utterance.onend?.();
+        });
       };
     });
+    const byId = getWorkbookDaysById(grade) as Record<string, WorkbookDay>;
+    const builtDay = byId[dayId];
+    const stepCount = builtDay?.teachingSteps?.length ?? 2;
+    const minChunks = 1 + stepCount;
+
     await page.getByTestId(testIds.screen.dayOverview.teachingPrimerTts(grade, dayId)).click();
-    const count = await page.evaluate(() => (window as unknown as { __primerTtsCalls?: number }).__primerTtsCalls ?? 0);
-    expect(count).toBeGreaterThan(0);
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            () => (window as unknown as { __primerTtsCalls?: number }).__primerTtsCalls ?? 0,
+          ),
+        { timeout: 3_000 },
+      )
+      .toBeGreaterThanOrEqual(minChunks);
   });
 });

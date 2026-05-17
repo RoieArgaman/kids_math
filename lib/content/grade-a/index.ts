@@ -64,7 +64,7 @@ const concepts = [
 ];
 
 export const workbookDays: WorkbookDay[] = concepts.map((c) =>
-  buildDayFromConcepts(concepts, c, { simpleSections: false }),
+  buildDayFromConcepts(concepts, c, { grade: "a", simpleSections: false }),
 );
 
 export const workbookDaysById: Record<WorkbookDay["id"], WorkbookDay> = workbookDays.reduce(
