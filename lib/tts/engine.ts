@@ -1,4 +1,4 @@
-import { CHILD_TTS_CHUNK_GAP_MS, CHILD_TTS_RATE } from "@/lib/tts/constants";
+import { CHILD_TTS_RATE } from "@/lib/tts/constants";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -35,20 +35,47 @@ function ensureVoicesLoaded(): void {
 }
 
 let chunkSpeakGeneration = 0;
-let chunkGapTimer: ReturnType<typeof setTimeout> | null = null;
 
-function clearChunkGapTimer(): void {
-  if (chunkGapTimer !== null) {
-    clearTimeout(chunkGapTimer);
-    chunkGapTimer = null;
+function bumpSpeakGeneration(): void {
+  chunkSpeakGeneration += 1;
+}
+
+/** User-initiated stop — always clears the synthesis queue. */
+export function stopSpeech(): void {
+  bumpSpeakGeneration();
+  if (!isBrowser() || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+}
+
+/**
+ * Cancel only when audio is active. Unconditional cancel() before speak() on an idle
+ * queue is a common Chrome/Safari silent-failure mode.
+ */
+function cancelActiveSpeechIfNeeded(): boolean {
+  if (!isBrowser() || !window.speechSynthesis) return false;
+  const synth = window.speechSynthesis;
+  if (!synth.speaking && !synth.pending) return false;
+  bumpSpeakGeneration();
+  synth.cancel();
+  return true;
+}
+
+function primeSpeechVoices(): void {
+  if (!isBrowser() || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.getVoices();
+  } catch {
+    // Some engines throw before voices are ready.
   }
 }
 
-export function stopSpeech(): void {
-  chunkSpeakGeneration += 1;
-  clearChunkGapTimer();
-  if (!isBrowser() || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+function runAfterQueueClear(run: () => void): void {
+  const cleared = cancelActiveSpeechIfNeeded();
+  if (cleared) {
+    queueMicrotask(run);
+  } else {
+    run();
+  }
 }
 
 /**
@@ -65,6 +92,15 @@ function applyProfile(utterance: SpeechSynthesisUtterance, options?: SpeakOption
   if (profile === "child") {
     utterance.rate = CHILD_TTS_RATE;
     utterance.pitch = 1;
+  }
+}
+
+function resumeSynthesis(): void {
+  if (!isBrowser() || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.resume();
+  } catch {
+    // Some engines throw if resume is not needed.
   }
 }
 
@@ -87,6 +123,8 @@ function speakUtterance(
   utterance.onerror = () => {
     onEnd?.();
   };
+  primeSpeechVoices();
+  resumeSynthesis();
   window.speechSynthesis!.speak(utterance);
 }
 
@@ -96,13 +134,14 @@ export function speakHebrew(text: string, onEnd?: () => void, options?: SpeakOpt
     return;
   }
   ensureVoicesLoaded();
-  stopSpeech();
   const trimmed = text.replace(/\s+/g, " ").trim();
   if (!trimmed) {
     onEnd?.();
     return;
   }
-  speakUtterance(trimmed, options, onEnd);
+  runAfterQueueClear(() => {
+    speakUtterance(trimmed, options, onEnd);
+  });
 }
 
 export function speakHebrewChunks(
@@ -115,7 +154,6 @@ export function speakHebrewChunks(
     return;
   }
   ensureVoicesLoaded();
-  stopSpeech();
 
   const chunks = parts.map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean);
   if (chunks.length === 0) {
@@ -123,29 +161,30 @@ export function speakHebrewChunks(
     return;
   }
 
-  const generation = chunkSpeakGeneration;
-
-  const speakAt = (index: number) => {
-    if (generation !== chunkSpeakGeneration) return;
-
-    if (index >= chunks.length) {
-      onEnd?.();
+  const startChunks = () => {
+    if (chunks.length === 1) {
+      speakUtterance(chunks[0]!, options, onEnd);
       return;
     }
 
-    speakUtterance(chunks[index]!, options, () => {
+    const generation = chunkSpeakGeneration;
+
+    const speakAt = (index: number) => {
       if (generation !== chunkSpeakGeneration) return;
-      if (index + 1 >= chunks.length) {
+
+      if (index >= chunks.length) {
         onEnd?.();
         return;
       }
-      chunkGapTimer = setTimeout(() => {
-        chunkGapTimer = null;
+
+      speakUtterance(chunks[index]!, options, () => {
         if (generation !== chunkSpeakGeneration) return;
         speakAt(index + 1);
-      }, CHILD_TTS_CHUNK_GAP_MS);
-    });
+      });
+    };
+
+    speakAt(0);
   };
 
-  speakAt(0);
+  runAfterQueueClear(startChunks);
 }

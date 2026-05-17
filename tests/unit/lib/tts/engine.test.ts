@@ -85,9 +85,10 @@ describe("tts engine", () => {
     expect(() => stopSpeech()).not.toThrow();
   });
 
-  it("speakHebrew passes trimmed, normalized text to SpeechSynthesisUtterance", () => {
+  it("speakHebrew does not cancel when synthesis queue is idle", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
+    const resume = vi.fn();
     const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
     const addEventListener = vi.fn();
 
@@ -106,7 +107,89 @@ describe("tts engine", () => {
     }
 
     // @ts-expect-error test mock
-    window.speechSynthesis = { speak, cancel, getVoices, addEventListener };
+    window.speechSynthesis = {
+      speak,
+      cancel,
+      resume,
+      getVoices,
+      addEventListener,
+      speaking: false,
+      pending: false,
+    };
+    // @ts-expect-error test mock
+    window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
+
+    speakHebrew("שלום");
+
+    expect(cancel).not.toHaveBeenCalled();
+    expect(speak).toHaveBeenCalledTimes(1);
+  });
+
+  it("speakHebrew cancels and defers when synthesis is already active", async () => {
+    const speak = vi.fn();
+    const cancel = vi.fn();
+    const resume = vi.fn();
+    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const addEventListener = vi.fn();
+
+    class MockUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      pitch = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    // @ts-expect-error test mock
+    window.speechSynthesis = {
+      speak,
+      cancel,
+      resume,
+      getVoices,
+      addEventListener,
+      speaking: true,
+      pending: false,
+    };
+    // @ts-expect-error test mock
+    window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
+
+    speakHebrew("שלום");
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(speak).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    expect(speak).toHaveBeenCalledTimes(1);
+  });
+
+  it("speakHebrew passes trimmed, normalized text to SpeechSynthesisUtterance", () => {
+    const speak = vi.fn();
+    const cancel = vi.fn();
+    const resume = vi.fn();
+    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const addEventListener = vi.fn();
+
+    class MockUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      pitch = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    // @ts-expect-error test mock
+    window.speechSynthesis = { speak, cancel, resume, getVoices, addEventListener };
     // @ts-expect-error test mock
     window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
 
@@ -122,6 +205,7 @@ describe("tts engine", () => {
   it("speakHebrewChunks speaks each part with child rate", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
+    const resume = vi.fn();
     const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
     const addEventListener = vi.fn();
 
@@ -140,7 +224,7 @@ describe("tts engine", () => {
     }
 
     // @ts-expect-error test mock
-    window.speechSynthesis = { speak, cancel, getVoices, addEventListener };
+    window.speechSynthesis = { speak, cancel, resume, getVoices, addEventListener };
     // @ts-expect-error test mock
     window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
 
@@ -150,7 +234,6 @@ describe("tts engine", () => {
     const first = speak.mock.calls[0][0] as MockUtterance;
     expect(first.rate).toBe(CHILD_TTS_RATE);
     first.onend?.();
-    vi.runAllTimers();
     expect(speak).toHaveBeenCalledTimes(2);
     const second = speak.mock.calls[1][0] as MockUtterance;
     second.onend?.();

@@ -349,11 +349,6 @@ test.describe("Day Hub scenarios", () => {
         });
       };
     });
-    const byId = getWorkbookDaysById(grade) as Record<string, WorkbookDay>;
-    const builtDay = byId[dayId];
-    const stepCount = builtDay?.teachingSteps?.length ?? 2;
-    const minChunks = 1 + stepCount;
-
     await page.getByTestId(testIds.screen.dayOverview.teachingPrimerTts(grade, dayId)).click();
     await expect
       .poll(
@@ -363,6 +358,6 @@ test.describe("Day Hub scenarios", () => {
           ),
         { timeout: 3_000 },
       )
-      .toBeGreaterThanOrEqual(minChunks);
+      .toBeGreaterThanOrEqual(1);
   });
 });

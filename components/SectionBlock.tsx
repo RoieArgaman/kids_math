@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { WorkedExampleTtsButton } from "@/components/section/WorkedExampleTtsButton";
 import type { SectionType, WorkedExample } from "@/lib/types";
-import { testIds } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 import { splitMathExpression } from "@/lib/utils/mathText";
 
 interface SectionBlockProps {
@@ -69,9 +70,18 @@ export function SectionBlock({
           className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"
           aria-label="דֻּגְמָה פְּתוּרָה"
         >
-          <h3 data-testid={testIds.component.sectionBlock.example.title(sectionId)} className="font-semibold text-amber-900">
-            {example.title}
-          </h3>
+          <div
+            data-testid={childTid(testIds.component.sectionBlock.example.root(sectionId), "topRow")}
+            className="flex flex-wrap items-start justify-between gap-2"
+          >
+            <h3
+              data-testid={testIds.component.sectionBlock.example.title(sectionId)}
+              className="min-w-0 flex-1 font-semibold text-amber-900"
+            >
+              {example.title}
+            </h3>
+            <WorkedExampleTtsButton sectionId={sectionId} example={example} />
+          </div>
           <p
             data-testid={testIds.component.sectionBlock.example.prompt(sectionId)}
             className="mt-1 text-sm text-amber-900"

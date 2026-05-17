@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Exercise, WorkbookDay } from "@/lib/types";
+import type { Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import { answerExerciseCorrectly } from "./answering";
 import { answerExerciseWrongly } from "./answering";
@@ -303,7 +303,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
 
 
 test.describe("tts tap-to-play", () => {
-  test("exercise TTS control is hidden when admin pref is off", async ({ page }) => {
+  test("exercise TTS control is visible but disabled when admin pref is off", async ({ page }) => {
     await page.addInitScript(() => {
       (window as unknown as { speechSynthesis?: unknown }).speechSynthesis = {
         speak: () => {},
@@ -332,7 +332,44 @@ test.describe("tts tap-to-play", () => {
     const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
     await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
 
-    await expect(page.getByTestId(testIds.component.exerciseBox.tts(ex!.id))).toHaveCount(0);
+    const tts = page.getByTestId(testIds.component.exerciseBox.tts(ex!.id));
+    await expect(tts).toBeVisible();
+    await expect(tts).toBeDisabled();
+  });
+
+  test("exercise TTS control is visible when admin pref is on", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { speechSynthesis?: unknown }).speechSynthesis = {
+        speak: () => {},
+        cancel: () => {},
+        pause: () => {},
+        resume: () => {},
+        getVoices: () => [],
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      };
+      (window as unknown as { SpeechSynthesisUtterance?: unknown }).SpeechSynthesisUtterance =
+        function SpeechSynthesisUtterance() {
+          return {};
+        };
+    });
+
+    const day = getWorkbookDaysById("a")["day-1"];
+    const ex = day ? findFirstInputExercise(day) : null;
+    if (!day || !ex) {
+      test.skip(true, "day-1 needs an input exercise");
+    }
+
+    await page.goto("/");
+    await page.evaluate(() => {
+      window.localStorage.setItem("kids_math.admin_prefs.v1", JSON.stringify({ ttsEnabled: true }));
+    });
+    const sectionId = ex!.id.replace(/-exercise-\d+$/, "");
+    await page.goto(`/grade/a/day/day-1/section/${sectionId}`);
+
+    const tts = page.getByTestId(testIds.component.exerciseBox.tts(ex!.id));
+    await expect(tts).toBeVisible();
+    await expect(tts).toBeEnabled();
   });
 
   test("exercise TTS control speaks on click when admin pref is on", async ({ page }) => {
@@ -367,6 +404,76 @@ test.describe("tts tap-to-play", () => {
     await page.getByTestId(testIds.component.exerciseBox.tts(ex!.id)).click();
     const count = await page.evaluate(() => (window as unknown as { __ttsSpeakCalls?: number }).__ttsSpeakCalls ?? 0);
     expect(count).toBeGreaterThan(0);
+  });
+
+  test("grade B concept section shows worked-example and exercise TTS when enabled", async ({
+    page,
+    context,
+  }) => {
+    const sectionId = "day-1-section-2";
+    const day = getWorkbookDaysById("b")["day-1"];
+    const section = day?.sections.find((s) => s.id === sectionId);
+    const ex = section?.exercises[0];
+    if (!day?.sections.some((s) => s.id === sectionId && s.example) || !ex) {
+      test.skip(true, "grade B day-1 section-2 needs worked example and exercises");
+    }
+
+    await page.addInitScript(() => {
+      (window as unknown as { speechSynthesis?: unknown }).speechSynthesis = {
+        speak: () => {},
+        cancel: () => {},
+        pause: () => {},
+        resume: () => {},
+        getVoices: () => [],
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      };
+      (window as unknown as { SpeechSynthesisUtterance?: unknown }).SpeechSynthesisUtterance =
+        function SpeechSynthesisUtterance() {
+          return {};
+        };
+    });
+
+    const baseURL = test.info().project.use.baseURL ?? "http://127.0.0.1:3005";
+    await context.addCookies([
+      { name: "kids_math.unlocked_grade_b", value: "1", url: baseURL },
+    ]);
+
+    const warmup = day!.sections[0]!;
+    const warmupCorrect: Record<ExerciseId, boolean> = {} as Record<ExerciseId, boolean>;
+    for (const warmupEx of warmup.exercises) {
+      warmupCorrect[warmupEx.id] = true;
+    }
+    await page.goto("/");
+    await seedProgressState(
+      page,
+      "b",
+      createProgressState({
+        days: {
+          "day-1": {
+            dayId: "day-1",
+            answers: {},
+            correctAnswers: warmupCorrect,
+            wrongCount: 0,
+            wrongBySection: {},
+            attempts: [],
+            percentDone: 20,
+            isComplete: false,
+          },
+        },
+      }),
+    );
+    await page.evaluate(() => {
+      window.localStorage.setItem("kids_math.admin_prefs.v1", JSON.stringify({ ttsEnabled: true }));
+    });
+    await page.goto(`/grade/b/day/day-1/section/${sectionId}`);
+
+    const exampleTts = page.getByTestId(testIds.component.sectionBlock.example.tts(sectionId));
+    const exerciseTts = page.getByTestId(testIds.component.exerciseBox.tts(ex!.id));
+    await expect(exampleTts).toBeVisible();
+    await expect(exampleTts).toBeEnabled();
+    await expect(exerciseTts).toBeVisible();
+    await expect(exerciseTts).toBeEnabled();
   });
 });
 

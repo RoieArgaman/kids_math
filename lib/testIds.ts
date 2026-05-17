@@ -241,6 +241,8 @@ export const testIds = {
           childTid(tid("component", "sectionBlock", "section", sectionId), "example", "step", idx),
         takeaway: (sectionId: string) =>
           childTid(tid("component", "sectionBlock", "section", sectionId), "example", "takeaway"),
+        tts: (sectionId: string) =>
+          childTid(tid("component", "sectionBlock", "section", sectionId), "example", "tts"),
       },
       body: (sectionId: string) => childTid(tid("component", "sectionBlock", "section", sectionId), "body"),
     },
