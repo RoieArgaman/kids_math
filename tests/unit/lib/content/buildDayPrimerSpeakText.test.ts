@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildDayPrimerSpeakChunks,
   buildDayPrimerSpeakText,
   hasDayTeachingPrimer,
 } from "@/lib/content/buildDayPrimerSpeakText";
@@ -30,7 +31,9 @@ describe("buildDayPrimerSpeakText", () => {
       teachingSummary: "אֶחָד",
       teachingSteps: ["שְׁנַיִם", "שְׁלוֹשָׁה"],
     });
-    expect(buildDayPrimerSpeakText(day)).toBe("אֶחָד. שְׁנַיִם. שְׁלוֹשָׁה");
+    expect(buildDayPrimerSpeakText(day)).toBe(
+      "אֶחָד. שָׁלָב שֵׁנִי: שְׁנַיִם. שָׁלָב שְׁלִישִׁי: שְׁלוֹשָׁה",
+    );
     expect(hasDayTeachingPrimer(day)).toBe(true);
   });
 
@@ -38,5 +41,17 @@ describe("buildDayPrimerSpeakText", () => {
     const day = minimalDay({ teachingSteps: ["שלב"] });
     expect(hasDayTeachingPrimer(day)).toBe(true);
     expect(buildDayPrimerSpeakText(day)).toBe("שלב");
+  });
+
+  it("buildDayPrimerSpeakChunks returns summary and steps", () => {
+    const day = minimalDay({
+      teachingSummary: "אֶחָד",
+      teachingSteps: ["שְׁנַיִם", "שְׁלוֹשָׁה"],
+    });
+    expect(buildDayPrimerSpeakChunks(day)).toEqual([
+      "אֶחָד",
+      "שָׁלָב שֵׁנִי: שְׁנַיִם",
+      "שָׁלָב שְׁלִישִׁי: שְׁלוֹשָׁה",
+    ]);
   });
 });

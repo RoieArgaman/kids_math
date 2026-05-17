@@ -91,7 +91,7 @@ export function ExerciseBox({
     >
       <div
         data-testid={childTid(baseTestId, "promptRow")}
-        className="mb-2 flex flex-wrap items-start justify-between gap-2"
+        className="mb-2 flex flex-wrap items-start gap-2"
         dir="rtl"
       >
         <TapToPlayTtsButton

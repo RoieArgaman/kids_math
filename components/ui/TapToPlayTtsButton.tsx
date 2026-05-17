@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { childTid } from "@/lib/testIds";
-import { isTtsSupported, speakHebrew, stopSpeech } from "@/lib/tts/engine";
+import { isTtsSupported, speakHebrew, speakHebrewChunks, stopSpeech } from "@/lib/tts/engine";
 
 type TapToPlayTtsButtonProps = {
-  text: string;
+  /** Single utterance (exercise prompts). Ignored when `chunks` is set. */
+  text?: string;
+  /** Primer: one chunk per summary/step with pauses between. */
+  chunks?: string[];
   dataTestId: string;
   featureEnabled: boolean;
   /** Screen reader label when idle */
@@ -72,15 +75,31 @@ function StopIcon({ baseTid }: { baseTid: string }) {
 }
 
 export function TapToPlayTtsButton({
-  text,
+  text = "",
+  chunks,
   dataTestId,
   featureEnabled,
   ariaLabel = DEFAULT_ARIA_IDLE,
   ariaLabelSpeaking = DEFAULT_ARIA_SPEAKING,
 }: TapToPlayTtsButtonProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [supported, setSupported] = useState(
+    () => typeof window !== "undefined" && isTtsSupported(),
+  );
 
-  const supported = typeof window !== "undefined" && isTtsSupported();
+  useEffect(() => {
+    const syncSupported = () => {
+      setSupported(isTtsSupported());
+    };
+    syncSupported();
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.addEventListener("voiceschanged", syncSupported);
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", syncSupported);
+      };
+    }
+    return undefined;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -102,24 +121,40 @@ export function TapToPlayTtsButton({
 
   const onClick = useCallback(() => {
     if (!supported || !featureEnabled) return;
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.getVoices();
+      } catch {
+        // Engine handles unsupported synthesis; keep click path alive.
+      }
+    }
     if (isSpeaking) {
       stopSpeech();
       setIsSpeaking(false);
       return;
     }
     setIsSpeaking(true);
-    speakHebrew(text, () => {
+    const onDone = () => {
       setIsSpeaking(false);
-    });
-  }, [featureEnabled, isSpeaking, supported, text]);
+    };
+    if (chunks && chunks.length > 0) {
+      speakHebrewChunks(chunks, onDone);
+    } else {
+      speakHebrew(text, onDone);
+    }
+  }, [chunks, featureEnabled, isSpeaking, supported, text]);
 
-  if (!featureEnabled || !supported) {
+  if (!supported) {
     return null;
   }
 
-  const stateClass = isSpeaking
-    ? "border-violet-400 bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-300/80"
-    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
+  const canPlay = featureEnabled;
+  const stateClass = !canPlay
+    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70"
+    : isSpeaking
+      ? "border-violet-400 bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-300/80"
+      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
 
   return (
     <button
@@ -128,6 +163,8 @@ export function TapToPlayTtsButton({
       className={`touch-icon-button shrink-0 ${stateClass}`}
       aria-label={isSpeaking ? ariaLabelSpeaking : ariaLabel}
       aria-pressed={isSpeaking}
+      aria-disabled={!canPlay}
+      disabled={!canPlay}
       onClick={onClick}
     >
       <span

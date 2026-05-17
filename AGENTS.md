@@ -916,6 +916,9 @@ If a learning is stable and recurring, update:
 ### Educational Content Changes
 **Mode: ULTRA minimum** — Must include `MoE_PedagogyLead` verification against Israeli MoE syllabus
 
+### Day Teaching Primer (hub copy + TTS)
+**Mode: MAX** when changing catalog, all grade primers, or app-wide TTS — Follow `.cursor/rules/day-teaching-primer.mdc` and `docs/TEACHING_PRIMER_GUIDELINES.md`; run `tests/unit/lib/content/teaching-primer-content.test.ts` on content changes.
+
 ---
 
 ## Agent-Specific Entry Points

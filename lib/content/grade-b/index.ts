@@ -65,6 +65,7 @@ const concepts = [
 
 export const workbookDaysGradeB: WorkbookDay[] = concepts.map((c) =>
   buildDayFromConcepts(concepts, c, {
+    grade: "b",
     simpleSections: true,
     progressiveConceptFocus: c.dayNumber < 29,
   }),

@@ -1,8 +1,10 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, Page } from "@playwright/test";
 import type { GradeId } from "@/lib/grades";
-import type { DayId, Exercise, WorkbookDay } from "@/lib/types";
+import type { DayId, Exercise, ExerciseId, WorkbookDay } from "@/lib/types";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
-import { testIds } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
+
+const SUBMIT_OUTCOME_TIMEOUT_MS = 1_500;
 
 function toShapeLabel(option: string): string {
   if (option === "circle") return "עִיגּוּל";
@@ -68,9 +70,67 @@ function wrongUiValue(ex: Exercise): { fillValue?: string; clickKey?: string } {
   }
 }
 
+function choiceSelectedTestId(exerciseId: ExerciseId, choiceKey: string): string {
+  return childTid(testIds.component.exerciseBox.root(exerciseId), "choice", choiceKey, "selected");
+}
+
+function choiceKeyFromChoiceButtonTestId(testId: string | null, exerciseId: ExerciseId): string | null {
+  if (!testId) return null;
+  const prefix = `${testIds.component.exerciseBox.root(exerciseId)}.choice.`;
+  if (!testId.startsWith(prefix)) return null;
+  const rest = testId.slice(prefix.length);
+  const key = rest.split(".")[0];
+  return key || null;
+}
+
+async function waitForExerciseReady(root: Locator, exerciseId: ExerciseId): Promise<void> {
+  await root.waitFor({ state: "visible", timeout: 10_000 });
+  const choicePrefix = `${testIds.component.exerciseBox.root(exerciseId)}.choice.`;
+  const choices = root.locator(`[data-testid^="${choicePrefix}"]`);
+  if ((await choices.count()) > 0) {
+    await choices.first().waitFor({ state: "visible", timeout: 5_000 });
+  }
+}
+
+async function waitForChoiceSelected(
+  root: Locator,
+  exerciseId: ExerciseId,
+  choiceKey: string,
+): Promise<void> {
+  const selected = root.getByTestId(choiceSelectedTestId(exerciseId, choiceKey));
+  await expect(selected).toBeVisible({ timeout: SUBMIT_OUTCOME_TIMEOUT_MS });
+}
+
+/** Returns true when the answer was wrong and retry was clicked. */
+async function submitAndWaitForOutcome(root: Locator, exerciseId: ExerciseId): Promise<boolean> {
+  const retryButton = root.getByTestId(testIds.component.exerciseBox.retry(exerciseId));
+  const retryVisible = await retryButton
+    .isVisible({ timeout: SUBMIT_OUTCOME_TIMEOUT_MS })
+    .catch(() => false);
+  if (!retryVisible) {
+    return false;
+  }
+  await retryButton.click();
+  return true;
+}
+
+async function clickChoiceAndCheck(
+  root: Locator,
+  choice: Locator,
+  exerciseId: ExerciseId,
+  choiceKey: string,
+  checkButton: Locator,
+): Promise<boolean> {
+  await choice.click();
+  await waitForChoiceSelected(root, exerciseId, choiceKey);
+  await checkButton.click();
+  return submitAndWaitForOutcome(root, exerciseId);
+}
+
 export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise<void> {
   const { fillValue, clickKey } = correctUiValue(ex);
   const root = page.getByTestId(testIds.component.exerciseBox.root(ex.id));
+  await waitForExerciseReady(root, ex.id);
   const checkButton = root.getByTestId(testIds.component.exerciseBox.check(ex.id));
 
   if (fillValue != null) {
@@ -81,7 +141,9 @@ export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise
     for (const candidate of candidates) {
       await input.fill(candidate);
       await checkButton.click();
-      const shouldRetry = await retryButton.isVisible({ timeout: 250 }).catch(() => false);
+      const shouldRetry = await retryButton
+        .isVisible({ timeout: SUBMIT_OUTCOME_TIMEOUT_MS })
+        .catch(() => false);
       if (!shouldRetry) return;
       await retryButton.click();
     }
@@ -92,11 +154,8 @@ export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise
   if (clickKey != null) {
     const desiredChoice = root.getByTestId(testIds.component.exerciseBox.choice(ex.id, clickKey));
     if ((await desiredChoice.count()) > 0) {
-      await desiredChoice.first().click();
-      await checkButton.click();
-      const retryVisible = await root.getByTestId(testIds.component.exerciseBox.retry(ex.id)).isVisible({ timeout: 250 }).catch(() => false);
-      if (!retryVisible) return;
-      await root.getByTestId(testIds.component.exerciseBox.retry(ex.id)).click();
+      const failed = await clickChoiceAndCheck(root, desiredChoice.first(), ex.id, clickKey, checkButton);
+      if (!failed) return;
     }
 
     // Some authored content can have answer values that do not match rendered choice keys.
@@ -111,6 +170,7 @@ export async function answerExerciseCorrectly(page: Page, ex: Exercise): Promise
 export async function answerExerciseWrongly(page: Page, ex: Exercise): Promise<void> {
   const { fillValue, clickKey } = wrongUiValue(ex);
   const root = page.getByTestId(testIds.component.exerciseBox.root(ex.id));
+  await waitForExerciseReady(root, ex.id);
 
   if (fillValue != null) {
     await root.getByTestId(testIds.component.exerciseBox.input(ex.id)).fill(fillValue);
@@ -118,21 +178,29 @@ export async function answerExerciseWrongly(page: Page, ex: Exercise): Promise<v
 
   if (clickKey != null) {
     await root.getByTestId(testIds.component.exerciseBox.choice(ex.id, clickKey)).click();
+    await waitForChoiceSelected(root, ex.id, clickKey);
   }
 
   await root.getByTestId(testIds.component.exerciseBox.check(ex.id)).click();
 }
 
-async function clickChoiceUntilCorrect(root: Locator, allChoices: Locator, checkButton: Locator, exerciseId: string): Promise<void> {
-  const retryButton = root.getByTestId(testIds.component.exerciseBox.retry(exerciseId));
+async function clickChoiceUntilCorrect(
+  root: Locator,
+  allChoices: Locator,
+  checkButton: Locator,
+  exerciseId: ExerciseId,
+): Promise<void> {
   const choiceCount = await allChoices.count();
 
   for (let idx = 0; idx < choiceCount; idx += 1) {
-    await allChoices.nth(idx).click();
-    await checkButton.click();
-    const shouldRetry = await retryButton.isVisible({ timeout: 250 }).catch(() => false);
-    if (!shouldRetry) return;
-    await retryButton.click();
+    const choice = allChoices.nth(idx);
+    const testId = await choice.getAttribute("data-testid");
+    const choiceKey = choiceKeyFromChoiceButtonTestId(testId, exerciseId);
+    if (!choiceKey) {
+      continue;
+    }
+    const failed = await clickChoiceAndCheck(root, choice, exerciseId, choiceKey, checkButton);
+    if (!failed) return;
   }
 
   throw new Error(`Could not find a correct choice for exercise ${exerciseId}`);
@@ -147,6 +215,10 @@ export async function answerDayCorrectly(page: Page, params: { grade: GradeId; d
   // Navigate section-by-section: sections unlock in order (warmup first, last section after all others).
   for (const section of day.sections) {
     await page.goto(`/grade/${params.grade}/day/${params.dayId}/section/${section.id}`);
+    const firstExercise = section.exercises[0];
+    if (firstExercise) {
+      await expect(page.getByTestId(testIds.component.exerciseBox.root(firstExercise.id))).toBeVisible();
+    }
     for (const ex of section.exercises) {
       await answerExerciseCorrectly(page, ex);
     }
@@ -154,4 +226,3 @@ export async function answerDayCorrectly(page: Page, params: { grade: GradeId; d
 
   return day;
 }
-

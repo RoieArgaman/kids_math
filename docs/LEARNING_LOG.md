@@ -279,3 +279,8 @@ Append-only record of what we learned while working on this repo.
 ### 2026-04-03 (Teaching primer: full Grade A rollout + subcomponents)
 - **What changed:** All `lib/content/grade-a/day-*.ts` concepts now include optional `teachingSummary` / `teachingSteps` where missing; UI split into `components/teaching-primer/` (`TeachingPrimerExpandedContent`, `TeachingPrimerExpandToggle`, `DayTeachingPrimer`) with `components/DayTeachingPrimer.tsx` re-export.
 - **E2E:** "no primer" scenario uses **Grade B** `day-1` (no authored primer) + unlock cookie.
+
+### 2026-05-17 (Teaching primer: catalog, child TTS, Grade B primers)
+- **Trigger:** Grade-fit Hebrew copy + slower chunked primer TTS app-wide.
+- **What changed / where:** `lib/content/teachingPrimerCatalog.ts` (58 days); `teachingPrimerFromCatalog` in `day-builder` with `grade` option; `lib/tts/constants.ts` + child default in `lib/tts/engine.ts` (`speakHebrewChunks`); `TapToPlayTtsButton` `chunks` prop; `docs/TEACHING_PRIMER_GUIDELINES.md`; `teaching-primer-content.test.ts`.
+- **How to reuse:** Edit catalog per grade/day; run primer content + TTS unit tests and `day-smoke` / `grade-b-lifecycle` E2E.
