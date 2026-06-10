@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { DayHeader } from "@/components/DayHeader";
 import { DayTeachingPrimer } from "@/components/DayTeachingPrimer";
-import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressHeader } from "@/components/ui/ProgressHeader";
 import { StarReward } from "@/components/StarReward";
@@ -21,6 +21,7 @@ import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
+import { findSectionForExercise, getWeakExercises } from "@/lib/utils/adaptiveSuggestions";
 import type { DayId, ExerciseId, Section } from "@/lib/types";
 import type { SectionType } from "@/lib/types/curriculum";
 
@@ -63,7 +64,6 @@ function getSectionCardState(
   if (isComplete) return "complete";
   if (sectionIdx === 0) return "open";
 
-  // Last section unlocks only when ALL other sections are complete
   if (sectionIdx === allSections.length - 1) {
     const allOthersComplete = allSections
       .slice(0, -1)
@@ -71,7 +71,6 @@ function getSectionCardState(
     return allOthersComplete ? "open" : "locked";
   }
 
-  // Middle sections unlock once warmup is complete
   const warmup = allSections[0];
   const warmupComplete = warmup?.exercises.every((ex) => correctAnswers[ex.id] === true) ?? false;
   return warmupComplete ? "open" : "locked";
@@ -81,19 +80,19 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
   const effectiveGrade = grade ?? DEFAULT_GRADE;
   const router = useRouter();
 
-  const {
-    markComplete,
-    percentDone,
-    isComplete,
-    correctAnswers,
-  } = useProgress(dayId, { grade: effectiveGrade });
+  const { markComplete, percentDone, isComplete, correctAnswers } = useProgress(dayId, {
+    grade: effectiveGrade,
+  });
 
   const day = useMemo(
     () => getWorkbookDays(effectiveGrade).find((d) => d.id === dayId),
     [dayId, effectiveGrade],
   );
 
-  const { previewAll, isRouteReady, isLocked } = useDayUnlockStatus({ grade: effectiveGrade, dayId });
+  const { previewAll, isRouteReady, isLocked } = useDayUnlockStatus({
+    grade: effectiveGrade,
+    dayId,
+  });
 
   const [showReward, setShowReward] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
@@ -126,7 +125,30 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     [day, sectionStates],
   );
 
+  const weakExercises = useMemo(
+    () => (isComplete && day ? getWeakExercises(day.sections, correctAnswers, 3) : []),
+    [isComplete, day, correctAnswers],
+  );
+
+  const prevSectionStatesRef = useRef<Record<string, SectionCardState>>({});
+  const [unlockingIds, setUnlockingIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const prev = prevSectionStatesRef.current;
+    const newlyUnlocked: string[] = [];
+    for (const [id, state] of Object.entries(sectionStates)) {
+      if (prev[id] === "locked" && state === "open") {
+        newlyUnlocked.push(id);
+      }
+    }
+    prevSectionStatesRef.current = { ...sectionStates };
+    if (newlyUnlocked.length === 0) return;
+    setUnlockingIds(new Set(newlyUnlocked));
+    const timer = setTimeout(() => setUnlockingIds(new Set()), 600);
+    return () => clearTimeout(timer);
+  }, [sectionStates]);
+
   const root = testIds.screen.dayOverview.root(effectiveGrade, dayId);
+  const weakSpotPanelId = testIds.screen.dayOverview.weakSpotPanel(effectiveGrade, dayId);
 
   if (!day) {
     return (
@@ -135,10 +157,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           emoji="🔍"
           title="הַיּוֹם לֹא נִמְצָא."
           actions={
-            <ButtonLink
-              href={routes.gradeHome(effectiveGrade, { previewAll })}
-              className="w-full text-center"
-            >
+            <ButtonLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
               חֲזָרָה לַחוֹבֶרֶת
             </ButtonLink>
           }
@@ -166,10 +185,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           title="הַיּוֹם נָעוּל"
           description="צָרִיךְ לְהַשְׁלִים אֶת הַיּוֹם הַקּוֹדֵם בְּ-100% כְּדֵי לִפְתֹּחַ אֶת הַיּוֹם הַזֶּה."
           actions={
-            <ButtonLink
-              href={routes.gradeHome(effectiveGrade, { previewAll })}
-              className="w-full text-center"
-            >
+            <ButtonLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
               חֲזוֹר הַבַּיְתָה
             </ButtonLink>
           }
@@ -186,7 +202,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
 
   return (
     <main data-testid={root}>
-      {/* Nav */}
       <div
         data-testid={testIds.screen.dayOverview.nav(effectiveGrade, dayId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
@@ -195,7 +210,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
       </div>
 
-      {/* Progress bar */}
       <ProgressHeader
         data-testid={childTid(root, "progressBar")}
         percentDone={percentDone}
@@ -203,7 +217,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         className="mb-4"
       />
 
-      {/* Day header */}
       <div data-testid={childTid(root, "header")} className="mb-4">
         <DayHeader
           day={day}
@@ -216,12 +229,12 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
 
       <DayTeachingPrimer day={day} grade={effectiveGrade} dayId={dayId} />
 
-      {/* Section cards */}
       <div data-testid={childTid(root, "sections")} className="mb-6 flex flex-col gap-4">
         {day.sections.map((section, idx) => {
           const state = sectionStates[section.id] ?? "locked";
           const isCardLocked = state === "locked";
           const isCardComplete = state === "complete";
+          const isUnlocking = unlockingIds.has(section.id);
           const chipClass =
             SECTION_TYPE_CHIP_CLASS[section.type] ?? "bg-gray-100 border-gray-300 text-gray-800";
           const typeLabel = SECTION_TYPE_LABEL[section.type] ?? section.type;
@@ -233,7 +246,10 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
             <div
               key={section.id}
               data-testid={cardRoot}
+              data-state={isUnlocking ? "unlocking" : undefined}
               className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
+                isUnlocking ? "animate-unlock-pulse" : ""
+              } ${
                 isCardComplete
                   ? "border-emerald-300 bg-emerald-50"
                   : isCardLocked
@@ -273,16 +289,10 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                   </span>
                 ) : (
                   <Link
-                    data-testid={testIds.screen.dayOverview.sectionCardCta(
-                      effectiveGrade,
-                      dayId,
-                      section.id,
-                    )}
+                    data-testid={testIds.screen.dayOverview.sectionCardCta(effectiveGrade, dayId, section.id)}
                     href={routes.gradeSection(effectiveGrade, dayId, section.id, { previewAll })}
                     className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm ${
-                      isCardComplete
-                        ? "border border-emerald-400 bg-white text-emerald-700"
-                        : "btn-accent"
+                      isCardComplete ? "border border-emerald-400 bg-white text-emerald-700" : "btn-accent"
                     }`}
                   >
                     {isCardComplete ? "תִּרְגּוּל חוֹזֵר" : idx === 0 ? "הַתְחֵל" : "פְּתַח"}
@@ -294,7 +304,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         })}
       </div>
 
-      {/* Completion panel — shown when all sections are done */}
       {allSectionsComplete && (
         <CompletionPanel
           data-testid={testIds.screen.dayOverview.completionPanel(effectiveGrade, dayId)}
@@ -312,6 +321,43 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
             </button>
           }
         />
+      )}
+
+      {weakExercises.length > 0 && (
+        <div
+          data-testid={weakSpotPanelId}
+          className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 shadow-sm"
+        >
+          <p
+            data-testid={childTid(weakSpotPanelId, "title")}
+            className="mb-3 text-sm font-bold text-violet-900"
+          >
+            💪 רוצים לתרגל שוב? אלה התרגילים שכדאי לחזור עליהם:
+          </p>
+          <div
+            data-testid={childTid(weakSpotPanelId, "list")}
+            className="flex flex-col gap-2"
+          >
+            {weakExercises.map((exercise) => {
+              const section = findSectionForExercise(day.sections, exercise.id as ExerciseId);
+              if (!section) return null;
+              return (
+                <Link
+                  key={exercise.id}
+                  data-testid={testIds.screen.dayOverview.weakSpotExercise(
+                    effectiveGrade,
+                    dayId,
+                    exercise.id,
+                  )}
+                  href={routes.gradeSection(effectiveGrade, dayId, section.id, { previewAll })}
+                  className="rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-800 shadow-sm hover:bg-violet-50"
+                >
+                  {exercise.prompt}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       <StarReward

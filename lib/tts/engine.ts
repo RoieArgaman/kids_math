@@ -18,10 +18,15 @@ export function isTtsSupported(): boolean {
 function pickHebrewVoice(): SpeechSynthesisVoice | null {
   if (!isBrowser() || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
-  const he =
-    voices.find((v) => v.lang?.toLowerCase().startsWith("he")) ??
-    voices.find((v) => v.lang?.toLowerCase().includes("he"));
-  return he ?? null;
+  // Prefer local (higher quality) voices: exact he-IL first, then any Hebrew
+  const localExact = voices.find((v) => v.localService && v.lang?.toLowerCase() === "he-il");
+  if (localExact) return localExact;
+  const localAny = voices.find((v) => v.localService && v.lang?.toLowerCase().startsWith("he"));
+  if (localAny) return localAny;
+  // Fall back to remote voices
+  const remoteExact = voices.find((v) => v.lang?.toLowerCase() === "he-il");
+  if (remoteExact) return remoteExact;
+  return voices.find((v) => v.lang?.toLowerCase().startsWith("he")) ?? null;
 }
 
 let voicesListenerAttached = false;
@@ -79,12 +84,19 @@ function runAfterQueueClear(run: () => void): void {
 }
 
 /**
- * Hyphens between Hebrew (incl. niqqud) and a digit are often read as "minus" (e.g. מֵ-1 → "from minus one").
- * Insert a space so engines read "מֵ 1" as "from one".
+ * Normalize Hebrew text for TTS:
+ * 1. Replace space-padded math operators with spoken Hebrew words.
+ * 2. Fix hyphens between Hebrew letters and digits (read as "minus" on some engines).
  */
 export function normalizeTextForHebrewTts(text: string): string {
+  let result = text
+    .replace(/ \+ /g, " פְּלוּס ")
+    .replace(/ = /g, " שָׁוֶה ")
+    .replace(/ - /g, " פָּחוֹת ")
+    .replace(/×/g, " כָּפוּל ");
   const dashClass = "[-\\u05BE\\u2212\\u2010-\\u2015]";
-  return text.replace(new RegExp(`(?<=[\\u0590-\\u05FF])${dashClass}(?=\\d)`, "g"), " ");
+  result = result.replace(new RegExp(`(?<=[\\u0590-\\u05FF])${dashClass}(?=\\d)`, "g"), " ");
+  return result;
 }
 
 function applyProfile(utterance: SpeechSynthesisUtterance, options?: SpeakOptions): void {

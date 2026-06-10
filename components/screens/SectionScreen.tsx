@@ -279,6 +279,7 @@ export function SectionScreen({
               retryMessage={feedback[exercise.id]}
               isCorrect={correctMap[exercise.id]}
               wasChecked={(attempts[exercise.id] ?? 0) > 0}
+              grade={effectiveGrade}
               setFocusRef={setFocusRef}
               wrongAttempts={wrongAttempts[exercise.id] ?? 0}
               hintUsed={hintUsed[exercise.id] ?? false}

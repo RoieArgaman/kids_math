@@ -1,6 +1,6 @@
 import type { AnswerValue, Exercise } from "../types";
 
-const HEBREW_NIQUD_REGEX = /[\u0591-\u05C7]/g;
+const HEBREW_NIQUD_REGEX = /[֑-ׇ]/g;
 const PUNCTUATION_REGEX = /[.,/#!$%^&*;:{}=\-_`~()?"'!]/g;
 
 export const normalizeTextAnswer = (value: string): string =>
@@ -162,21 +162,32 @@ export const defaultHint = (exercise: Exercise): string => {
 
   switch (exercise.kind) {
     case "number_input":
-      return "נַסּוּ לִסְפּוֹר לְאַט צַעַד־צַעַד וְלִבְדּוֹק שׁוּב אֶת הַתּוֹצָאָה.";
+      return "נַסּוּ לִסְפּוֹר לְאַט צַעַדַ–צַעַד וְלִבְדּוֹק שׁוּב אֶת הַתּוֹצָאָה.";
     case "multiple_choice":
-      return "עִבְרוּ עַל כָּל אֶפְשָׁרוּת וּבִדְקוּ אֵיזוֹ מַתְאִימָה בְּדִיּוּק לַשְּׁאֵלָה.";
+      return "עִבְרוּ עַל כָּל אֶפְשָׁרוּת וּבִדְקוּ אֵיזוֹ מַתְאִימָה בְדִיּוּק לַשְּׁאֵלָה.";
     case "true_false":
-      return "קִרְאוּ אֶת הַמִּשְׁפָּט שׁוּב וּבִדְקוּ אִם הוּא תָּמִיד נָכוֹן.";
+      return "קִרְאוּ אֶת הַמִּשְׁפָט שׁוּב וּבִדְקוּ אִם הוּא תָּמִיד נָכוֹן.";
     case "number_line_jump":
       return "סַמְּנוּ נְקוּדַּת הַתְחָלָה וְקִפְצוּ לְפִי גֹּדֶל הַקְּפִיצָה עַד הַסּוֹף.";
     case "shape_choice":
-      return "בִּדְקוּ אֶת מִסְפַּר הַצְּלָעוֹת אוֹ הַפִּינוֹת שֶׁל כָּל צוּרָה.";
+      return "בִדְקוּ אֶת מִסְפַר הַצְּלָעוֹת אוֹ הַפִּנּוֹת שֶׁל כָּל צוּרָה.";
     default: {
       const _never: never = exercise;
       return _never;
     }
   }
 };
+
+/** True when the student's numeric answer is exactly ±1 off the correct answer. */
+export function isNearMiss(exercise: Exercise, rawAnswer: unknown): boolean {
+  if (exercise.kind !== "number_input") return false;
+  const normalized = normalizeAnswerValue(rawAnswer);
+  if (typeof normalized !== "number") return false;
+  return Math.abs(normalized - exercise.answer) === 1;
+}
+
+export const NEAR_MISS_FEEDBACK_TEXT =
+  "כִּמְעַט נָכוֹן! נַסּוּ שׁוּב בְעִיּוּן.";
 
 export const getRetryFeedbackText = (
   exercise: Exercise,
@@ -187,17 +198,22 @@ export const getRetryFeedbackText = (
   const correct = isAnswerCorrect(exercise, rawAnswer);
 
   if (correct) {
-    return attemptNumber <= 1 ? "מְעוּלֶּה! תְּשׁוּבָה נְכוֹנָה." : "יָפֶה מְאֹד, הִצְלַחְתָּ לְתַקֵּן נָכוֹן.";
+    return attemptNumber <= 1
+      ? "מְעוּלֶּה! תְשׁוּבָה נְכוֹנָה."
+      : "יָפֶה מְאֹד, הִצְלַחְתָּ לְתַקֵּן נָכוֹן.";
   }
 
   if (normalized === null) {
-    return "לֹא נִקְלְטָה תְּשׁוּבָה. נַסּוּ לְהָזִין תְּשׁוּבָה מְלֵאָה וּבְרוּרָה.";
+    return "לֹא נִקְלְטָה תְשׁוּבָה. נַסּוּ לְהָזִין תְשׁוּבָה מְלֵאָה וּבְרוּרָה.";
+  }
+
+  if (isNearMiss(exercise, rawAnswer)) {
+    return NEAR_MISS_FEEDBACK_TEXT;
   }
 
   if (attemptNumber >= 3) {
-    return `כמעט שם. רמז: ${defaultHint(exercise)}`;
+    return "נְסוּ עוֹד פַּעַם — רֶמֶז מוּכָן בִשְׁבִילְכֶם 💡";
   }
 
-  return "לֹא מְדוּיָּק עֲדַיִן, נַסּוּ שׁוּב וּבִדְקוּ כָּל שָׁלָב.";
+  return "לֹא מְדוּיָּק עֲדַיִן, נַסּוּ שׁוּב וּבִדְקוּ כָּל שָׁלָב.";
 };
-

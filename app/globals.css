@@ -61,6 +61,12 @@ main {
   background: #fffbeb;    /* amber-50 */
 }
 
+/* Near-miss wrong answer — distinct from hint (lighter yellow, ⚡ icon) */
+.surface-near-miss {
+  border-color: #fde68a;  /* amber-200 */
+  background: #fefce8;    /* yellow-50 */
+}
+
 .muted {
   color: var(--muted);
 }
@@ -360,11 +366,19 @@ a:focus-visible {
   100% { transform: translateY(0px);   }
 }
 
+@keyframes unlock-pulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(139, 117, 204, 0.55); }
+  30%  { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(139, 117, 204, 0); }
+  60%  { transform: scale(1); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(139, 117, 204, 0); }
+}
+
 @layer utilities {
   .text-balance { text-wrap: balance; }
-  .animate-bounce-in  { animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .animate-wiggle     { animation: wiggle 0.4s ease; }
-  .animate-float      { animation: float 3s ease-in-out infinite; }
+  .animate-bounce-in    { animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .animate-wiggle       { animation: wiggle 0.4s ease; }
+  .animate-float        { animation: float 3s ease-in-out infinite; }
+  .animate-unlock-pulse { animation: unlock-pulse 600ms ease-out; }
 }
 
 @keyframes badge-glow {
