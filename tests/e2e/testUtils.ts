@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 import { testIds } from "@/lib/testIds";
 import type { GradeId } from "@/lib/grades";
 import type { DayId, DayProgressState, Exercise, ExerciseId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
@@ -235,3 +235,61 @@ export async function dismissDayCompletionCelebration(page: Page): Promise<void>
   }
 }
 
+// ─── Auth test helpers ────────────────────────────────────────────────────────
+
+export const TEST_USER = {
+  userId: "test-user-id",
+  username: "testuser",
+  role: "user" as const,
+};
+
+export const TEST_ADMIN = {
+  userId: "test-admin-id",
+  username: "testadmin",
+  role: "admin" as const,
+};
+
+export const TEST_PASSWORD = "testpassword";
+
+/**
+ * Intercepts all auth API routes with predictable mocked responses.
+ * Call before page.goto() so routes are installed before any requests.
+ *
+ * @param loggedIn - When true, /api/auth/me returns TEST_USER immediately.
+ * @param user - Override the user returned (defaults to TEST_USER).
+ */
+export async function mockAuthApi(
+  page: Page,
+  opts: { loggedIn?: boolean; user?: typeof TEST_USER | typeof TEST_ADMIN } = {},
+): Promise<void> {
+  const { loggedIn = false, user = TEST_USER } = opts;
+  let sessionUser: typeof TEST_USER | typeof TEST_ADMIN | null = loggedIn ? user : null;
+
+  await page.route("/api/auth/me", (route) => {
+    if (sessionUser) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(sessionUser) });
+    }
+    return route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Unauthorized" }) });
+  });
+
+  await page.route("/api/auth/login", async (route) => {
+    const body = route.request().postDataJSON() as { username?: string; password?: string } | null;
+    if (body?.password === TEST_PASSWORD) {
+      sessionUser = user;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ user: sessionUser }) });
+    }
+    return route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Invalid credentials" }) });
+  });
+
+  await page.route("/api/auth/logout", (route) => {
+    sessionUser = null;
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+
+  await page.route("/api/user/progress", (route) => {
+    if (route.request().method() === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: "null" });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+}

@@ -4,6 +4,7 @@ import type { ExerciseId } from "@/lib/types";
 import { SECTION_QUESTION_COUNTS } from "./config";
 import type { GmatChallengeStateV1, GmatSectionKey } from "./types";
 import { GMAT_SECTION_ORDER_DEFAULT } from "./types";
+import { scheduleSync } from "@/lib/auth/serverSync";
 
 const KEY_PREFIX = "kids_math.gmat_challenge.v1.grade.";
 
@@ -266,6 +267,7 @@ export function saveGmatChallengeState(grade: GradeId, state: GmatChallengeState
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(keyForGrade(grade), JSON.stringify(state));
+    scheduleSync();
   } catch {
     // private mode / quota
   }

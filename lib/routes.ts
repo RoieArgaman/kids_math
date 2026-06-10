@@ -66,6 +66,7 @@ export const routes = {
   gradeBadges: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/badges`, opts),
   adminProgress: (opts?: RouteOpts) => withQuery("/admin/progress", opts),
+  adminUsers: (opts?: RouteOpts) => withQuery("/admin/users", opts),
   privacy: (opts?: RouteOpts) => withQuery("/privacy", opts),
   cookies: (opts?: RouteOpts) => withQuery("/cookies", opts),
 };

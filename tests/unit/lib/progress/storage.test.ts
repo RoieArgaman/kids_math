@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
+import { registerSyncCallback, unregisterSyncCallback } from "@/lib/auth/serverSync";
 import type { DayId, DayProgressState } from "@/lib/types";
 
 const LEGACY_KEY = "kids_math.workbook_progress.v1";
@@ -246,5 +247,50 @@ describe("saveProgressState", () => {
     };
     saveProgressState(state, { grade: "b" });
     expect(window.localStorage.getItem(GRADE_B_KEY)).toBeTruthy();
+  });
+
+  describe("backward compat — scheduleSync does not affect localStorage writes", () => {
+    afterEach(() => {
+      unregisterSyncCallback();
+      vi.useRealTimers();
+    });
+
+    it("saves to localStorage even when a sync callback is registered", () => {
+      vi.useFakeTimers();
+      registerSyncCallback(vi.fn());
+      const state = {
+        version: 1 as const,
+        days: { "day-1": makeDay("day-1") },
+        updatedAt: "2020-01-01T00:00:00.000Z",
+      };
+      saveProgressState(state, { grade: "a" });
+      // localStorage must have data regardless of callback registration
+      const raw = window.localStorage.getItem(GRADE_A_KEY);
+      expect(raw).toBeTruthy();
+      const parsed = JSON.parse(raw!) as { version: number };
+      expect(parsed.version).toBe(1);
+    });
+
+    it("saved data is identical with or without a sync callback registered", () => {
+      const state = {
+        version: 1 as const,
+        days: { "day-1": makeDay("day-1") },
+        updatedAt: "2020-01-01T00:00:00.000Z",
+      };
+
+      // Save without callback
+      saveProgressState(state, { grade: "a" });
+      const withoutCallback = window.localStorage.getItem(GRADE_A_KEY);
+      window.localStorage.removeItem(GRADE_A_KEY);
+
+      // Save with callback registered
+      vi.useFakeTimers();
+      registerSyncCallback(vi.fn());
+      saveProgressState(state, { grade: "a" });
+      const withCallback = window.localStorage.getItem(GRADE_A_KEY);
+
+      const parseVersion = (raw: string | null) => (JSON.parse(raw ?? "{}") as { version?: number }).version;
+      expect(parseVersion(withCallback)).toBe(parseVersion(withoutCallback));
+    });
   });
 });

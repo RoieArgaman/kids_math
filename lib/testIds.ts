@@ -304,6 +304,32 @@ export const testIds = {
     streakBadge: {
       root: () => tid("component", "streakBadge"),
     },
+    auth: {
+      topBar: () => tid("component", "auth", "topBar"),
+      loginButton: () => tid("component", "auth", "loginButton"),
+      loginModal: () => tid("component", "auth", "loginModal"),
+      loginModalOverlay: () => tid("component", "auth", "loginModal", "overlay"),
+      usernameInput: () => tid("component", "auth", "loginModal", "username"),
+      passwordInput: () => tid("component", "auth", "loginModal", "password"),
+      submitButton: () => tid("component", "auth", "loginModal", "submit"),
+      errorMessage: () => tid("component", "auth", "loginModal", "error"),
+      avatar: () => tid("component", "auth", "avatar"),
+      avatarDropdown: () => tid("component", "auth", "avatar", "dropdown"),
+      logoutButton: () => tid("component", "auth", "avatar", "logout"),
+      adminUsersLink: () => tid("component", "auth", "avatar", "adminUsers"),
+    },
+    adminUsers: {
+      root: () => tid("component", "adminUsers"),
+      userRow: (userId: string) => tid("component", "adminUsers", "user", userId),
+      addForm: () => tid("component", "adminUsers", "addForm"),
+      usernameInput: () => tid("component", "adminUsers", "addForm", "username"),
+      passwordInput: () => tid("component", "adminUsers", "addForm", "password"),
+      adminToggle: () => tid("component", "adminUsers", "addForm", "adminToggle"),
+      submitButton: () => tid("component", "adminUsers", "addForm", "submit"),
+      deleteButton: (userId: string) => tid("component", "adminUsers", "user", userId, "delete"),
+      deleteConfirm: (userId: string) => tid("component", "adminUsers", "user", userId, "deleteConfirm"),
+      deleteCancel: (userId: string) => tid("component", "adminUsers", "user", userId, "deleteCancel"),
+    },
   },
 } as const;
 

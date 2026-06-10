@@ -2,6 +2,7 @@ import type { GradeId } from "@/lib/grades";
 import type { ExerciseId } from "@/lib/types";
 import { FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
 import type { FinalExamState, FinalExamStateV1 } from "@/lib/final-exam/types";
+import { scheduleSync } from "@/lib/auth/serverSync";
 
 const KEY_PREFIX = "kids_math.final_exam.v1.grade.";
 
@@ -98,6 +99,7 @@ export function saveFinalExamState(grade: GradeId, state: FinalExamState): void 
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(keyForGrade(grade), JSON.stringify(state));
+    scheduleSync();
   } catch {
     // Avoid crashes in private mode/quota errors.
   }

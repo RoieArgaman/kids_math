@@ -1,5 +1,6 @@
 import type { GradeId } from "@/lib/grades";
 import type { BadgeId, BadgeState } from "./types";
+import { scheduleSync } from "@/lib/auth/serverSync";
 
 function badgeStorageKey(grade: GradeId): string {
   return `kids_math.badges.v1.grade.${grade}`;
@@ -70,6 +71,7 @@ export function saveBadgeState(state: BadgeState): void {
   if (!isBrowser()) return;
   try {
     window.localStorage.setItem(badgeStorageKey(state.grade), JSON.stringify(state));
+    scheduleSync();
   } catch {
     // Intentionally no-op.
   }
