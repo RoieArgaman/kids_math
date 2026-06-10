@@ -178,6 +178,10 @@ export const testIds = {
         tid("screen", "dayOverview", "grade", grade, "day", dayId, "teachingPrimer", "tts"),
       teachingPrimerExpand: (grade: string, dayId: string) =>
         tid("screen", "dayOverview", "grade", grade, "day", dayId, "teachingPrimer", "expand"),
+      weakSpotPanel: (grade: string, dayId: string) =>
+        tid("screen", "dayOverview", "weakSpot", "grade", grade, "day", dayId),
+      weakSpotExercise: (grade: string, dayId: string, exerciseId: string) =>
+        tid("screen", "dayOverview", "weakSpot", "grade", grade, "day", dayId, "exercise", exerciseId),
     },
     section: {
       root: (grade: string, dayId: string, sectionId: string) =>
@@ -188,6 +192,8 @@ export const testIds = {
         tid("screen", "section", "stickyHeader", "grade", grade, "day", dayId, "section", sectionId),
       completionPanel: (grade: string, dayId: string, sectionId: string) =>
         tid("screen", "section", "completionPanel", "grade", grade, "day", dayId, "section", sectionId),
+      nextSectionCta: (grade: string, dayId: string, sectionId: string) =>
+        tid("screen", "section", "cta", "next-section", "grade", grade, "day", dayId, "section", sectionId),
     },
   },
   layout: {
@@ -317,6 +323,13 @@ export const testIds = {
       avatarDropdown: () => tid("component", "auth", "avatar", "dropdown"),
       logoutButton: () => tid("component", "auth", "avatar", "logout"),
       adminUsersLink: () => tid("component", "auth", "avatar", "adminUsers"),
+    },
+    topBar: {
+      studentTtsToggle: () => tid("component", "topBar", "studentTts", "toggle"),
+      authSection: () => tid("component", "topBar", "auth", "section"),
+    },
+    metacognitionToast: {
+      root: () => tid("component", "metacognitionToast"),
     },
     adminUsers: {
       root: () => tid("component", "adminUsers"),
