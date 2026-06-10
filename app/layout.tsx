@@ -3,6 +3,7 @@ import { Rubik } from "next/font/google";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { TopBar } from "@/components/layout/TopBar";
 import { testIds } from "@/lib/testIds";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${rubik.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
         <AppProviders>
+          <TopBar />
           <div data-testid={testIds.layout.mainSlot()} className="w-full min-w-0 grow">
             {children}
           </div>

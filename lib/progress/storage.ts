@@ -2,6 +2,7 @@ import { createInitialWorkbookProgressState } from "@/lib/progress/engine";
 import type { GradeId } from "@/lib/grades";
 import { DEFAULT_GRADE } from "@/lib/grades";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
+import { scheduleSync } from "@/lib/auth/serverSync";
 
 /** Current v2 storage schema version. Increment when the persisted shape changes. */
 export const STORAGE_SCHEMA_VERSION = 2;
@@ -202,6 +203,7 @@ export function saveProgressState(state: WorkbookProgressState, options: Progres
       updatedAt: new Date().toISOString(),
     };
     window.localStorage.setItem(key, JSON.stringify(nextState));
+    scheduleSync();
   } catch (err) {
     // QuotaExceededError — storage is full. Dispatch a DOM event so the
     // StorageErrorBoundary (or any listener) can surface this to the user.

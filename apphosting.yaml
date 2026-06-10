@@ -9,4 +9,6 @@ runConfig:
 env:
   - variable: NODE_ENV
     value: production
+  - variable: JWT_SECRET
+    secret: kids-math-jwt-secret
 

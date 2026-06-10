@@ -1,5 +1,6 @@
 import type { StreakState } from "./types";
 import { STREAK_MILESTONES } from "./types";
+import { scheduleSync } from "@/lib/auth/serverSync";
 
 const STORAGE_KEY = "kids_math.streak.v1";
 
@@ -44,6 +45,7 @@ export function saveStreakState(state: StreakState): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    scheduleSync();
   } catch {
     // Avoid crashes in private mode / quota errors.
   }
