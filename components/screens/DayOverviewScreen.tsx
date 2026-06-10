@@ -8,8 +8,9 @@ import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { DayHeader } from "@/components/DayHeader";
 import { DayTeachingPrimer } from "@/components/DayTeachingPrimer";
+import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
-import { ProgressBar } from "@/components/ProgressBar";
+import { ProgressHeader } from "@/components/ui/ProgressHeader";
 import { StarReward } from "@/components/StarReward";
 import { TrophyUnlock } from "@/components/TrophyUnlock";
 import { getWorkbookDays } from "@/lib/content/workbook";
@@ -110,6 +111,16 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     );
   }, [day, correctAnswers]);
 
+  const sectionCorrectCounts = useMemo(() => {
+    if (!day) return {} as Record<string, number>;
+    return Object.fromEntries(
+      day.sections.map((section) => [
+        section.id,
+        section.exercises.filter((ex) => correctAnswers[ex.id as ExerciseId] === true).length,
+      ]),
+    );
+  }, [day, correctAnswers]);
+
   const allSectionsComplete = useMemo(
     () => Boolean(day) && day!.sections.every((s) => sectionStates[s.id] === "complete"),
     [day, sectionStates],
@@ -185,18 +196,12 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
       </div>
 
       {/* Progress bar */}
-      <div
+      <ProgressHeader
         data-testid={childTid(root, "progressBar")}
-        className="mb-4 rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
-      >
-        <p
-          data-testid={childTid(root, "progressBar", "label")}
-          className="mb-1 text-xs font-semibold text-gray-600"
-        >
-          📊 הַהִתְקַדְּמוּת שֶׁלִּי:
-        </p>
-        <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
-      </div>
+        percentDone={percentDone}
+        label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`}
+        className="mb-4"
+      />
 
       {/* Day header */}
       <div data-testid={childTid(root, "header")} className="mb-4">
@@ -221,9 +226,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
             SECTION_TYPE_CHIP_CLASS[section.type] ?? "bg-gray-100 border-gray-300 text-gray-800";
           const typeLabel = SECTION_TYPE_LABEL[section.type] ?? section.type;
           const emoji = SECTION_TYPE_EMOJI[section.type] ?? "📚";
-          const correctInSection = section.exercises.filter(
-            (ex) => correctAnswers[ex.id] === true,
-          ).length;
+          const correctInSection = sectionCorrectCounts[section.id] ?? 0;
           const cardRoot = testIds.screen.dayOverview.sectionCard(effectiveGrade, dayId, section.id);
 
           return (
@@ -293,37 +296,22 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
 
       {/* Completion panel — shown when all sections are done */}
       {allSectionsComplete && (
-        <div
+        <CompletionPanel
           data-testid={testIds.screen.dayOverview.completionPanel(effectiveGrade, dayId)}
-          className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200 p-6 text-center shadow-md"
-        >
-          <p
-            data-testid={childTid(testIds.screen.dayOverview.completionPanel(effectiveGrade, dayId), "icon")}
-            className="mb-1 text-5xl"
-          >
-            🎉
-          </p>
-          <p
-            data-testid={childTid(testIds.screen.dayOverview.completionPanel(effectiveGrade, dayId), "title")}
-            className="mb-1 text-2xl font-semibold text-emerald-900"
-          >
-            כָּל הַכָּבוֹד!
-          </p>
-          <p
-            data-testid={childTid(testIds.screen.dayOverview.completionPanel(effectiveGrade, dayId), "subtitle")}
-            className="mb-4 text-sm font-semibold text-emerald-700"
-          >
-            כָּל הַחֲלָקִים הוּשְׁלְמוּ — עָשִׂיתָ עֲבוֹדָה מְצוּיֶנֶת!
-          </p>
-          <button
-            data-testid={testIds.screen.dayOverview.completeCta(effectiveGrade, dayId)}
-            type="button"
-            className="touch-button btn-accent w-full rounded-2xl py-4 text-lg font-semibold shadow-md"
-            onClick={completeDay}
-          >
-            הַיּוֹם הוּשְׁלַם ✨
-          </button>
-        </div>
+          icon="🎉"
+          title="כָּל הַכָּבוֹד!"
+          subtitle="כָּל הַחֲלָקִים הוּשְׁלְמוּ — עָשִׂיתָ עֲבוֹדָה מְצוּיֶנֶת!"
+          actions={
+            <button
+              data-testid={testIds.screen.dayOverview.completeCta(effectiveGrade, dayId)}
+              type="button"
+              className="touch-button btn-accent w-full rounded-2xl py-4 text-lg font-semibold shadow-md"
+              onClick={completeDay}
+            >
+              הַיּוֹם הוּשְׁלַם ✨
+            </button>
+          }
+        />
       )}
 
       <StarReward

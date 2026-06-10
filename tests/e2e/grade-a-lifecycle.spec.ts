@@ -10,6 +10,8 @@ import {
   seedProgressState,
 } from "./testUtils";
 import { childTid, testIds } from "@/lib/testIds";
+import { getWorkbookDays } from "@/lib/content/workbook";
+import type { DayProgressState, ExerciseId } from "@/lib/types";
 
 test.beforeEach(async ({ page, context }) => {
   await context.clearCookies();
@@ -187,6 +189,59 @@ test.describe("grade A lifecycle", () => {
     await page.getByTestId(testIds.screen.finalExam.startGradeB()).click();
     await expect(page).toHaveURL(/\/grade\/b\/?$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("ב׳");
+  });
+
+  test("next-section CTA appears on completed warmup and navigates to next section", async ({ page }) => {
+    // Build a progress state where only the warmup (section 0) of day-1 is correct.
+    const day1 = getWorkbookDays("a").find((d) => d.id === "day-1");
+    if (!day1 || day1.sections.length < 2) {
+      throw new Error("day-1 must have at least 2 sections for this test");
+    }
+    const warmupSection = day1.sections[0];
+    const nextSection = day1.sections[1];
+
+    const correctAnswers: Record<ExerciseId, boolean> = {} as Record<ExerciseId, boolean>;
+    for (const ex of warmupSection.exercises) {
+      correctAnswers[ex.id] = true;
+    }
+    const warmupDoneState: DayProgressState = {
+      dayId: "day-1",
+      answers: {},
+      correctAnswers,
+      wrongCount: 0,
+      wrongBySection: {} as Record<never, number>,
+      attempts: [],
+      percentDone: Math.round((warmupSection.exercises.length / day1.sections.flatMap((s) => s.exercises).length) * 100),
+      isComplete: false,
+    };
+
+    await seedProgressState(
+      page,
+      "a",
+      createProgressState({ days: { "day-1": warmupDoneState } }),
+    );
+
+    // Navigate directly to the warmup section screen (it's already complete).
+    await page.goto(`/grade/a/day/day-1/section/${warmupSection.id}`);
+
+    // On fresh page load, the section-complete transition fires the StarReward celebration.
+    // Dismiss it to reveal the static completion panel with navigation CTAs.
+    const starRewardConfirm = page.getByTestId(testIds.component.starReward.confirm());
+    await expect(starRewardConfirm).toBeVisible({ timeout: 5000 });
+    await starRewardConfirm.click();
+
+    const completionPanelId = testIds.screen.section.completionPanel("a", "day-1", warmupSection.id);
+    await expect(page.getByTestId(completionPanelId)).toBeVisible();
+
+    // Next-section CTA must be visible since warmup is done (unlocks section 1).
+    const nextSectionCta = page.getByTestId(
+      testIds.screen.section.nextSectionCta("a", "day-1", warmupSection.id),
+    );
+    await expect(nextSectionCta).toBeVisible();
+
+    // Clicking navigates to section 1.
+    await nextSectionCta.click();
+    await expect(page).toHaveURL(new RegExp(`/grade/a/day/day-1/section/${nextSection.id}`));
   });
 });
 
