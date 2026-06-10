@@ -342,6 +342,10 @@ export const testIds = {
       deleteButton: (userId: string) => tid("component", "adminUsers", "user", userId, "delete"),
       deleteConfirm: (userId: string) => tid("component", "adminUsers", "user", userId, "deleteConfirm"),
       deleteCancel: (userId: string) => tid("component", "adminUsers", "user", userId, "deleteCancel"),
+      changePasswordButton: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw"),
+      changePasswordInput: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "input"),
+      changePasswordSubmit: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "submit"),
+      changePasswordCancel: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "cancel"),
     },
   },
 } as const;
