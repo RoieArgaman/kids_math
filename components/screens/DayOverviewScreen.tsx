@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
-import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { DayHeader } from "@/components/DayHeader";
 import { DayTeachingPrimer } from "@/components/DayTeachingPrimer";
+import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressHeader } from "@/components/ui/ProgressHeader";
 import { StarReward } from "@/components/StarReward";
@@ -21,7 +21,6 @@ import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import { findSectionForExercise, getWeakExercises } from "@/lib/utils/adaptiveSuggestions";
 import type { DayId, ExerciseId, Section } from "@/lib/types";
 import type { SectionType } from "@/lib/types/curriculum";
 
@@ -125,14 +124,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
   const allSectionsComplete = useMemo(
     () => Boolean(day) && day!.sections.every((s) => sectionStates[s.id] === "complete"),
     [day, sectionStates],
-  );
-
-  const weakExercises = useMemo(
-    () =>
-      isComplete && day
-        ? getWeakExercises(day.sections, correctAnswers, 3)
-        : [],
-    [isComplete, day, correctAnswers],
   );
 
   const root = testIds.screen.dayOverview.root(effectiveGrade, dayId);
@@ -321,46 +312,6 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
             </button>
           }
         />
-      )}
-
-      {/* Weak-spot review — shown when day is complete but some exercises were missed */}
-      {weakExercises.length > 0 && (
-        <div
-          data-testid={testIds.screen.dayOverview.weakSpotPanel(effectiveGrade, dayId)}
-          className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 shadow-sm"
-        >
-          <p
-            data-testid={childTid(testIds.screen.dayOverview.weakSpotPanel(effectiveGrade, dayId), "title")}
-            className="mb-3 text-sm font-bold text-violet-900"
-          >
-            💪 רוצים לתרגל שוב? אלה התרגילים שכדאי לחזור עליהם:
-          </p>
-          <div
-            data-testid={childTid(testIds.screen.dayOverview.weakSpotPanel(effectiveGrade, dayId), "list")}
-            className="flex flex-col gap-2"
-          >
-            {weakExercises.map((exercise) => {
-              const section = day
-                ? findSectionForExercise(day.sections, exercise.id as ExerciseId)
-                : undefined;
-              if (!section) return null;
-              return (
-                <Link
-                  key={exercise.id}
-                  data-testid={testIds.screen.dayOverview.weakSpotExercise(
-                    effectiveGrade,
-                    dayId,
-                    exercise.id,
-                  )}
-                  href={routes.gradeSection(effectiveGrade, dayId, section.id, { previewAll })}
-                  className="rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-800 shadow-sm hover:bg-violet-50"
-                >
-                  {exercise.prompt}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
       )}
 
       <StarReward

@@ -1,9 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MetacognitionToast } from "@/components/ui/MetacognitionToast";
-import { isAnswerCorrect } from "@/lib/utils/exercise";
-import type { SectionType } from "@/lib/types/curriculum";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
@@ -26,8 +23,6 @@ import { childTid, testIds } from "@/lib/testIds";
 import { getNextUnlockedSection } from "@/lib/utils/sectionNav";
 import type { DayId, ExerciseId, SectionId } from "@/lib/types";
 
-const METACOGNITION_SECTION_TYPES: SectionType[] = ["arithmetic", "challenge"];
-
 export function SectionScreen({
   grade,
   dayId,
@@ -39,8 +34,6 @@ export function SectionScreen({
 }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
   const [showReward, setShowReward] = useState(false);
-  const [showMetacognition, setShowMetacognition] = useState(false);
-  const consecutiveCorrect = useRef(0);
 
   const {
     setAnswer,
@@ -81,7 +74,7 @@ export function SectionScreen({
     [section],
   );
 
-  const { answers, correctMap, feedback, attempts, wrongAttempts, hintUsed, resetAnswerStateForExerciseIds, onChangeValue, onRetryExercise, onRevealHint, submitExercise: submitExerciseBase } =
+  const { answers, correctMap, feedback, attempts, wrongAttempts, hintUsed, resetAnswerStateForExerciseIds, onChangeValue, onRetryExercise, onRevealHint, submitExercise } =
     useDayAnswers({
       day,
       grade: effectiveGrade,
@@ -93,30 +86,6 @@ export function SectionScreen({
   const handleReset = useCallback(() => {
     resetAnswerStateForExerciseIds(sectionExerciseIds);
   }, [resetAnswerStateForExerciseIds, sectionExerciseIds]);
-
-  const submitExercise = useCallback(
-    (exercise: Parameters<typeof submitExerciseBase>[0]) => {
-      if (!correctMap[exercise.id]) {
-        const userAnswer = answers[exercise.id] ?? "";
-        const correct = isAnswerCorrect(exercise, userAnswer);
-        if (correct) {
-          consecutiveCorrect.current += 1;
-          if (
-            consecutiveCorrect.current >= 3 &&
-            section &&
-            METACOGNITION_SECTION_TYPES.includes(section.type)
-          ) {
-            consecutiveCorrect.current = 0;
-            setShowMetacognition(true);
-          }
-        } else {
-          consecutiveCorrect.current = 0;
-        }
-      }
-      submitExerciseBase(exercise);
-    },
-    [answers, correctMap, section, submitExerciseBase],
-  );
 
   const { resetNotice } = useSectionReset({
     sectionWrongCount,
@@ -337,7 +306,10 @@ export function SectionScreen({
             titleClassName="text-xl"
             subtitle="כָּל הַיָּשָׁר — עָשִׂיתָ עֲבוֹדָה נֶהֱדֶרֶת!"
             actions={
-              <div data-testid={childTid(completionPanelId, "actions")} className="flex flex-col gap-3">
+              <div
+                data-testid={childTid(completionPanelId, "actions")}
+                className="flex flex-col gap-3"
+              >
                 {nextSection && (
                   <ButtonLink
                     data-testid={testIds.screen.section.nextSectionCta(
@@ -370,10 +342,6 @@ export function SectionScreen({
         visible={showReward}
         text="הִשְׁלַמְתֶּם אֶת הַחֵלֶק בְּהַצְלָחָה."
         onConfirm={() => setShowReward(false)}
-      />
-      <MetacognitionToast
-        visible={showMetacognition}
-        onDismiss={() => setShowMetacognition(false)}
       />
     </main>
   );
