@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { ExerciseRenderer } from "@/components/exercises/ExerciseRenderer";
 import { MathExpressionTokens } from "@/components/ui/MathExpressionTokens";
 import { childTid, testIds } from "@/lib/testIds";
 import { getRenderableMathTokens } from "@/lib/utils/exerciseMathPolicy";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
-import { defaultHint } from "@/lib/utils/exercise";
+import { defaultHint, NEAR_MISS_FEEDBACK_TEXT } from "@/lib/utils/exercise";
+import type { GradeId } from "@/lib/grades";
 import type { Exercise } from "@/lib/types";
 import { TapToPlayTtsButton } from "@/components/ui/TapToPlayTtsButton";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
+import { useStudentTts } from "@/components/providers/StudentTtsProvider";
 import { buildExercisePromptSpeakText } from "@/lib/utils/exercisePromptSpeakText";
+import { speakHebrew } from "@/lib/tts/engine";
 
 interface ExerciseBoxProps {
   exercise: Exercise;
@@ -27,10 +31,21 @@ interface ExerciseBoxProps {
   wrongAttempts?: number;
   hintUsed?: boolean;
   onRevealHint: () => void;
+  /** Grade A uses larger prompt text to aid early readers. */
+  grade?: GradeId;
 }
 
 function isPositiveFeedback(message: string): boolean {
-  return message.includes("מְעוּלֶּה") || message.includes("יָפֶה מְאֹד") || message.includes("נְכוֹנָה");
+  return (
+    message.includes("מְעוּלֶּה") ||
+    message.includes("יָפֶה מְאֹד") ||
+    message.includes("נְכוֹנָה") ||
+    message.includes("נָכוֹן.")
+  );
+}
+
+function isNearMissFeedback(message: string): boolean {
+  return message === NEAR_MISS_FEEDBACK_TEXT;
 }
 
 export function ExerciseBox({
@@ -48,16 +63,28 @@ export function ExerciseBox({
   hintUsed,
   disableRetry,
   onRevealHint,
+  grade,
 }: ExerciseBoxProps) {
   const promptLabel = exercise.prompt.replace(/\s+/g, " ").trim();
   const checkButtonLabel = `בְּדִיקָה: ${promptLabel}`;
-  const inputLabel = `תְּשׁוּבָה לַשְּׁאֵלָה: ${promptLabel}`;
+  const inputLabel = `תְּשׁוּבָה לַשְּׁאֵלָה: ${promptLabel}`;
   const baseTestId = testIds.component.exerciseBox.root(exercise.id);
 
-  const { ttsEnabled, hydrated } = useAdminTtsEnabled();
+  const { ttsEnabled, hydrated: adminHydrated } = useAdminTtsEnabled();
+  const { autoPlay, hydrated: studentHydrated } = useStudentTts();
   const promptParts = splitMathExpression(exercise.prompt);
   const ttsSpeakText = buildExercisePromptSpeakText(promptParts);
-  const showTts = hydrated && ttsEnabled;
+  const showTts = adminHydrated && ttsEnabled;
+
+  // Auto-play the prompt once on mount when the student has enabled auto-play
+  const autoPlayedRef = useRef(false);
+  useEffect(() => {
+    if (autoPlayedRef.current) return;
+    if (!adminHydrated || !studentHydrated) return;
+    if (!ttsEnabled || !autoPlay) return;
+    autoPlayedRef.current = true;
+    speakHebrew(ttsSpeakText);
+  }, [adminHydrated, studentHydrated, ttsEnabled, autoPlay, ttsSpeakText]);
 
   const onEnter = () => {
     if (showCheckButton) {
@@ -67,7 +94,10 @@ export function ExerciseBox({
   };
   const mathTokens = promptParts.math ? tokenizeMathExpression(promptParts.math) : null;
   const renderableMathTokens = getRenderableMathTokens(exercise, mathTokens);
-  const showRetryAction = Boolean(retryMessage) && isCorrect !== true && !disableRetry;
+  const nearMiss = retryMessage ? isNearMissFeedback(retryMessage) : false;
+  const showRetryAction =
+    Boolean(retryMessage) && isCorrect !== true && !disableRetry && !nearMiss;
+  const showNearMissRetry = nearMiss && !disableRetry;
   const showHintButton = (wrongAttempts ?? 0) >= 2 && isCorrect !== true && !hintUsed;
   const showHintText = hintUsed && isCorrect !== true;
   const hintText = (showHintButton || showHintText) ? defaultHint(exercise) : null;
@@ -75,7 +105,9 @@ export function ExerciseBox({
   const surfaceStateClass = wasChecked
     ? isCorrect
       ? hintUsed ? "surface-hint" : "surface-success"
-      : "surface-error"
+      : nearMiss
+        ? "surface-near-miss"
+        : "surface-error"
     : "";
 
   const correctRingClass = wasChecked && isCorrect
@@ -101,7 +133,7 @@ export function ExerciseBox({
         />
         <p
           data-testid={childTid(baseTestId, "prompt")}
-          className="min-w-0 flex-1 text-lg font-semibold"
+          className={`min-w-0 flex-1 font-semibold ${grade === "a" ? "text-xl" : "text-lg"}`}
           dir="rtl"
           style={{ unicodeBidi: "plaintext" }}
         >
@@ -134,7 +166,7 @@ export function ExerciseBox({
           className={`mt-2 text-sm ${isPositiveFeedback(retryMessage) ? "feedback-success" : "feedback-error"}`}
         >
           <span data-testid={childTid(baseTestId, "feedback", "icon")} aria-hidden="true">
-            {isPositiveFeedback(retryMessage) ? "✅ " : "❌ "}
+            {isPositiveFeedback(retryMessage) ? "✅ " : nearMiss ? "⚡ " : "❌ "}
           </span>
           {retryMessage}
           {showRetryAction ? (
@@ -145,6 +177,16 @@ export function ExerciseBox({
               onClick={onRetry}
             >
               נַסּוּ שׁוּב
+            </button>
+          ) : null}
+          {showNearMissRetry ? (
+            <button
+              data-testid={testIds.component.exerciseBox.retry(exercise.id)}
+              type="button"
+              className="me-2 touch-button rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+              onClick={onRetry}
+            >
+              נַסּוּ שׁוּב — כִּמְעַט!
             </button>
           ) : null}
         </div>
