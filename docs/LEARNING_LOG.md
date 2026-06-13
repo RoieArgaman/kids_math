@@ -6,6 +6,17 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-06-13 (AI migration: structured math render + TTS manifest + accuracy backstop)
+- **Trigger:** Plan to "migrate AI" for better voice, more-accurate questions, and better question rendering (docs/AI_MIGRATION_PLAN.md, MAX, INV-FALLBACK = degrade to today's behavior on any issue).
+- **What changed / where:**
+  - Render: `mathExpression?` added to `BaseExercise` (`lib/types/curriculum.ts`); `resolvePromptParts` in `lib/utils/mathText.ts` prefers it over the regex `splitMathExpression`; one-line swap in `components/ExerciseBox.tsx`. Absent/malformed field → identical to today (proven by `it.each`).
+  - Voice: `lib/tts/audioManifest.ts` (+ empty `audioManifest.data.json`); `lib/tts/engine.ts` `speakUtterance` now tries a pre-generated audio file first and falls back to `speechSynthesis` on any miss/error; `stopSpeech`/cancel also stop manifest audio. `scripts/generate-audio.mjs` is the human-run generator.
+  - Accuracy: `validateExerciseArithmetic` in `lib/content/engine/validate.ts` (uses new `evaluateMathExpression` with × ÷ precedence), wired into `content-validity.test.ts` + seeded-bad-answer test. `scripts/audit-content-accuracy.mjs` (read-only, tmp/ only) + `scripts/author-content.mjs`.
+- **What we learned:**
+  - The arithmetic backstop must be **kind-aware and conservative**: `true_false` deliberately states wrong equations (answer encodes correctness), and `number_input` "fix the mistake" prompts embed wrong equations on purpose — so only flag (a) `= ?` where the numeric answer ≠ computed, and (b) `true_false` where the boolean disagrees with the equation. It immediately caught a real bug: day-14 `true_false` "45 + 10 - 5 = 55" answer `true` (correct is 50).
+  - `edge-and-a11y.spec.ts` `math-token-row.png` remains env-flaky on this machine — verified it fails identically on clean `origin/main` (stash + rerun), so a diff there is not a regression. Render path is provably unchanged until content backfills `mathExpression`.
+- **How to reuse next time:** runtime AI stays build/authoring-time; new paths must fall back to the legacy path and prove it with a fault-injection/`it.each` test. Confirm Claude model/pricing via the `claude-api` skill before wiring the authoring scripts.
+
 ### 2026-06-13 (Admin: English track in progress manager)
 
 - **Trigger:** Admin progress screen managed Math only (grades א׳/ב׳); needed to also view/complete/reset the English (Pre-A1) learner track.

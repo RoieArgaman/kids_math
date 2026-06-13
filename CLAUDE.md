@@ -68,6 +68,7 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 8. No console.log — in production code
 9. No secrets — flag immediately if found
 10. Numbers only — students type digits or click buttons. **No text/character input.** Use `number_input` or `multiple_choice`, never free-text fields
+11. **Content accuracy audit** — when adding/editing exercises or day content, run an AI content audit (in-session, or `scripts/audit-content-accuracy.mjs`) for word-problems, natural-language claims, distractor plausibility, and MoE syllabus fit. The deterministic checker can't catch these. Full rules: **`AGENTS.md` → Educational Content Changes**
 
 ### Self-Review (before every response)
 Run the Self-Review Protocol from `AGENTS.md` — catch your own mistakes before handing off.

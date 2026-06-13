@@ -59,6 +59,13 @@ interface BaseExercise {
   id: ExerciseId;
   kind: ExerciseKind;
   prompt: string;
+  /**
+   * Optional explicit math expression for rendering (e.g. "7 + 5 = ?").
+   * When present, the boxed-token renderer uses it directly instead of
+   * reverse-engineering the formula from `prompt` via regex. Strictly additive:
+   * absent or malformed → falls back to `splitMathExpression(prompt)` (today's behavior).
+   */
+  mathExpression?: string;
   explanation?: string;
   hint?: string;
   meta: CurriculumMeta;

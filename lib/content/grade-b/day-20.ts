@@ -13,7 +13,7 @@ export const concept: DayConcept = {
   languagePrompt: "בִּחְרוּ: חֲצִי מִ-10 זֶה —",
   languageOptions: ["חָמֵשׁ", "שָׁלוֹשׁ", "שֶׁבַע"],
   languageAnswer: "חָמֵשׁ",
-  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: רֶבַע הוּא אוֹתוֹ דָּבָר כְּ-25 מֵאָה",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: שְׁלִישׁ גָּדוֹל מֵחֲצִי",
   reviewAnswer: false,
   challengePrompt: "כַּמָּה הוּא חֲצִי מִ-16?",
   challengeAnswer: 8,

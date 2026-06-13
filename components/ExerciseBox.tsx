@@ -5,7 +5,7 @@ import { ExerciseRenderer } from "@/components/exercises/ExerciseRenderer";
 import { MathExpressionTokens } from "@/components/ui/MathExpressionTokens";
 import { childTid, testIds } from "@/lib/testIds";
 import { getRenderableMathTokens } from "@/lib/utils/exerciseMathPolicy";
-import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
+import { resolvePromptParts, tokenizeMathExpression } from "@/lib/utils/mathText";
 import { defaultHint, NEAR_MISS_FEEDBACK_TEXT } from "@/lib/utils/exercise";
 import type { GradeId } from "@/lib/grades";
 import type { Exercise } from "@/lib/types";
@@ -72,7 +72,7 @@ export function ExerciseBox({
 
   const { ttsEnabled, hydrated: adminHydrated } = useAdminTtsEnabled();
   const { autoPlay, hydrated: studentHydrated } = useStudentTts();
-  const promptParts = splitMathExpression(exercise.prompt);
+  const promptParts = resolvePromptParts(exercise);
   const ttsSpeakText = buildExercisePromptSpeakText(promptParts);
 
   // Tap-to-play is always available (see SpeakerButton); the admin pref only

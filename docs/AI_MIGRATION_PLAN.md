@@ -1,8 +1,24 @@
-# AI Migration Plan (Future Work)
+# AI Migration Plan
 
-> **Status:** PLANNED — not started. Captured 2026-06-13 via `/plan` (MAX mode, reviewed twice).
-> **Mode to execute:** MAX (server/API + secrets + app-wide TTS + content generation).
-> **Owner:** TBD.
+> **Status:** Code infrastructure IMPLEMENTED 2026-06-13 (branch `feat/ai-structured-math-rendering`).
+> The runtime + validators + scripts + tests are in; the actual AI/TTS **generation runs**
+> are human-key steps (see "Human-run steps remaining" below). Captured via `/plan` (MAX,
+> reviewed twice).
+> **Mode:** MAX (server/API + secrets + app-wide TTS + content generation).
+
+## Implementation status (2026-06-13)
+
+| Piece | Status |
+|-------|--------|
+| Outcome 3 — `mathExpression?` field + `resolvePromptParts` + `ExerciseBox` wiring | ✅ Done, tested (INV-FALLBACK proven) |
+| Outcome 1 — `audioManifest` + engine manifest-first/fallback + `generate-audio.mjs` + empty manifest | ✅ Code done; audio files NOT generated (needs GCP key) |
+| Outcome 2 — `validateExerciseArithmetic` backstop + seeded-bad-answer test + audit/author scripts | ✅ Validator done & wired into CI; **already caught + fixed a real bug** (day-14 `45+10-5=55` → `=50`) |
+| Outcome 2 — actual Claude audit/authoring run | ⏳ Human-run (needs ANTHROPIC_API_KEY) |
+| Case C — runtime hints | ⏳ Deferred to its own MAX cycle |
+
+### Human-run steps remaining (need keys, offline, not CI)
+1. `node --env-file=.env.local scripts/generate-audio.mjs` — wire `synthesize()`/`collectStrings()`, run with `GCP_TTS_CREDENTIALS_JSON`; commit `public/audio/*` + manifest. Until then the empty manifest keeps `speechSynthesis` (today's behavior).
+2. `node --env-file=.env.local scripts/audit-content-accuracy.mjs` and `scripts/author-content.mjs` — wire the Claude call (confirm model/pricing via `claude-api` skill), triage `tmp/content-audit.md`, hand-commit reviewed content. See [AI_AUTHORING_GUIDELINES.md](AI_AUTHORING_GUIDELINES.md).
 
 Research-backed plan for introducing AI into kids_math **without breaking offline-first,
 content determinism, numeric-grading correctness, or child-data safety.**

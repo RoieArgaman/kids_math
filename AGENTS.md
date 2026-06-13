@@ -448,6 +448,7 @@ SELF-REVIEW (before handoff)
 [ ] "use client" only where necessary?
 [ ] @/* imports used?
 [ ] TypeScript strict — no any?
+[ ] Educational content changed? Ran the AI content audit (word-problems, NL claims, distractors, syllabus band) — not just the deterministic checker?
 [ ] Quality gates ran and all pass?
 [ ] Verification report filled completely (ULTRA/MAX)?
 [ ] Learning log updated (ULTRA/MAX) or skip justified?
@@ -914,7 +915,26 @@ If a learning is stable and recurring, update:
 **Mode: ULTRA or MAX** — Follow `.cursor/rules/build-school-year.mdc`
 
 ### Educational Content Changes
-**Mode: ULTRA minimum** — Must include `MoE_PedagogyLead` verification against Israeli MoE syllabus
+**Mode: ULTRA minimum** — Must include `MoE_PedagogyLead` verification against Israeli MoE syllabus.
+
+**Content Accuracy Audit (MANDATORY when adding/editing exercises or day content).**
+The deterministic gate — `validateExerciseArithmetic` in `lib/content/engine/validate.ts`,
+enforced by `tests/unit/lib/content/content-validity.test.ts` — only catches `= ?` answer
+mismatches and `true_false` equation contradictions. It **cannot** judge:
+- word-problem / number-line answers (no equation to evaluate),
+- natural-language claims (e.g. "these are odd numbers" about 5, 10, 15),
+- distractor plausibility, ambiguous wording, or reading level,
+- Grade 1–2 MoE syllabus-band fit (number ranges, operations).
+
+So for every changed exercise also run an **AI content audit**, via either:
+- **in-session** — ask Claude Code to audit the changed content files directly (free; no key), or
+- **script** — `node --env-file=.env.local scripts/audit-content-accuracy.mjs <files>`
+  (needs `ANTHROPIC_API_KEY`; read-only, writes `tmp/content-audit.md`).
+
+Triage findings by hand. **Never auto-flip a `true_false` answer or reword content without
+review.** See `docs/AI_AUTHORING_GUIDELINES.md`. (This audit has already caught real bugs the
+deterministic checker structurally cannot — e.g. a false odd/even claim and a wrong-answer
+true/false item.)
 
 ### Day Teaching Primer (hub copy + TTS)
 **Mode: MAX** when changing catalog, all grade primers, or app-wide TTS — Follow `.cursor/rules/day-teaching-primer.mdc` and `docs/TEACHING_PRIMER_GUIDELINES.md`; run `tests/unit/lib/content/teaching-primer-content.test.ts` on content changes.
