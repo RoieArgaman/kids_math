@@ -320,6 +320,7 @@ export const testIds = {
       submitButton: () => tid("component", "auth", "loginModal", "submit"),
       errorMessage: () => tid("component", "auth", "loginModal", "error"),
       avatar: () => tid("component", "auth", "avatar"),
+      avatarButton: () => tid("component", "auth", "avatar", "button"),
       avatarDropdown: () => tid("component", "auth", "avatar", "dropdown"),
       logoutButton: () => tid("component", "auth", "avatar", "logout"),
       adminUsersLink: () => tid("component", "auth", "avatar", "adminUsers"),
