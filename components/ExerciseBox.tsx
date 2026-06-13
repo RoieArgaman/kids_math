@@ -74,8 +74,9 @@ export function ExerciseBox({
   const { autoPlay, hydrated: studentHydrated } = useStudentTts();
   const promptParts = splitMathExpression(exercise.prompt);
   const ttsSpeakText = buildExercisePromptSpeakText(promptParts);
-  const showTts = adminHydrated && ttsEnabled;
 
+  // Tap-to-play is always available (see SpeakerButton); the admin pref only
+  // gates auto-play on mount, combined with the student's auto-play toggle.
   // Auto-play the prompt once on mount when the student has enabled auto-play
   const autoPlayedRef = useRef(false);
   useEffect(() => {
@@ -129,7 +130,6 @@ export function ExerciseBox({
         <TapToPlayTtsButton
           text={ttsSpeakText}
           dataTestId={testIds.component.exerciseBox.tts(exercise.id)}
-          featureEnabled={showTts}
         />
         <p
           data-testid={childTid(baseTestId, "prompt")}

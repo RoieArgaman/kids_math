@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { childTid } from "@/lib/testIds";
-import { isEnglishVoiceAvailable, speakEnglish } from "@/lib/tts/engine";
+import { SpeakerButton } from "@/components/ui/SpeakerButton";
 
 interface AudioButtonProps {
   /** English text to speak aloud. */
@@ -17,9 +15,9 @@ interface AudioButtonProps {
 }
 
 /**
- * Audio-first affordance for the English layer. Speaks `text` via English TTS.
- * Degrades gracefully: when no English voice is available it stays visible but
- * disabled (never blocks answering — the printed word remains on screen).
+ * English (English layer) preset of {@link SpeakerButton}: 🔊 + visible label.
+ * Degrades gracefully — when no English voice is available it stays visible but
+ * disabled (never blocks answering; the printed word remains on screen).
  */
 export function AudioButton({
   text,
@@ -28,45 +26,16 @@ export function AudioButton({
   size = "lg",
   ...rest
 }: AudioButtonProps) {
-  const [available, setAvailable] = useState(true);
-  const [speaking, setSpeaking] = useState(false);
-
-  useEffect(() => {
-    // Voices may populate asynchronously; re-check shortly after mount.
-    setAvailable(isEnglishVoiceAvailable());
-    const t = setTimeout(() => setAvailable(isEnglishVoiceAvailable()), 300);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (!autoPlay) return;
-    speakEnglish(text);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onPlay = () => {
-    setSpeaking(true);
-    speakEnglish(text, () => setSpeaking(false));
-  };
-
   return (
-    <button
-      data-testid={rest["data-testid"]}
+    <SpeakerButton
+      lang="en"
+      appearance="labeled"
+      text={text}
+      label={label}
+      autoPlay={autoPlay}
+      size={size}
+      dataTestId={rest["data-testid"]}
       data-exercise-focus={rest["data-exercise-focus"]}
-      type="button"
-      disabled={!available}
-      aria-label={`${label}: ${text}`}
-      onClick={onPlay}
-      className={`touch-button inline-flex items-center gap-2 rounded-2xl border-2 border-slate-200 bg-white transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 ${
-        size === "lg" ? "min-h-14 px-5 text-2xl" : "min-h-12 px-4 text-xl"
-      } ${speaking ? "btn-accent" : ""}`}
-    >
-      <span data-testid={childTid(rest["data-testid"], "icon")} aria-hidden="true">
-        🔊
-      </span>
-      <span data-testid={childTid(rest["data-testid"], "label")} className="text-base font-semibold">
-        {label}
-      </span>
-    </button>
+    />
   );
 }
