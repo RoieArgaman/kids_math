@@ -114,7 +114,6 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
           text={speakText}
           chunks={speakChunks}
           dataTestId={testIds.screen.dayOverview.teachingPrimerTts(g, dayId)}
-          featureEnabled={adminHydrated && ttsEnabled}
           ariaLabel="הַשְׁמַע הַסְבָּר קָצָר"
           ariaLabelSpeaking="עֲצוֹר הַשְׁמָעָה"
         />

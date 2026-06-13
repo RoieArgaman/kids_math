@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { TapToPlayTtsButton } from "@/components/ui/TapToPlayTtsButton";
-import { useAdminTtsEnabled } from "@/components/providers/AdminTtsProvider";
 import { testIds } from "@/lib/testIds";
 import type { WorkedExample } from "@/lib/types";
 import { buildWorkedExampleSpeakChunks } from "@/lib/utils/workedExampleSpeakText";
@@ -13,7 +12,6 @@ type WorkedExampleTtsButtonProps = {
 };
 
 export function WorkedExampleTtsButton({ sectionId, example }: WorkedExampleTtsButtonProps) {
-  const { ttsEnabled, hydrated } = useAdminTtsEnabled();
   const chunks = useMemo(() => buildWorkedExampleSpeakChunks(example), [example]);
 
   if (chunks.length === 0) {
@@ -24,7 +22,6 @@ export function WorkedExampleTtsButton({ sectionId, example }: WorkedExampleTtsB
     <TapToPlayTtsButton
       chunks={chunks}
       dataTestId={testIds.component.sectionBlock.example.tts(sectionId)}
-      featureEnabled={hydrated && ttsEnabled}
       ariaLabel="הַשְׁמַע דֻּגְמָה פְּתוּרָה"
       ariaLabelSpeaking="עֲצוֹר הַשְׁמָעָה"
     />

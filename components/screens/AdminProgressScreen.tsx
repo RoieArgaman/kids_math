@@ -409,7 +409,7 @@ export function AdminProgressScreen({
                   checked={ttsEnabled}
                   onChange={(event) => setTtsEnabled(event.target.checked)}
                 />
-                השמעת הנחיות בקול (למכשיר זה בלבד)
+                השמעה אוטומטית של הנחיות בקול (למכשיר זה בלבד)
               </label>
             </section>
           ) : null}
