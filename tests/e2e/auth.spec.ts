@@ -127,4 +127,25 @@ test.describe("auth UI — avatar dropdown", () => {
     await page.getByTestId(testIds.component.auth.avatar()).click();
     await expect(page.getByTestId(testIds.component.auth.adminUsersLink())).toBeVisible();
   });
+
+  // Regression: in RTL the avatar must stay on the visual LEFT (inline-end) — even when the
+  // StudentTtsToggle is hidden — and its dropdown must open fully within the viewport.
+  test("avatar sits on the left (RTL) and dropdown stays within the viewport", async ({ page }) => {
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+
+    const sectionBox = await page.getByTestId(testIds.component.topBar.authSection()).boundingBox();
+    expect(sectionBox).not.toBeNull();
+    // RTL end → auth section center is in the left half of the screen.
+    expect(sectionBox!.x + sectionBox!.width / 2).toBeLessThan(viewport!.width / 2);
+
+    await page.getByTestId(testIds.component.auth.avatar()).click();
+    const dropdown = page.getByTestId(testIds.component.auth.avatarDropdown());
+    await expect(dropdown).toBeVisible();
+
+    const box = await dropdown.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
+  });
 });

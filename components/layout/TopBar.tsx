@@ -28,7 +28,10 @@ export function TopBar() {
         className="flex h-10 w-full items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4"
       >
         <StudentTtsToggle />
-        <div data-testid={testIds.component.topBar.authSection()} className="flex items-center">
+        {/* ms-auto pins the auth section to the inline-end (visual left in RTL) even when
+            StudentTtsToggle renders null — without it, justify-between collapses the lone
+            child to the start (visual right in RTL). */}
+        <div data-testid={testIds.component.topBar.authSection()} className="ms-auto flex items-center">
           {isLoggedIn ? (
             <UserAvatar />
           ) : (

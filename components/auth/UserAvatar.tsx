@@ -40,7 +40,8 @@ export function UserAvatar() {
       ref={dropdownRef}
       className="relative"
     >
-      <button data-testid="km.autogen.useravatar.node.idx.0"
+      <button
+        data-testid={testIds.component.auth.avatarButton()}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}
@@ -52,7 +53,9 @@ export function UserAvatar() {
       {open && (
         <div
           data-testid={testIds.component.auth.avatarDropdown()}
-          className="absolute left-0 top-full z-40 mt-1 min-w-[160px] rounded-2xl border border-slate-200 bg-white py-1 shadow-lg"
+          // The trigger is pinned to the inline-end (visual left in RTL), so opening from
+          // left-0 grows into the viewport. max-w clamp is a safety net against overflow.
+          className="absolute left-0 top-full z-40 mt-1 min-w-[160px] max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white py-1 shadow-lg"
           role="menu"
         >
           <div data-testid="km.autogen.useravatar.node.idx.1" className="border-b border-slate-100 px-4 py-2">
