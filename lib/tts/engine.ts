@@ -6,8 +6,12 @@ function isBrowser(): boolean {
 
 export type SpeakProfile = "child" | "default";
 
+export type SpeakLang = "he" | "en";
+
 export type SpeakOptions = {
   profile?: SpeakProfile;
+  /** Spoken language. Defaults to Hebrew (the original math layer). */
+  lang?: SpeakLang;
 };
 
 export function isTtsSupported(): boolean {
@@ -15,13 +19,27 @@ export function isTtsSupported(): boolean {
   return Boolean(window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined");
 }
 
-function pickHebrewVoice(): SpeechSynthesisVoice | null {
+function pickVoiceForLang(langPrefix: string): SpeechSynthesisVoice | null {
   if (!isBrowser() || !window.speechSynthesis) return null;
+  const prefix = langPrefix.toLowerCase();
   const voices = window.speechSynthesis.getVoices();
-  const he =
-    voices.find((v) => v.lang?.toLowerCase().startsWith("he")) ??
-    voices.find((v) => v.lang?.toLowerCase().includes("he"));
-  return he ?? null;
+  const match =
+    voices.find((v) => v.lang?.toLowerCase().startsWith(prefix)) ??
+    voices.find((v) => v.lang?.toLowerCase().includes(prefix));
+  return match ?? null;
+}
+
+function pickHebrewVoice(): SpeechSynthesisVoice | null {
+  return pickVoiceForLang("he");
+}
+
+function pickEnglishVoice(): SpeechSynthesisVoice | null {
+  return pickVoiceForLang("en");
+}
+
+/** True when the browser exposes at least one English voice (for graceful audio fallback). */
+export function isEnglishVoiceAvailable(): boolean {
+  return pickEnglishVoice() !== null;
 }
 
 let voicesListenerAttached = false;
@@ -109,11 +127,12 @@ function speakUtterance(
   options: SpeakOptions | undefined,
   onEnd?: () => void,
 ): void {
-  const normalized = normalizeTextForHebrewTts(text);
+  const lang = options?.lang ?? "he";
+  const normalized = lang === "en" ? text : normalizeTextForHebrewTts(text);
   const utterance = new SpeechSynthesisUtterance(normalized);
-  utterance.lang = "he-IL";
+  utterance.lang = lang === "en" ? "en-US" : "he-IL";
   applyProfile(utterance, options);
-  const voice = pickHebrewVoice();
+  const voice = lang === "en" ? pickEnglishVoice() : pickHebrewVoice();
   if (voice) {
     utterance.voice = voice;
   }
@@ -142,6 +161,11 @@ export function speakHebrew(text: string, onEnd?: () => void, options?: SpeakOpt
   runAfterQueueClear(() => {
     speakUtterance(trimmed, options, onEnd);
   });
+}
+
+/** Speak English text (English layer). Falls back to a no-op + onEnd when TTS is unavailable. */
+export function speakEnglish(text: string, onEnd?: () => void, options?: SpeakOptions): void {
+  speakHebrew(text, onEnd, { ...options, lang: "en" });
 }
 
 export function speakHebrewChunks(

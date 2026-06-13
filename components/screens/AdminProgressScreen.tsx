@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { Surface } from "@/components/ui/Surface";
-import { getWorkbookDays } from "@/lib/content/workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { saveFinalExamState } from "@/lib/final-exam/storage";
 import { buildAdminForcedPassedFinalExamState } from "@/lib/admin/forcedFinalExam";
@@ -15,11 +14,12 @@ import {
   forceMarkSectionComplete,
   resetSectionProgress,
 } from "@/lib/progress/engine";
-import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import type { DayId, Section, SectionId, WorkbookProgressState } from "@/lib/types";
-import { resetAdminDayProgress } from "@/lib/admin/resetDayProgress";
+import { resetAdminDayProgress, resetAdminEnglishDayProgress } from "@/lib/admin/resetDayProgress";
+import { subjectLabel, type LearningTrack, type Subject } from "@/lib/subjects";
+import { getTrackDays, loadTrackProgress, saveTrackProgress } from "@/lib/track";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
 import { wipeGradeBClientState } from "@/lib/admin/wipeGradeBClientState";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
@@ -40,12 +40,19 @@ function sectionStatusLabel(section: Section, dayProgress: { correctAnswers: Rec
   return "חלקי";
 }
 
-export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: GradeId }) {
+export function AdminProgressScreen({
+  initialGrade = "a",
+  initialSubject = "math",
+}: {
+  initialGrade?: GradeId;
+  initialSubject?: Subject;
+}) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState("");
 
   const [selectedGrade, setSelectedGrade] = useState<GradeId>(initialGrade);
+  const [selectedSubject, setSelectedSubject] = useState<Subject>(initialSubject);
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
   const [status, setStatus] = useState<StatusState>(null);
   const [resetArmedDayId, setResetArmedDayId] = useState<string | null>(null);
@@ -72,15 +79,25 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     });
   }
 
+  /** Resolved learning track + its testid/storage discriminator. */
+  const isEnglish = selectedSubject === "english";
+  const track: LearningTrack = isEnglish ? { subject: "english" } : { subject: "math", grade: selectedGrade };
+  /** testid token: math uses the grade ("a"/"b"); English uses "english". Keeps testid signatures stable. */
+  const trackKey = isEnglish ? "english" : selectedGrade;
+  const trackLabel = isEnglish ? subjectLabel("english") : `כיתה ${gradeLabel(selectedGrade)}`;
+
   useEffect(() => {
     setSelectedGrade(initialGrade);
+    setSelectedSubject(initialSubject);
     setIsUnlocked(isAdminUnlocked());
-  }, [initialGrade]);
+  }, [initialGrade, initialSubject]);
 
   useEffect(() => {
     if (!isUnlocked) return;
-    setProgress(loadProgressState({ grade: selectedGrade }));
-  }, [isUnlocked, selectedGrade]);
+    setProgress(loadTrackProgress(track));
+    // `track` is derived from selectedSubject/selectedGrade; those drive reloads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUnlocked, selectedSubject, selectedGrade]);
 
   useEffect(() => {
     const onPageHide = () => {
@@ -93,7 +110,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     };
   }, []);
 
-  const days = useMemo(() => getWorkbookDays(selectedGrade), [selectedGrade]);
+  const days = useMemo(() => getTrackDays(track), [selectedSubject, selectedGrade]); // eslint-disable-line react-hooks/exhaustive-deps
   const regularDays = useMemo(() => days.filter((day) => day.id !== FINAL_EXAM_DAY_ID), [days]);
   const allRegularDaysComplete = useMemo(
     () => regularDays.every((day) => Boolean(progress.days[day.id as DayId]?.isComplete)),
@@ -105,7 +122,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
   }
 
   function persistNext(next: WorkbookProgressState, successMessage: string): void {
-    saveProgressState(next, { grade: selectedGrade });
+    saveTrackProgress(next, track);
     setProgress(next);
     setStatus({ kind: "success", message: successMessage });
   }
@@ -161,6 +178,20 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
   }
 
   async function handleReset(dayId: string): Promise<void> {
+    // English: isolated store, no final-exam / GMAT / grade-B side effects.
+    if (isEnglish) {
+      const englishResult = resetAdminEnglishDayProgress(progress, dayId as DayId);
+      if (!englishResult) {
+        setResetArmedDayId(null);
+        setStatus({ kind: "error", message: `היום ${dayId} לא נמצא במחברת ${trackLabel}.` });
+        return;
+      }
+      setResetArmedDayId(null);
+      setResetArmedSectionKey(null);
+      persistNext(englishResult.nextState, `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`);
+      return;
+    }
+
     const result = resetAdminDayProgress(progress, dayId as DayId, selectedGrade);
     if (!result) {
       setResetArmedDayId(null);
@@ -169,7 +200,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     }
 
     const { nextState, shouldRevokeGradeBUnlock } = result;
-    saveProgressState(nextState, { grade: selectedGrade });
+    saveTrackProgress(nextState, track);
     setProgress(nextState);
     setResetArmedDayId(null);
     setResetArmedSectionKey(null);
@@ -213,7 +244,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
     );
     setResetArmedDayId(null);
     setResetArmedSectionKey(null);
-    persistNext(next, `כל ימי הלימוד בכיתה ${gradeLabel(selectedGrade)} סומנו כהושלמו.`);
+    persistNext(next, `כל ימי הלימוד ב${trackLabel} סומנו כהושלמו.`);
   }
 
   async function handleForceFinalExamComplete(): Promise<void> {
@@ -249,7 +280,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
         day: examDay,
         fillAnswers: true,
       });
-      saveProgressState(nextProgress, { grade: selectedGrade });
+      saveTrackProgress(nextProgress, track);
       return nextProgress;
     });
     setResetArmedDayId(null);
@@ -323,26 +354,32 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
             ניהול התקדמות
           </h1>
           <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-slate-600">
-            בחרו כיתה וסמנו לכל יום אם הושלם או אופס.
+            בחרו מסלול וסמנו לכל יום אם הושלם או אופס.
           </p>
         </header>
 
         <div data-testid={childTid(rootTid, "body")} className="space-y-4">
           <section data-testid={childTid(rootTid, "gradeSelector")} className="space-y-2 px-4">
             <label data-testid={childTid(rootTid, "gradeLabel")} htmlFor="admin-grade" className="block text-sm font-semibold text-slate-700">
-              כיתה
+              מסלול
             </label>
             <select
               id="admin-grade"
               data-testid={testIds.screen.adminProgress.gradeSelect()}
               className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-              value={selectedGrade}
+              value={trackKey}
               onChange={(event) => {
                 setResetArmedDayId(null);
                 setResetArmedSectionKey(null);
                 setExpandedDaySectionLists(new Set());
                 setStatus(null);
-                setSelectedGrade(event.target.value as GradeId);
+                const value = event.target.value;
+                if (value === "english") {
+                  setSelectedSubject("english");
+                  return;
+                }
+                setSelectedSubject("math");
+                setSelectedGrade(value as GradeId);
               }}
             >
               <option data-testid={childTid(rootTid, "gradeOption", "a")} value="a">
@@ -350,6 +387,9 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
               </option>
               <option data-testid={childTid(rootTid, "gradeOption", "b")} value="b">
                 כיתה {gradeLabel("b")}
+              </option>
+              <option data-testid={childTid(rootTid, "gradeOption", "english")} value="english">
+                {subjectLabel("english")}
               </option>
             </select>
           </section>
@@ -376,21 +416,23 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
 
           <section data-testid={childTid(rootTid, "gradeActions")} className="flex flex-wrap items-center gap-3 px-4">
             <Button
-              data-testid={testIds.screen.adminProgress.markAllDaysComplete(selectedGrade)}
+              data-testid={testIds.screen.adminProgress.markAllDaysComplete(trackKey)}
               onClick={handleMarkAllDaysComplete}
             >
               סמן את כל הימים כהושלמו
             </Button>
-            <Button
-              data-testid={testIds.screen.adminProgress.forceFinalExamComplete(selectedGrade)}
-              variant="outline"
-              disabled={!allRegularDaysComplete}
-              onClick={() => {
-                void handleForceFinalExamComplete();
-              }}
-            >
-              סמן מבחן מסכם כהושלם
-            </Button>
+            {!isEnglish ? (
+              <Button
+                data-testid={testIds.screen.adminProgress.forceFinalExamComplete(trackKey)}
+                variant="outline"
+                disabled={!allRegularDaysComplete}
+                onClick={() => {
+                  void handleForceFinalExamComplete();
+                }}
+              >
+                סמן מבחן מסכם כהושלם
+              </Button>
+            ) : null}
           </section>
 
           <div data-testid={childTid(rootTid, "statusSlot")} className="min-h-6 px-4" role="status" aria-live="polite">
@@ -406,13 +448,13 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
 
           <section data-testid={childTid(rootTid, "daysList")} className="space-y-3">
             {days.map((day) => {
-              const rowTid = testIds.screen.adminProgress.dayRow(selectedGrade, day.id);
+              const rowTid = testIds.screen.adminProgress.dayRow(trackKey, day.id);
               const dayIdTyped = day.id as DayId;
               const isComplete = Boolean(progress.days[dayIdTyped]?.isComplete);
               const isResetArmed = resetArmedDayId === day.id;
               const dayProgress = progress.days[dayIdTyped];
               const sectionsExpanded = expandedDaySectionLists.has(dayIdTyped);
-              const sectionsPanelId = `admin-sections-panel-${selectedGrade}-${day.id}`;
+              const sectionsPanelId = `admin-sections-panel-${trackKey}-${day.id}`;
               return (
                 <article data-testid={rowTid} key={day.id} className="rounded-2xl border border-slate-200 p-4">
                   <div data-testid={childTid(rowTid, "header")} className="mb-2 flex items-start justify-between gap-3">
@@ -420,7 +462,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                       יום {day.dayNumber}: {day.title}
                     </h2>
                     <span
-                      data-testid={testIds.screen.adminProgress.dayState(selectedGrade, day.id)}
+                      data-testid={testIds.screen.adminProgress.dayState(trackKey, day.id)}
                       className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${isComplete ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}
                     >
                       {isComplete ? "הושלם" : "לא הושלם"}
@@ -440,7 +482,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                         type="button"
                         variant="outline"
                         className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-2 px-3 text-sm font-semibold"
-                        data-testid={testIds.screen.adminProgress.daySectionsToggle(selectedGrade, day.id)}
+                        data-testid={testIds.screen.adminProgress.daySectionsToggle(trackKey, day.id)}
                         aria-expanded={sectionsExpanded}
                         aria-controls={sectionsPanelId}
                         onClick={() => toggleDaySectionsList(dayIdTyped)}
@@ -461,7 +503,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                           className="space-y-2"
                         >
                           {day.sections.map((section) => {
-                            const secRowTid = testIds.screen.adminProgress.sectionRow(selectedGrade, day.id, section.id);
+                            const secRowTid = testIds.screen.adminProgress.sectionRow(trackKey, day.id, section.id);
                             const sectionKey = `${day.id}|${section.id}`;
                             const isSectionResetArmed = resetArmedSectionKey === sectionKey;
                             return (
@@ -478,7 +520,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                                     {section.title}
                                   </span>
                                   <span
-                                    data-testid={testIds.screen.adminProgress.sectionState(selectedGrade, day.id, section.id)}
+                                    data-testid={testIds.screen.adminProgress.sectionState(trackKey, day.id, section.id)}
                                     className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-600"
                                   >
                                     {sectionStatusLabel(section, dayProgress)}
@@ -486,7 +528,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                                 </div>
                                 <div data-testid={childTid(secRowTid, "actions")} className="flex flex-wrap items-center gap-2">
                                   <Button
-                                    data-testid={testIds.screen.adminProgress.markSectionComplete(selectedGrade, day.id, section.id)}
+                                    data-testid={testIds.screen.adminProgress.markSectionComplete(trackKey, day.id, section.id)}
                                     className="min-h-[44px] shrink-0 text-sm"
                                     onClick={() => handleMarkSectionComplete(day.id, section.id)}
                                   >
@@ -494,7 +536,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                                   </Button>
                                   {!isSectionResetArmed ? (
                                     <Button
-                                      data-testid={testIds.screen.adminProgress.resetSection(selectedGrade, day.id, section.id)}
+                                      data-testid={testIds.screen.adminProgress.resetSection(trackKey, day.id, section.id)}
                                       className="min-h-[44px] shrink-0 text-sm"
                                       variant="outline"
                                       disabled={resetBusy}
@@ -508,7 +550,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                                   ) : (
                                     <div data-testid={childTid(secRowTid, "resetConfirmPanel")} className="flex flex-wrap items-center gap-2">
                                       <Button
-                                        data-testid={testIds.screen.adminProgress.resetSectionCancel(selectedGrade, day.id, section.id)}
+                                        data-testid={testIds.screen.adminProgress.resetSectionCancel(trackKey, day.id, section.id)}
                                         className="min-h-[44px] text-sm"
                                         variant="outline"
                                         disabled={resetBusy}
@@ -517,7 +559,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                                         ביטול
                                       </Button>
                                       <Button
-                                        data-testid={testIds.screen.adminProgress.resetSectionConfirm(selectedGrade, day.id, section.id)}
+                                        data-testid={testIds.screen.adminProgress.resetSectionConfirm(trackKey, day.id, section.id)}
                                         className="min-h-[44px] text-sm"
                                         disabled={resetBusy}
                                         onClick={() => handleResetSection(day.id, section)}
@@ -537,7 +579,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
 
                   <div data-testid={childTid(rowTid, "actions")} className="flex flex-wrap items-center gap-3">
                     <Button
-                      data-testid={testIds.screen.adminProgress.markComplete(selectedGrade, day.id)}
+                      data-testid={testIds.screen.adminProgress.markComplete(trackKey, day.id)}
                       onClick={() => handleMarkComplete(day.id)}
                     >
                       סמן כהושלם
@@ -545,7 +587,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
 
                     {!isResetArmed ? (
                       <Button
-                        data-testid={testIds.screen.adminProgress.reset(selectedGrade, day.id)}
+                        data-testid={testIds.screen.adminProgress.reset(trackKey, day.id)}
                         variant="outline"
                         disabled={resetBusy}
                         onClick={() => {
@@ -558,7 +600,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                     ) : (
                       <div data-testid={childTid(rowTid, "resetConfirmPanel")} className="flex items-center gap-3">
                         <Button
-                          data-testid={testIds.screen.adminProgress.resetCancel(selectedGrade, day.id)}
+                          data-testid={testIds.screen.adminProgress.resetCancel(trackKey, day.id)}
                           variant="outline"
                           disabled={resetBusy}
                           onClick={() => setResetArmedDayId(null)}
@@ -566,7 +608,7 @@ export function AdminProgressScreen({ initialGrade = "a" }: { initialGrade?: Gra
                           ביטול
                         </Button>
                         <Button
-                          data-testid={testIds.screen.adminProgress.resetConfirm(selectedGrade, day.id)}
+                          data-testid={testIds.screen.adminProgress.resetConfirm(trackKey, day.id)}
                           disabled={resetBusy}
                           onClick={() => {
                             void handleReset(day.id);

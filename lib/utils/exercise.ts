@@ -55,7 +55,32 @@ const toBoolean = (value: AnswerValue): boolean | null => {
   return null;
 };
 
+const isMatchPairsCorrect = (
+  exercise: Extract<Exercise, { kind: "match_pairs" }>,
+  rawAnswer: unknown,
+): boolean => {
+  if (typeof rawAnswer !== "string" || rawAnswer.trim().length === 0) {
+    return false;
+  }
+  let mapping: unknown;
+  try {
+    mapping = JSON.parse(rawAnswer);
+  } catch {
+    return false;
+  }
+  if (typeof mapping !== "object" || mapping === null) {
+    return false;
+  }
+  const map = mapping as Record<string, unknown>;
+  // Every pair must be matched, and matched correctly.
+  return exercise.pairs.every((pair) => map[pair.left] === pair.right);
+};
+
 export const isAnswerCorrect = (exercise: Exercise, rawAnswer: unknown): boolean => {
+  if (exercise.kind === "match_pairs") {
+    return isMatchPairsCorrect(exercise, rawAnswer);
+  }
+
   const normalized = normalizeAnswerValue(rawAnswer);
   if (normalized === null) {
     return false;
@@ -78,6 +103,10 @@ export const isAnswerCorrect = (exercise: Exercise, rawAnswer: unknown): boolean
       );
     case "shape_choice":
       return String(normalized) === exercise.answer;
+    case "listen_choose":
+      return normalizeTextAnswer(String(normalized)) === normalizeTextAnswer(exercise.answer);
+    case "letter_tiles":
+      return normalizeTextAnswer(String(normalized)) === normalizeTextAnswer(exercise.word);
     default: {
       const _exhaustiveCheck: never = exercise;
       return _exhaustiveCheck;
@@ -171,6 +200,12 @@ export const defaultHint = (exercise: Exercise): string => {
       return "סַמְּנוּ נְקוּדַּת הַתְחָלָה וְקִפְצוּ לְפִי גֹּדֶל הַקְּפִיצָה עַד הַסּוֹף.";
     case "shape_choice":
       return "בִּדְקוּ אֶת מִסְפַּר הַצְּלָעוֹת אוֹ הַפִּינוֹת שֶׁל כָּל צוּרָה.";
+    case "listen_choose":
+      return "לַחֲצוּ עַל הָרַמְקוֹל 🔊 וְהַקְשִׁיבוּ שׁוּב, וְאָז בַּחֲרוּ אֶת הַתְּשׁוּבָה שֶׁמַּתְאִימָה.";
+    case "letter_tiles":
+      return "הַקְשִׁיבוּ לַמִּלָּה וְאָז הַרְכִּיבוּ אוֹתָהּ מֵהָאוֹתִיּוֹת לְפִי הַסֵּדֶר.";
+    case "match_pairs":
+      return "בַּחֲרוּ פְּרִיט מִצַּד אֶחָד וְאָז אֶת הַהַתְאָמָה שֶׁלּוֹ מֵהַצַּד הַשֵּׁנִי, עַד שֶׁכָּל הַזּוּגוֹת מְחֻבָּרִים.";
     default: {
       const _never: never = exercise;
       return _never;

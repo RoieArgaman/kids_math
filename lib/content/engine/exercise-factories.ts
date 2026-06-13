@@ -137,6 +137,75 @@ export const numberLineJump = (
   meta: meta(skillTags, difficulty, representation),
 });
 
+export const listenChoose = (
+  dayNumber: number,
+  sectionNumber: number,
+  exerciseNumber: number,
+  prompt: string,
+  audioText: string,
+  options: string[],
+  answer: string,
+  skillTags: SkillTag[],
+  difficulty: DifficultyLevel,
+  representation: RepresentationType,
+  optionsLang: "he" | "en" = "he",
+): ExerciseByKind<"listen_choose"> => ({
+  id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
+  kind: "listen_choose",
+  prompt,
+  audioText,
+  options,
+  answer,
+  optionsLang,
+  meta: meta(skillTags, difficulty, representation),
+});
+
+export const letterTiles = (
+  dayNumber: number,
+  sectionNumber: number,
+  exerciseNumber: number,
+  prompt: string,
+  word: string,
+  skillTags: SkillTag[],
+  difficulty: DifficultyLevel,
+  representation: RepresentationType,
+  audioText?: string,
+  tiles?: string[],
+): ExerciseByKind<"letter_tiles"> => ({
+  id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
+  kind: "letter_tiles",
+  prompt,
+  word,
+  tiles,
+  audioText,
+  meta: meta(skillTags, difficulty, representation),
+});
+
+export const matchPairs = (
+  dayNumber: number,
+  sectionNumber: number,
+  exerciseNumber: number,
+  prompt: string,
+  pairs: Array<{ left: string; right: string }>,
+  skillTags: SkillTag[],
+  difficulty: DifficultyLevel,
+  representation: RepresentationType,
+  options?: {
+    leftLang?: "he" | "en";
+    rightLang?: "he" | "en";
+    audioByLeft?: Record<string, string>;
+  },
+): ExerciseByKind<"match_pairs"> => ({
+  id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
+  kind: "match_pairs",
+  prompt,
+  pairs,
+  leftLang: options?.leftLang ?? "en",
+  rightLang: options?.rightLang ?? "he",
+  audioByLeft: options?.audioByLeft,
+  meta: meta(skillTags, difficulty, representation),
+});
+
 export const shapeChoice = (
   dayNumber: number,
   sectionNumber: number,

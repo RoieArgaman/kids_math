@@ -6,6 +6,7 @@ import { answerExerciseWrongly } from "./answering";
 import { createCompletedDayProgressState, createFullyAnsweredDayProgressState, createProgressState, seedProgressState } from "./testUtils";
 import { childTid, testIds } from "@/lib/testIds";
 import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
+import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/cookieConsent/storage";
 
 function findFirstInputExercise(day: WorkbookDay): Exercise | null {
   for (const section of day.sections) {
@@ -111,6 +112,8 @@ test.describe("keyboard + persistence basics (RTL)", () => {
       test.skip(true, "No math-tokenizable numeric exercise found in warmup sections");
     }
 
+    // Accept the cookie-consent notice so its banner doesn't overlap the element screenshot.
+    await page.evaluate((key) => window.localStorage.setItem(key, "1"), COOKIE_CONSENT_STORAGE_KEY);
     await page.goto(`/grade/a/day/${match!.dayId}/section/${match!.sectionId}`);
     const rootTid = testIds.component.exerciseBox.root(match!.exercise.id);
     const containerTid = childTid(rootTid, "mathTokens");
@@ -123,7 +126,11 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     await expect(
       page.getByTestId(containerTid).locator(`[data-testid$=".question"]`),
     ).toHaveCount(1);
-    await expect(page.getByTestId(containerTid)).toHaveScreenshot("math-token-row.png");
+    // Small tolerance absorbs sub-pixel anti-aliasing drift across Chromium versions;
+    // a real layout/content change (e.g. an overlapping banner) diffs far above this.
+    await expect(page.getByTestId(containerTid)).toHaveScreenshot("math-token-row.png", {
+      maxDiffPixelRatio: 0.05,
+    });
   });
 
   test("retry button shows on wrong answer and hides on correct answer", async ({ page }) => {

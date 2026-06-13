@@ -6,6 +6,21 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-06-13 (Admin: English track in progress manager)
+
+- **Trigger:** Admin progress screen managed Math only (grades א׳/ב׳); needed to also view/complete/reset the English (Pre-A1) learner track.
+- **What changed / where:** `components/screens/AdminProgressScreen.tsx` — grade `<select>` became a 3-option **track** selector (א׳ / ב׳ / אנגלית) backed by `selectedSubject` + a derived `LearningTrack`; data/load/save now route through `lib/track.ts` (`getTrackDays`/`loadTrackProgress`/`saveTrackProgress`). `lib/admin/resetDayProgress.ts` — new `resetAdminEnglishDayProgress` (cascade over `getEnglishDays()`, **zero** final-exam/GMAT/grade-B side effects). `app/admin/progress/page.tsx` — parses optional `?subject=english`. Tests: `tests/unit/lib/admin/resetDayProgress.test.ts`, `tests/e2e/admin-progress.spec.ts`.
+- **What we learned:**
+  - The `adminProgress.*` testid helpers type their first arg as `grade: string`, so passing a **`trackKey`** (`"a"|"b"|"english"`) needs **no testid signature change** and keeps all existing Math tests valid. This is the cheapest way to add a track dimension to an existing grade-keyed screen.
+  - English reuses `WorkbookProgressState` and shares the day id `"day-1"` with Math — safe **only** because the UI keys rows by `trackKey` and saves go through `saveTrackProgress` (isolated store `kids_math.english.workbook_progress.v1`). Never call `saveProgressState`/`resetAdminDayProgress` on the English path.
+  - English has no final exam → hide (don't stub) the force-final-exam control via `!isEnglish`.
+- **How to reuse next time — add a new subject/track to the admin screen:**
+  1. Extend `Subject`/`LearningTrack` in `lib/subjects.ts` and the resolver in `lib/track.ts`.
+  2. Add a `<select>` option + derive `trackKey` (subject token when no grade axis); pass `trackKey` into every `adminProgress.*` testid.
+  3. If the track has no unlock/exam chain, add a side-effect-free `resetAdmin<Subject>DayProgress` helper and branch `handleReset` on it — keep the Math path byte-for-byte unchanged.
+- **How to reuse next time — storage-isolation E2E guard (reusable recipe):** after a multi-store admin action, assert the **target** key changed AND the **sibling** keys are still `null`/untouched, and `page.route("**/api/lock-grade-b", …)` with a boolean flag to prove no cross-store side effect fired.
+- **Backlog idea (deferred):** a `lib/track.ts` `ALL_TRACKS` registry so the admin selector (and future screens) iterate tracks instead of hardcoding `<option>`s.
+
 ### 2026-04-03 (Admin: per-section mark complete + reset)
 
 - **Trigger:** Admin needed to force-complete or reset one workbook section at a time; full day completes when all exercises reach the completion gate (100% in engine).
@@ -284,3 +299,64 @@ Append-only record of what we learned while working on this repo.
 - **Trigger:** Grade-fit Hebrew copy + slower chunked primer TTS app-wide.
 - **What changed / where:** `lib/content/teachingPrimerCatalog.ts` (58 days); `teachingPrimerFromCatalog` in `day-builder` with `grade` option; `lib/tts/constants.ts` + child default in `lib/tts/engine.ts` (`speakHebrewChunks`); `TapToPlayTtsButton` `chunks` prop; `docs/TEACHING_PRIMER_GUIDELINES.md`; `teaching-primer-content.test.ts`.
 - **How to reuse:** Edit catalog per grade/day; run primer content + TTS unit tests and `day-smoke` / `grade-b-lifecycle` E2E.
+
+### 2026-06-13 (English learning layer — Phase 0/1: audio-first Hebrew→English)
+- **Trigger:** Add a second subject (English, taught from Hebrew) alongside Math, same warm-up → teaching → final-exam shape, built on researched young-EFL best practice (listening-first, comprehensible input, no free text).
+- **What changed / where (Phase 0 rails + Phase 1 Day 1):**
+  - `lib/subjects.ts` — `Subject` + `LearningTrack` model (math is grade-keyed, english is single subject-keyed track)
+  - `lib/track.ts` — resolver mapping `{subject,grade}` → day source + (isolated) progress store; keeps `lib/progress/storage.ts` untouched
+  - `lib/english/storage.ts` — isolated `kids_math.english.workbook_progress.v1` store (reuses `WorkbookProgressState` + `sanitizeState`)
+  - `lib/types/curriculum.ts` — new `listen_choose` / `letter_tiles` exercise kinds (audio + tap-to-spell, no keyboard)
+  - Handled new kinds in `lib/utils/exercise.ts` (grading+hint), `lib/progress/engine.ts` (answer lookup), `lib/utils/choiceOptions.ts`, `lib/content/engine/exercise-factories.ts`
+  - `components/exercises/AudioButton.tsx` (English TTS + graceful no-voice fallback), `LetterTiles.tsx`; wired into `ExerciseRenderer.tsx`
+  - `lib/tts/engine.ts` — parameterized lang; `speakEnglish` + `pickEnglishVoice` + `isEnglishVoiceAvailable`
+  - English screens `components/screens/english/*` + pages `app/english/**`; English entry card on `app/page.tsx`; `routes.ts` builders
+  - Hooks `useProgress` / `useDayAnswers` take optional `subject` (default math → byte-identical)
+  - Content: `lib/content/english/day-01.ts` (Greetings & Colors), `english-workbook.ts`
+  - Tests: `tests/unit/lib/english/storage.test.ts`, `exercise-english-kinds.test.ts`, `tests/e2e/english-day-smoke.spec.ts`
+- **What we learned:**
+  1. `ExerciseRenderer` was **non-exhaustive** — a trailing `else` silently rendered any unknown kind as a number-line. Adding kinds requires fixing this to a real `never` check, plus 3 other exhaustive switches the compiler flags (`exercise.ts` ×2, `progress/engine.ts`).
+  2. `tid()`/`childTid()` **lowercase every segment** — a camelCase E2E selector (`letterTiles`) won't match the DOM (`lettertiles`). Always build selectors via the testId helpers, never hand-concatenate.
+  3. `tests/e2e/edge-and-a11y.spec.ts` `math-token-row.png` screenshot is **environment-flaky** (fails on a clean tree on this machine) — not a code regression.
+- **How to reuse next time:** New subject → add to `Subject`, give it its own `lib/<subject>/storage.ts` (never edit math's), resolve via `lib/track.ts`, thread `subject` through hooks (default-preserve math), and build thin dedicated screens reusing `ExerciseItem`/`SectionBlock`/`useProgress`/`useDayAnswers`. Deferred for Phase 2: `match_pairs` kind, English final exam, sync-bundle v2 (English keys), `/`→Subject-Picker relocation, full Pre-A1 curriculum.
+
+### 2026-06-13 (Subject-first IA: `/` = subject picker, grades under Math)
+- **Trigger:** Make the main screen show "Math" and "English"; grades live inside Math.
+- **What changed / where:**
+  - `app/page.tsx` — now the **Subject Picker** (`testIds.screen.subjectPicker.*`)
+  - `app/math/page.tsx` (new) — the Math grade picker (keeps `testIds.screen.gradePicker.*`) + "back to subjects" nav (`gradePicker.navBack`)
+  - `lib/routes.ts` — `gradePicker()` now aliases **`/math`** (so all existing "back to grade selection" links auto-correct with no per-file edits)
+  - `lib/testIds.ts` — added `subjectPicker.*`, moved `englishCard*` there, added `gradePicker.navBack`
+  - Tests: `routes.test.ts` (IA path map), `subject-picker.spec.ts` (new nav E2E); updated `admin-progress`/`auth-backward-compat`/`grade-b-lifecycle`/`english-day-smoke`
+  - `docs/NAVIGATION_IA.md` (new) — route map + How-tos
+- **What we learned:**
+  1. **Aliasing the old route builder is cheaper than repointing call sites.** `routes.gradePicker()` → `/math` auto-migrated 8 "back to grade selection" links; only assertions that pin URL/landing identity needed edits (3 lines).
+  2. The E2E `goto("/")` calls are overwhelmingly **load-and-clear anchors**, not grade-card interactions — so changing what renders at `/` was low-risk. Verify this distinction before any home-route change.
+- **How to add a new subject / grade / exercise kind:** see `docs/NAVIGATION_IA.md` (step-by-step How-to sections).
+- **DX improvement added:** `docs/NAVIGATION_IA.md` route map + How-to guides; `routes.test.ts` now guards the IA path mapping from silent drift.
+
+### 2026-06-13 (כיתה ב׳ — שער ברירת הכיתה, לא רק middleware)
+- **Trigger:** "כיתה ב׳ should open only after grade A is done, not before." Bug: the כיתה ב׳ card was enterable before passing grade A's final exam.
+- **Root cause:** Two-layer gate, only one layer enforced. `middleware.ts` correctly redirects `/grade/b/*` to `/grade/b/locked` without the unlock cookie — but `app/math/page.tsx` rendered the grade B card as an **always-active `<Link>`**. The page already loaded `gradeAFinalPassed` (via `loadFinalExamState("a")`) but used it only to decorate grade A's badge, never to gate grade B. Net: the card *looked* open and bounced the child through a redirect.
+- **What changed / where:**
+  - `app/math/page.tsx` — `gradeBLocked = !gradeAFinalPassed && !previewAll`; when locked, render an **inert** card (`<div>`, not `<Link>`, `opacity-60`, 🔒 warning chip, locked hint, **no** `gradeCardCta`); active `<Link>` only when unlocked. `previewAll` bypasses (QA).
+  - `tests/e2e/subject-picker.spec.ts` — locked-before (inert, no CTA, click stays on `/math`), `?previewAll=1` unlock, and full valid passed-state unlock.
+  - `docs/NAVIGATION_IA.md` — "How to add a grade" now states the picker-card gating rule.
+- **What we learned:**
+  1. `loadFinalExamState` **rejects** any state whose `selectedExerciseIds.length !== FINAL_EXAM_QUESTION_COUNT` (30) — seeding a bare `{passed:true}` returns `null`. E2E must seed a full valid state or use `previewAll`.
+  2. Picker reads localStorage (`passed`); middleware reads the cookie. Admin-forced cookie-unlock without a passed exam leaves the card locked — accepted edge (the picker reflects the learner's own result).
+- **How to reuse next time:** When a route is gated in `middleware.ts`, also gate its **entry card** in the picker on the same unlock signal — a passing E2E redirect can still leave a misleadingly-open card. Make the locked card inert (no CTA), not a `<Link>` to a redirect.
+
+### 2026-06-13 (English Phase 2: match_pairs, final exam, full curriculum, sync v2)
+- **Trigger:** Complete the English layer — all deferred Phase 2 items.
+- **What changed / where:**
+  - **2.1 match_pairs kind:** `curriculum.ts` (kind+interface), `exercise.ts` (`isMatchPairsCorrect` via early-return on raw JSON), `progress/engine.ts`, `exercise-factories.ts` (`matchPairs`), `components/exercises/MatchPairs.tsx`, renderer wiring, testIds, unit + E2E.
+  - **2.2 English final exam:** `lib/english/final-exam/{config,types,picker,grading,storage}.ts` (adaptive count, key `kids_math.english.final_exam.v1`), `components/screens/english/EnglishFinalExamScreen.tsx`, `app/english/exam/page.tsx`, exam card on English home (unlock when all days complete; previewAll bypass), unit + E2E.
+  - **2.3 curriculum:** English days 2–7 (`lib/content/english/day-0{2..7}.ts`) — numbers, family, animals, food, body, classroom; `english-content-validity.test.ts` (29 checks).
+  - **2.4 sync v2:** `UserProgressBundle` bumped to `bundleVersion: 1|2` with optional `english`; `buildBundleFromLocalStorage`/`hydrateLocalStorageFromBundle` include English; `/api/user/progress` accepts v1 **and** v2; round-trip + backward-compat unit test.
+- **What we learned:**
+  1. **match_pairs needs the raw answer, not the normalized one** — `normalizeAnswerValue` strips JSON punctuation. Handle it via an early `if (exercise.kind === "match_pairs")` return *before* normalization (which also keeps the other switches' `never` exhaustiveness intact).
+  2. **Sync bundle versioning:** make new subject data an **optional** field + accept both versions on the server. Old v1 payloads hydrate (skip english); v2 degrades gracefully. The `snapshot/restore` path already covers `kids_math.*` keys generically — only the structured bundle needed changes.
+  3. **`next build` is fragile under concurrent activity** — a running `next dev` (or another agent) writing `.next` mid-build yields misleading `PageNotFoundError`/`ENOENT` (`_document`, `_not-found`, `*.nft.json`). These are environment races, not code errors; confirm via an isolated `rm -rf .next && npm run build` with no other Next process running.
+- **How to add an exam for a new subject:** mirror `lib/english/final-exam/*` — config (target/min/pass), picker (seeded shuffle over `buildXExamBank()`, cap at bank size), grading (`gradeXFinalExam` → scorePercent/passed/canFinish), storage (`kids_math.<subject>.final_exam.v1`), a screen using `ExerciseItem` with `showCheckButton=false` + bulk grade on finish, a `/…/exam` page, an unlock-gated card on the subject home, then add its key to the sync bundle.
+- **DX improvement added:** `english-content-validity.test.ts` (guards every authored day: ids, counts, answer-in-options, self-grading) — copy it per subject. `NAVIGATION_IA.md` "How to add an exercise kind / subject" extended.

@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { GradeId } from "@/lib/grades";
-import { loadProgressState } from "@/lib/progress/storage";
+import type { Subject } from "@/lib/subjects";
+import { loadTrackProgress } from "@/lib/track";
 import type { Exercise, ExerciseId, SectionId, WorkbookDay } from "@/lib/types";
 import { getRetryFeedbackText, isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
 
 interface UseDayAnswersOptions {
   day: WorkbookDay | undefined;
   grade: GradeId;
+  subject?: Subject;
   sectionId: SectionId;
   allExercisesCount: number;
   setAnswer: (input: {
@@ -47,6 +49,7 @@ export interface DayAnswersState {
 export function useDayAnswers({
   day,
   grade,
+  subject,
   sectionId,
   allExercisesCount,
   setAnswer,
@@ -74,7 +77,7 @@ export function useDayAnswers({
       return;
     }
 
-    const saved = loadProgressState({ grade }).days[day.id];
+    const saved = loadTrackProgress({ subject, grade }).days[day.id];
     if (!saved) {
       return;
     }
@@ -101,7 +104,7 @@ export function useDayAnswers({
       return acc;
     }, {});
     setAttempts(attemptsByExercise);
-  }, [day, grade]);
+  }, [day, grade, subject]);
 
   const resetAnswerState = useCallback(() => {
     setAnswers({});

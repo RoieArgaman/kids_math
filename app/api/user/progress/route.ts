@@ -29,11 +29,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as unknown;
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      (body as Record<string, unknown>).bundleVersion !== 1
-    ) {
+    const bundleVersion =
+      typeof body === "object" && body !== null
+        ? (body as Record<string, unknown>).bundleVersion
+        : undefined;
+    // Accept v1 (math only) and v2 (adds English) — backward + forward compatible.
+    if (bundleVersion !== 1 && bundleVersion !== 2) {
       return NextResponse.json({ error: "Invalid bundle" }, { status: 400 });
     }
 
