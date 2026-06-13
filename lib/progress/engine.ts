@@ -342,6 +342,12 @@ function answerValueForExercise(exercise: Exercise): AnswerValue {
       return exercise.answer;
     case "shape_choice":
       return exercise.answer;
+    case "listen_choose":
+      return exercise.answer;
+    case "letter_tiles":
+      return exercise.word;
+    case "match_pairs":
+      return exercise.pairs.map((p) => `${p.left}→${p.right}`).join(", ");
     default: {
       const exhaustiveCheck: never = exercise;
       return exhaustiveCheck;

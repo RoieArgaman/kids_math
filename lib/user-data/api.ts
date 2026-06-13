@@ -1,12 +1,20 @@
 "use client";
 
-import type { UserProgressBundle, GradeProgressData } from "./types";
+import type { UserProgressBundle, GradeProgressData, EnglishProgressData } from "./types";
 import { loadProgressState } from "@/lib/progress/storage";
 import { workbookProgressStorageKey } from "@/lib/progress/storage";
 import { loadBadgeState } from "@/lib/badges/storage";
 import { loadStreakState } from "@/lib/streak/storage";
 import { loadFinalExamState } from "@/lib/final-exam/storage";
 import { loadGmatChallengeState } from "@/lib/gmat-challenge/storage";
+import {
+  englishProgressStorageKey,
+  loadEnglishProgressState,
+} from "@/lib/english/storage";
+import {
+  englishFinalExamStorageKey,
+  loadEnglishFinalExamState,
+} from "@/lib/english/final-exam/storage";
 import type { GradeId } from "@/lib/grades";
 
 const GRADES: GradeId[] = ["a", "b"];
@@ -22,15 +30,23 @@ function buildGradeData(grade: GradeId): GradeProgressData {
   };
 }
 
+function buildEnglishData(): EnglishProgressData {
+  return {
+    workbook: loadEnglishProgressState(),
+    finalExam: loadEnglishFinalExamState(),
+  };
+}
+
 export function buildBundleFromLocalStorage(): UserProgressBundle {
   return {
-    bundleVersion: 1,
+    bundleVersion: 2,
     updatedAt: new Date().toISOString(),
     streak: loadStreakState(),
     grades: {
       a: buildGradeData("a"),
       b: buildGradeData("b"),
     },
+    english: buildEnglishData(),
   };
 }
 
@@ -108,6 +124,16 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     }
   }
 
+  // English subject (bundleVersion 2+). Optional — v1 bundles simply skip this block.
+  if (bundle.english) {
+    if (bundle.english.workbook) {
+      window.localStorage.setItem(englishProgressStorageKey(), JSON.stringify(bundle.english.workbook));
+    }
+    if (bundle.english.finalExam) {
+      window.localStorage.setItem(englishFinalExamStorageKey(), JSON.stringify(bundle.english.finalExam));
+    }
+  }
+
   // Dispatch storage events so useReloadOnStorageResume refreshes affected screens
   for (const grade of GRADES) {
     try {
@@ -122,6 +148,19 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     } catch {
       // ignore
     }
+  }
+
+  try {
+    const englishKey = englishProgressStorageKey();
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: englishKey,
+        newValue: window.localStorage.getItem(englishKey),
+        storageArea: window.localStorage,
+      }),
+    );
+  } catch {
+    // ignore
   }
 }
 

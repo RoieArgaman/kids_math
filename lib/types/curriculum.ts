@@ -50,7 +50,10 @@ export type ExerciseKind =
   | "multiple_choice"
   | "true_false"
   | "number_line_jump"
-  | "shape_choice";
+  | "shape_choice"
+  | "listen_choose"
+  | "letter_tiles"
+  | "match_pairs";
 
 interface BaseExercise {
   id: ExerciseId;
@@ -93,12 +96,62 @@ export interface ShapeChoiceExercise extends BaseExercise {
   answer: "circle" | "square" | "triangle" | "rectangle";
 }
 
+/**
+ * Audio-first listening exercise (English layer): TTS speaks `audioText` (English),
+ * the learner taps the matching option. Options are typically Hebrew meanings or
+ * English words. Reuses the multiple-choice answer model (single string value).
+ */
+export interface ListenChooseExercise extends BaseExercise {
+  kind: "listen_choose";
+  /** English text spoken by TTS (the 🔊 prompt). */
+  audioText: string;
+  options: string[];
+  answer: string;
+  /** Text direction of the options (English answers need LTR). Defaults to "he". */
+  optionsLang?: "he" | "en";
+}
+
+/**
+ * Tap-to-build spelling exercise (English layer): the learner assembles `word`
+ * from letter tiles by tapping — no keyboard / free-text (respects the
+ * numbers-only / no-text-input product rule).
+ */
+export interface LetterTilesExercise extends BaseExercise {
+  kind: "letter_tiles";
+  /** Target English word to assemble (lowercase letters). */
+  word: string;
+  /** Optional explicit tile set (scrambled). Defaults to the letters of `word`. */
+  tiles?: string[];
+  /** Optional English text spoken as an audio hint. */
+  audioText?: string;
+}
+
+/**
+ * Tap-to-match exercise (English layer): the learner connects each left item to its
+ * matching right item (e.g. English word ↔ Hebrew meaning). No typing — taps only.
+ * The assembled matches are serialized to the single-string answer model as JSON.
+ */
+export interface MatchPairsExercise extends BaseExercise {
+  kind: "match_pairs";
+  /** The correct pairs; left/right are shuffled independently for display. */
+  pairs: Array<{ left: string; right: string }>;
+  /** Text direction of the left column (defaults "en"). */
+  leftLang?: "he" | "en";
+  /** Text direction of the right column (defaults "he"). */
+  rightLang?: "he" | "en";
+  /** Optional English audio for each left item (keyed by left text). */
+  audioByLeft?: Record<string, string>;
+}
+
 export type Exercise =
   | NumberInputExercise
   | MultipleChoiceExercise
   | TrueFalseExercise
   | NumberLineJumpExercise
-  | ShapeChoiceExercise;
+  | ShapeChoiceExercise
+  | ListenChooseExercise
+  | LetterTilesExercise
+  | MatchPairsExercise;
 
 export interface WorkedExample {
   title: string;

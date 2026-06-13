@@ -241,6 +241,59 @@ test("admin can mark and reset per section; day completes when all sections are 
   await expect(page.getByTestId(testIds.screen.adminProgress.dayState("a", "day-1"))).toContainText("לא הושלם");
 });
 
+test("admin can complete and reset English progress in its isolated store with no math side effects", async ({
+  page,
+}) => {
+  const ENGLISH_KEY = "kids_math.english.workbook_progress.v1";
+  const MATH_KEY_A = "kids_math.workbook_progress.v2.grade.a";
+  const MATH_KEY_B = "kids_math.workbook_progress.v2.grade.b";
+
+  // English must never touch the grade-B unlock chain — fail loudly if it does.
+  let lockGradeBCalled = false;
+  await page.route("**/api/lock-grade-b", async (route) => {
+    lockGradeBCalled = true;
+    await route.fulfill({ status: 200, body: "{}" });
+  });
+
+  await page.goto("/admin/progress");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  // Switch to the English track.
+  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("english");
+
+  // No final-exam control exists for English.
+  await expect(page.getByTestId(testIds.screen.adminProgress.forceFinalExamComplete("english"))).toHaveCount(0);
+
+  // Mark English day-1 complete.
+  await page.getByTestId(testIds.screen.adminProgress.markComplete("english", "day-1")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("english", "day-1"))).toContainText("הושלם");
+
+  // Written to the English store; math stores untouched.
+  const afterComplete = await page.evaluate(
+    (keys) => ({
+      english: window.localStorage.getItem(keys.english),
+      mathA: window.localStorage.getItem(keys.mathA),
+      mathB: window.localStorage.getItem(keys.mathB),
+    }),
+    { english: ENGLISH_KEY, mathA: MATH_KEY_A, mathB: MATH_KEY_B },
+  );
+  expect(afterComplete.english).not.toBeNull();
+  expect(JSON.parse(afterComplete.english!).days["day-1"].isComplete).toBe(true);
+  expect(afterComplete.mathA).toBeNull();
+  expect(afterComplete.mathB).toBeNull();
+
+  // Reset English day-1.
+  await page.getByTestId(testIds.screen.adminProgress.reset("english", "day-1")).click();
+  await page.getByTestId(testIds.screen.adminProgress.resetConfirm("english", "day-1")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("english", "day-1"))).toContainText("לא הושלם");
+
+  const afterReset = await page.evaluate((key) => window.localStorage.getItem(key), ENGLISH_KEY);
+  expect(JSON.parse(afterReset!).days["day-1"].isComplete).toBe(false);
+
+  expect(lockGradeBCalled).toBe(false);
+});
+
 test("admin back navigation returns to grade picker", async ({ page }) => {
   await page.goto("/admin/progress?grade=a");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
@@ -249,7 +302,7 @@ test("admin back navigation returns to grade picker", async ({ page }) => {
   await page.getByTestId(testIds.screen.adminProgress.navBack()).click();
 
   await expect(page.getByTestId(testIds.screen.gradePicker.root())).toBeVisible();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/math");
 
   await page.goto("/admin/progress?grade=a");
   await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toBeVisible();

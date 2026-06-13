@@ -10,11 +10,12 @@ import {
   resetSectionProgress,
   setAnswerForDay,
 } from "@/lib/progress/engine";
-import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
+import { loadTrackProgress, saveTrackProgress } from "@/lib/track";
 import type { AnswerValue, DayId, ExerciseId, SectionId } from "@/lib/types";
 import { logEvent } from "@/lib/analytics/events";
 import type { GradeId } from "@/lib/grades";
 import { DEFAULT_GRADE } from "@/lib/grades";
+import type { Subject } from "@/lib/subjects";
 
 interface SetAnswerArgs {
   exerciseId: ExerciseId;
@@ -42,9 +43,10 @@ interface UseProgressApi {
 
 export function useProgress(
   dayId: DayId,
-  options: { grade?: GradeId; sectionId?: SectionId } = {},
+  options: { grade?: GradeId; sectionId?: SectionId; subject?: Subject } = {},
 ): UseProgressApi {
   const grade = options.grade ?? DEFAULT_GRADE;
+  const subject = options.subject;
   const sectionId = options.sectionId;
   const [state, setState] = useState(createInitialWorkbookProgressState);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -54,22 +56,22 @@ export function useProgress(
 
   useEffect(() => {
     lastStateSavedLogAtRef.current = 0;
-    setState(loadProgressState({ grade }));
+    setState(loadTrackProgress({ subject, grade }));
     setIsHydrated(true);
     logEvent("state_loaded", { dayId, payload: { grade } });
-  }, [dayId, grade]);
+  }, [dayId, grade, subject]);
 
   useEffect(() => {
     if (!isHydrated) {
       return;
     }
-    saveProgressState(state, { grade });
+    saveTrackProgress(state, { subject, grade });
     const now = Date.now();
     if (now - lastStateSavedLogAtRef.current >= 5000) {
       lastStateSavedLogAtRef.current = now;
       logEvent("state_saved", { payload: { grade } });
     }
-  }, [isHydrated, state, grade]);
+  }, [isHydrated, state, grade, subject]);
 
   const setAnswer = useCallback(
     ({ exerciseId, sectionId: sid, answer, isCorrect, totalExercises }: SetAnswerArgs) => {

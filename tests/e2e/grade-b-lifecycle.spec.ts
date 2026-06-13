@@ -117,7 +117,7 @@ test.describe("grade B lifecycle", () => {
     expect(storedAfter).toBe(storedBefore);
 
     await page.getByTestId(testIds.screen.finalExam.gradePicker()).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/math$/);
   });
 });
 

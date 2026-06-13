@@ -47,12 +47,61 @@ export function testIdAttr(id: string): { "data-testid": string } {
 
 export const testIds = {
   screen: {
+    subjectPicker: {
+      root: () => tid("screen", "subjectPicker"),
+      hero: () => tid("screen", "subjectPicker", "hero"),
+      adminCta: () => tid("screen", "subjectPicker", "cta", "admin"),
+      mathCard: () => tid("screen", "subjectPicker", "subjectCard", "math"),
+      mathCardCta: () => tid("screen", "subjectPicker", "subjectCard", "math", "cta"),
+      englishCard: () => tid("screen", "subjectPicker", "subjectCard", "english"),
+      englishCardCta: () => tid("screen", "subjectPicker", "subjectCard", "english", "cta"),
+    },
     gradePicker: {
       root: () => tid("screen", "gradePicker"),
       hero: () => tid("screen", "gradePicker", "hero"),
+      navBack: () => tid("screen", "gradePicker", "nav", "back"),
       adminCta: () => tid("screen", "gradePicker", "cta", "admin"),
       gradeCard: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade),
       gradeCardCta: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade, "cta"),
+    },
+    english: {
+      home: {
+        root: () => tid("screen", "english", "home"),
+        hero: () => tid("screen", "english", "home", "hero"),
+        dayCard: (dayId: string) => tid("screen", "english", "home", "dayCard", "day", dayId),
+        dayCardCta: (dayId: string) => tid("screen", "english", "home", "dayCard", "day", dayId, "cta"),
+        examCard: () => tid("screen", "english", "home", "examCard"),
+        examCardCta: () => tid("screen", "english", "home", "examCard", "cta"),
+      },
+      exam: {
+        root: () => tid("screen", "english", "exam"),
+        nav: () => tid("screen", "english", "exam", "nav"),
+        stickyHeader: () => tid("screen", "english", "exam", "stickyHeader"),
+        finishCta: () => tid("screen", "english", "exam", "cta", "finish"),
+        retryCta: () => tid("screen", "english", "exam", "cta", "retry"),
+        finishPanel: () => tid("screen", "english", "exam", "finishPanel"),
+        lockedNotice: () => tid("screen", "english", "exam", "lockedNotice"),
+      },
+      day: {
+        root: (dayId: string) => tid("screen", "english", "day", "day", dayId),
+        nav: (dayId: string) => tid("screen", "english", "day", "nav", "day", dayId),
+        sectionCard: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "day", "day", dayId, "sectionCard", "section", sectionId),
+        sectionCardCta: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "day", "day", dayId, "sectionCard", "section", sectionId, "cta"),
+        completionPanel: (dayId: string) => tid("screen", "english", "day", "day", dayId, "completionPanel"),
+        completeCta: (dayId: string) => tid("screen", "english", "day", "day", dayId, "cta", "complete"),
+      },
+      section: {
+        root: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "section", "day", dayId, "section", sectionId),
+        nav: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "section", "nav", "day", dayId, "section", sectionId),
+        stickyHeader: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "section", "stickyHeader", "day", dayId, "section", sectionId),
+        completionPanel: (dayId: string, sectionId: string) =>
+          tid("screen", "english", "section", "completionPanel", "day", dayId, "section", sectionId),
+      },
     },
     gradeBLocked: {
       root: () => tid("screen", "grade-b-locked"),
@@ -289,6 +338,16 @@ export const testIds = {
       hintText: (exerciseId: string) =>
         tid("component", "exerciseBox", "exercise", exerciseId, "hintText"),
       tts: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId, "tts"),
+      audio: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId, "audio"),
+      tile: (exerciseId: string, index: number) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "tile", index),
+      tileWord: (exerciseId: string) => tid("component", "exerciseBox", "exercise", exerciseId, "tileWord"),
+      tileBackspace: (exerciseId: string) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "tileBackspace"),
+      matchLeft: (exerciseId: string, index: number) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "matchLeft", index),
+      matchRight: (exerciseId: string, index: number) =>
+        tid("component", "exerciseBox", "exercise", exerciseId, "matchRight", index),
     },
     shapeIcon: {
       root: (shape: string) => tid("component", "shapeIcon", shape),

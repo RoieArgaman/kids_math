@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { getWorkbookDays } from "@/lib/content/workbook";
+import { getEnglishDays } from "@/lib/content/english-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
-import { resetAdminDayProgress } from "@/lib/admin/resetDayProgress";
+import { resetAdminDayProgress, resetAdminEnglishDayProgress } from "@/lib/admin/resetDayProgress";
 import * as gmatStorage from "@/lib/gmat-challenge/storage";
 import * as finalExamStorage from "@/lib/final-exam/storage";
 import {
@@ -116,5 +117,49 @@ describe("resetAdminDayProgress", () => {
     expect(withoutUpdatedAt(result!.nextState)).toEqual(
       withoutUpdatedAt(cascadeResetWorkbook(state, "day-5", "a")),
     );
+  });
+});
+
+describe("resetAdminEnglishDayProgress", () => {
+  function cascadeResetEnglish(state: WorkbookProgressState, startDayId: DayId): WorkbookProgressState {
+    const ordered = getEnglishDays();
+    const startIndex = ordered.findIndex((d) => d.id === startDayId);
+    let next = state;
+    for (let i = startIndex; i < ordered.length; i++) {
+      next = resetDayProgress(next, ordered[i].id as DayId);
+    }
+    return next;
+  }
+
+  it("returns null when dayId is not in the English workbook", () => {
+    expect(resetAdminEnglishDayProgress(createInitialWorkbookProgressState(), "day-999" as DayId)).toBeNull();
+  });
+
+  it("cascades reset from the chosen English day through the end of the workbook", () => {
+    const firstDayId = getEnglishDays()[0].id as DayId;
+    const state: WorkbookProgressState = {
+      ...createInitialWorkbookProgressState(),
+      days: {
+        [firstDayId]: { ...createInitialDayProgressState(firstDayId), isComplete: true, percentDone: 100 },
+      },
+    };
+
+    const result = resetAdminEnglishDayProgress(state, firstDayId);
+    expect(result).not.toBeNull();
+    expect(withoutUpdatedAt(result!.nextState)).toEqual(withoutUpdatedAt(cascadeResetEnglish(state, firstDayId)));
+    expect(result?.nextState.days[firstDayId]?.isComplete).toBe(false);
+  });
+
+  it("has zero math side effects (no final exam / GMAT clearing)", () => {
+    const clearSpy = vi.spyOn(finalExamStorage, "clearFinalExamState");
+    const gmatSpy = vi.spyOn(gmatStorage, "clearGmatChallengeState");
+
+    const firstDayId = getEnglishDays()[0].id as DayId;
+    resetAdminEnglishDayProgress(createInitialWorkbookProgressState(), firstDayId);
+
+    expect(clearSpy).not.toHaveBeenCalled();
+    expect(gmatSpy).not.toHaveBeenCalled();
+    clearSpy.mockRestore();
+    gmatSpy.mockRestore();
   });
 });

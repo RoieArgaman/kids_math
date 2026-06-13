@@ -11,7 +11,7 @@ function toShapeLabel(option: string): string {
 }
 
 export function getChoiceOptionsForExercise(exercise: Exercise): ChoiceOption[] {
-  if (exercise.kind === "multiple_choice") {
+  if (exercise.kind === "multiple_choice" || exercise.kind === "listen_choose") {
     return exercise.options.map((option) => ({ key: option, label: option, value: option }));
   }
   if (exercise.kind === "shape_choice") {

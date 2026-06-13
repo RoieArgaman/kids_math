@@ -1,4 +1,5 @@
 import { getWorkbookDays } from "@/lib/content/workbook";
+import { getEnglishDays } from "@/lib/content/english-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { clearGmatChallengeState } from "@/lib/gmat-challenge/storage";
 import { clearFinalExamState } from "@/lib/final-exam/storage";
@@ -48,4 +49,33 @@ export function resetAdminDayProgress(
     cascadeTouchedFinalExam,
     shouldRevokeGradeBUnlock,
   };
+}
+
+export type ResetAdminEnglishDayProgressResult = {
+  nextState: WorkbookProgressState;
+};
+
+/**
+ * English admin "reset day" cascades from the chosen day through the end of the English
+ * (Pre-A1) workbook, mirroring the math cascade shape. English has NO final exam, GMAT
+ * challenge, or grade-B unlock chain, so this path deliberately has zero side effects —
+ * it only resets day progress and returns the next state for the caller to persist via
+ * the English store (`saveTrackProgress` / `saveEnglishProgressState`).
+ */
+export function resetAdminEnglishDayProgress(
+  state: WorkbookProgressState,
+  dayId: DayId,
+): ResetAdminEnglishDayProgressResult | null {
+  const ordered = getEnglishDays();
+  const startIndex = ordered.findIndex((d) => d.id === dayId);
+  if (startIndex === -1) {
+    return null;
+  }
+
+  let next = state;
+  for (let i = startIndex; i < ordered.length; i++) {
+    next = resetDayProgress(next, ordered[i].id as DayId);
+  }
+
+  return { nextState: next };
 }
