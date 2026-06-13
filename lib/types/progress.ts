@@ -1,4 +1,4 @@
-import type { DayId, ExerciseId } from "./curriculum";
+import type { DayId, ExerciseId, SectionId } from "./curriculum";
 
 export type AnswerValue = string | number | boolean;
 
@@ -15,7 +15,7 @@ export interface DayProgressState {
   correctAnswers: Record<ExerciseId, boolean>;
   wrongCount: number;
   /** Wrong submissions per section (limit + reset are per section). Keys are section ids (`day-*-section-*`). */
-  wrongBySection: Record<string, number>;
+  wrongBySection: Record<SectionId, number>;
   attempts: ExerciseAttempt[];
   completedAt?: string;
   bestTimeMs?: number;  // personal best completion time in ms; undefined until first completion

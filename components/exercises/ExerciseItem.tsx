@@ -3,11 +3,13 @@
 import { memo, useCallback } from "react";
 import { ExerciseBox } from "@/components/ExerciseBox";
 import { childTid } from "@/lib/testIds";
+import type { GradeId } from "@/lib/grades";
 import type { Exercise, ExerciseId } from "@/lib/types";
 
 interface ExerciseItemProps {
   screenRootTestId: string;
   exercise: Exercise;
+  grade?: GradeId;
   value: string;
   retryMessage?: string;
   isCorrect?: boolean;
@@ -34,6 +36,7 @@ function ExerciseItemBase({
   wasChecked,
   isReadOnly = false,
   showCheckButton = true,
+  grade,
   setFocusRef,
   onChangeValue,
   onSubmitExercise,
@@ -87,6 +90,7 @@ function ExerciseItemBase({
         wrongAttempts={wrongAttempts}
         hintUsed={hintUsed}
         disableRetry={disableRetry}
+        grade={grade}
         onRevealHint={onHint}
         onChange={onChange}
         onSubmit={onSubmit}

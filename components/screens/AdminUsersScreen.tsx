@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/context";
-import { isAdminUnlocked } from "@/lib/admin/session";
 import { testIds } from "@/lib/testIds";
-import { routes } from "@/lib/routes";
 
 interface UserRecord {
   userId: string;
@@ -29,8 +26,12 @@ export function AdminUsersScreen() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  const [changePwUserId, setChangePwUserId] = useState<string | null>(null);
+  const [changePwValue, setChangePwValue] = useState("");
+  const [changePwBusy, setChangePwBusy] = useState(false);
+  const [changePwError, setChangePwError] = useState("");
+
   const isAdminUser = !authLoading && user?.role === "admin";
-  const pinOk = isAdminUnlocked();
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -49,12 +50,12 @@ export function AdminUsersScreen() {
   }, []);
 
   useEffect(() => {
-    if (isAdminUser && pinOk) {
+    if (isAdminUser) {
       void fetchUsers();
     } else {
       setLoading(false);
     }
-  }, [isAdminUser, pinOk, fetchUsers]);
+  }, [isAdminUser, fetchUsers]);
 
   const handleAdd = useCallback(
     async (e: React.FormEvent) => {
@@ -118,20 +119,51 @@ export function AdminUsersScreen() {
     [fetchUsers],
   );
 
-  if (!isAdminUser || !pinOk) {
+  const openChangePw = useCallback((userId: string) => {
+    setChangePwUserId(userId);
+    setChangePwValue("");
+    setChangePwError("");
+    setConfirmDeleteId(null);
+  }, []);
+
+  const cancelChangePw = useCallback(() => {
+    setChangePwUserId(null);
+    setChangePwValue("");
+    setChangePwError("");
+  }, []);
+
+  const handleChangePassword = useCallback(
+    async (userId: string) => {
+      if (!changePwValue) return;
+      setChangePwBusy(true);
+      setChangePwError("");
+      try {
+        const res = await fetch("/api/admin/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, password: changePwValue }),
+        });
+        if (!res.ok) {
+          setChangePwError("שגיאה בשינוי הסיסמה");
+          return;
+        }
+        setChangePwUserId(null);
+        setChangePwValue("");
+        setStatusMsg("הסיסמה עודכנה ✓");
+        setTimeout(() => setStatusMsg(""), 3000);
+      } catch {
+        setChangePwError("שגיאה בשינוי הסיסמה");
+      } finally {
+        setChangePwBusy(false);
+      }
+    },
+    [changePwValue],
+  );
+
+  if (!isAdminUser) {
     return (
       <main data-testid={testIds.component.adminUsers.root()} className="p-6 text-center">
-        <p data-testid="km.autogen.adminusersscreen.node.idx.0" className="mb-3 text-slate-600">
-          {!isAdminUser ? "אין הרשאה לעמוד זה" : "נדרשת כניסת PIN של מנהל"}
-        </p>
-        {isAdminUser && !pinOk && (
-          <Link
-            href={routes.adminProgress()}
-            className="text-sm font-semibold text-violet-600 hover:underline"
-          >
-            כניסה עם PIN ←
-          </Link>
-        )}
+        <p data-testid="km.autogen.adminusersscreen.node.idx.0" className="text-slate-600">אין הרשאה לעמוד זה</p>
       </main>
     );
   }
@@ -226,41 +258,87 @@ export function AdminUsersScreen() {
               <li
                 key={u.userId}
                 data-testid={testIds.component.adminUsers.userRow(u.userId)}
-                className="flex items-center justify-between gap-3 py-3"
+                className="py-3"
               >
-                <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="min-w-0">
-                  <p data-testid="km.autogen.adminusersscreen.node.idx.19" className="truncate font-semibold text-slate-800" dir="ltr">{u.username}</p>
-                  <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="text-xs text-slate-500">
-                    {u.role === "admin" ? "מנהל" : "משתמש"} · {new Date(u.createdAt).toLocaleDateString("he-IL")}
-                  </p>
+                <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="flex items-center justify-between gap-3">
+                  <div data-testid="km.autogen.adminusersscreen.node.idx.19" className="min-w-0">
+                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="truncate font-semibold text-slate-800" dir="ltr">{u.username}</p>
+                    <p data-testid="km.autogen.adminusersscreen.node.idx.21" className="text-xs text-slate-500">
+                      {u.role === "admin" ? "מנהל" : "משתמש"} · {new Date(u.createdAt).toLocaleDateString("he-IL")}
+                    </p>
+                  </div>
+
+                  {confirmDeleteId === u.userId ? (
+                    <div data-testid="km.autogen.adminusersscreen.node.idx.22" className="flex shrink-0 gap-2">
+                      <button
+                        data-testid={testIds.component.adminUsers.deleteConfirm(u.userId)}
+                        onClick={() => handleDelete(u.userId)}
+                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                      >
+                        אשר מחיקה
+                      </button>
+                      <button
+                        data-testid={testIds.component.adminUsers.deleteCancel(u.userId)}
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        ביטול
+                      </button>
+                    </div>
+                  ) : changePwUserId !== u.userId ? (
+                    <div data-testid="km.autogen.adminusersscreen.node.idx.23" className="flex shrink-0 gap-2">
+                      <button
+                        data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
+                        onClick={() => openChangePw(u.userId)}
+                        className="rounded-lg border border-violet-200 px-3 py-1.5 text-xs font-semibold text-violet-600 hover:bg-violet-50"
+                      >
+                        שנה סיסמה
+                      </button>
+                      <button
+                        data-testid={testIds.component.adminUsers.deleteButton(u.userId)}
+                        onClick={() => setConfirmDeleteId(u.userId)}
+                        disabled={u.userId === user?.userId}
+                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
+                      >
+                        מחק
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
 
-                {confirmDeleteId === u.userId ? (
-                  <div data-testid="km.autogen.adminusersscreen.node.idx.21" className="flex shrink-0 gap-2">
+                {changePwUserId === u.userId && (
+                  <div data-testid="km.autogen.adminusersscreen.node.idx.24" className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      data-testid={testIds.component.adminUsers.changePasswordInput(u.userId)}
+                      type="text"
+                      dir="ltr"
+                      placeholder="סיסמה חדשה"
+                      value={changePwValue}
+                      onChange={(e) => { setChangePwValue(e.target.value); setChangePwError(""); }}
+                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      disabled={changePwBusy}
+                      autoFocus
+                    />
                     <button
-                      data-testid={testIds.component.adminUsers.deleteConfirm(u.userId)}
-                      onClick={() => handleDelete(u.userId)}
-                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                      data-testid={testIds.component.adminUsers.changePasswordSubmit(u.userId)}
+                      onClick={() => handleChangePassword(u.userId)}
+                      disabled={!changePwValue || changePwBusy}
+                      className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
                     >
-                      אשר מחיקה
+                      {changePwBusy ? "..." : "שמור"}
                     </button>
                     <button
-                      data-testid={testIds.component.adminUsers.deleteCancel(u.userId)}
-                      onClick={() => setConfirmDeleteId(null)}
+                      data-testid={testIds.component.adminUsers.changePasswordCancel(u.userId)}
+                      onClick={cancelChangePw}
+                      disabled={changePwBusy}
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                     >
                       ביטול
                     </button>
+                    {changePwError && (
+                      <p data-testid="km.autogen.adminusersscreen.node.idx.25" className="text-xs font-medium text-red-600">{changePwError}</p>
+                    )}
                   </div>
-                ) : (
-                  <button
-                    data-testid={testIds.component.adminUsers.deleteButton(u.userId)}
-                    onClick={() => setConfirmDeleteId(u.userId)}
-                    disabled={u.userId === user?.userId}
-                    className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
-                  >
-                    מחק
-                  </button>
                 )}
               </li>
             ))}

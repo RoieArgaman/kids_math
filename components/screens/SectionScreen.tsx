@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
-import { ProgressBar } from "@/components/ProgressBar";
+import { ProgressHeader } from "@/components/ui/ProgressHeader";
 import { SectionBlock } from "@/components/SectionBlock";
 import { StarReward } from "@/components/StarReward";
 import { getWorkbookDays } from "@/lib/content/workbook";
@@ -19,6 +20,7 @@ import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
+import { getNextUnlockedSection } from "@/lib/utils/sectionNav";
 import type { DayId, ExerciseId, SectionId } from "@/lib/types";
 
 export function SectionScreen({
@@ -239,27 +241,14 @@ export function SectionScreen({
       </div>
 
       {/* Sticky progress header */}
-      <div
+      <ProgressHeader
         data-testid={stickyHeaderId}
-        className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
-      >
-        <p
-          data-testid={childTid(stickyHeaderId, "label")}
-          className="mb-1 text-xs font-semibold text-gray-600"
-        >
-          📊 הַהִתְקַדְּמוּת שֶׁלִּי:
-        </p>
-        <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
-        <div data-testid={childTid(stickyHeaderId, "row")} className="mt-2 flex items-center gap-2">
-          <div
-            data-testid={childTid(stickyHeaderId, "wrongBadge")}
-            className="error-counter-badge items-center gap-1 px-4 py-1.5 text-sm font-semibold"
-            aria-live="polite"
-          >
-            💥 {sectionWrongCount}/{MAX_SECTION_WRONG_ANSWERS}
-          </div>
-        </div>
-      </div>
+        percentDone={percentDone}
+        label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`}
+        wrongCount={sectionWrongCount}
+        maxWrong={MAX_SECTION_WRONG_ANSWERS}
+        className="progress-sticky"
+      />
 
       {/* Reset notice */}
       {resetNotice ? (
@@ -290,6 +279,7 @@ export function SectionScreen({
               retryMessage={feedback[exercise.id]}
               isCorrect={correctMap[exercise.id]}
               wasChecked={(attempts[exercise.id] ?? 0) > 0}
+              grade={effectiveGrade}
               setFocusRef={setFocusRef}
               wrongAttempts={wrongAttempts[exercise.id] ?? 0}
               hintUsed={hintUsed[exercise.id] ?? false}
@@ -304,34 +294,50 @@ export function SectionScreen({
       </div>
 
       {/* Section complete panel — shown when revisiting a completed section */}
-      {sectionComplete && !showReward && (
-        <div
-          data-testid={completionPanelId}
-          className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200 p-6 text-center shadow-md"
-        >
-          <p data-testid={childTid(completionPanelId, "icon")} className="mb-1 text-4xl">
-            ✅
-          </p>
-          <p
-            data-testid={childTid(completionPanelId, "title")}
-            className="mb-1 text-xl font-semibold text-emerald-900"
-          >
-            הַחֵלֶק הוּשְׁלַם!
-          </p>
-          <p
-            data-testid={childTid(completionPanelId, "subtitle")}
-            className="mb-4 text-sm font-semibold text-emerald-700"
-          >
-            כָּל הַיָּשָׁר — עָשִׂיתָ עֲבוֹדָה נֶהֱדֶרֶת!
-          </p>
-          <ButtonLink
-            href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
-            className="w-full text-center"
-          >
-            חֲזָרָה לַיּוֹם 🎉
-          </ButtonLink>
-        </div>
-      )}
+      {sectionComplete && !showReward && (() => {
+        const nextSection = day
+          ? getNextUnlockedSection(day, sectionIdx, correctAnswers)
+          : null;
+        return (
+          <CompletionPanel
+            data-testid={completionPanelId}
+            icon="✅"
+            iconClassName="text-4xl"
+            title="הַחֵלֶק הוּשְׁלַם!"
+            titleClassName="text-xl"
+            subtitle="כָּל הַיָּשָׁר — עָשִׂיתָ עֲבוֹדָה נֶהֱדֶרֶת!"
+            actions={
+              <div
+                data-testid={childTid(completionPanelId, "actions")}
+                className="flex flex-col gap-3"
+              >
+                {nextSection && (
+                  <ButtonLink
+                    data-testid={testIds.screen.section.nextSectionCta(
+                      effectiveGrade,
+                      dayId,
+                      sectionId,
+                    )}
+                    href={routes.gradeSection(effectiveGrade, dayId, nextSection.id, {
+                      previewAll,
+                    })}
+                    className="w-full text-center"
+                  >
+                    המשך לחלק הבא ←
+                  </ButtonLink>
+                )}
+                <ButtonLink
+                  href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
+                  variant="outline"
+                  className="w-full text-center"
+                >
+                  חֲזָרָה לַיּוֹם 🎉
+                </ButtonLink>
+              </div>
+            }
+          />
+        );
+      })()}
 
       <StarReward
         visible={showReward}

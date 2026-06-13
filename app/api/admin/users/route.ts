@@ -86,6 +86,41 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  const admin = await requireAdmin(request);
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  try {
+    const body = (await request.json()) as unknown;
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      typeof (body as Record<string, unknown>).userId !== "string" ||
+      typeof (body as Record<string, unknown>).password !== "string"
+    ) {
+      return NextResponse.json({ error: "userId and password required" }, { status: 400 });
+    }
+
+    const { userId, password } = body as { userId: string; password: string };
+    if (!userId || !password) {
+      return NextResponse.json({ error: "userId and password required" }, { status: 400 });
+    }
+
+    const db = getFirestore();
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    await db.collection("users").doc(userId).update({ passwordHash });
+
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
