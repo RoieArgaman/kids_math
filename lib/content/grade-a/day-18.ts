@@ -13,7 +13,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 5,
   arithmeticMcOptions: ["4", "5", "6"],
   arithmeticMcAnswer: "5",
-  languagePrompt: "בִּחְרוּ בִּמִילִים: אֵיזוֹ שָׁעָה הִיא כְּשֶׁהַמַּחְצֵבֶת מַצִּיגָה 7 (בְּשָׁעוֹת שְׁלֵמוֹת בִּלְבַד)?",
+  languagePrompt: "בִּחְרוּ בִּמִילִים: אֵיזוֹ שָׁעָה הִיא כְּשֶׁהַשָּׁעוֹן מַצִּיג 7 (בְּשָׁעוֹת שְׁלֵמוֹת בִּלְבַד)?",
   languageOptions: ["שֵׁשׁ", "שֶׁבַע", "שְׁמוֹנֶה"],
   languageAnswer: "שֶׁבַע",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: לְ-60 דַּקּוֹת קוֹרְאִים שָׁעָה אַחַת",

@@ -9,7 +9,7 @@ export const concept: DayConcept = {
   mainTags: ["symmetry-transform", "geometry-shapes"],
   spiralReviewTags: ["measurement-time", "number-recognition"],
   arithmeticPrompt:
-    "עַל קַו מִסְפָּרִים מִסְפָּרִים נְקֻדּוֹת: מִ-5 עוֹבְרִים שְׁנֵי מָקוֹמוֹת יָמִינָה. בְּאֵיזֶה מִסְפָּר נֶעֱצְרִים?",
+    "עַל קַו הַמִּסְפָּרִים: מִ-5 עוֹבְרִים שְׁנֵי מָקוֹמוֹת יָמִינָה. בְּאֵיזֶה מִסְפָּר נֶעֱצְרִים?",
   arithmeticAnswer: 7,
   arithmeticMcOptions: ["6", "7", "8"],
   arithmeticMcAnswer: "7",

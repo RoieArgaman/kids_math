@@ -1,4 +1,5 @@
 import { CHILD_TTS_RATE } from "@/lib/tts/constants";
+import { lookupAudioUrl } from "@/lib/tts/audioManifest";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -56,13 +57,29 @@ function ensureVoicesLoaded(): void {
 
 let chunkSpeakGeneration = 0;
 
+/** Currently-playing pre-generated audio element (manifest path), if any. */
+let currentAudio: HTMLAudioElement | null = null;
+
 function bumpSpeakGeneration(): void {
   chunkSpeakGeneration += 1;
 }
 
-/** User-initiated stop — always clears the synthesis queue. */
+function stopCurrentAudio(): void {
+  if (!currentAudio) return;
+  try {
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
+    currentAudio.pause();
+  } catch {
+    // Some engines throw if paused before playback starts.
+  }
+  currentAudio = null;
+}
+
+/** User-initiated stop — always clears the synthesis queue and any manifest audio. */
 export function stopSpeech(): void {
   bumpSpeakGeneration();
+  stopCurrentAudio();
   if (!isBrowser() || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
 }
@@ -72,9 +89,11 @@ export function stopSpeech(): void {
  * queue is a common Chrome/Safari silent-failure mode.
  */
 function cancelActiveSpeechIfNeeded(): boolean {
-  if (!isBrowser() || !window.speechSynthesis) return false;
+  const hadAudio = currentAudio !== null;
+  stopCurrentAudio();
+  if (!isBrowser() || !window.speechSynthesis) return hadAudio;
   const synth = window.speechSynthesis;
-  if (!synth.speaking && !synth.pending) return false;
+  if (!synth.speaking && !synth.pending) return hadAudio;
   bumpSpeakGeneration();
   synth.cancel();
   return true;
@@ -131,13 +150,12 @@ function resumeSynthesis(): void {
   }
 }
 
-function speakUtterance(
-  text: string,
+function speakViaSynthesis(
+  normalized: string,
+  lang: SpeakLang,
   options: SpeakOptions | undefined,
   onEnd?: () => void,
 ): void {
-  const lang = options?.lang ?? "he";
-  const normalized = lang === "en" ? text : normalizeTextForHebrewTts(text);
   const utterance = new SpeechSynthesisUtterance(normalized);
   utterance.lang = lang === "en" ? "en-US" : "he-IL";
   applyProfile(utterance, options);
@@ -154,6 +172,44 @@ function speakUtterance(
   primeSpeechVoices();
   resumeSynthesis();
   window.speechSynthesis!.speak(utterance);
+}
+
+function speakUtterance(
+  text: string,
+  options: SpeakOptions | undefined,
+  onEnd?: () => void,
+): void {
+  const lang = options?.lang ?? "he";
+  const normalized = lang === "en" ? text : normalizeTextForHebrewTts(text);
+
+  // Manifest-first: play pre-generated neural audio when available; fall back to the
+  // browser engine on any miss or playback error (INV-FALLBACK → today's behavior).
+  const audioUrl = lookupAudioUrl(normalized, lang);
+  if (audioUrl && typeof Audio !== "undefined") {
+    try {
+      const audio = new Audio(audioUrl);
+      currentAudio = audio;
+      const fallback = () => {
+        if (currentAudio === audio) currentAudio = null;
+        speakViaSynthesis(normalized, lang, options, onEnd);
+      };
+      audio.onended = () => {
+        if (currentAudio === audio) currentAudio = null;
+        onEnd?.();
+      };
+      audio.onerror = fallback;
+      const played = audio.play();
+      if (played && typeof played.catch === "function") {
+        played.catch(fallback);
+      }
+      return;
+    } catch {
+      currentAudio = null;
+      // fall through to synthesis
+    }
+  }
+
+  speakViaSynthesis(normalized, lang, options, onEnd);
 }
 
 export function speakHebrew(text: string, onEnd?: () => void, options?: SpeakOptions): void {

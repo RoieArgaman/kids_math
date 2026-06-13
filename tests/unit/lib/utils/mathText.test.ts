@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { splitMathExpression, tokenizeMathExpression } from "@/lib/utils/mathText";
+import {
+  evaluateMathExpression,
+  resolvePromptParts,
+  splitMathExpression,
+  tokenizeMathExpression,
+} from "@/lib/utils/mathText";
 
 describe("splitMathExpression", () => {
   it("returns only text when no math expression exists", () => {
@@ -25,6 +30,74 @@ describe("splitMathExpression", () => {
     expect(splitMathExpression("כִּתְבוּ בִּמִילִים: 63")).toEqual({
       text: "כִּתְבוּ בִּמִילִים: 63",
     });
+  });
+});
+
+describe("resolvePromptParts", () => {
+  // INV-FALLBACK: with no explicit field, behavior is byte-identical to splitMathExpression.
+  const fallbackPrompts = [
+    "זו רק שאלה מילולית ללא תרגיל",
+    "חַשְּׁבוּ 3 + 3 + 3 = ? (שָׁלוֹשׁ פְּעָמִים שָׁלוֹשׁ)",
+    "יוֹם 3: דֻּגְמָה 1 + 1. עַכְשָׁיו 7 + 5 = 12.",
+    "כִּתְבוּ בִּמִילִים: 63",
+  ];
+  it.each(fallbackPrompts)("falls back to splitMathExpression when no mathExpression: %s", (prompt) => {
+    expect(resolvePromptParts({ prompt })).toEqual(splitMathExpression(prompt));
+  });
+
+  it("falls back when mathExpression is malformed (no operator)", () => {
+    const prompt = "כַּמָּה זֶה 7 + 5 = ?";
+    expect(resolvePromptParts({ prompt, mathExpression: "42" })).toEqual(
+      splitMathExpression(prompt),
+    );
+  });
+
+  it("uses the explicit expression and strips it from the text when present inline", () => {
+    const result = resolvePromptParts({
+      prompt: "כַּמָּה זֶה 7 + 5 = ?",
+      mathExpression: "7 + 5 = ?",
+    });
+    expect(result.math).toBe("7 + 5 = ?");
+    expect(result.text).toBe("כַּמָּה זֶה");
+  });
+
+  it("keeps the full prompt as text when the explicit expression is not inline", () => {
+    const result = resolvePromptParts({
+      prompt: "פִּתְרוּ אֶת הַתַּרְגִּיל הַבָּא",
+      mathExpression: "9 - 4 = ?",
+    });
+    expect(result.math).toBe("9 - 4 = ?");
+    expect(result.text).toBe("פִּתְרוּ אֶת הַתַּרְגִּיל הַבָּא");
+  });
+
+  it("normalizes whitespace in the explicit expression", () => {
+    const result = resolvePromptParts({ prompt: "תַּרְגִּיל", mathExpression: "  8  +  2  = ?  " });
+    expect(result.math).toBe("8 + 2 = ?");
+  });
+});
+
+describe("evaluateMathExpression", () => {
+  it("evaluates addition and subtraction left-to-right", () => {
+    expect(evaluateMathExpression("7 + 5 = ?")).toBe(12);
+    expect(evaluateMathExpression("9 - 4 = ?")).toBe(5);
+    expect(evaluateMathExpression("3 + 4 + 2 = ?")).toBe(9);
+    expect(evaluateMathExpression("10 - 3 - 2 = ?")).toBe(5);
+  });
+
+  it("respects × ÷ precedence over + -", () => {
+    expect(evaluateMathExpression("2 + 3 × 4 = ?")).toBe(14);
+    expect(evaluateMathExpression("10 - 6 ÷ 2 = ?")).toBe(7);
+  });
+
+  it("evaluates the operand side, ignoring a stated result", () => {
+    expect(evaluateMathExpression("7 + 5 = 12")).toBe(12);
+    expect(evaluateMathExpression("7 + 5 = 99")).toBe(12);
+  });
+
+  it("returns null for non-evaluable forms", () => {
+    expect(evaluateMathExpression("7 + ? = 12")).toBeNull();
+    expect(evaluateMathExpression("42")).toBeNull();
+    expect(evaluateMathExpression("5 apples")).toBeNull();
   });
 });
 
