@@ -23,7 +23,9 @@ async function answerExercise(page: import("@playwright/test").Page, exercise: E
       const trayId = childTid(testIds.component.exerciseBox.root(exId), "letterTiles", "tray");
       const tray = page.getByTestId(trayId);
       for (const ch of exercise.word) {
-        await tray.locator("button", { hasText: new RegExp(`^${ch}$`, "i") }).first().click();
+        // Select the first ENABLED tile for this letter — used tiles get disabled, so
+        // duplicate letters (e.g. "dad") must not re-target the already-used tile.
+        await tray.locator("button:not([disabled])", { hasText: new RegExp(`^${ch}$`, "i") }).first().click();
       }
       break;
     }
@@ -73,10 +75,11 @@ test.describe("english day smoke", () => {
         await answerExercise(page, exercise);
       }
 
-      // Section completion panel proves all answers were correct.
-      await expect(
-        page.getByTestId(testIds.screen.english.section.completionPanel(DAY_ID, section.id)),
-      ).toBeVisible({ timeout: 10_000 });
+      // Completing a section shows the StarReward overlay (proves all answers were correct);
+      // dismiss it before navigating — mirrors the math day-smoke pattern.
+      await expect(page.getByTestId(testIds.component.starReward.overlay())).toBeVisible({ timeout: 10_000 });
+      await page.getByTestId(testIds.component.starReward.confirm()).click();
+      await expect(page.getByTestId(testIds.component.starReward.overlay())).toHaveCount(0);
 
       await page.goto(`/english/day/${DAY_ID}`);
       await expect(page.getByTestId(testIds.screen.english.day.root(DAY_ID))).toBeVisible();

@@ -21,7 +21,9 @@ async function answerOnly(page: Page, exercise: Exercise) {
     case "letter_tiles": {
       const tray = page.getByTestId(childTid(testIds.component.exerciseBox.root(exId), "letterTiles", "tray"));
       for (const ch of exercise.word) {
-        await tray.locator("button", { hasText: new RegExp(`^${ch}$`, "i") }).first().click();
+        // Select the first ENABLED tile — used tiles get disabled, so duplicate letters
+        // (e.g. "dad") must not re-target the already-used tile.
+        await tray.locator("button:not([disabled])", { hasText: new RegExp(`^${ch}$`, "i") }).first().click();
       }
       break;
     }
