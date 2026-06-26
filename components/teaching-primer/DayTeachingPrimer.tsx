@@ -98,7 +98,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
     <Surface
       data-testid={primerRoot}
       variant="default"
-      className="animate-bounce-in mb-4 border border-amber-200/80 bg-amber-50/90 shadow-sm"
+      className="animate-bounce-in mb-4 border border-[--border] shadow-sm"
     >
       <div
         data-testid={childTid(primerRoot, "topRow")}
@@ -106,7 +106,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
       >
         <h2
           data-testid={childTid(primerRoot, "title")}
-          className="text-lg font-bold text-amber-950"
+          className="text-lg font-bold text-[--title]"
         >
           לִפְנֵי שֶׁמַּתְחִילִים
         </h2>
@@ -120,7 +120,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
       </div>
       <div
         data-testid={childTid(primerRoot, "body")}
-        className="mt-3 space-y-3 text-base leading-relaxed text-amber-950"
+        className="mt-3 space-y-3 text-base leading-relaxed text-[--muted]"
       >
         {showFull ? (
           <TeachingPrimerExpandedContent

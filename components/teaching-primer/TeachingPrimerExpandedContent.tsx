@@ -29,7 +29,7 @@ export function TeachingPrimerExpandedContent({
             >
               <span
                 data-testid={childTid(primerRoot, "step", String(idx), "num")}
-                className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-300 text-xs font-bold text-amber-950"
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f0ebfb] text-xs font-bold text-[--accent]"
                 aria-hidden="true"
               >
                 {idx + 1}

@@ -28,12 +28,21 @@ import type { SectionType } from "@/lib/types/curriculum";
 type SectionCardState = "locked" | "open" | "complete";
 
 const SECTION_TYPE_CHIP_CLASS: Record<SectionType, string> = {
-  warmup: "bg-amber-100 border-amber-300 text-amber-800",
-  arithmetic: "bg-blue-100 border-blue-300 text-blue-800",
-  geometry: "bg-purple-100 border-purple-300 text-purple-800",
-  verbal: "bg-rose-100 border-rose-300 text-rose-800",
-  challenge: "bg-orange-100 border-orange-300 text-orange-800",
-  review: "bg-teal-100 border-teal-300 text-teal-800",
+  warmup: "bg-[#fef3c7] text-[#92400e]",
+  arithmetic: "bg-[#e0f2fe] text-[#075985]",
+  geometry: "bg-[#ede9fe] text-[#5b21b6]",
+  verbal: "bg-[#ffe4e6] text-[#9f1239]",
+  challenge: "bg-[#ffedd5] text-[#9a3412]",
+  review: "bg-[#ccfbf1] text-[#115e59]",
+};
+
+const SECTION_TYPE_RAIL_VAR: Record<SectionType, string> = {
+  warmup: "var(--section-warmup)",
+  arithmetic: "var(--section-arithmetic)",
+  geometry: "var(--section-geometry)",
+  verbal: "var(--section-verbal)",
+  challenge: "var(--section-challenge)",
+  review: "var(--section-review)",
 };
 
 const SECTION_TYPE_LABEL: Record<SectionType, string> = {
@@ -236,7 +245,8 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           const isCardComplete = state === "complete";
           const isUnlocking = unlockingIds.has(section.id);
           const chipClass =
-            SECTION_TYPE_CHIP_CLASS[section.type] ?? "bg-gray-100 border-gray-300 text-gray-800";
+            SECTION_TYPE_CHIP_CLASS[section.type] ?? "bg-gray-100 text-gray-800";
+          const railColor = SECTION_TYPE_RAIL_VAR[section.type] ?? "var(--border)";
           const typeLabel = SECTION_TYPE_LABEL[section.type] ?? section.type;
           const emoji = SECTION_TYPE_EMOJI[section.type] ?? "📚";
           const correctInSection = sectionCorrectCounts[section.id] ?? 0;
@@ -247,43 +257,49 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
               key={section.id}
               data-testid={cardRoot}
               data-state={isUnlocking ? "unlocking" : undefined}
-              className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
+              style={{ borderInlineStartColor: railColor }}
+              className={`rounded-3xl border border-s-4 p-5 shadow-sm transition-all ${
                 isUnlocking ? "animate-unlock-pulse" : ""
               } ${
                 isCardComplete
-                  ? "border-emerald-300 bg-emerald-50"
+                  ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
-                    ? "border-gray-200 bg-gray-50 opacity-60"
-                    : "border-slate-200 bg-white"
+                    ? "border-[#eceaf1] opacity-60"
+                    : "border-[--border] bg-white"
               }`}
             >
               <div data-testid={childTid(cardRoot, "topRow")} className="mb-3 flex items-center gap-3">
-                <span data-testid={childTid(cardRoot, "emoji")} className="text-3xl">
-                  {isCardComplete ? "✅" : isCardLocked ? "🔒" : emoji}
+                <span
+                  data-testid={childTid(cardRoot, "medallion")}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-lg ${chipClass}`}
+                >
+                  <span data-testid={childTid(cardRoot, "emoji")} aria-hidden="true">
+                    {isCardComplete ? "✅" : isCardLocked ? "🔒" : emoji}
+                  </span>
                 </span>
                 <div data-testid={childTid(cardRoot, "info")} className="min-w-0 flex-1">
-                  <p data-testid={childTid(cardRoot, "title")} className="text-base font-bold leading-tight">
+                  <p data-testid={childTid(cardRoot, "title")} className="text-base font-bold leading-tight text-[--title]">
                     {section.title}
                   </p>
-                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-gray-500">
+                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[--muted]">
                     {section.learningGoal}
                   </p>
                 </div>
                 <span
                   data-testid={childTid(cardRoot, "chip")}
-                  className={`rounded-full border px-2 py-1 text-xs font-semibold ${chipClass}`}
+                  className={`rounded-full px-2 py-1 text-xs font-semibold ${chipClass}`}
                 >
                   {typeLabel}
                 </span>
               </div>
               <div data-testid={childTid(cardRoot, "bottomRow")} className="flex items-center justify-between gap-3">
-                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-gray-600">
+                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[--muted]">
                   {correctInSection}/{section.exercises.length} תרגילים ✓
                 </span>
                 {isCardLocked ? (
                   <span
                     data-testid={childTid(cardRoot, "lockedHint")}
-                    className="text-sm font-semibold text-gray-400"
+                    className="text-sm font-semibold text-[--muted]"
                   >
                     הַשְׁלֵם חִימּוּם תְּחִילָה
                   </span>
@@ -326,7 +342,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
       {weakExercises.length > 0 && (
         <div
           data-testid={weakSpotPanelId}
-          className="mb-6 rounded-3xl border border-violet-200 bg-violet-50 p-5 shadow-sm"
+          className="mb-6 rounded-3xl border border-[--border] bg-violet-50/60 p-5 shadow-sm"
         >
           <p
             data-testid={childTid(weakSpotPanelId, "title")}
