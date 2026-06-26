@@ -213,7 +213,7 @@ export function SpeakerButton({
         disabled={!available}
         aria-label={`${label}: ${text}`}
         onClick={onClick}
-        className={`touch-button inline-flex items-center gap-2 rounded-2xl border-2 border-slate-200 bg-white transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 ${
+        className={`touch-button inline-flex items-center gap-2 rounded-2xl border-2 border-[#e3e0ec] bg-white text-[#1f2d3a] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 ${
           size === "lg" ? "min-h-14 px-5 text-2xl" : "min-h-12 px-4 text-xl"
         } ${isSpeaking ? "btn-accent" : ""}`}
       >
@@ -233,10 +233,10 @@ export function SpeakerButton({
   }
 
   const stateClass = !available
-    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70"
+    ? "border-[#e5e7eb] bg-[#f1f5f9] text-[#94a3b8] opacity-70 cursor-not-allowed"
     : isSpeaking
-      ? "border-violet-400 bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-300/80"
-      : "border-[#e7defb] bg-[#faf7ff] text-[--accent] hover:bg-[#f3ecff]";
+      ? "border-[#a78bfa] bg-[#ede9fe] text-[#6d28d9] ring-1 ring-[#cdbff2]"
+      : "border-[#e7defb] bg-[#faf7ff] text-[#8b75cc] hover:bg-[#f3effb]";
 
   return (
     <button

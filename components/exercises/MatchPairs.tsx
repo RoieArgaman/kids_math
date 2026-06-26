@@ -94,12 +94,12 @@ export function MatchPairs({ exercise, value, onChange }: MatchPairsProps) {
               data-exercise-focus={index === 0 ? "true" : undefined}
               type="button"
               onClick={() => onLeftTap(left)}
-              className={`touch-button flex min-h-12 items-center justify-between gap-2 rounded-2xl border-2 px-3 text-base font-semibold transition-transform hover:scale-105 ${
+              className={`touch-button flex min-h-12 items-center justify-between gap-2 rounded-2xl border-2 px-3 text-base font-semibold transition-transform hover:scale-[1.03] ${
                 matched
-                  ? "border-emerald-400 bg-emerald-50"
+                  ? "border-[#86efac] bg-[#f0fdf4]"
                   : isActive
                     ? "btn-accent"
-                    : "border-slate-200 bg-white"
+                    : "border-2 border-[#e3e0ec] bg-white text-[#2c2348]"
               }`}
             >
               <span data-testid={childTid(root, "leftLabel", index)}>{left}</span>
@@ -111,7 +111,7 @@ export function MatchPairs({ exercise, value, onChange }: MatchPairsProps) {
                   size="sm"
                 />
               ) : cue ? (
-                <span data-testid={childTid(root, "leftCue", index)} className="text-sm font-bold text-emerald-700">
+                <span data-testid={childTid(root, "leftCue", index)} className="text-sm font-bold text-[#047857]">
                   {cue}
                 </span>
               ) : null}
@@ -131,13 +131,13 @@ export function MatchPairs({ exercise, value, onChange }: MatchPairsProps) {
               data-testid={testIds.component.exerciseBox.matchRight(exercise.id, index)}
               type="button"
               onClick={() => onRightTap(right)}
-              className={`touch-button flex min-h-12 items-center justify-between gap-2 rounded-2xl border-2 px-3 text-base font-semibold transition-transform hover:scale-105 ${
-                matched ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-white"
+              className={`touch-button flex min-h-12 items-center justify-between gap-2 rounded-2xl border-2 px-3 text-base font-semibold transition-transform hover:scale-[1.03] ${
+                matched ? "border-[#86efac] bg-[#f0fdf4]" : "border-2 border-[#e3e0ec] bg-white text-[#2c2348]"
               }`}
             >
               <span data-testid={childTid(root, "rightLabel", index)}>{right}</span>
               {cue ? (
-                <span data-testid={childTid(root, "rightCue", index)} className="text-sm font-bold text-emerald-700">
+                <span data-testid={childTid(root, "rightCue", index)} className="text-sm font-bold text-[#047857]">
                   {cue}
                 </span>
               ) : null}

@@ -66,12 +66,12 @@ export function LetterTiles({ exercise, value, onChange }: LetterTilesProps) {
       <div
         data-testid={testIds.component.exerciseBox.tileWord(exercise.id)}
         dir="ltr"
-        className="mb-3 flex min-h-14 flex-wrap items-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-2"
+        className="mb-3 flex min-h-14 flex-wrap items-center gap-1.5 rounded-2xl border-2 border-dashed border-[#cdbff2] bg-[#faf7ff] p-2"
       >
         {value.length === 0 ? (
           <span
             data-testid={childTid(testIds.component.exerciseBox.tileWord(exercise.id), "placeholder")}
-            className="px-2 text-slate-400"
+            className="px-2 text-[#b9b2c4]"
           >
             _ _ _
           </span>
@@ -102,7 +102,7 @@ export function LetterTiles({ exercise, value, onChange }: LetterTilesProps) {
             type="button"
             disabled={used[index]}
             onClick={() => appendTile(index)}
-            className="touch-button flex h-12 w-12 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-2xl font-bold transition-transform hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+            className="touch-button flex h-12 w-12 items-center justify-center rounded-xl border-2 border-[#e3e0ec] bg-white text-[#2c2348] text-2xl font-bold transition-transform hover:scale-[1.03] disabled:opacity-30 disabled:hover:scale-100"
           >
             {tile}
           </button>
@@ -113,7 +113,7 @@ export function LetterTiles({ exercise, value, onChange }: LetterTilesProps) {
           disabled={value.length === 0}
           onClick={backspace}
           aria-label="מְחִיקַת אוֹת אַחֲרוֹנָה"
-          className="touch-button flex h-12 min-w-12 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-2xl transition-transform hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+          className="touch-button flex h-12 min-w-12 items-center justify-center rounded-xl border-2 border-[#e3e0ec] bg-white text-[#2c2348] text-2xl transition-transform hover:scale-[1.03] disabled:opacity-30 disabled:hover:scale-100"
         >
           ⌫
         </button>
