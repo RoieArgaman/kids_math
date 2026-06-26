@@ -236,7 +236,7 @@ export function SpeakerButton({
     ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70"
     : isSpeaking
       ? "border-violet-400 bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-300/80"
-      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
+      : "border-[#e7defb] bg-[#faf7ff] text-[--accent] hover:bg-[#f3ecff]";
 
   return (
     <button

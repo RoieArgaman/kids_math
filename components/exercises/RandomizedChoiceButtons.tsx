@@ -39,7 +39,7 @@ export function RandomizedChoiceButtons({
           data-exercise-focus={index === 0 ? "true" : undefined}
           key={option.key}
           type="button"
-          className={`touch-button rounded-2xl transition-transform hover:scale-105 ${renderAsShapes ? "relative min-h-24 py-3" : "min-h-14"} ${selected === option.value ? "btn-accent" : "border-2 border-slate-200 bg-white"}`}
+          className={`touch-button rounded-2xl transition-transform hover:scale-105 ${renderAsShapes ? "relative min-h-24 py-3" : "min-h-14"} ${selected === option.value ? "btn-accent" : "rounded-2xl border-2 border-[#e3e0ec] bg-white"}`}
           onClick={() => onSelect(option.value)}
         >
           {selected === option.value ? (

@@ -204,7 +204,7 @@ export function ExerciseBox({
       {showHintText && hintText ? (
         <div
           data-testid={testIds.component.exerciseBox.hintText(exercise.id)}
-          className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900"
+          className="mt-2 rounded-xl border border-[#fcd34d] bg-[#fffaf0] p-3 text-sm font-semibold text-amber-900"
           dir="rtl"
           role="status"
           aria-live="polite"
