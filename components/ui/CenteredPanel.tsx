@@ -26,7 +26,7 @@ export function CenteredPanel({
       <Surface
         data-testid={testId ? childTid(testId, "card") : undefined}
         variant={surfaceVariant}
-        className="mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg"
+        className="mx-auto max-w-sm rounded-[22px] p-8 text-center shadow-[0_2px_14px_rgba(80,60,140,0.06)]"
       >
         {emoji ? (
           <p data-testid={testId ? childTid(testId, "emoji") : undefined} className="mb-2 text-6xl" aria-hidden>
@@ -34,11 +34,11 @@ export function CenteredPanel({
           </p>
         ) : null}
         <div data-testid={testId ? childTid(testId, "body") : undefined}>
-          <div data-testid={testId ? childTid(testId, "title") : undefined} className="mb-2 text-xl font-semibold text-gray-800">
+          <div data-testid={testId ? childTid(testId, "title") : undefined} className="mb-2 text-xl font-bold text-[#2c2348]">
             {title}
           </div>
           {description ? (
-            <div data-testid={testId ? childTid(testId, "description") : undefined} className="mb-6 text-sm text-gray-500">
+            <div data-testid={testId ? childTid(testId, "description") : undefined} className="mb-6 text-sm text-[#8a8298]">
               {description}
             </div>
           ) : null}

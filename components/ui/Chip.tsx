@@ -12,11 +12,11 @@ export type ChipProps = {
 };
 
 function toneClassName(tone: ChipTone): string {
-  if (tone === "danger") return "bg-red-100 text-red-600";
-  if (tone === "warning") return "bg-amber-100 text-amber-800";
-  if (tone === "success") return "bg-emerald-100 text-emerald-700";
-  if (tone === "info") return "bg-violet-100 text-violet-800";
-  return "bg-slate-100 text-slate-700";
+  if (tone === "danger") return "bg-[#fee2e2] text-[#dc2626]";
+  if (tone === "warning") return "bg-[#fef3c7] text-[#92400e]";
+  if (tone === "success") return "bg-[#d1fae5] text-[#047857]";
+  if (tone === "info") return "bg-[#ede9fe] text-[#6d28d9]";
+  return "bg-[#f3effb] text-[#6b6577]";
 }
 
 export function Chip({ children, tone = "neutral", className, "data-testid": testId, ...rest }: ChipProps) {
