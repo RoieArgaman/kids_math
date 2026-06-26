@@ -98,7 +98,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
     <Surface
       data-testid={primerRoot}
       variant="default"
-      className="animate-bounce-in mb-4 border border-[--border] shadow-sm"
+      className="animate-bounce-in mb-4"
     >
       <div
         data-testid={childTid(primerRoot, "topRow")}
@@ -108,7 +108,14 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
           data-testid={childTid(primerRoot, "title")}
           className="text-base font-bold text-[--title]"
         >
-          💡 לִפְנֵי שֶׁמַּתְחִילִים
+          <span
+            data-testid={childTid(primerRoot, "title", "icon")}
+            aria-hidden="true"
+            className="me-1"
+          >
+            💡
+          </span>
+          לִפְנֵי שֶׁמַּתְחִילִים
         </h2>
         <TapToPlayTtsButton
           text={speakText}
@@ -120,7 +127,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
       </div>
       <div
         data-testid={childTid(primerRoot, "body")}
-        className="mt-3 space-y-3 text-base leading-relaxed text-[--muted]"
+        className="mt-3 space-y-3 text-[13.5px] leading-relaxed text-[#6f6685]"
       >
         {showFull ? (
           <TeachingPrimerExpandedContent
