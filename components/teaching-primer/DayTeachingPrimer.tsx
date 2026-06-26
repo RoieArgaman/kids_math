@@ -106,9 +106,9 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
       >
         <h2
           data-testid={childTid(primerRoot, "title")}
-          className="text-lg font-bold text-[--title]"
+          className="text-base font-bold text-[--title]"
         >
-          לִפְנֵי שֶׁמַּתְחִילִים
+          💡 לִפְנֵי שֶׁמַּתְחִילִים
         </h2>
         <TapToPlayTtsButton
           text={speakText}

@@ -215,8 +215,8 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         data-testid={testIds.screen.dayOverview.nav(effectiveGrade, dayId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
-        <AppNavLink href={routes.gradeHome(effectiveGrade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
-        <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+        <AppNavLink tone="primary" href={routes.gradeHome(effectiveGrade, { previewAll })}>→ חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
+        <AppNavLink tone="muted" href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
       </div>
 
       <ProgressHeader
@@ -258,7 +258,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
               data-testid={cardRoot}
               data-state={isUnlocking ? "unlocking" : undefined}
               style={{ borderInlineStartColor: railColor }}
-              className={`rounded-3xl border border-s-4 p-5 shadow-sm transition-all ${
+              className={`rounded-[20px] border border-s-4 p-4 shadow-[0_2px_12px_rgba(80,60,140,0.05)] transition-all ${
                 isUnlocking ? "animate-unlock-pulse" : ""
               } ${
                 isCardComplete
@@ -271,7 +271,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
               <div data-testid={childTid(cardRoot, "topRow")} className="mb-3 flex items-center gap-3">
                 <span
                   data-testid={childTid(cardRoot, "medallion")}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-lg ${chipClass}`}
+                  className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[14px] text-xl ${chipClass}`}
                 >
                   <span data-testid={childTid(cardRoot, "emoji")} aria-hidden="true">
                     {isCardComplete ? "✅" : isCardLocked ? "🔒" : emoji}

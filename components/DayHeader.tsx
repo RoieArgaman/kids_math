@@ -40,9 +40,9 @@ export function DayHeader({
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">
         <span
           data-testid={weekBadgeTestId}
-          className="inline-block rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-[--accent]"
+          className="inline-block rounded-full bg-white/75 px-3 py-1 text-xs font-semibold text-[--accent]"
         >
-          שָׁבוּעַ {day.week}
+          ⭐ שָׁבוּעַ {day.week}
         </span>
         {timerLabel ? (
           <span
@@ -58,7 +58,7 @@ export function DayHeader({
       <div data-testid={titleRowTestId} className="mt-3 flex items-center gap-3">
         <span
           data-testid={medallionTestId}
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-white text-3xl shadow-[0_4px_14px_rgba(124,111,205,0.18)]"
         >
           <span data-testid={emojiTestId} aria-hidden="true" style={{ unicodeBidi: "isolate" }}>
             {emoji}

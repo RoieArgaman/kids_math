@@ -1,19 +1,25 @@
 import Link, { type LinkProps } from "next/link";
 import type { ReactNode } from "react";
 
-const defaultClassName =
-  "inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2";
+const baseClassName =
+  "inline-flex items-center gap-1 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2";
+
+const toneClassName = {
+  default: "text-violet-700 hover:text-violet-900",
+  primary: "text-[--accent] hover:text-[#6d28d9]",
+  muted: "text-[--muted-soft] hover:text-[--muted]",
+} as const;
+
+export type AppNavLinkTone = keyof typeof toneClassName;
 
 export type AppNavLinkProps = Omit<LinkProps, "className"> & {
   className?: string;
+  tone?: AppNavLinkTone;
   children: ReactNode;
 };
 
-export function AppNavLink({ href, children, className, ...rest }: AppNavLinkProps) {
-  const merged =
-    className !== undefined && className !== ""
-      ? `${defaultClassName} ${className}`.trim()
-      : defaultClassName;
+export function AppNavLink({ href, children, className, tone = "default", ...rest }: AppNavLinkProps) {
+  const merged = [baseClassName, toneClassName[tone], className].filter(Boolean).join(" ");
 
   return (
     <Link href={href} className={merged} {...rest}>

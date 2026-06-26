@@ -133,7 +133,7 @@ export function ExerciseBox({
         />
         <p
           data-testid={childTid(baseTestId, "prompt")}
-          className={`min-w-0 flex-1 font-semibold ${grade === "a" ? "text-xl" : "text-lg"}`}
+          className={`min-w-0 flex-1 font-bold ${grade === "a" ? "text-xl" : "text-lg"}`}
           dir="rtl"
           style={{ unicodeBidi: "plaintext" }}
         >

@@ -232,10 +232,10 @@ export function SectionScreen({
         data-testid={testIds.screen.section.nav(effectiveGrade, dayId, sectionId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
-        <AppNavLink href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}>
-          חֲזָרָה לַיּוֹם
+        <AppNavLink tone="primary" href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}>
+          → חֲזָרָה לַיּוֹם
         </AppNavLink>
-        <AppNavLink href={routes.gradeHome(effectiveGrade, { previewAll })}>
+        <AppNavLink tone="muted" href={routes.gradeHome(effectiveGrade, { previewAll })}>
           חֲזָרָה לַחוֹבֶרֶת
         </AppNavLink>
       </div>

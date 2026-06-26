@@ -47,7 +47,7 @@ export function SectionBlock({
   return (
     <section
       data-testid={rootTestId}
-      className="surface mb-4 border-s-[6px] p-4"
+      className="surface mb-4 rounded-[22px] border-s-[6px] p-[18px]"
       style={{ borderInlineStartColor: BORDER_BY_TYPE[type] }}
     >
       <h2 data-testid={testIds.component.sectionBlock.title(sectionId)} className="text-xl font-bold text-[--title]">
@@ -61,13 +61,13 @@ export function SectionBlock({
         </span>
         {title}
       </h2>
-      <p data-testid={testIds.component.sectionBlock.learningGoal(sectionId)} className="muted mt-1 text-base text-[--muted]">
+      <p data-testid={testIds.component.sectionBlock.learningGoal(sectionId)} className="mt-1 text-sm text-[--muted]">
         {learningGoal}
       </p>
       {example ? (
         <article
           data-testid={testIds.component.sectionBlock.example.root(sectionId)}
-          className="mt-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 p-4"
+          className="mt-3 rounded-2xl border border-[#fde9b8] bg-[#fffbeb] p-4"
           aria-label="דֻּגְמָה פְּתוּרָה"
         >
           <div

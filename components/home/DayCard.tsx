@@ -67,18 +67,16 @@ export function DayCard({
         ? "bg-[#d1fae5] text-[#047857]"
         : "bg-[#ede9fe] text-[#6d28d9]";
 
-  const cardBorderClasses =
-    state === "open"
-      ? "border-r-4 border-r-violet-400"
-      : state === "complete"
-        ? "border-r-4 border-r-emerald-400"
-        : "";
+  const railColor =
+    state === "open" ? "#a78bfa" : state === "complete" ? "#34d399" : undefined;
+  const cardBorderClasses = railColor ? "border-s-4" : "";
 
   const root = testIds.screen.home.dayCard(day.id);
 
   return (
     <article
       data-testid={root}
+      style={railColor ? { borderInlineStartColor: railColor } : undefined}
       className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
     >
       {/* Card header row */}
@@ -93,7 +91,7 @@ export function DayCard({
           <span
             data-testid={childTid(root, "medallion")}
             aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f3effb] text-lg"
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[13px] bg-[#f3effb] text-xl"
           >
             {dayEmoji}
           </span>

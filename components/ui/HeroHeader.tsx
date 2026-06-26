@@ -50,7 +50,7 @@ export function HeroHeader({
       ))}
 
       <div data-testid={testId ? childTid(testId, "content") : undefined} className="relative">
-        <h1 data-testid={testId ? childTid(testId, "title") : undefined} className="text-4xl font-bold leading-tight text-[--title]">
+        <h1 data-testid={testId ? childTid(testId, "title") : undefined} className="text-[26px] font-bold leading-tight text-[--title]">
           {title}
         </h1>
         {subtitle ? (

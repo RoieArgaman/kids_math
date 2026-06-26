@@ -207,18 +207,24 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       <HeroHeader
         data-testid={testIds.screen.home.hero(effectiveGrade)}
         title={
-          <>
+          <span
+            data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "row")}
+            className="inline-flex items-center justify-center gap-3"
+          >
             <span
               data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "emoji")}
               aria-hidden="true"
+              className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white text-3xl shadow-[0_4px_14px_rgba(124,111,205,0.18)]"
               style={{ unicodeBidi: "isolate" }}
             >
-              🧮{" "}
+              🧮
             </span>
-            חוֹבֶרֶת מָתֵמָטִיקָה - כִּיתָּה {gradeLabel(effectiveGrade)}
-          </>
+            <span data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "text")}>
+              חוֹבֶרֶת מָתֵמָטִיקָה
+            </span>
+          </span>
         }
-        subtitle="מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת."
+        subtitle={`מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת. · כִּיתָּה ${gradeLabel(effectiveGrade)}`}
         decorations={[
           { emoji: "✨", className: "pointer-events-none absolute -left-4 -top-4 text-7xl opacity-15 select-none" },
           { emoji: "⭐", className: "pointer-events-none absolute -bottom-3 left-8 text-6xl opacity-15 select-none" },
