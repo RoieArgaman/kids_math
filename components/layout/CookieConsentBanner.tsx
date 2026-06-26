@@ -35,7 +35,7 @@ export function CookieConsentBanner() {
   return (
     <div
       data-testid={root}
-      className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-violet-200/95 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_32px_rgba(91,33,182,0.12)] motion-safe:animate-cookie-banner-in motion-reduce:animate-none"
+      className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-[#e7defb] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_28px_rgba(80,60,140,0.10)] motion-safe:animate-cookie-banner-in motion-reduce:animate-none"
       role="region"
       aria-label="הודעה על עוגיות ואחסון מקומי"
     >
@@ -45,12 +45,12 @@ export function CookieConsentBanner() {
       >
         <p
           data-testid={childTid(root, "message")}
-          className="text-center text-sm leading-relaxed text-slate-700 sm:text-right sm:text-[0.95rem]"
+          className="text-center text-sm leading-relaxed text-[#6b6577] sm:text-right sm:text-[0.95rem]"
         >
           אנחנו משתמשים בעוגיות טכניות ובאחסון מקומי כדי שהאפליקציה תעבוד ותזכור את ההתקדמות. אפשר לקרוא עוד ב
           <Link
             data-testid={childTid(root, "link", "cookies")}
-            className="mx-1 font-semibold text-violet-800 underline decoration-violet-300 underline-offset-2 hover:text-violet-950"
+            className="mx-1 font-semibold text-[#6d28d9] underline decoration-[#cdbff2] underline-offset-2 hover:text-[#2c2348]"
             href={routes.cookies()}
           >
             מדיניות העוגיות
@@ -63,7 +63,7 @@ export function CookieConsentBanner() {
         >
           <Link
             data-testid={childTid(root, "link", "privacy")}
-            className="touch-button inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            className="touch-button inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#e7defb] bg-white px-4 text-sm font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
             href={routes.privacy()}
           >
             פרטיות
