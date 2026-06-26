@@ -1,16 +1,60 @@
 interface ProgressBarProps {
   value: number;
   label?: string;
+  /** Compact: bare track + percent pill, no card/label/markers. Used inside ProgressHeader. */
+  compact?: boolean;
 }
 
-export function ProgressBar({ value, label }: ProgressBarProps) {
+export function ProgressBar({ value, label, compact = false }: ProgressBarProps) {
   const safeValue = Math.max(0, Math.min(100, Math.round(value)));
+
+  const isComplete = safeValue === 100;
+
+  if (compact) {
+    return (
+      <div data-testid="km.autogen.progressbar.node.idx.0" className="flex items-center gap-3">
+        <div data-testid="km.autogen.progressbar.node.idx.4" className="relative flex-1">
+          <div data-testid="km.autogen.progressbar.node.idx.5"
+            aria-label={label ?? "הִתְקַדְּמוּת"}
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={safeValue}
+            role="progressbar"
+            className="h-2 overflow-hidden rounded-full bg-[--track]"
+          >
+            <div data-testid="km.autogen.progressbar.node.idx.6"
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${safeValue}%`,
+                background: isComplete
+                  ? "linear-gradient(90deg, #34d399 0%, #10b981 100%)"
+                  : "linear-gradient(90deg, #8b75cc 0%, #a78bfa 100%)",
+              }}
+            />
+          </div>
+        </div>
+        <span
+          data-testid="km.autogen.progressbar.node.idx.3"
+          className={`inline-flex min-w-[3rem] justify-center rounded-full px-2.5 py-1 text-xs font-bold ${
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[--accent]"
+          }`}
+        >
+          {safeValue}%
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div data-testid="km.autogen.progressbar.node.idx.0" className="surface p-4">
       <div data-testid="km.autogen.progressbar.node.idx.1" className="mb-3 flex items-center justify-between">
-        <span data-testid="km.autogen.progressbar.node.idx.2" className="font-medium">{label ?? "הִתְקַדְּמוּת יוֹמִית"}</span>
-        <span data-testid="km.autogen.progressbar.node.idx.3" className="rounded-full bg-purple-100 px-2 py-0.5 text-sm font-bold text-purple-700">
+        <span data-testid="km.autogen.progressbar.node.idx.2" className="font-medium text-[--muted]">{label ?? "הִתְקַדְּמוּת יוֹמִית"}</span>
+        <span
+          data-testid="km.autogen.progressbar.node.idx.3"
+          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[--accent]"
+          }`}
+        >
           {safeValue}%
         </span>
       </div>
@@ -21,13 +65,15 @@ export function ProgressBar({ value, label }: ProgressBarProps) {
           aria-valuemin={0}
           aria-valuenow={safeValue}
           role="progressbar"
-          className="h-5 overflow-hidden rounded-full bg-slate-100"
+          className="h-2.5 overflow-hidden rounded-full bg-[--track]"
         >
           <div data-testid="km.autogen.progressbar.node.idx.6"
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${safeValue}%`,
-              background: "linear-gradient(90deg, #FDE68A 0%, #6EE7B7 100%)",
+              background: isComplete
+                ? "linear-gradient(90deg, #34d399 0%, #10b981 100%)"
+                : "linear-gradient(90deg, #8b75cc 0%, #a78bfa 100%)",
             }}
           />
         </div>

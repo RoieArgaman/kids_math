@@ -152,9 +152,9 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
 
       <div
         data-testid={stickyHeaderId}
-        className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
+        className="progress-sticky rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm"
       >
-        <p data-testid={childTid(stickyHeaderId, "label")} className="mb-1 text-xs font-semibold text-gray-600">
+        <p data-testid={childTid(stickyHeaderId, "label")} className="mb-1 text-xs font-semibold text-[#8a8298]">
           📊 הַהִתְקַדְּמוּת שֶׁלִּי:
         </p>
         <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
@@ -173,7 +173,7 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
         <div
           data-testid={childTid(sectionRootId, "resetNotice")}
           role="alert"
-          className="mb-5 mt-3 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-800 shadow-sm"
+          className="mb-5 mt-3 rounded-2xl border border-[#fecdd3] bg-[#fff5f6] p-4 text-sm font-semibold text-[#b91c1c] shadow-sm"
         >
           ⚠️ {resetNotice}
         </div>
@@ -212,12 +212,12 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
       {sectionComplete && !showReward && (
         <div
           data-testid={completionPanelId}
-          className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200 p-6 text-center shadow-md"
+          className="mb-6 rounded-3xl border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
         >
           <p data-testid={childTid(completionPanelId, "icon")} className="mb-1 text-4xl">
             ✅
           </p>
-          <p data-testid={childTid(completionPanelId, "title")} className="mb-1 text-xl font-semibold text-emerald-900">
+          <p data-testid={childTid(completionPanelId, "title")} className="mb-1 text-xl font-semibold text-[#047857]">
             הַחֵלֶק הוּשְׁלַם!
           </p>
           <ButtonLink href={routes.englishDay(dayId)} className="w-full text-center">

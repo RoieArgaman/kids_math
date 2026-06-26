@@ -9,7 +9,7 @@ export function TeachingPrimerExpandToggle({ expanded, testId, onToggle }: Teach
     <button
       type="button"
       data-testid={testId}
-      className="touch-button mt-3 w-full rounded-2xl border border-amber-300 bg-white py-3 text-sm font-semibold text-amber-950 shadow-sm"
+      className="touch-button mt-3 w-full rounded-2xl border border-[#e7defb] bg-white py-3 text-sm font-semibold text-[#6d28d9] shadow-sm"
       aria-expanded={expanded}
       onClick={onToggle}
     >

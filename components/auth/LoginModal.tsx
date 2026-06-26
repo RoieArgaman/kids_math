@@ -66,7 +66,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
       >
         <h2 data-testid="km.autogen.loginmodal.node.idx.0"
           id="login-modal-title"
-          className="mb-5 text-center text-xl font-bold text-slate-800"
+          className="mb-5 text-center text-xl font-bold text-[#2c2348]"
         >
           כניסה לחשבון
         </h2>
@@ -75,7 +75,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
           <div data-testid="km.autogen.loginmodal.node.idx.2" className="mb-4">
             <label data-testid="km.autogen.loginmodal.node.idx.3"
               htmlFor="km-login-username"
-              className="mb-1 block text-sm font-semibold text-slate-700"
+              className="mb-1 block text-sm font-semibold text-[#4f4860]"
             >
               שם משתמש
             </label>
@@ -91,7 +91,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 setUsername(e.target.value);
                 setError("");
               }}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={isLoading}
             />
           </div>
@@ -99,7 +99,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
           <div data-testid="km.autogen.loginmodal.node.idx.4" className="mb-5">
             <label data-testid="km.autogen.loginmodal.node.idx.5"
               htmlFor="km-login-password"
-              className="mb-1 block text-sm font-semibold text-slate-700"
+              className="mb-1 block text-sm font-semibold text-[#4f4860]"
             >
               סיסמה
             </label>
@@ -114,7 +114,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 setPassword(e.target.value);
                 setError("");
               }}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={isLoading}
             />
           </div>
@@ -122,7 +122,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
           {error && (
             <p
               data-testid={testIds.component.auth.errorMessage()}
-              className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-center text-sm font-medium text-red-700"
+              className="mb-4 rounded-xl bg-[#fee2e2] px-4 py-2.5 text-center text-sm font-medium text-[#b91c1c]"
               role="alert"
             >
               {error}

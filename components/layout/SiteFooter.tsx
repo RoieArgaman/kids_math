@@ -8,7 +8,7 @@ export function SiteFooter() {
   return (
     <footer
       data-testid={testIds.layout.siteFooter.root()}
-      className="mt-auto border-t border-violet-100/90 bg-gradient-to-b from-[#fffefb] to-violet-50/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
+      className="mt-auto border-t border-[#efe9f7] bg-gradient-to-b from-[#fffefb] to-[#f7f4fd]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]"
     >
       <div
         data-testid={testIds.layout.siteFooter.content()}
@@ -22,7 +22,7 @@ export function SiteFooter() {
           <h2
             data-testid={testIds.layout.siteFooter.heading()}
             id={FOOTER_HEADING_ID}
-            className="mb-2 text-center text-xs font-bold tracking-tight text-violet-950"
+            className="mb-2 text-center text-xs font-bold tracking-tight text-[#2c2348]"
           >
             מידע למשפחה
           </h2>
@@ -34,13 +34,13 @@ export function SiteFooter() {
             <Link
               data-testid={testIds.layout.siteFooter.linkPrivacy()}
               href={routes.privacy()}
-              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-violet-900 underline decoration-violet-300 underline-offset-2 transition hover:bg-violet-50/80 hover:text-violet-950 motion-reduce:transition-none"
+              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[#6d28d9] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
             >
               מדיניות פרטיות
             </Link>
             <span
               data-testid={testIds.layout.siteFooter.sep()}
-              className="select-none text-violet-300"
+              className="select-none text-[#cdbff2]"
               aria-hidden
             >
               ·
@@ -48,14 +48,14 @@ export function SiteFooter() {
             <Link
               data-testid={testIds.layout.siteFooter.linkCookies()}
               href={routes.cookies()}
-              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-violet-900 underline decoration-violet-300 underline-offset-2 transition hover:bg-violet-50/80 hover:text-violet-950 motion-reduce:transition-none"
+              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[#6d28d9] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
             >
               מדיניות עוגיות
             </Link>
           </nav>
           <p
             data-testid={testIds.layout.siteFooter.note()}
-            className="mt-2 text-center text-xs leading-snug text-slate-600"
+            className="mt-2 text-center text-xs leading-snug text-[#8a8298]"
           >
             מידע חשוב להורים ולמטפלים; השימוש באפליקציה כפוף למסמכים המשפטיים בקישורים למעלה.
           </p>

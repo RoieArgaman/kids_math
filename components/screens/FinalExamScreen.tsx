@@ -261,8 +261,8 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         <AppNavLink href={routes.gradeHome(grade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
       </div>
 
-      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm">
-        <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-slate-900">
+      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm">
+        <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-[#2c2348]">
           מִבְחָן מְסַכֵּם — כִּיתָּה {gradeLabel(grade)}
         </h1>
         <p data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "subtitle")} className="muted mt-1 text-sm">
@@ -329,14 +329,14 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         {showResults ? (
           <div
             data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results")}
-            className="mt-4 rounded-2xl border border-slate-200 bg-white p-4"
+            className="mt-4 rounded-2xl border border-[#efe9f7] bg-white p-4"
           >
-            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-slate-900">
+            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-[#2c2348]">
               ציון: {scorePercent}%
             </p>
             <p
               data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "status")}
-              className={`mt-1 text-sm font-semibold ${passed ? "text-emerald-700" : "text-rose-700"}`}
+              className={`mt-1 text-sm font-semibold ${passed ? "text-[#047857]" : "text-[#b91c1c]"}`}
             >
               {passed
                 ? grade === "a"
@@ -381,7 +381,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               )}
               <Link
                 href={routes.gradeHome(grade, { previewAll })}
-                className="touch-button inline-block w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 text-center font-semibold text-slate-800 hover:bg-slate-50"
+                className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
               >
                 חזרה לחוברת
               </Link>
@@ -389,7 +389,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
                 <Link
                   data-testid={testIds.screen.finalExam.gmatChallengeCta(grade)}
                   href={routes.gradeGmatChallenge(grade, { previewAll })}
-                  className="touch-button col-span-full inline-block w-full rounded-2xl border-2 border-violet-200 bg-violet-50 px-6 py-3 text-center font-semibold text-violet-900 hover:bg-violet-100 sm:col-span-2"
+                  className="touch-button col-span-full inline-block w-full rounded-2xl border-2 border-[#e7defb] bg-[#ede9fe] px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#e3d9fb] sm:col-span-2"
                 >
                   אתגר התנסות רשות (בהשראת GMAT Focus)
                 </Link>

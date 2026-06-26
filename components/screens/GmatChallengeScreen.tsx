@@ -485,7 +485,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             <div data-testid={childTid(root, "questionHud")} className="surface mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-2 text-sm font-semibold">
               <span data-testid={childTid(root, "questionCounter")}>שאלה {qIdx + 1} מתוך {total}</span>
               {bookmarkedNums.length > 0 ? (
-                <span data-testid={childTid(root, "bookmarkHint")} className="text-amber-700">
+                <span data-testid={childTid(root, "bookmarkHint")} className="text-[#92400e]">
                   ⭐ מסומנות: {bookmarkedNums.join(", ")}
                 </span>
               ) : null}
@@ -515,7 +515,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                   <button
                     type="button"
                     data-testid={childTid(root, "bookmark", "toggle", exId ?? "")}
-                    className="touch-button rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                    className="touch-button rounded-xl border border-[#fde9c8] bg-[#fffdf5] px-3 py-2 text-sm text-[#92400e]"
                     onClick={() => exId && toggleBookmark(exId)}
                   >
                     {isBookmarked ? "הסר סימון ⭐" : "סמן לבדיקה ☆"}
@@ -535,7 +535,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ) : (
               <div
                 data-testid={childTid(root, "activeQuestion", "loading")}
-                className="surface rounded-2xl p-4 text-center text-sm text-slate-500"
+                className="surface rounded-2xl p-4 text-center text-sm text-[#8a8298]"
               >
                 טוֹעֲנִים שְׁאֵלָה...
               </div>
@@ -551,8 +551,8 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
 
         return (
           <>
-            <header data-testid={childTid(root, "reviewHeader")} className="progress-sticky mb-4 rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md">
-              <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-slate-900">
+            <header data-testid={childTid(root, "reviewHeader")} className="progress-sticky mb-4 rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)]">
+              <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-[#2c2348]">
                 סקירת מקטע — {SECTION_LABELS[currentKey]}
               </h1>
               <p data-testid={childTid(root, "review", "divergences")} className="muted mt-1 text-sm">
@@ -574,14 +574,14 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                     <button
                       type="button"
                       data-testid={childTid(root, "reviewBackToGrid")}
-                      className="mb-3 touch-button rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                      className="mb-3 touch-button rounded-xl border border-[#e7defb] bg-white px-3 py-2 text-sm text-[#6d28d9]"
                       onClick={() => setReviewQuestionIndex(null)}
                     >
                       ← חזרה לרשימת השאלות
                     </button>
                     <p
                       data-testid={childTid(root, "reviewQuestionNumber", String(reviewQuestionIndex))}
-                      className="mb-2 text-sm font-semibold text-slate-600"
+                      className="mb-2 text-sm font-semibold text-[#8a8298]"
                     >
                       שאלה {reviewQuestionIndex + 1}
                     </p>
@@ -606,7 +606,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                       />
                     ) : null}
                     {isLocked ? (
-                      <p data-testid={childTid(root, "reviewLockMessage")} className="mt-2 text-sm text-rose-600">
+                      <p data-testid={childTid(root, "reviewLockMessage")} className="mt-2 text-sm text-[#b91c1c]">
                         הגעתם למגבלת {DEFAULT_MAX_REVIEW_DIVERGENCES} שינויים.
                       </p>
                     ) : null}
@@ -616,7 +616,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ) : (
               // Show question grid
               <div data-testid={childTid(root, "reviewGrid")} className="surface rounded-3xl p-4">
-                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-slate-600">
+                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-[#8a8298]">
                   לחצו על שאלה כדי לעיין בה או לשנות את תשובתכם.
                 </p>
                 <div data-testid={childTid(root, "reviewGrid", "tiles")} className="grid grid-cols-4 gap-2">
@@ -632,10 +632,10 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                         onClick={() => setReviewQuestionIndex(i)}
                         className={`touch-button rounded-xl border-2 py-3 text-sm font-bold ${
                           changed
-                            ? "border-blue-400 bg-blue-50 text-blue-800"
+                            ? "border-[#7cc4ec] bg-[#e0f2fe] text-[#075985]"
                             : answered
-                              ? "border-green-300 bg-green-50 text-green-800"
-                              : "border-slate-200 bg-white text-slate-500"
+                              ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#047857]"
+                              : "border-[#e3e0ec] bg-white text-[#8a8298]"
                         }`}
                       >
                         {i + 1}
@@ -644,7 +644,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                     );
                   })}
                 </div>
-                <p data-testid={childTid(root, "reviewLegend")} className="mt-3 text-xs text-slate-500">
+                <p data-testid={childTid(root, "reviewLegend")} className="mt-3 text-xs text-[#9a93a8]">
                   ירוק = נענה · כחול = שונה · ⭐ = מסומן
                 </p>
               </div>
@@ -666,7 +666,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
 
       {state.phase === "results" ? (
         <div data-testid={testIds.screen.gmatChallenge.results(grade)} className="surface rounded-3xl p-6">
-          <h2 data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "title")} className="text-xl font-bold text-slate-900">סיימתם את האתגר</h2>
+          <h2 data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "title")} className="text-xl font-bold text-[#2c2348]">סיימתם את האתגר</h2>
           <p data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "score")} className="mt-2 text-2xl font-bold">
             ציון כולל: {state.scorePercent ?? 0}%
           </p>

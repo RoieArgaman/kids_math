@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
-import { Chip } from "@/components/ui/Chip";
 import { HeroHeader } from "@/components/ui/HeroHeader";
 import { Surface } from "@/components/ui/Surface";
 import { DayCard, type DayCardState } from "@/components/home/DayCard";
@@ -148,6 +147,38 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   const isAdmin = isHydrated && isAdminUnlocked();
   const rollups = useMemo(() => computeAnalyticsRollups(events), [events]);
 
+  // Derived per-day state (behavior-preserving): same expression used in the grid below,
+  // computed once so we can both render cards and count completes for the overall row.
+  const dayStateById = new Map<string, DayCardState>(
+    workbookDaysList.map((day) => {
+      const idx = workbookDaysList.findIndex((item) => item.id === day.id);
+      const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;
+      const finalExamPassed = Boolean(finalExam?.passed);
+      const state: DayCardState = isFinalExamDay
+        ? finalExamPassed
+          ? "complete"
+          : previewAll
+            ? "open"
+            : idx === 0
+              ? "open"
+              : (() => {
+                const previousDay = workbookDaysList[idx - 1];
+                const previousProgress = progress.days[previousDay.id];
+                return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
+              })()
+        : previewAll
+          ? progress.days[day.id as DayId]?.isComplete
+            ? "complete"
+            : "open"
+          : getDayState(day, idx, progress, workbookDaysList);
+      return [day.id, state];
+    }),
+  );
+  const totalDays = workbookDaysList.length;
+  const completedDays = workbookDaysList.filter((day) => dayStateById.get(day.id) === "complete").length;
+  const overallPercent = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+  const allComplete = totalDays > 0 && completedDays === totalDays;
+
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.home.root(`${effectiveGrade}.loading`)} className="pb-10">
@@ -176,18 +207,24 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       <HeroHeader
         data-testid={testIds.screen.home.hero(effectiveGrade)}
         title={
-          <>
+          <span
+            data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "row")}
+            className="inline-flex items-center justify-center gap-3"
+          >
             <span
               data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "emoji")}
               aria-hidden="true"
+              className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white text-3xl shadow-[0_4px_14px_rgba(124,111,205,0.18)]"
               style={{ unicodeBidi: "isolate" }}
             >
-              🧮{" "}
+              🧮
             </span>
-            חוֹבֶרֶת מָתֵמָטִיקָה - כִּיתָּה {gradeLabel(effectiveGrade)}
-          </>
+            <span data-testid={childTid(testIds.screen.home.hero(effectiveGrade), "title", "text")}>
+              חוֹבֶרֶת מָתֵמָטִיקָה
+            </span>
+          </span>
         }
-        subtitle="מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת."
+        subtitle={`מַסְלוּל יוֹמִי לִשְׁבוּעַיִם, עִם פְּתִיחָה הַדְרָגָתִית לְפִי הִתְקַדְּמוּת. · כִּיתָּה ${gradeLabel(effectiveGrade)}`}
         decorations={[
           { emoji: "✨", className: "pointer-events-none absolute -left-4 -top-4 text-7xl opacity-15 select-none" },
           { emoji: "⭐", className: "pointer-events-none absolute -bottom-3 left-8 text-6xl opacity-15 select-none" },
@@ -204,6 +241,39 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           </Link>
         }
       />
+
+      <div
+        data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall")}
+        className="mb-5"
+      >
+        <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "head")}
+          className="mb-1.5 flex items-center justify-between text-sm font-bold"
+        >
+          <span
+            data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "label")}
+            className="text-[--title]"
+          >
+            הִתְקַדְּמוּת כְּלָלִית
+          </span>
+          <span
+            data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "count")}
+            className="text-[--muted]"
+          >
+            {completedDays} / {totalDays} יָמִים
+          </span>
+        </div>
+        <div
+          data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "track")}
+          className="h-2 w-full overflow-hidden rounded-full bg-[--track]"
+        >
+          <div
+            data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "fill")}
+            className={`h-full rounded-full transition-all ${allComplete ? "bg-[#34d399]" : "bg-[--accent]"}`}
+            style={{ width: `${overallPercent}%` }}
+          />
+        </div>
+      </div>
 
       {streakState !== null && (
         <div
@@ -263,15 +333,18 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
         return (
           <section data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week)} key={week} className="mb-8">
-            {/* Week banner */}
-            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "banner")} className="mb-4 flex items-center gap-2">
-              <Chip
+            {/* Week divider */}
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "banner")} className="mb-4 flex items-center gap-3">
+              <span
                 data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "badge")}
-                tone="neutral"
-                className={`gap-1.5 px-4 py-1.5 text-base font-bold ${weekCfg.badgeBg} ${weekCfg.badgeText}`}
+                className="shrink-0 text-sm font-bold text-[#8b8696]"
               >
                 {weekCfg.emoji} שָׁבוּעַ {week}
-              </Chip>
+              </span>
+              <div
+                data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "rule")}
+                className="h-px flex-1 bg-[--hairline]"
+              />
             </div>
 
             <div
@@ -279,28 +352,10 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
               className="grid gap-4"
             >
               {weekDays.map((day) => {
-                const idx = workbookDaysList.findIndex((item) => item.id === day.id);
                 const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;
                 const dayProgress = progress.days[day.id as DayId];
-                const finalExamPassed = Boolean(finalExam?.passed);
 
-                const state: DayCardState = isFinalExamDay
-                  ? finalExamPassed
-                    ? "complete"
-                    : previewAll
-                      ? "open"
-                      : idx === 0
-                        ? "open"
-                        : (() => {
-                          const previousDay = workbookDaysList[idx - 1];
-                          const previousProgress = progress.days[previousDay.id];
-                          return canUnlockNextDay(previousDay, previousProgress) ? "open" : "locked";
-                        })()
-                  : previewAll
-                    ? progress.days[day.id as DayId]?.isComplete
-                      ? "complete"
-                      : "open"
-                    : getDayState(day, idx, progress, workbookDaysList);
+                const state: DayCardState = dayStateById.get(day.id) ?? "locked";
 
                 const score = isFinalExamDay ? 0 : (dayProgress?.percentDone ?? 0);
 

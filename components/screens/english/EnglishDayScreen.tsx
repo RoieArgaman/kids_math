@@ -92,23 +92,23 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
 
       <div
         data-testid={childTid(root, "progressBar")}
-        className="mb-4 rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
+        className="mb-4 rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm"
       >
-        <p data-testid={childTid(root, "progressBar", "label")} className="mb-1 text-xs font-semibold text-gray-600">
+        <p data-testid={childTid(root, "progressBar", "label")} className="mb-1 text-xs font-semibold text-[#8a8298]">
           📊 הַהִתְקַדְּמוּת שֶׁלִּי:
         </p>
         <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
       </div>
 
-      <div data-testid={childTid(root, "header")} className="mb-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div data-testid={childTid(root, "header")} className="mb-4 rounded-[20px] border border-[#efe9f7] bg-white p-5 shadow-[0_2px_12px_rgba(80,60,140,0.05)]">
         <h1 data-testid={childTid(root, "title")} className="text-2xl font-bold">
           {day.title}
         </h1>
-        <p data-testid={childTid(root, "objective")} className="mt-1 text-sm text-gray-600">
+        <p data-testid={childTid(root, "objective")} className="mt-1 text-sm text-[#8a8298]">
           {day.objective}
         </p>
         {day.teachingSummary ? (
-          <p data-testid={childTid(root, "summary")} className="mt-3 text-base leading-relaxed text-slate-700">
+          <p data-testid={childTid(root, "summary")} className="mt-3 text-base leading-relaxed text-[#4f4860]">
             {day.teachingSummary}
           </p>
         ) : null}
@@ -128,10 +128,10 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
               data-testid={cardRoot}
               className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
                 isCardComplete
-                  ? "border-emerald-300 bg-emerald-50"
+                  ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
-                    ? "border-gray-200 bg-gray-50 opacity-60"
-                    : "border-slate-200 bg-white"
+                    ? "border-[#eceaf1] bg-[#faf9fc] opacity-60"
+                    : "border-[#efe9f7] bg-white"
               }`}
             >
               <div data-testid={childTid(cardRoot, "topRow")} className="mb-3 flex items-center gap-3">
@@ -142,17 +142,17 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
                   <p data-testid={childTid(cardRoot, "cardTitle")} className="text-base font-bold leading-tight">
                     {section.title}
                   </p>
-                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-gray-500">
+                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[#8a8298]">
                     {section.learningGoal}
                   </p>
                 </div>
               </div>
               <div data-testid={childTid(cardRoot, "bottomRow")} className="flex items-center justify-between gap-3">
-                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-gray-600">
+                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[#8a8298]">
                   {correctInSection}/{section.exercises.length} תרגילים ✓
                 </span>
                 {isCardLocked ? (
-                  <span data-testid={childTid(cardRoot, "lockedHint")} className="text-sm font-semibold text-gray-400">
+                  <span data-testid={childTid(cardRoot, "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
                     הַשְׁלִימוּ אֶת הַחֵלֶק הַקּוֹדֵם
                   </span>
                 ) : (
@@ -160,7 +160,7 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
                     data-testid={testIds.screen.english.day.sectionCardCta(dayId, section.id)}
                     href={routes.englishSection(dayId, section.id)}
                     className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm ${
-                      isCardComplete ? "border border-emerald-400 bg-white text-emerald-700" : "btn-accent"
+                      isCardComplete ? "border border-[#a7f3d0] bg-white text-[#047857]" : "btn-accent"
                     }`}
                   >
                     {isCardComplete ? "תִּרְגּוּל חוֹזֵר" : idx === 0 ? "הַתְחֵל" : "פְּתַח"}
@@ -175,14 +175,14 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
       {allSectionsComplete && (
         <div
           data-testid={testIds.screen.english.day.completionPanel(dayId)}
-          className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200 p-6 text-center shadow-md"
+          className="mb-6 rounded-3xl border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
         >
           <p data-testid={childTid(testIds.screen.english.day.completionPanel(dayId), "icon")} className="mb-1 text-5xl">
             🎉
           </p>
           <p
             data-testid={childTid(testIds.screen.english.day.completionPanel(dayId), "title")}
-            className="mb-4 text-2xl font-semibold text-emerald-900"
+            className="mb-4 text-2xl font-semibold text-[#047857]"
           >
             כָּל הַכָּבוֹד!
           </p>

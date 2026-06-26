@@ -173,7 +173,7 @@ export function AdminUsersScreen() {
       <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-slate-800">ניהול משתמשים</h1>
 
       {statusMsg && (
-        <p data-testid="km.autogen.adminusersscreen.node.idx.2" className="mb-4 rounded-xl bg-green-50 px-4 py-2.5 text-center text-sm font-medium text-green-700">
+        <p data-testid="km.autogen.adminusersscreen.node.idx.2" className="mb-4 rounded-xl bg-[#d1fae5] px-4 py-2.5 text-center text-sm font-medium text-[#047857]">
           {statusMsg}
         </p>
       )}
@@ -194,7 +194,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newUsername}
               onChange={(e) => { setNewUsername(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </div>
@@ -206,7 +206,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </div>
@@ -217,7 +217,7 @@ export function AdminUsersScreen() {
               type="checkbox"
               checked={newIsAdmin}
               onChange={(e) => setNewIsAdmin(e.target.checked)}
-              className="h-4 w-4 rounded accent-violet-600"
+              className="h-4 w-4 rounded accent-[#8b75cc]"
               disabled={adding}
             />
             <label data-testid="km.autogen.adminusersscreen.node.idx.10" htmlFor="km-new-user-admin" className="text-sm font-medium text-slate-700">
@@ -273,7 +273,7 @@ export function AdminUsersScreen() {
                       <button
                         data-testid={testIds.component.adminUsers.deleteConfirm(u.userId)}
                         onClick={() => handleDelete(u.userId)}
-                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                        className="rounded-lg bg-[#dc2626] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b91c1c]"
                       >
                         אשר מחיקה
                       </button>
@@ -290,7 +290,7 @@ export function AdminUsersScreen() {
                       <button
                         data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
                         onClick={() => openChangePw(u.userId)}
-                        className="rounded-lg border border-violet-200 px-3 py-1.5 text-xs font-semibold text-violet-600 hover:bg-violet-50"
+                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[#6d28d9] hover:bg-[#f3effb]"
                       >
                         שנה סיסמה
                       </button>
@@ -298,7 +298,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.deleteButton(u.userId)}
                         onClick={() => setConfirmDeleteId(u.userId)}
                         disabled={u.userId === user?.userId}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
+                        className="rounded-lg border border-[#fecaca] px-3 py-1.5 text-xs font-semibold text-[#dc2626] hover:bg-red-50 disabled:opacity-40"
                       >
                         מחק
                       </button>
@@ -315,7 +315,7 @@ export function AdminUsersScreen() {
                       placeholder="סיסמה חדשה"
                       value={changePwValue}
                       onChange={(e) => { setChangePwValue(e.target.value); setChangePwError(""); }}
-                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
                       disabled={changePwBusy}
                       autoFocus
                     />
@@ -323,7 +323,7 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordSubmit(u.userId)}
                       onClick={() => handleChangePassword(u.userId)}
                       disabled={!changePwValue || changePwBusy}
-                      className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
+                      className="rounded-lg bg-[#8b75cc] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
                     >
                       {changePwBusy ? "..." : "שמור"}
                     </button>

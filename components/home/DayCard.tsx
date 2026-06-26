@@ -62,23 +62,21 @@ export function DayCard({
 
   const stateChipClasses =
     state === "locked"
-      ? "bg-red-100 text-red-600"
+      ? "bg-[#fee2e2] text-[#b91c1c]"
       : state === "complete"
-        ? "bg-amber-100 text-amber-700"
-        : "bg-green-100 text-green-700";
+        ? "bg-[#d1fae5] text-[#047857]"
+        : "bg-[#ede9fe] text-[#6d28d9]";
 
-  const cardBorderClasses =
-    state === "open"
-      ? "border-r-4 border-r-violet-400"
-      : state === "complete"
-        ? "border-r-4 border-r-emerald-400"
-        : "";
+  const railColor =
+    state === "open" ? "#a78bfa" : state === "complete" ? "#34d399" : undefined;
+  const cardBorderClasses = railColor ? "border-s-4" : "";
 
   const root = testIds.screen.home.dayCard(day.id);
 
   return (
     <article
       data-testid={root}
+      style={railColor ? { borderInlineStartColor: railColor } : undefined}
       className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
     >
       {/* Card header row */}
@@ -91,6 +89,13 @@ export function DayCard({
           className="flex min-w-0 flex-1 items-start gap-2"
         >
           <span
+            data-testid={childTid(root, "medallion")}
+            aria-hidden="true"
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[13px] bg-[#f3effb] text-xl"
+          >
+            {dayEmoji}
+          </span>
+          <span
             data-testid={childTid(root, "dayNumBadge")}
             className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700"
           >
@@ -98,7 +103,7 @@ export function DayCard({
           </span>
           <strong
             data-testid={childTid(root, "title")}
-            className="min-w-0 text-base leading-snug break-words"
+            className="min-w-0 text-base font-bold leading-snug break-words text-[--title]"
           >
             {dayEmoji} יוֹם {day.dayNumber}: {day.title}
           </strong>
@@ -132,23 +137,23 @@ export function DayCard({
           data-testid={childTid(root, "progressRowHeader")}
           className="mb-1 flex items-center justify-between text-xs font-medium"
         >
-          <span data-testid={childTid(root, "progressLabel")} className="text-slate-500">
+          <span data-testid={childTid(root, "progressLabel")} className="text-[--muted]">
             הִתְקַדְּמוּת
           </span>
           <span
             data-testid={childTid(root, "progressPercent")}
-            className={`font-bold ${score === 100 ? "text-emerald-600" : "text-violet-500"}`}
+            className={`rounded-full px-2.5 py-1 text-xs font-bold ${score === 100 ? "bg-[#d1fae5] text-emerald-600" : "bg-[#f3effb] text-[--accent]"}`}
           >
             {Math.round(score)}%
           </span>
         </div>
         <div
           data-testid={childTid(root, "progressTrack")}
-          className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+          className="h-2 w-full overflow-hidden rounded-full bg-[--track]"
         >
           <div
             data-testid={childTid(root, "progressFill")}
-            className={`h-full rounded-full transition-all ${score === 100 ? "bg-emerald-400" : "bg-violet-400"}`}
+            className={`h-full rounded-full transition-all ${score === 100 ? "bg-[#34d399]" : "bg-[--accent]"}`}
             style={{ width: `${score}%` }}
           />
         </div>
@@ -181,6 +186,19 @@ export function DayCard({
         <p data-testid={childTid(root, "lockedHint")} className="muted text-center text-sm">
           סַיְּימוּ אֶת הַיּוֹם הַקּוֹדֵם כְּדֵי לִפְתּוֹחַ 🔒
         </p>
+      ) : state === "complete" ? (
+        <Link
+          data-testid={testIds.screen.home.dayCardCta(day.id)}
+          className="touch-button block w-full rounded-full border border-emerald-300 bg-white text-center font-semibold text-emerald-700 sm:w-auto"
+          href={routes.gradeDay(effectiveGrade, day.id as DayId, { previewAll })}
+          onClick={() =>
+            logEvent("day_card_clicked", {
+              payload: { grade: effectiveGrade, dayId: day.id },
+            })
+          }
+        >
+          חֲזָרָה לַיּוֹם
+        </Link>
       ) : (
         <Link
           data-testid={testIds.screen.home.dayCardCta(day.id)}

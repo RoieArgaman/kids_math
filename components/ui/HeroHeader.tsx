@@ -30,7 +30,7 @@ export function HeroHeader({
   "data-testid": testId,
 }: HeroHeaderProps) {
   const merged = [
-    "relative mb-6 overflow-hidden rounded-3xl border border-violet-200 bg-gradient-to-l from-violet-200 to-sky-100 p-6 shadow-md",
+    "relative mb-6 overflow-hidden rounded-[26px] border border-[#e7defb] bg-[linear-gradient(135deg,#efe9ff_0%,#f6f0fb_55%,#fbf4ee_100%)] p-6 text-center shadow-md",
     className,
   ]
     .filter(Boolean)
@@ -50,11 +50,11 @@ export function HeroHeader({
       ))}
 
       <div data-testid={testId ? childTid(testId, "content") : undefined} className="relative">
-        <h1 data-testid={testId ? childTid(testId, "title") : undefined} className="text-4xl font-bold leading-tight text-violet-900">
+        <h1 data-testid={testId ? childTid(testId, "title") : undefined} className="text-[26px] font-bold leading-tight text-[--title]">
           {title}
         </h1>
         {subtitle ? (
-          <p data-testid={testId ? childTid(testId, "subtitle") : undefined} className="mt-2 text-sm text-violet-700">
+          <p data-testid={testId ? childTid(testId, "subtitle") : undefined} className="mt-2 text-sm text-[--muted]">
             {subtitle}
           </p>
         ) : null}

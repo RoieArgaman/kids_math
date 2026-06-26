@@ -10,8 +10,8 @@ export default function GradeBLockedPage() {
         <p data-testid="km.autogen.page.node.idx.2" className="mb-2 text-6xl" aria-hidden="true">
           🔒
         </p>
-        <h1 data-testid="km.autogen.page.node.idx.3" className="mb-2 text-2xl font-bold text-gray-800">כיתה ב׳ נעולה</h1>
-        <p data-testid="km.autogen.page.node.idx.4" className="mb-6 text-sm text-gray-500">
+        <h1 data-testid="km.autogen.page.node.idx.3" className="mb-2 text-2xl font-bold text-[#2c2348]">כיתה ב׳ נעולה</h1>
+        <p data-testid="km.autogen.page.node.idx.4" className="mb-6 text-sm text-[#8a8298]">
           כדי לפתוח את כיתה ב׳ צריך לסיים את המבחן המסכם של כיתה א׳ ולקבל ציון של לפחות 85.
         </p>
 
@@ -26,7 +26,7 @@ export default function GradeBLockedPage() {
           <Link
             href={routes.gradeDay(FINAL_EXAM_GRADE, FINAL_EXAM_DAY_ID)}
             data-testid={testIds.screen.gradeBLocked.goFinalExam()}
-            className="touch-button inline-block w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 text-center font-semibold text-slate-800 hover:bg-slate-50"
+            className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
           >
             ללכת למבחן המסכם
           </Link>

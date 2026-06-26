@@ -66,7 +66,7 @@ export function EnglishHomeScreen() {
               key={day.id}
               data-testid={cardId}
               className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
-                isLocked ? "border-gray-200 bg-gray-50 opacity-60" : "border-slate-200 bg-white"
+                isLocked ? "border-[#eceaf1] bg-[#faf9fc] opacity-60" : "border-[#efe9f7] bg-white"
               }`}
             >
               <div data-testid={childTid(cardId, "row")} className="flex items-center justify-between gap-3">
@@ -74,12 +74,12 @@ export function EnglishHomeScreen() {
                   <p data-testid={childTid(cardId, "title")} className="text-base font-bold leading-tight">
                     {day.title}
                   </p>
-                  <p data-testid={childTid(cardId, "objective")} className="mt-0.5 text-xs text-gray-500">
+                  <p data-testid={childTid(cardId, "objective")} className="mt-0.5 text-xs text-[#8a8298]">
                     {day.objective}
                   </p>
                 </div>
                 {isLocked ? (
-                  <span data-testid={childTid(cardId, "lockedHint")} className="text-sm font-semibold text-gray-400">
+                  <span data-testid={childTid(cardId, "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
                     🔒 נָעוּל
                   </span>
                 ) : (
@@ -99,7 +99,7 @@ export function EnglishHomeScreen() {
         <div
           data-testid={testIds.screen.english.home.examCard()}
           className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
-            examUnlocked ? "border-violet-300 bg-violet-50" : "border-gray-200 bg-gray-50 opacity-60"
+            examUnlocked ? "border-[#e7defb] bg-[#ede9fe]" : "border-[#eceaf1] bg-[#faf9fc] opacity-60"
           }`}
         >
           <div data-testid={childTid(testIds.screen.english.home.examCard(), "row")} className="flex items-center justify-between gap-3">
@@ -107,7 +107,7 @@ export function EnglishHomeScreen() {
               <p data-testid={childTid(testIds.screen.english.home.examCard(), "title")} className="text-base font-bold leading-tight">
                 📝 מִבְחָן מְסַכֵּם
               </p>
-              <p data-testid={childTid(testIds.screen.english.home.examCard(), "objective")} className="mt-0.5 text-xs text-gray-500">
+              <p data-testid={childTid(testIds.screen.english.home.examCard(), "objective")} className="mt-0.5 text-xs text-[#8a8298]">
                 נִפְתָּח אַחֲרֵי שֶׁמַּשְׁלִימִים אֶת כָּל הַשִּׁעוּרִים.
               </p>
             </div>
@@ -120,7 +120,7 @@ export function EnglishHomeScreen() {
                 לַמִּבְחָן
               </Link>
             ) : (
-              <span data-testid={childTid(testIds.screen.english.home.examCard(), "lockedHint")} className="text-sm font-semibold text-gray-400">
+              <span data-testid={childTid(testIds.screen.english.home.examCard(), "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
                 🔒 נָעוּל
               </span>
             )}

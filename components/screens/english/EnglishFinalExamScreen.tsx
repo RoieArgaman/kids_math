@@ -191,7 +191,7 @@ export function EnglishFinalExamScreen() {
 
       <div
         data-testid={stickyId}
-        className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
+        className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
       >
         <p data-testid={childTid(stickyId, "title")} className="mb-1 text-lg font-bold">
           📝 מִבְחָן מְסַכֵּם בְּאַנְגְּלִית
@@ -227,17 +227,17 @@ export function EnglishFinalExamScreen() {
           data-testid={finishPanelId}
           className={`mb-6 rounded-3xl border p-6 text-center shadow-md ${
             state?.passed
-              ? "border-emerald-200 bg-gradient-to-br from-emerald-100 to-green-200"
-              : "border-amber-200 bg-amber-50"
+              ? "border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5]"
+              : "border-[#fde9c8] bg-[#fffdf5]"
           }`}
         >
           <p data-testid={childTid(finishPanelId, "icon")} className="mb-1 text-5xl">
             {state?.passed ? "🎉" : "💪"}
           </p>
-          <p data-testid={childTid(finishPanelId, "score")} className="mb-1 text-2xl font-bold text-slate-800">
+          <p data-testid={childTid(finishPanelId, "score")} className="mb-1 text-2xl font-bold text-[#2c2348]">
             {state?.scorePercent}%
           </p>
-          <p data-testid={childTid(finishPanelId, "verdict")} className="mb-4 text-base font-semibold text-slate-700">
+          <p data-testid={childTid(finishPanelId, "verdict")} className="mb-4 text-base font-semibold text-[#4f4860]">
             {state?.passed
               ? "כָּל הַכָּבוֹד! עָבַרְתָּ אֶת הַמִּבְחָן."
               : `צָרִיךְ ${ENGLISH_FINAL_EXAM_PASS_PERCENT}% כְּדֵי לַעֲבֹר — נַסּוּ שׁוּב!`}

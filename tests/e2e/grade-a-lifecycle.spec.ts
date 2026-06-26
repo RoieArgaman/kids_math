@@ -188,7 +188,7 @@ test.describe("grade A lifecycle", () => {
     // This CTA navigates to grade B, which should now be allowed by middleware cookie (set by finishExam()).
     await page.getByTestId(testIds.screen.finalExam.startGradeB()).click();
     await expect(page).toHaveURL(/\/grade\/b\/?$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("ב׳");
+    await expect(page.getByTestId(testIds.screen.home.hero("b"))).toContainText("ב׳");
   });
 
   test("next-section CTA appears on completed warmup and navigates to next section", async ({ page }) => {

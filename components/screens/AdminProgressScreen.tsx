@@ -303,13 +303,13 @@ export function AdminProgressScreen({
         description="הכניסו קוד גישה כדי לנהל התקדמות ימים."
         actions={
           <div data-testid={childTid(rootTid, "pinPanel")} className="space-y-3 text-right">
-            <label data-testid={childTid(rootTid, "pinLabel")} htmlFor="admin-pin" className="block text-sm font-semibold text-slate-700">
+            <label data-testid={childTid(rootTid, "pinLabel")} htmlFor="admin-pin" className="block text-sm font-semibold text-[#4f4860]">
               קוד גישה
             </label>
             <input
               id="admin-pin"
               data-testid={testIds.screen.adminProgress.pinInput()}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
               type="password"
               inputMode="numeric"
               dir="ltr"
@@ -326,7 +326,7 @@ export function AdminProgressScreen({
               <p
                 id="admin-pin-error"
                 data-testid={testIds.screen.adminProgress.pinError()}
-                className="text-sm font-semibold text-rose-700"
+                className="text-sm font-semibold text-[#b91c1c]"
               >
                 {pinError}
               </p>
@@ -350,10 +350,10 @@ export function AdminProgressScreen({
 
       <Surface data-testid={childTid(rootTid, "panel")} className="space-y-4 p-5">
         <header data-testid={childTid(rootTid, "header")} className="space-y-1">
-          <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-slate-800">
+          <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[#2c2348]">
             ניהול התקדמות
           </h1>
-          <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-slate-600">
+          <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[#8a8298]">
             בחרו מסלול וסמנו לכל יום אם הושלם או אופס.
           </p>
         </header>
@@ -463,7 +463,7 @@ export function AdminProgressScreen({
                     </h2>
                     <span
                       data-testid={testIds.screen.adminProgress.dayState(trackKey, day.id)}
-                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${isComplete ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${isComplete ? "bg-[#d1fae5] text-[#047857]" : "bg-[#f3effb] text-[#6b6577]"}`}
                     >
                       {isComplete ? "הושלם" : "לא הושלם"}
                     </span>
@@ -521,7 +521,7 @@ export function AdminProgressScreen({
                                   </span>
                                   <span
                                     data-testid={testIds.screen.adminProgress.sectionState(trackKey, day.id, section.id)}
-                                    className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-600"
+                                    className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#8a8298]"
                                   >
                                     {sectionStatusLabel(section, dayProgress)}
                                   </span>

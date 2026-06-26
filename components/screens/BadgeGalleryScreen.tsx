@@ -153,7 +153,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Title */}
       <h1
         data-testid={childTid(badgesRoot, "title")}
-        className="mb-4 text-2xl font-extrabold text-purple-800"
+        className="mb-4 text-2xl font-bold text-[#2c2348]"
       >
         🏆 הַפְּרָסִים שֶׁלִּי
       </h1>
@@ -162,12 +162,12 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {badgeState.unlocked.length === 0 && (
         <div
           data-testid={childTid(badgesRoot, "emptyState")}
-          className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center"
+          className="mb-6 rounded-2xl border border-[#fde9c8] bg-[#fffdf5] p-6 text-center"
           dir="rtl"
         >
           <div data-testid={childTid(badgesRoot, "emptyState", "icon")} className="mb-2 text-4xl">🌟</div>
-          <div data-testid={childTid(badgesRoot, "emptyState", "title")} className="mb-1 text-base font-bold text-amber-800">הפרסים מחכים לך!</div>
-          <div data-testid={childTid(badgesRoot, "emptyState", "hint")} className="text-sm text-amber-600">
+          <div data-testid={childTid(badgesRoot, "emptyState", "title")} className="mb-1 text-base font-bold text-[#92400e]">הפרסים מחכים לך!</div>
+          <div data-testid={childTid(badgesRoot, "emptyState", "hint")} className="text-sm text-[#92400e]">
             השלם ימים והצלח בתרגילים כדי לאסוף פרסים
           </div>
         </div>
@@ -176,7 +176,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Progress counter */}
       <div
         data-testid={childTid(badgesRoot, "progressCounter")}
-        className="mb-6 flex items-center justify-between rounded-xl bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700"
+        className="mb-6 flex items-center justify-between rounded-xl bg-[#f3effb] px-4 py-2 text-sm font-semibold text-[#8b75cc]"
         dir="rtl"
       >
         <span data-testid={childTid(badgesRoot, "progressCounter", "label")}>🏅 הפרסים שלי</span>
@@ -195,7 +195,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
 
         return (
           <section key={cat.label} data-testid={childTid(badgesRoot, "category", cat.id)} className="mb-8" dir="rtl">
-            <h2 data-testid={childTid(badgesRoot, "category", cat.id, "heading")} className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+            <h2 data-testid={childTid(badgesRoot, "category", cat.id, "heading")} className="mb-3 text-sm font-bold uppercase tracking-wide text-[#8b8696]">
               {cat.label}
             </h2>
             <div
@@ -230,7 +230,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     }}
                   >
                     {/* Tier label */}
-                    <span data-testid={childTid(cardTid, "tier")} className="absolute right-2 top-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <span data-testid={childTid(cardTid, "tier")} className="absolute right-2 top-2 text-[10px] font-semibold uppercase tracking-wide text-[#9a93a8]">
                       {TIER_LABEL[badge.tier]}
                     </span>
 
@@ -263,7 +263,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     {/* Badge name */}
                     <div
                       data-testid={childTid(cardTid, "name")}
-                      className="mb-1 text-sm font-bold text-slate-800"
+                      className="mb-1 text-sm font-bold text-[#2c2348]"
                     >
                       {badge.name}
                     </div>
@@ -273,13 +273,13 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       <>
                         <div
                           data-testid={childTid(cardTid, "unlockedAt")}
-                          className="text-xs text-emerald-600"
+                          className="text-xs text-[#047857]"
                         >
                           {formatUnlockDate(unlockedAt)}
                         </div>
                         <div
                           data-testid={childTid(cardTid, "description")}
-                          className="mt-1 text-xs leading-snug text-slate-500"
+                          className="mt-1 text-xs leading-snug text-[#9a93a8]"
                           dir="rtl"
                         >
                           {badge.description}
@@ -289,7 +289,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       /* Locked: show description as hint */
                       <div
                         data-testid={childTid(cardTid, "lockedHint")}
-                        className="text-xs text-slate-600"
+                        className="text-xs text-[#8a8298]"
                       >
                         {badge.description}
                       </div>

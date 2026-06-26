@@ -36,74 +36,80 @@ export default function SubjectPickerPage() {
           className="touch-button inline-flex"
           href={routes.adminProgress()}
         >
-          גישת אדמין
+          גִּישַׁת אַדְמִין
         </Link>
       </div>
 
       <HeroHeader
         data-testid={testIds.screen.subjectPicker.hero()}
-        title="מה לומדים היום?"
-        subtitle="בוחרים נושא כדי להתחיל."
+        title="מָה לוֹמְדִים הַיּוֹם?"
+        subtitle="בּוֹחֲרִים נוֹשֵׂא כְּדֵי לְהַתְחִיל."
         decorations={[
-          { emoji: "🎒", className: "pointer-events-none absolute -left-4 -top-4 text-7xl opacity-15 select-none" },
-          { emoji: "✨", className: "pointer-events-none absolute right-4 top-2 text-5xl opacity-20 select-none" },
+          { emoji: "🎒", className: "pointer-events-none absolute -left-4 -top-4 text-7xl opacity-[0.14] select-none" },
+          { emoji: "✨", className: "pointer-events-none absolute bottom-2 right-4 text-5xl opacity-[0.18] select-none" },
         ]}
       />
 
       <section data-testid={childTid(testIds.screen.subjectPicker.root(), "grid")} className="grid gap-4 sm:grid-cols-2">
         <Link
           data-testid={testIds.screen.subjectPicker.mathCard()}
-          className="surface p-5 shadow-sm hover:shadow-md transition-shadow"
+          className="surface border-s-[5px] rounded-[22px] p-5 shadow-sm hover:shadow-md transition-shadow"
+          style={{ borderInlineStartColor: "var(--accent)" }}
           href={routes.mathHome({ previewAll })}
         >
           <div data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "row")} className="flex items-start justify-between gap-3">
             <div data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "content")}>
-              <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "emoji")} className="text-4xl leading-none" aria-hidden>
-                🔢
+              <div data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "medallion")} className="w-[58px] h-[58px] rounded-[18px] flex items-center justify-center text-[32px] bg-[#ede9fe]">
+                <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "emoji")} className="leading-none" aria-hidden>
+                  🔢
+                </p>
+              </div>
+              <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "title")} className="mt-2 text-xl font-bold text-[--title]">
+                חֶשְׁבּוֹן
               </p>
-              <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "title")} className="mt-2 text-xl font-bold text-violet-900">
-                חשבון
-              </p>
-              <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "subtitle")} className="muted mt-1 text-sm">
-                מסלול יומי לפי כיתה • חימום, שיעורים ומבחן מסכם
+              <p data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "subtitle")} className="mt-1 text-sm text-[--muted]">
+                מַסְלוּל יוֹמִי לְפִי כִּיתָּה • חִימּוּם, שִׁיעוּרִים וּמִבְחָן מְסַכֵּם
               </p>
             </div>
             <Chip data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "badge")} tone="info" className="px-3 py-1">
-              כיתות א׳–ב׳
+              כִּיתּוֹת א׳–ב׳
             </Chip>
           </div>
           <div data-testid={childTid(testIds.screen.subjectPicker.mathCard(), "ctaRow")} className="mt-4">
-            <span data-testid={testIds.screen.subjectPicker.mathCardCta()} className="touch-button btn-accent inline-flex w-full justify-center text-center">
-              ללימוד חשבון
+            <span data-testid={testIds.screen.subjectPicker.mathCardCta()} className="touch-button btn-accent inline-flex w-full justify-center text-center font-semibold">
+              לְלִימּוּד חֶשְׁבּוֹן
             </span>
           </div>
         </Link>
 
         <Link
           data-testid={testIds.screen.subjectPicker.englishCard()}
-          className="surface p-5 shadow-sm hover:shadow-md transition-shadow"
+          className="surface border-s-[5px] rounded-[22px] p-5 shadow-sm hover:shadow-md transition-shadow"
+          style={{ borderInlineStartColor: "#34d399" }}
           href={routes.englishHome({ previewAll })}
           aria-label="אנגלית"
         >
           <div data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "row")} className="flex items-start justify-between gap-3">
             <div data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "content")}>
-              <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "emoji")} className="text-4xl leading-none" aria-hidden>
-                🔤
+              <div data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "medallion")} className="w-[58px] h-[58px] rounded-[18px] flex items-center justify-center text-[32px] bg-[#d1fae5]">
+                <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "emoji")} className="leading-none" aria-hidden>
+                  🔤
+                </p>
+              </div>
+              <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "title")} className="mt-2 text-xl font-bold text-[--title]">
+                אַנְגְּלִית
               </p>
-              <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "title")} className="mt-2 text-xl font-bold text-violet-900">
-                אנגלית
-              </p>
-              <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "subtitle")} className="muted mt-1 text-sm">
-                לומדים אנגלית מעברית • הקשבה, בחירה והרכבת מילים
+              <p data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "subtitle")} className="mt-1 text-sm text-[--muted]">
+                לוֹמְדִים אַנְגְּלִית מֵעִבְרִית • הַקְשָׁבָה, בְּחִירָה וְהַרְכָּבַת מִילִּים
               </p>
             </div>
             <Chip data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "badge")} tone="info" className="px-3 py-1">
-              חדש
+              חָדָשׁ
             </Chip>
           </div>
           <div data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "ctaRow")} className="mt-4">
-            <span data-testid={testIds.screen.subjectPicker.englishCardCta()} className="touch-button btn-accent inline-flex w-full justify-center text-center">
-              ללימוד אנגלית
+            <span data-testid={testIds.screen.subjectPicker.englishCardCta()} className="touch-button btn-accent inline-flex w-full justify-center text-center font-semibold">
+              לְלִימּוּד אַנְגְּלִית
             </span>
           </div>
         </Link>
