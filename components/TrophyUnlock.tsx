@@ -21,7 +21,7 @@ export function TrophyUnlock({ visible, newBadgeIds, onConfirm }: TrophyUnlockPr
     <div data-testid={testIds.component.trophyUnlock.overlay()} className="star-reward-overlay" role="presentation">
       <div
         data-testid={dialogTid}
-        className="star-reward-modal star-reward-modal--trophy flex min-h-0 w-full max-w-md flex-col rounded-3xl p-8"
+        className="star-reward-modal star-reward-modal--trophy flex min-h-0 w-full max-w-md flex-col rounded-[24px] p-8"
         role="dialog"
         aria-modal="true"
         aria-labelledby="trophy-unlock-title"
@@ -47,11 +47,11 @@ export function TrophyUnlock({ visible, newBadgeIds, onConfirm }: TrophyUnlockPr
             <p
               id="trophy-unlock-title"
               data-testid={childTid(dialogTid, "title")}
-              className="mt-3 text-2xl font-bold text-purple-700"
+              className="mt-3 text-2xl font-bold text-[#6d28d9]"
             >
               פְּרָס חָדָשׁ!
             </p>
-            <p data-testid={childTid(dialogTid, "subtitle")} className="mt-1 text-lg font-bold text-amber-600">
+            <p data-testid={childTid(dialogTid, "subtitle")} className="mt-1 text-lg font-bold text-[#b45309]">
               הֶשֵּׂגְתָּ תְּגָמוּל חָדָשׁ!
             </p>
           </div>
@@ -71,7 +71,7 @@ export function TrophyUnlock({ visible, newBadgeIds, onConfirm }: TrophyUnlockPr
                   <span data-testid={childTid(dialogTid, "badgeRow", id, "icon")} className="text-3xl">
                     {badge.icon}
                   </span>
-                  <span data-testid={childTid(dialogTid, "badgeRow", id, "name")} className="font-bold text-slate-800">
+                  <span data-testid={childTid(dialogTid, "badgeRow", id, "name")} className="font-bold text-[#4f4860]">
                     {badge.name}
                   </span>
                 </div>

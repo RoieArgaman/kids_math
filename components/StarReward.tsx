@@ -17,7 +17,7 @@ export function StarReward({ visible, text, onConfirm }: StarRewardProps) {
     <div data-testid={testIds.component.starReward.overlay()} className="star-reward-overlay" role="presentation">
       <div
         data-testid={testIds.component.starReward.dialog()}
-        className="star-reward-modal w-full max-w-md rounded-3xl p-8"
+        className="star-reward-modal w-full max-w-md rounded-[24px] p-8"
         role="dialog"
         aria-modal="true"
         aria-labelledby="star-reward-title"
@@ -34,11 +34,11 @@ export function StarReward({ visible, text, onConfirm }: StarRewardProps) {
         <div data-testid="km.autogen.starreward.node.idx.4" className="star-pop text-6xl" aria-hidden>
           ⭐⭐⭐⭐⭐
         </div>
-        <p data-testid="km.autogen.starreward.node.idx.5" id="star-reward-title" className="mt-3 text-2xl font-bold text-purple-700">
+        <p data-testid="km.autogen.starreward.node.idx.5" id="star-reward-title" className="mt-3 text-2xl font-bold text-[#6d28d9]">
           כָּל הַכָּבוֹד!
         </p>
-        <p data-testid="km.autogen.starreward.node.idx.6" className="mt-1 text-lg font-bold text-amber-600">אַתָּה אַלּוּף! 🏆</p>
-        <p data-testid="km.autogen.starreward.node.idx.7" className="mt-2 text-base font-semibold text-slate-700">
+        <p data-testid="km.autogen.starreward.node.idx.6" className="mt-1 text-lg font-bold text-[#b45309]">אַתָּה אַלּוּף! 🏆</p>
+        <p data-testid="km.autogen.starreward.node.idx.7" className="mt-2 text-base font-medium text-[#4f4860]">
           {text ?? "הִשְׁלַמְתֶּם אֶת הַיּוֹם בְּהַצְלָחָה."}
         </p>
         <button
