@@ -153,7 +153,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Title */}
       <h1
         data-testid={childTid(badgesRoot, "title")}
-        className="mb-4 text-2xl font-extrabold text-purple-800"
+        className="mb-4 text-2xl font-bold text-purple-800"
       >
         🏆 הַפְּרָסִים שֶׁלִּי
       </h1>

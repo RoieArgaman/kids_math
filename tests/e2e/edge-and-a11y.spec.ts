@@ -272,7 +272,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     ).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText("💥 0/3")).toBeVisible();
+    await expect(page.getByText("❌ שְׁגִיאוֹת 0/3")).toBeVisible();
   });
 
   test("after sticky completion, 3 wrong answers do not auto-reset the day", async ({ page }) => {
@@ -304,7 +304,7 @@ test.describe("keyboard + persistence basics (RTL)", () => {
     ).toHaveCount(0);
 
     const wrongBadge = page.getByTestId(childTid(testIds.screen.section.stickyHeader("a", "day-1", sectionId), "wrongBadge"));
-    await expect(wrongBadge).toContainText("💥 0/3");
+    await expect(wrongBadge).toContainText("❌ שְׁגִיאוֹת 0/3");
   });
 });
 

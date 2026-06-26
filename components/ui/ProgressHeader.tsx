@@ -22,11 +22,11 @@ export function ProgressHeader({
   return (
     <div
       data-testid={testId}
-      className={`rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm ${className}`}
+      className={`rounded-3xl border border-[--border] bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm ${className}`}
     >
       <p
         data-testid={childTid(testId, "label")}
-        className="mb-1 text-xs font-semibold text-gray-600"
+        className="mb-1 text-xs font-semibold text-[--muted]"
       >
         📊 הַהִתְקַדְּמוּת שֶׁלִּי:
       </p>
@@ -38,10 +38,10 @@ export function ProgressHeader({
         >
           <div
             data-testid={childTid(testId, "wrongBadge")}
-            className="error-counter-badge items-center gap-1 px-4 py-1.5 text-sm font-semibold"
+            className="error-counter-badge items-center gap-1 px-4 py-1.5 text-sm font-bold"
             aria-live="polite"
           >
-            💥 {wrongCount}/{maxWrong}
+            ❌ שְׁגִיאוֹת {wrongCount}/{maxWrong}
           </div>
         </div>
       )}
