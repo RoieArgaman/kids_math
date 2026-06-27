@@ -905,6 +905,9 @@ If a learning is stable and recurring, update:
 
 ## Domain-Specific Checklists
 
+### Adding a New Subject
+**Mode: MAX** — Follow `.cursor/rules/add-subject.mdc` (new top-level subject: isolated store, content, routes, screens, sync, admin, tests; English/Science are the worked examples).
+
 ### Adding a New Grade
 **Mode: MAX** — Follow `.cursor/rules/add-grade.mdc`
 

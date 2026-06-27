@@ -1,0 +1,104 @@
+---
+description: When adding a new top-level subject (Subject) alongside Math/English/Science — its store, content, routes, screens, sync, admin, and tests.
+alwaysApply: false
+---
+
+# Adding a new subject (נושא)
+
+Use this checklist when introducing another top-level learning domain (the home
+"מה לומדים היום?" picker). Subjects are **fully isolated tracks** that reuse the
+shared progress engine, screens hooks, and exercise renderers — extend the
+existing pattern, do not fork parallel flows.
+
+**Mode: MAX.** Adding a subject creates new `lib/*/storage.ts` files (auto-escalate),
+adds routes, and bumps the cross-device sync schema. Worked examples below:
+**English** (`lib/english/*`, audio-first, two CEFR levels) and **Science**
+(`lib/science/*`, 100% Hebrew, two Israeli grade levels) — mirror whichever is the
+closer fit.
+
+## How subjects work today (mental model)
+
+- **`Subject`** lives in `lib/subjects.ts` (`"math" | "english" | "science"`). It drives
+  `parseSubjectId`, `subjectLabel` (Hebrew), the `LearningTrack` union, and `isXTrack`
+  guards. Math is grade-keyed (`{subject:"math", grade}`); English/Science are
+  single-store subjects (`{subject:"english"}` / `{subject:"science"}`).
+- **Track resolver** `lib/track.ts` is the ONE place mapping a `{subject, grade}` to its
+  content list + (isolated) progress store. `getTrackDays` / `getTrackDaysById` /
+  `loadTrackProgress` / `saveTrackProgress` use an **exhaustive `switch (opts.subject)`**.
+- **Content** `lib/content/<subject>-workbook.ts` exposes `get<Subject>Days(level)` +
+  `getAll<Subject>Days()`; days live in `lib/content/<subject>/day-*.ts` aggregated by
+  `index.ts`. Reuse `WorkbookDay` and the factories in
+  `lib/content/engine/exercise-factories.ts` — **no new `ExerciseKind`**.
+- **Progress** is an isolated, additive store `lib/<subject>/storage.ts` keyed
+  `kids_math.<subject>.workbook_progress.v1` (no grade axis for single-store subjects).
+  Math/English stores are never touched.
+- **Levels** (optional, if multi-level): `lib/<subject>/levels.ts` reuses the `GradeId`
+  axis (`"a"/"b"`) for labels + unlock gating. Level ב׳ is gated behind Level א׳'s exam.
+- **Final exam** (optional): `lib/<subject>/final-exam/{config,types,grading,picker,storage}.ts`,
+  key `kids_math.<subject>.final_exam.v1.level.${level}`. Mirror `lib/english/final-exam/*`.
+- **Review** (spiral) is keyed in `lib/review/storage.ts` via an exhaustive `switch` —
+  add a `<subject>ReviewStorageKey()` + arm.
+- **Routes** `lib/routes.ts`: `<subject>LevelPicker / <subject>Home / <subject>Day /
+  <subject>Section / <subject>Exam`. **TestIds** `lib/testIds.ts`: a `screen.<subject>.*`
+  tree mirroring `screen.english.*`, plus the subject-picker card ids.
+- **Screens** `components/screens/<subject>/*` (LevelPicker/Home/Day/Section/FinalExam)
+  are near-copies of `components/screens/english/*` with swapped imports/testids/copy.
+  **App routes** `app/<subject>/**` are thin server routers (`parseGradeId` /
+  `parseDayId` / `parseSectionId` → render the client screen).
+- **Subject picker** `app/page.tsx`: add the subject card (distinct accent + emoji).
+- **Cross-device sync** `lib/user-data/{types,api}.ts`: add a `<Subject>ProgressData`
+  interface, bump `bundleVersion` (additive), and gate the new field **optional** so
+  old payloads still hydrate. Mirror the `english`/`science` blocks in `buildBundle*` +
+  `hydrateLocalStorageFromBundle` (incl. the storage-event dispatch).
+- **Admin** `components/screens/AdminProgressScreen.tsx`: add an option to the track
+  selector. The final-exam control + grade-B side effects are gated on `isMath`;
+  single-store subjects share the isolated reset path (`resetAdmin<Subject>DayProgress`
+  in `lib/admin/resetDayProgress.ts` — zero side effects, mirrors English).
+
+## Checklist (in dependency order)
+
+1. **Registry** — `lib/subjects.ts`: extend `Subject`, `parseSubjectId`, `subjectLabel`,
+   `LearningTrack`, add `is<Subject>Track`.
+2. **Storage** *(auto-MAX)* — `lib/<subject>/storage.ts` (mirror `lib/english/storage.ts`);
+   `levels.ts` + `final-exam/*` if applicable.
+3. **Content** — `lib/content/<subject>/day-*.ts` + `index.ts` + `<subject>-workbook.ts`.
+4. **Resolvers** — add the `<subject>` arm to every `switch` in `lib/track.ts` AND
+   `lib/review/storage.ts`. ⚠️ Use exhaustive switches; a missing arm silently falls
+   through to the **Math** store (progress corruption).
+5. **Sync** — `lib/user-data/types.ts` (+bundleVersion, optional field) and `api.ts`
+   (`build<Subject>Data`, hydrate block, storage events). Update the bundleVersion
+   assertions in `tests/unit/lib/user-data/*Sync.test.ts`.
+6. **Routes + testIds** — `lib/routes.ts`, `lib/testIds.ts`. Run `npm run check:testids`.
+7. **Screens + app routes** — `components/screens/<subject>/*`, `app/<subject>/**`.
+8. **Subject picker card** — `app/page.tsx`.
+9. **Admin** — `AdminProgressScreen.tsx` selector + `resetAdmin<Subject>DayProgress`.
+10. **Tests** — storage isolation, final-exam, content guard (unit); `<subject>-day-smoke`
+    + `<subject>-exam-smoke` (E2E); a Science-style admin E2E. Mirror the English specs.
+
+## Gotchas (learned building Science)
+
+- **Math fall-through is the #1 risk.** Exhaustive `switch (subject)` in `lib/track.ts`
+  and `lib/review/storage.ts`, never `subject === "english" ? … : <math>`.
+- **No data migration needed** — a brand-new `kids_math.<subject>.*` namespace is purely
+  additive. The only schema touch is the sync bundle, which must stay backward-compatible
+  (optional field, bumped version).
+- **100% Hebrew subjects (e.g. Science):** author with `multiple_choice` / `true_false` /
+  `match_pairs` only — **never** `listen_choose` / `letter_tiles` (those route to the
+  English TTS voice via `AudioButton`, `lang="en"`). Always pass `matchPairs`
+  `{ leftLang: "he", rightLang: "he" }` (its default is `"en"`). Add a content guard test
+  asserting no disallowed kinds, no `"en"` flags, and zero Latin letters.
+- **Spoken prompts:** `buildExercisePromptSpeakText` (`lib/utils/exercisePromptSpeakText.ts`)
+  strips decorative emoji from the TTS string (visual keeps them) so a Hebrew voice never
+  reads/leaks an answer-depicting emoji. Keep that behavior.
+- **Day IDs must be globally unique across levels** within a subject (e.g. Science Level א׳
+  `day-1..N`, Level ב׳ `day-(N+1)..`) so the single store stays unambiguous.
+- **Admin parity:** single-store subjects must hide the final-exam control and never call
+  `/api/lock-grade-b` — gate on `isMath`, reuse the isolated reset path.
+
+## Quality gates
+
+MAX: `npm run test:qa` (lint + check:testids + build + unit + E2E). Targeted runs while
+iterating: unit `tests/unit/lib/<subject>/` + `tests/unit/lib/admin/resetDayProgress.test.ts`;
+E2E `tests/e2e/<subject>-day-smoke.spec.ts tests/e2e/<subject>-exam-smoke.spec.ts
+tests/e2e/admin-progress.spec.ts`. Plus the AI content audit + spoken-content/voice review
+(`AGENTS.md → Educational Content Changes`) for the new lessons.
