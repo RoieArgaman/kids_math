@@ -415,9 +415,9 @@ Append-only record of what we learned while working on this repo.
 - **Trigger:** Build a full regression test plan (manual + automated) and run free-style monkey/fuzz testing to find bugs, then fix them.
 - **What was added / where:**
   - `docs/REGRESSION_TEST_PLAN.md` — 174 cases (95 +, 79 −) across all 19 feature areas, with a coverage matrix and a traceability appendix mapping existing specs → plan IDs.
-  - `docs/REGRESSION_FINDINGS.md` + `scripts/monkey-freestyle.js` — seeded monkey/fuzz runner and its findings.
+  - `docs/REGRESSION_FINDINGS.md` — findings from a seeded monkey/fuzz + live-browser exploratory session (run ad-hoc; not committed as a spec).
   - Unit: `tests/unit/lib/streak/engine.test.ts`, `tests/unit/lib/badges/engine.test.ts` (the two engines had **no** unit coverage).
-  - E2E: `tests/e2e/grade-b-gate.spec.ts`, `exercise-negative.spec.ts`, `visual-smoke.spec.ts`, `monkey.spec.ts`.
+  - E2E: `tests/e2e/grade-b-gate.spec.ts`, `exercise-negative.spec.ts`, `visual-smoke.spec.ts`.
   - `.mcp.json` — registered the Playwright MCP server (`@playwright/mcp`, headless chromium). Kept portable: no machine-specific `--executable-path`/`PLAYWRIGHT_BROWSERS_PATH` (those are sandbox-only) so it works on any clone.
 - **Bugs found by monkey testing & fixed:**
   1. **No custom 404** — `notFound()` fell back to Next's English/LTR default 404. Added `app/not-found.tsx` (RTL Hebrew, reuses `CenteredPanel`/`ButtonLink`) + `screen.notFound` test id.
@@ -427,4 +427,4 @@ Append-only record of what we learned while working on this repo.
   2. **Dev-mode not-found rendering is misleading.** `next dev` serves `notFound()` through an `<html id="__next_error__">` shell with no `dir`/CSS over the no-JS HTML (content hydrates client-side). Verify 404/redirect behavior against a **production build** and/or a real browser (`document.documentElement.dir`), not `curl` against dev.
   3. **Monkey noise vs signal:** `Failed to fetch RSC payload` console errors are **dev-only** prefetch artifacts (gone under `npm run build && start`); `401 /api/auth/me` is expected when logged out. Filter these before triaging.
   4. **Robustness confirmed:** corrupt `localStorage`, adversarial numeric input, and the grade-B gate all held with no crashes.
-- **How to reuse next time:** run `scripts/monkey-freestyle.js` (seeded) against a **prod** server; treat `StorageErrorBoundary` as an acceptable graceful state; verify any `notFound()`/`redirect()` change in a real browser, never dev-curl.
+- **How to reuse next time:** run a seeded monkey/fuzz pass (ad-hoc) against a **prod** server; treat `StorageErrorBoundary` as an acceptable graceful state; verify any `notFound()`/`redirect()` change in a real browser, never dev-curl. (Randomized fuzz is kept out of the committed/CI suite to avoid flakiness; the deterministic specs lock in what it found.)

@@ -100,11 +100,14 @@ Full suite after fixes: `lint` ✓, `check:testids` ✓, `tsc` ✓, unit **500/5
 
 ## Reproduction
 
+The seeded monkey/fuzz pass was an ad-hoc exploratory session (not committed as a
+spec — randomized fuzz is kept out of the blocking CI lane). The bugs it found are
+now locked in by deterministic tests (`grade-b-gate.spec.ts`, `exercise-negative.spec.ts`,
+`visual-smoke.spec.ts`) and the fixes in `app/not-found.tsx` / `StorageErrorBoundary.tsx`.
+F1/F2 reproduce directly without any script:
+
 ```bash
-# from repo root, with dev server on :3005
-SEED=1337 STEPS=80 NODE_PATH=$PWD/node_modules \
-  node scripts/monkey-freestyle.js   # (script archived from session; see git history)
-# Direct confirmation of F1/F2:
+# with a server on :3005 (npm run dev / npm run start)
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3005/grade/z              # 404, no dir=rtl
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3005/grade/a/day/day-999  # 200, friendly RTL
 ```

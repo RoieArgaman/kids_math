@@ -45,7 +45,7 @@ npm run test:e2e  -- tests/e2e/grade-b-gate.spec.ts
 | **Priority** | `P0` / `P1` / `P2` | P0 = blocks release (core flow / data safety / gate) · P1 = important · P2 = polish/edge |
 | **Automated spec status** | ✅ exists · 🆕 to add · 📝 manual-only | The `Automated spec` column path: ✅ already in `tests/**`, 🆕 a new spec added in parallel, 📝 no automated coverage planned |
 
-**New specs referenced as 🆕:** `tests/unit/lib/streak/engine.test.ts`, `tests/unit/lib/badges/engine.test.ts`, `tests/e2e/grade-b-gate.spec.ts`, `tests/e2e/exercise-negative.spec.ts`, `tests/e2e/visual-smoke.spec.ts`, `tests/e2e/monkey.spec.ts`.
+**New specs referenced as 🆕:** `tests/unit/lib/streak/engine.test.ts`, `tests/unit/lib/badges/engine.test.ts`, `tests/e2e/grade-b-gate.spec.ts`, `tests/e2e/exercise-negative.spec.ts`, `tests/e2e/visual-smoke.spec.ts`.
 
 ---
 
@@ -383,7 +383,7 @@ Keys prefixed `kids_math.*`; legacy → per-grade migration (`lib/progress/stora
 | REG-XCUT-07 | Invalid day format 404 | — | 1. Navigate to malformed day path. | 404, no crash. | − | Both | P1 | `tests/e2e/edge-and-a11y.spec.ts` ✅ |
 | REG-XCUT-08 | Persistence basics (RTL) | Mid-flow | 1. Make progress. 2. Refresh. | State persists; layout stays RTL. | + | Both | P1 | `tests/e2e/edge-and-a11y.spec.ts` ✅ |
 | REG-XCUT-09 | Visual smoke: no console errors | All key screens | 1. Visit each key screen. 2. Capture screenshot. 3. Listen for `console.error`/`pageerror`. | Every key screen renders root testId; zero console/page errors. | − | Auto | P1 | `tests/e2e/visual-smoke.spec.ts` 🆕 |
-| REG-XCUT-10 | Monkey / fuzz invariants hold | Seeded random walk | 1. Run seeded random actions (adversarial inputs, random clicks, corrupt localStorage injection, back/forward). | No uncaught exception, no `console.error`, body stays interactive, `dir="rtl"` preserved, no silent progress wipe; StorageErrorBoundary is an acceptable graceful state. | − | Auto | P1 | `tests/e2e/monkey.spec.ts` 🆕 |
+| REG-XCUT-10 | Monkey / fuzz invariants hold | Seeded random walk | 1. Run seeded random actions (adversarial inputs, random clicks, corrupt localStorage injection, back/forward). | No uncaught exception, no `console.error`, body stays interactive, `dir="rtl"` preserved, no silent progress wipe; StorageErrorBoundary is an acceptable graceful state. | − | Manual | P2 | Manual-only (ad-hoc exploratory; see `docs/REGRESSION_FINDINGS.md`) |
 
 ---
 
@@ -443,7 +443,6 @@ Every existing `tests/**` spec mapped to the plan IDs it satisfies. 🆕 marks p
 | `tests/e2e/grade-b-gate.spec.ts` 🆕 | REG-GRADEPICK-04, REG-HOME-07, REG-GRADEB-01/06/08/09 |
 | `tests/e2e/exercise-negative.spec.ts` 🆕 | REG-EX-08/09/11/12 |
 | `tests/e2e/visual-smoke.spec.ts` 🆕 | REG-XCUT-09 |
-| `tests/e2e/monkey.spec.ts` 🆕 | REG-XCUT-10 |
 
 ### Unit specs
 
@@ -490,7 +489,7 @@ Every existing `tests/**` spec mapped to the plan IDs it satisfies. 🆕 marks p
 | REG-GRADEB-01/06/08/09, REG-HOME-07, REG-GRADEPICK-04 | 🆕 `tests/e2e/grade-b-gate.spec.ts` |
 | REG-EX-08/09/11/12 | 🆕 `tests/e2e/exercise-negative.spec.ts` |
 | REG-XCUT-09 | 🆕 `tests/e2e/visual-smoke.spec.ts` |
-| REG-XCUT-10 | 🆕 `tests/e2e/monkey.spec.ts` |
+| REG-XCUT-10 | 📝 Manual-only (ad-hoc exploratory) |
 
 ---
 
