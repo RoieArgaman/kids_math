@@ -108,3 +108,28 @@ SEED=1337 STEPS=80 NODE_PATH=$PWD/node_modules \
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3005/grade/z              # 404, no dir=rtl
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3005/grade/a/day/day-999  # 200, friendly RTL
 ```
+
+## Exploratory session 2 (post-fix, production build)
+
+A second, interaction-driven pass over the **production** build (real headless Chromium): all 13 key
+screens at desktop (1280px) **and** mobile (375px), plus the login modal, exercise input edge cases,
+and final-exam entry — with console/page-error capture throughout.
+
+**Clean — no new defects:**
+- No console or page errors on any screen (prod; the dev-only RSC noise is gone).
+- No horizontal overflow / layout breakage at desktop **or** mobile width.
+- No a11y gaps flagged: every `<img>` has `alt`, every `<button>` has an accessible name, `dir="rtl"` everywhere.
+- Login modal opens, validates, surfaces its error ("שגיאה בהתחברות, נסו שוב"), and closes on Escape.
+
+**Observations (not code bugs):**
+- **O1 — invalid login returns HTTP 500 *in this sandbox* (environment artifact).** `app/api/auth/login/route.ts`
+  is correctly written to return **401** for bad credentials, but `getFirestore()` throws here because
+  `FIRESTORE_CREDENTIALS_JSON` is unset in the container, hitting the generic 500 catch. With Firestore
+  configured (production) invalid logins return 401. The user-facing error message displays either way.
+- **O2 — number field accepts `-3`, `1.0`, `007`, very long digit strings on desktop (LOW / polish).** On
+  mobile the numeric keypad limits entry to digits; on desktop the field doesn't block `-`/`.`/leading
+  zeros. Grading normalizes these (`1.0`→1, `007`→7) so results stay correct. Left as-is (rejecting
+  non-digits would be a behavior change); flagged for product decision against the "digits only" rule.
+
+All other end-to-end flows (completion → unlock chain, GMAT, admin mark/reset, badges, streak, English)
+are covered by the 116 passing E2E specs and were not re-tested by hand.
