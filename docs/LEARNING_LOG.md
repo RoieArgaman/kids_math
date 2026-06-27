@@ -418,7 +418,7 @@ Append-only record of what we learned while working on this repo.
   - `docs/REGRESSION_FINDINGS.md` + `scripts/monkey-freestyle.js` — seeded monkey/fuzz runner and its findings.
   - Unit: `tests/unit/lib/streak/engine.test.ts`, `tests/unit/lib/badges/engine.test.ts` (the two engines had **no** unit coverage).
   - E2E: `tests/e2e/grade-b-gate.spec.ts`, `exercise-negative.spec.ts`, `visual-smoke.spec.ts`, `monkey.spec.ts`.
-  - `.mcp.json` — registered the Playwright MCP server (`@playwright/mcp`, headless chromium at `/opt/pw-browsers/chromium`).
+  - `.mcp.json` — registered the Playwright MCP server (`@playwright/mcp`, headless chromium). Kept portable: no machine-specific `--executable-path`/`PLAYWRIGHT_BROWSERS_PATH` (those are sandbox-only) so it works on any clone.
 - **Bugs found by monkey testing & fixed:**
   1. **No custom 404** — `notFound()` fell back to Next's English/LTR default 404. Added `app/not-found.tsx` (RTL Hebrew, reuses `CenteredPanel`/`ButtonLink`) + `screen.notFound` test id.
   2. **`StorageErrorBoundary` swallowed `notFound()`** — a class error boundary's `getDerivedStateFromError` caught Next's `NEXT_NOT_FOUND`/`NEXT_REDIRECT` control-flow errors, so bad day/section URLs under a valid grade showed "error loading progress" instead of a 404. Fix: re-throw errors whose `digest` is `NEXT_NOT_FOUND` or starts with `NEXT_REDIRECT`.
