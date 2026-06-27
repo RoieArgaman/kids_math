@@ -410,3 +410,21 @@ Append-only record of what we learned while working on this repo.
   4. **Per-learner stores ride the per-grade bundle block** (like badges/finalExam/gmat), not a top-level optional — additive + backward-compatible; bump `bundleVersion` and accept old versions on the server.
 - **How to reuse next time:** New per-learner derived feature → mine `attempts[]` (not `correctAnswers`), add a sibling `lib/<domain>/storage.ts` (copy `badges/storage.ts`), inject client-side without touching progress accounting, and nest its state in `GradeProgressData`/`EnglishProgressData` with a `bundleVersion` bump.
 - **Caveat:** E2E (`spiral-review.spec.ts`) compiles/typechecks/discovers but couldn't execute in-sandbox — Playwright browser-revision mismatch (sandbox `chromium-1194` vs project Playwright `-1208`). Run in a browser-enabled env.
+
+### 2026-06-27 (Full-system regression plan + tests, monkey testing, RTL 404 fixes)
+- **Trigger:** Build a full regression test plan (manual + automated) and run free-style monkey/fuzz testing to find bugs, then fix them.
+- **What was added / where:**
+  - `docs/REGRESSION_TEST_PLAN.md` — 174 cases (95 +, 79 −) across all 19 feature areas, with a coverage matrix and a traceability appendix mapping existing specs → plan IDs.
+  - `docs/REGRESSION_FINDINGS.md` — findings from a seeded monkey/fuzz + live-browser exploratory session (run ad-hoc; not committed as a spec).
+  - Unit: `tests/unit/lib/streak/engine.test.ts`, `tests/unit/lib/badges/engine.test.ts` (the two engines had **no** unit coverage).
+  - E2E: `tests/e2e/grade-b-gate.spec.ts`, `exercise-negative.spec.ts`, `visual-smoke.spec.ts`.
+  - `.mcp.json` — registered the Playwright MCP server (`@playwright/mcp`, headless chromium). Kept portable: no machine-specific `--executable-path`/`PLAYWRIGHT_BROWSERS_PATH` (those are sandbox-only) so it works on any clone.
+- **Bugs found by monkey testing & fixed:**
+  1. **No custom 404** — `notFound()` fell back to Next's English/LTR default 404. Added `app/not-found.tsx` (RTL Hebrew, reuses `CenteredPanel`/`ButtonLink`) + `screen.notFound` test id.
+  2. **`StorageErrorBoundary` swallowed `notFound()`** — a class error boundary's `getDerivedStateFromError` caught Next's `NEXT_NOT_FOUND`/`NEXT_REDIRECT` control-flow errors, so bad day/section URLs under a valid grade showed "error loading progress" instead of a 404. Fix: re-throw errors whose `digest` is `NEXT_NOT_FOUND` or starts with `NEXT_REDIRECT`.
+- **What we learned:**
+  1. **Custom error boundaries must re-throw Next control-flow errors.** Any `Component` error boundary wrapping route children has to let `notFound()`/`redirect()` (identified by `error.digest`) bubble, or it silently breaks those APIs for everything beneath it.
+  2. **Dev-mode not-found rendering is misleading.** `next dev` serves `notFound()` through an `<html id="__next_error__">` shell with no `dir`/CSS over the no-JS HTML (content hydrates client-side). Verify 404/redirect behavior against a **production build** and/or a real browser (`document.documentElement.dir`), not `curl` against dev.
+  3. **Monkey noise vs signal:** `Failed to fetch RSC payload` console errors are **dev-only** prefetch artifacts (gone under `npm run build && start`); `401 /api/auth/me` is expected when logged out. Filter these before triaging.
+  4. **Robustness confirmed:** corrupt `localStorage`, adversarial numeric input, and the grade-B gate all held with no crashes.
+- **How to reuse next time:** run a seeded monkey/fuzz pass (ad-hoc) against a **prod** server; treat `StorageErrorBoundary` as an acceptable graceful state; verify any `notFound()`/`redirect()` change in a real browser, never dev-curl. (Randomized fuzz is kept out of the committed/CI suite to avoid flakiness; the deterministic specs lock in what it found.)

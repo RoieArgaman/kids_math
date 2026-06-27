@@ -219,6 +219,9 @@ export const testIds = {
       root: () => tid("screen", "cookies"),
       navBack: () => tid("screen", "cookies", "nav", "back"),
     },
+    notFound: {
+      root: () => tid("screen", "notFound"),
+    },
     dayOverview: {
       root: (grade: string, dayId: string) => tid("screen", "dayOverview", "grade", grade, "day", dayId),
       nav: (grade: string, dayId: string) => tid("screen", "dayOverview", "nav", "grade", grade, "day", dayId),

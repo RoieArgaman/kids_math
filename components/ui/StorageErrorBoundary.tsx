@@ -29,6 +29,12 @@ export class StorageErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // Let Next.js control-flow "errors" (notFound(), redirect()) bubble up to
+    // their own boundaries instead of being swallowed as a storage failure.
+    const digest = (error as { digest?: unknown }).digest;
+    if (digest === "NEXT_NOT_FOUND" || (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT"))) {
+      throw error;
+    }
     return { hasError: true, errorMessage: error.message };
   }
 
