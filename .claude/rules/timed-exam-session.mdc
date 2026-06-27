@@ -1,0 +1,26 @@
+---
+description: Timed multi-section optional exams (exam-session lib, GMAT-style challenge, future variants)
+alwaysApply: false
+---
+
+# Timed exam session pattern
+
+## Layers
+
+- **`lib/exam-session/`** — content-agnostic: phases (`ExamPhase`), review divergence limits (`reviewPolicy`), scaled section timers (`timer`). No Hebrew copy, no `Exercise`.
+- **`lib/<product>-challenge/`** — workbook wiring: classifiers, pickers, `localStorage` keys, grading, analytics names. Example: `lib/gmat-challenge/`.
+- **`components/timed-exam/`** — reusable UI blocks (`ExamRulesPanel`, `SectionOrderPicker`, `TimedExamSectionHeader`, `OptionalBreakPanel`). Screens compose these + `ExerciseItem`.
+
+## Adding a new timed optional exam
+
+1. Add domain module under `lib/<name>/` (types v1, config, picker, grading, storage with `kids_math.<domain>.v<ver>.grade.*`).
+2. Reuse `lib/exam-session` helpers; do not fork timer or review-limit logic.
+3. New route under `app/grade/[grade]/...` + `routes` helper in `lib/routes.ts`.
+4. Gate: optional exams must not unlock grades or mutate mandatory progress; only read gates like `preview` / `final_exam.passed` when needed.
+5. `data-testid`: extend `lib/testIds.ts`; run `npm run check:testids`.
+6. Tests: unit (picker, storage, grading, `reviewPolicy`) + e2e for lock + happy path; use `window.__KIDS_MATH_E2E_SHORT_GMAT__` only as a pattern reference — for new exams, introduce a dedicated E2E flag name if timers need shortening.
+7. Analytics: extend `AnalyticsEventName` in `lib/types.ts` + `lib/analytics/events.ts`.
+
+## Verification
+
+See `quality-gates.mdc` for commands. Touching routes/storage/timers: lint, `check:testids`, `build`, and targeted e2e.

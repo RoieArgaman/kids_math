@@ -1,0 +1,140 @@
+---
+description: Quality gates, verification report, severity levels, security gate — aligned with AGENTS.md modes
+alwaysApply: true
+---
+
+# Quality Gates (kids_math)
+
+> **Canonical source: `AGENTS.md`** — this file provides Cursor-specific details.
+
+## Quality Gates by Mode
+
+### PRO
+```bash
+npm run lint
+npm run check:testids
+# If behavior changed: npm run build
+# If logic changed: npm run test:unit -- <specific-test-file>
+```
+
+### ULTRA
+```bash
+npm run lint
+npm run check:testids
+npm run build
+npm run test:unit
+npm run test:e2e -- <SPECIFIC-spec-files>   # MUST name exact specs
+# Then: MCP Playwright visual check (if ANY UI changed)
+# Then: npm run test:qa  (full CI suite — must all pass before READY)
+```
+
+### MAX
+```bash
+npm run test:qa   # Full suite, no exceptions
+# Then: MCP Playwright visual check (ALWAYS — all changed screens)
+# CI is already covered by test:qa
+```
+
+## Mandatory Test Targeting (specific, not "targeted")
+
+| Changed Area | Must Run |
+|-------------|----------|
+| UI copy/layout | `tests/e2e/day-smoke.spec.ts` |
+| Routing/gates/middleware | `tests/e2e/grade-b.spec.ts tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/admin-progress.spec.ts` |
+| Progress/storage | `tests/unit/lib/progress/` AND `tests/e2e/grade-a-lifecycle.spec.ts` |
+| Final exam | `tests/unit/lib/final-exam/` AND `tests/e2e/grade-a-lifecycle.spec.ts tests/e2e/grade-b-lifecycle.spec.ts` |
+| Content/days | `tests/unit/lib/content/content-validity.test.ts` AND `tests/e2e/day-smoke.spec.ts` |
+| GMAT | `tests/unit/lib/gmat-challenge/` AND `tests/e2e/gmat-challenge.spec.ts` |
+
+**Storage / schema / content IDs:** Changes that affect persisted progress (including renaming `dayId` or section/exercise ids) must follow **`AGENTS.md` → Data & Storage Rules** and run the applicable rows in the table above.
+
+## Security Gate (mandatory, all modes)
+
+```
+SECURITY GATE
+[ ] No hardcoded secrets (grep: API_KEY, SECRET, TOKEN, PASSWORD, sk-, pk_)
+[ ] No console.log in production code (non-test .ts/.tsx)
+[ ] No sensitive data in data-testid values
+[ ] No unvalidated user input reaching storage or DOM
+[ ] Cookie operations use proper flags
+[ ] API route handlers validate inputs
+[ ] No TODO/FIXME/HACK in security-critical code
+
+Result: [PASS / FAIL — findings with severity]
+```
+
+If CRITICAL finding → auto-BLOCK, STOP, fix immediately.
+If HIGH finding → BLOCK merge, must fix.
+
+## Verification Report (ULTRA/MAX mandatory, PRO recommended)
+
+```
+VERIFICATION REPORT (kids_math)
+================================
+Mode:        [PRO/ULTRA/MAX]
+Changed:     [description]
+
+Lint:        [PASS/FAIL]
+TestIDs:     [PASS/FAIL]
+Build:       [PASS/FAIL/SKIPPED — reason]
+Unit:        [PASS/FAIL/SKIPPED — reason] (X passed, Y failed)
+E2E:         [PASS/FAIL/SKIPPED — reason] (X passed, Y failed; specs: list)
+Security:    [PASS/FAIL] (findings with severity)
+Visual:      [PASS/FAIL/SKIPPED — reason] (screens checked: list)
+CI Suite:    [PASS/FAIL] (lint ✓, testids ✓, build ✓, unit X/X ✓, e2e X/X ✓)
+Diff:        [X files, Y insertions, Z deletions]
+
+Self-Review: [CLEAN / X issues caught and fixed]
+Learning:    [YES — summary / NO — reason]
+
+Overall:     [READY / NOT READY]
+```
+
+### READY Decision Tree
+
+READY if ALL true:
+- Zero CRITICAL issues
+- Zero HIGH issues
+- All gates PASS (or SKIPPED with valid reason)
+- Security gate PASS
+- Visual verification PASS (or SKIPPED with valid reason)
+- CI Suite PASS (ULTRA/MAX: full test:qa must pass)
+- Report 100% filled (no blanks)
+- Self-review completed
+- Learning updated (ULTRA/MAX) or justified skip
+
+NOT READY if ANY: CRITICAL, HIGH, gate FAIL, report incomplete.
+
+**SKIPPED must have reason:** `SKIPPED [PRO, only copy changed]` not just `SKIPPED`.
+
+## Review Severity Levels
+
+| Level | Meaning | Action | Auto-block? |
+|-------|---------|--------|------------|
+| **CRITICAL** | Security vuln, data loss, broken gate | BLOCK, no exceptions | YES |
+| **HIGH** | Bug, test failure, type error, broken flow | BLOCK before merge | YES |
+| **MEDIUM** | Warning, missing test, a11y concern | Should fix | NO |
+| **LOW** | Style, suggestion | Optional | NO |
+
+### Security Severity (specific)
+| Finding | Severity |
+|---------|----------|
+| Hardcoded secret / credential | CRITICAL |
+| XSS vector | CRITICAL |
+| console.log in prod | HIGH |
+| Sensitive data in testid/analytics | HIGH |
+| Weak validation | MEDIUM |
+
+## Manual RTL Checklist (ULTRA/MAX)
+
+### ULTRA:
+- [ ] Home → plan → day navigation
+- [ ] Keyboard (Tab/Shift+Tab) on changed elements
+- [ ] Touch targets >= 44px
+
+### MAX (add):
+- [ ] All grades navigation
+- [ ] Locked/unlocked gate behavior
+- [ ] Error/empty states
+- [ ] BFCache state sync
+- [ ] Cross-tab storage sync

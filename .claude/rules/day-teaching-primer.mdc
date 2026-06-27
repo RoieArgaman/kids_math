@@ -1,0 +1,49 @@
+---
+description: Day overview teaching primer (Hebrew copy, TTS, testIds) — optional authoring contract
+alwaysApply: false
+---
+
+# Day teaching primer (kids_math)
+
+## When this applies
+
+- Editing **`lib/content/teachingPrimerCatalog.ts`** or optional **`teachingSummary` / `teachingSteps`** on `DayConcept`.
+- Changing **`DayTeachingPrimer`**, TTS engine, or `TapToPlayTtsButton`.
+
+## UI modules
+
+- `components/teaching-primer/DayTeachingPrimer.tsx` — hub panel + chunked TTS.
+- `lib/content/buildDayPrimerSpeakText.ts` — `buildDayPrimerSpeakChunks`, collapse threshold.
+
+## Authoring
+
+- **Hebrew only** — תקנית, פשוטה, מדוברת (see `docs/TEACHING_PRIMER_GUIDELINES.md` § עברית תקנית ופשוטה).
+- **Single source:** edit `lib/content/teachingPrimerCatalog.ts` only (not duplicated in `day-*.ts`).
+- Align with section worked example; run `teachingPrimerHebrewLint` via unit tests.
+- **Length:** stay under `PRIMER_RECOMMENDED_COMBINED_CHARS` (850); collapse at 900 chars or >4 steps.
+
+## TTS
+
+- **Child profile** by default (`lib/tts/constants.ts` → `speakHebrew` / `speakHebrewChunks`).
+- Primer: `TapToPlayTtsButton` with `chunks={buildDayPrimerSpeakChunks(day)}`.
+- Exercises: single utterance via `buildExercisePromptSpeakText`.
+- **No autoplay**; admin `ttsEnabled` gate.
+
+## Test IDs
+
+- `testIds.screen.dayOverview.teachingPrimer(grade, dayId)` — root `Surface`.
+- Nested: `summary`, `steps`, `step.{idx}`, `teachingPrimerTts`, `teachingPrimerExpand`.
+
+## Quality (mandatory when editing primer or TTS)
+
+```bash
+npm run test:unit -- tests/unit/lib/content/teaching-primer-content.test.ts
+npm run test:unit -- tests/unit/lib/content/buildDayPrimerSpeakText.test.ts
+npm run test:unit -- tests/unit/lib/tts/engine.test.ts
+npm run test:unit -- tests/unit/lib/content/content-validity.test.ts
+npm run test:e2e -- tests/e2e/day-smoke.spec.ts
+npm run test:e2e -- tests/e2e/grade-b-lifecycle.spec.ts
+npm run check:testids
+```
+
+Full release: `npm run test:qa`. Human checklist: `docs/TEACHING_PRIMER_GUIDELINES.md` § TTS verification.

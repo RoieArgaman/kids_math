@@ -1,0 +1,244 @@
+---
+description: Core agent guidelines for kids_math — mandatory behaviors, conventions, workflow modes, and self-review
+alwaysApply: true
+---
+
+# kids_math Agent Guidelines
+
+> **Canonical source of truth: `AGENTS.md` at project root.**
+> This file mirrors the mandatory sections for Cursor. When in conflict, `AGENTS.md` wins.
+
+## Mandatory Behaviors (All Modes — No Exceptions)
+
+### 1. Research Before Writing
+Before modifying ANY file:
+- **Read the file first** — understand existing code before changing it
+- **Search for existing patterns** — grep for similar implementations in the codebase
+- **Check helpers/utils** — reuse existing functions from `lib/`, don't reinvent
+- **Check learning log** — read `docs/LEARNING_LOG.md` for relevant past decisions
+- **Check Cursor rules** — read relevant `.cursor/rules/*.mdc` for domain conventions
+- **Check cross-file dependencies** — grep for all files that import from files you plan to change:
+  ```bash
+  grep -r "from.*<module-path>" --include="*.ts" --include="*.tsx" .
+  ```
+  If >5 files import from a changed module → flag as HIGH IMPACT.
+
+### 2. State Your Mode (first line of every response)
+```
+Mode: [PRO/ULTRA/MAX] — [one-line reason]
+```
+
+### 3. Minimal Diffs
+- Make the smallest correct change
+- No drive-by refactors, no "while I'm here" improvements
+- No adding comments, docstrings, or type annotations to unchanged code
+- Don't create abstractions for one-time operations
+
+**Diff size limits:**
+| Mode | Max files | Max insertions | Exceeding limit |
+|------|-----------|----------------|-----------------|
+| PRO | 2 | 50 lines | Justify in Decisions OR escalate |
+| ULTRA | 8 | 300 lines | Justify in Decisions OR escalate |
+| MAX | No limit | No limit | Each file must have rationale |
+
+### 4. Never Weaken Configs
+- Don't modify `.eslintrc`, `tsconfig.json`, `tailwind.config`, `next.config`, `playwright.config`, `vitest.config` to suppress errors
+- Fix the code, not the config
+- Config changes require explicit user approval
+
+### 5. No Secrets in Code
+- Never hardcode API keys, passwords, tokens, or credentials
+- Never commit `.env` files
+- If you FIND a secret: **STOP, flag as CRITICAL, do not proceed**
+
+### 6. Preserve Backward Compatibility
+- **User outcome:** Deploys must not wipe stored learner progress. Completed days/sections and **all** persisted domains (workbook, final exam, GMAT, badges, streak) must still load after new code unless a migration replaces an old shape. Full policy: **`AGENTS.md` → Data & Storage Rules** (authoritative).
+- localStorage schemas are versioned — additive changes only
+- If schema must change: version bump + migration + MAX mode
+- **Auto-escalate to MAX** if editing any `lib/*/storage.ts`
+
+### 7. Self-Review Before Handoff (mandatory — all modes)
+Run this checklist mentally before every response:
+```
+SELF-REVIEW
+===========
+[ ] Read all relevant files BEFORE making changes?
+[ ] Checked for existing patterns/helpers to reuse?
+[ ] Checked cross-file dependencies (grep for imports)?
+[ ] Diff minimal? (within mode size limits)
+[ ] No config weakening?
+[ ] No console.log in production code?
+[ ] No hardcoded secrets?
+[ ] All interactive elements have data-testid via lib/testIds.ts?
+[ ] Route references use lib/routes.ts (no hardcoded paths)?
+[ ] Storage schemas unchanged OR migration included?
+[ ] Existing persisted progress still loads (or migration covered); content IDs tied to storage not renamed without a plan?
+[ ] RTL preserved? dir="ltr" only for math inputs?
+[ ] "use client" only where necessary?
+[ ] @/* imports used?
+[ ] TypeScript strict — no any?
+[ ] Quality gates ran and pass?
+[ ] Verification report filled (ULTRA/MAX)?
+[ ] Learning log updated (ULTRA/MAX) or skip justified?
+```
+Fix issues before responding. Document what you caught in handoff "Self-Review" field.
+
+---
+
+## Project Snapshot
+
+- Stack: Next.js App Router, React 18, TypeScript (strict), Tailwind CSS
+- Direction: Hebrew RTL UI (`<html lang="he" dir="rtl">`)
+- Path alias: `@/*` imports (per `tsconfig.json`)
+- State: localStorage only (no Redux/Zustand), keys namespaced `kids_math.*`
+
+## Dev Commands
+
+```bash
+npm run dev              # Dev server
+npm run lint             # ESLint
+npm run check:testids    # Test ID contract check
+npm run build            # Production build
+npm run test:unit        # Vitest unit tests
+npm run test:e2e         # Playwright E2E tests
+npm run test:qa          # Full QA suite (lint + unit + build + E2E)
+```
+
+Follow `quality-gates.mdc` for mode-specific quality gate requirements.
+
+---
+
+## Code Conventions
+
+- Prefer small, typed modules with explicit exported APIs
+- Avoid `any`; narrow unknowns with type guards
+- Keep functions pure when possible; isolate IO
+- Prefer `const`, early returns, and clear naming
+
+## Next.js / React Conventions
+
+- App Router: keep route files in `app/**/page.tsx`, `app/**/layout.tsx`
+- Keep `app/**/page.tsx` thin and server-first:
+  - parse and validate params (use parse helpers + `notFound()`)
+  - delegate browser/storage/UI state to `components/screens/**` and `lib/hooks/**`
+- `"use client"` only when necessary; keep client components minimal
+- Avoid introducing new global providers
+
+## UI / Tailwind Conventions
+
+- Reuse existing design tokens: `app/globals.css` and `tailwind.config.ts`
+- Prefer composing shared UI primitives:
+  - `Surface` — `.surface` containers (supports `variant`)
+  - `Button`, `ButtonLink` — `.touch-button` + variants
+  - `Chip` — pill badges
+  - `HeroHeader` — repeated hero sections
+  - `CenteredPanel` — centered locked/not-found/loading panels
+- Visible focus styles (`:focus-visible` patterns)
+- Touch-friendly targets (~44–52px)
+- RTL default: keep `dir="rtl"`; use `dir="ltr"` only for math inputs/expressions
+
+## `data-testid` in UI Components
+
+- Every custom component that renders a DOM root must accept and **forward** `data-testid`
+- Use `testIds.screen.*` for Tier-1 anchors and `childTid()` for nested elements (see `testids.mdc`)
+- No Hebrew/localized text in test IDs
+- Run `npm run check:testids` before concluding
+
+## Analytics / Telemetry
+
+- Use existing analytics module (`lib/analytics/events.ts`) only
+- Do not invent new storage keys or event pipelines
+- Add new event names only when there is clear product value; keep payloads small and typed
+- Never log sensitive data
+
+## Data + Progress Storage
+
+- **Backward compatibility is a user-visible requirement** (not only “schema version”): see **`AGENTS.md` → Data & Storage Rules** for principle, content-ID stability, anti-patterns, and tests when migrations change.
+- Treat persisted schemas as versioned: prefer additive changes
+- Breaking changes require version bump + migration + MAX mode
+- Key format: `kids_math.<domain>.v<schema>.grade.${grade}`
+- Sanitize loaded payloads, fail-safe to defaults on parse errors
+- **Editing any `lib/*/storage.ts` file → auto-escalate to MAX**
+
+## Routing Helpers
+
+- Use route builders from `lib/routes.ts` — never hardcode path strings
+- Preserve query state (e.g. preview flags) through helper utilities
+
+## Hydration and Browser-only State
+
+- Guard reads of `window`, URL query, cookies, localStorage until hydrated
+- Keep browser-only IO in client components/hooks with stable fallback UI until ready
+
+## Security Checklist (before every handoff)
+
+```
+SECURITY GATE
+=============
+[ ] No hardcoded secrets (grep: API_KEY, SECRET, TOKEN, PASSWORD, sk-, pk_)
+[ ] No console.log in production code (non-test .ts/.tsx)
+[ ] No sensitive data in data-testid values
+[ ] No unvalidated user input reaching storage or DOM
+[ ] Cookie operations use proper flags (httpOnly, secure, sameSite)
+[ ] API route handlers validate inputs
+[ ] No TODO/FIXME/HACK in security-critical code paths
+
+Result: [PASS / FAIL — list findings with severity]
+```
+
+**If CRITICAL finding** → auto-BLOCK, stop work, fix immediately.
+**If HIGH finding** → BLOCK merge, must fix before proceeding.
+
+---
+
+## Escalation (Auto and Manual)
+
+**Auto-escalation** (inform user, switch mode immediately):
+- Editing `lib/*/storage.ts` → MAX
+- Diff exceeds mode limit → +1 level
+- CRITICAL security finding → MAX
+- Cross-file impact >5 files → ULTRA minimum
+
+**Manual escalation**: If discovered during ANY phase — STOP, report finding, ask user to confirm escalated mode.
+
+---
+
+## MCP Playwright Visual Verification
+
+After quality gates pass, if ANY UI was changed:
+1. `preview_start` — launch the app
+2. `preview_screenshot` — check RTL layout, no visual breaks
+3. Navigate to changed screens and screenshot
+4. `preview_console_logs` — check for runtime errors
+5. `preview_stop`
+
+Report result in verification report `Visual:` field.
+
+---
+
+## Rule Precedence
+
+When rules conflict:
+1. `AGENTS.md` mandatory behaviors and mode requirements
+2. System and safety constraints from runtime/tooling
+3. Active workflow mode requirements (PRO/ULTRA/MAX)
+4. Always-applied `.cursor/rules/*.mdc`
+5. Task-specific optional rules (e.g. `add-grade.mdc`)
+6. Supporting docs under `docs/`
+
+Tie-breaker: smallest safe change that preserves behavior while satisfying higher-precedence constraints.
+
+## Git / PR Expectations
+
+- Keep changes focused and easy to review
+- PR descriptions must include: summary, test plan, storage/analytics considerations
+- **Run `npm run test:qa` before declaring PR ready** — CI must pass
+
+## Learning Loop
+
+If you discover a recurring convention or pitfall, document it:
+- `docs/LEARNING_LOG.md` — one-off discoveries, gotchas, "we always do X here"
+- `.cursor/rules/*.mdc` — stable patterns that should constrain all future agents
+- `AGENTS.md` — patterns that apply to ALL agents (Claude, Cursor, Devin)
+
+See `learning-loop.mdc` for full format.
