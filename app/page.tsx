@@ -113,6 +113,38 @@ export default function SubjectPickerPage() {
             </span>
           </div>
         </Link>
+
+        <Link
+          data-testid={testIds.screen.subjectPicker.scienceCard()}
+          className="surface border-s-[5px] rounded-[22px] p-5 shadow-sm hover:shadow-md transition-shadow"
+          style={{ borderInlineStartColor: "#14b8a6" }}
+          href={routes.scienceLevelPicker({ previewAll })}
+          aria-label="מדעים"
+        >
+          <div data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "row")} className="flex items-start justify-between gap-3">
+            <div data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "content")}>
+              <div data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "medallion")} className="w-[58px] h-[58px] rounded-[18px] flex items-center justify-center text-[32px] bg-[#ccfbf1]">
+                <p data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "emoji")} className="leading-none" aria-hidden>
+                  🔬
+                </p>
+              </div>
+              <p data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "title")} className="mt-2 text-xl font-bold text-[--title]">
+                מַדָּעִים
+              </p>
+              <p data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "subtitle")} className="mt-1 text-sm text-[--muted]">
+                חוֹקְרִים אֶת הָעוֹלָם • הַחוּשִׁים, בַּעֲלֵי חַיִּים, צְמָחִים וּמֶזֶג אֲוִיר
+              </p>
+            </div>
+            <Chip data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "badge")} tone="info" className="px-3 py-1">
+              חָדָשׁ
+            </Chip>
+          </div>
+          <div data-testid={childTid(testIds.screen.subjectPicker.scienceCard(), "ctaRow")} className="mt-4">
+            <span data-testid={testIds.screen.subjectPicker.scienceCardCta()} className="touch-button btn-accent inline-flex w-full justify-center text-center font-semibold">
+              לְלִימּוּד מַדָּעִים
+            </span>
+          </div>
+        </Link>
       </section>
     </main>
   );

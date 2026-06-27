@@ -55,6 +55,8 @@ export const testIds = {
       mathCardCta: () => tid("screen", "subjectPicker", "subjectCard", "math", "cta"),
       englishCard: () => tid("screen", "subjectPicker", "subjectCard", "english"),
       englishCardCta: () => tid("screen", "subjectPicker", "subjectCard", "english", "cta"),
+      scienceCard: () => tid("screen", "subjectPicker", "subjectCard", "science"),
+      scienceCardCta: () => tid("screen", "subjectPicker", "subjectCard", "science", "cta"),
     },
     gradePicker: {
       root: () => tid("screen", "gradePicker"),
@@ -110,6 +112,54 @@ export const testIds = {
           tid("screen", "english", "section", "stickyHeader", "day", dayId, "section", sectionId),
         completionPanel: (dayId: string, sectionId: string) =>
           tid("screen", "english", "section", "completionPanel", "day", dayId, "section", sectionId),
+      },
+    },
+    science: {
+      levelPicker: {
+        root: () => tid("screen", "science", "levelPicker"),
+        hero: () => tid("screen", "science", "levelPicker", "hero"),
+        levelCard: (level: string) => tid("screen", "science", "levelPicker", "levelCard", "level", level),
+        levelCardCta: (level: string) =>
+          tid("screen", "science", "levelPicker", "levelCard", "level", level, "cta"),
+        levelLockedHint: (level: string) =>
+          tid("screen", "science", "levelPicker", "levelCard", "level", level, "lockedHint"),
+      },
+      home: {
+        root: () => tid("screen", "science", "home"),
+        hero: () => tid("screen", "science", "home", "hero"),
+        dayCard: (dayId: string) => tid("screen", "science", "home", "dayCard", "day", dayId),
+        dayCardCta: (dayId: string) => tid("screen", "science", "home", "dayCard", "day", dayId, "cta"),
+        examCard: () => tid("screen", "science", "home", "examCard"),
+        examCardCta: () => tid("screen", "science", "home", "examCard", "cta"),
+      },
+      exam: {
+        root: () => tid("screen", "science", "exam"),
+        nav: () => tid("screen", "science", "exam", "nav"),
+        stickyHeader: () => tid("screen", "science", "exam", "stickyHeader"),
+        finishCta: () => tid("screen", "science", "exam", "cta", "finish"),
+        retryCta: () => tid("screen", "science", "exam", "cta", "retry"),
+        finishPanel: () => tid("screen", "science", "exam", "finishPanel"),
+        lockedNotice: () => tid("screen", "science", "exam", "lockedNotice"),
+      },
+      day: {
+        root: (dayId: string) => tid("screen", "science", "day", "day", dayId),
+        nav: (dayId: string) => tid("screen", "science", "day", "nav", "day", dayId),
+        sectionCard: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "day", "day", dayId, "sectionCard", "section", sectionId),
+        sectionCardCta: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "day", "day", dayId, "sectionCard", "section", sectionId, "cta"),
+        completionPanel: (dayId: string) => tid("screen", "science", "day", "day", dayId, "completionPanel"),
+        completeCta: (dayId: string) => tid("screen", "science", "day", "day", dayId, "cta", "complete"),
+      },
+      section: {
+        root: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "section", "day", dayId, "section", sectionId),
+        nav: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "section", "nav", "day", dayId, "section", sectionId),
+        stickyHeader: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "section", "stickyHeader", "day", dayId, "section", sectionId),
+        completionPanel: (dayId: string, sectionId: string) =>
+          tid("screen", "science", "section", "completionPanel", "day", dayId, "section", sectionId),
       },
     },
     gradeBLocked: {

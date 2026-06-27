@@ -294,6 +294,59 @@ test("admin can complete and reset English progress in its isolated store with n
   expect(lockGradeBCalled).toBe(false);
 });
 
+test("admin can complete and reset Science progress in its isolated store with no math side effects", async ({
+  page,
+}) => {
+  const SCIENCE_KEY = "kids_math.science.workbook_progress.v1";
+  const MATH_KEY_A = "kids_math.workbook_progress.v2.grade.a";
+  const ENGLISH_KEY = "kids_math.english.workbook_progress.v1";
+
+  // Science must never touch the grade-B unlock chain — fail loudly if it does.
+  let lockGradeBCalled = false;
+  await page.route("**/api/lock-grade-b", async (route) => {
+    lockGradeBCalled = true;
+    await route.fulfill({ status: 200, body: "{}" });
+  });
+
+  await page.goto("/admin/progress");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  // Switch to the Science track.
+  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("science");
+
+  // No final-exam control exists for Science (isolated store, like English).
+  await expect(page.getByTestId(testIds.screen.adminProgress.forceFinalExamComplete("science"))).toHaveCount(0);
+
+  // Mark Science day-1 complete.
+  await page.getByTestId(testIds.screen.adminProgress.markComplete("science", "day-1")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("science", "day-1"))).toContainText("הושלם");
+
+  // Written to the Science store; math + english stores untouched.
+  const afterComplete = await page.evaluate(
+    (keys) => ({
+      science: window.localStorage.getItem(keys.science),
+      mathA: window.localStorage.getItem(keys.mathA),
+      english: window.localStorage.getItem(keys.english),
+    }),
+    { science: SCIENCE_KEY, mathA: MATH_KEY_A, english: ENGLISH_KEY },
+  );
+  expect(afterComplete.science).not.toBeNull();
+  expect(JSON.parse(afterComplete.science!).days["day-1"].isComplete).toBe(true);
+  expect(afterComplete.mathA).toBeNull();
+  expect(afterComplete.english).toBeNull();
+
+  // Reset Science day-1.
+  await page.getByTestId(testIds.screen.adminProgress.reset("science", "day-1")).click();
+  await page.getByTestId(testIds.screen.adminProgress.resetConfirm("science", "day-1")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("science", "day-1"))).toContainText("לא הושלם");
+
+  const afterReset = await page.evaluate((key) => window.localStorage.getItem(key), SCIENCE_KEY);
+  expect(JSON.parse(afterReset!).days["day-1"].isComplete).toBe(false);
+
+  expect(lockGradeBCalled).toBe(false);
+});
+
 test("admin back navigation returns to grade picker", async ({ page }) => {
   await page.goto("/admin/progress?grade=a");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");

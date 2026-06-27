@@ -20,12 +20,22 @@ export function englishReviewStorageKey(): string {
   return "kids_math.english.review.v1";
 }
 
+/** Cross-tab/sync key for the Science track's review state (single store, both levels). */
+export function scienceReviewStorageKey(): string {
+  return "kids_math.science.review.v1";
+}
+
 export type ReviewTrackOptions = { subject?: Subject; grade?: GradeId };
 
 function keyFor(opts: ReviewTrackOptions): string {
-  return opts.subject === "english"
-    ? englishReviewStorageKey()
-    : reviewStorageKey(opts.grade ?? DEFAULT_GRADE);
+  switch (opts.subject) {
+    case "english":
+      return englishReviewStorageKey();
+    case "science":
+      return scienceReviewStorageKey();
+    default:
+      return reviewStorageKey(opts.grade ?? DEFAULT_GRADE);
+  }
 }
 
 function isBrowser(): boolean {

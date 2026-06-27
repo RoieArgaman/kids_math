@@ -58,6 +58,15 @@ export const routes = {
   subjectPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/", opts),
   /** Math subject home (grade picker). */
   mathHome: (opts?: Omit<RouteOpts, "grade">) => withQuery("/math", opts),
+  /** Science level picker (כיתה א׳ / כיתה ב׳) — the Science analog of the grade picker. */
+  scienceLevelPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/science", opts),
+  /** Home for a single Science level (its lessons + that level's exam). */
+  scienceHome: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/science/${level}`, opts),
+  scienceDay: (level: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/science/${level}/day/${dayId}`, opts),
+  scienceSection: (level: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/science/${level}/day/${dayId}/section/${sectionId}`, opts),
+  scienceExam: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/science/${level}/exam`, opts),
   /** English level picker (שלב א׳ / שלב ב׳) — the English analog of the grade picker. */
   englishLevelPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/english", opts),
   /** Home for a single English level (its lessons + that level's exam). */

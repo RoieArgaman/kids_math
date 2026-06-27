@@ -1,6 +1,11 @@
 "use client";
 
-import type { UserProgressBundle, GradeProgressData, EnglishProgressData } from "./types";
+import type {
+  UserProgressBundle,
+  GradeProgressData,
+  EnglishProgressData,
+  ScienceProgressData,
+} from "./types";
 import { loadProgressState } from "@/lib/progress/storage";
 import { workbookProgressStorageKey } from "@/lib/progress/storage";
 import { loadBadgeState } from "@/lib/badges/storage";
@@ -16,7 +21,16 @@ import {
   loadEnglishFinalExamState,
 } from "@/lib/english/final-exam/storage";
 import {
+  scienceProgressStorageKey,
+  loadScienceProgressState,
+} from "@/lib/science/storage";
+import {
+  scienceFinalExamStorageKey,
+  loadScienceFinalExamState,
+} from "@/lib/science/final-exam/storage";
+import {
   englishReviewStorageKey,
+  scienceReviewStorageKey,
   loadReviewState,
   reviewStorageKey,
 } from "@/lib/review/storage";
@@ -44,9 +58,17 @@ function buildEnglishData(): EnglishProgressData {
   };
 }
 
+function buildScienceData(): ScienceProgressData {
+  return {
+    workbook: loadScienceProgressState(),
+    finalExam: loadScienceFinalExamState(),
+    review: loadReviewState({ subject: "science" }),
+  };
+}
+
 export function buildBundleFromLocalStorage(): UserProgressBundle {
   return {
-    bundleVersion: 3,
+    bundleVersion: 4,
     updatedAt: new Date().toISOString(),
     streak: loadStreakState(),
     grades: {
@@ -54,6 +76,7 @@ export function buildBundleFromLocalStorage(): UserProgressBundle {
       b: buildGradeData("b"),
     },
     english: buildEnglishData(),
+    science: buildScienceData(),
   };
 }
 
@@ -149,6 +172,19 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     }
   }
 
+  // Science subject (bundleVersion 4+). Optional — older bundles simply skip this block.
+  if (bundle.science) {
+    if (bundle.science.workbook) {
+      window.localStorage.setItem(scienceProgressStorageKey(), JSON.stringify(bundle.science.workbook));
+    }
+    if (bundle.science.finalExam) {
+      window.localStorage.setItem(scienceFinalExamStorageKey(), JSON.stringify(bundle.science.finalExam));
+    }
+    if (bundle.science.review) {
+      window.localStorage.setItem(scienceReviewStorageKey(), JSON.stringify(bundle.science.review));
+    }
+  }
+
   // Dispatch storage events so useReloadOnStorageResume refreshes affected screens
   for (const grade of GRADES) {
     try {
@@ -200,6 +236,32 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
       new StorageEvent("storage", {
         key: englishReviewKey,
         newValue: window.localStorage.getItem(englishReviewKey),
+        storageArea: window.localStorage,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+
+  try {
+    const scienceKey = scienceProgressStorageKey();
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: scienceKey,
+        newValue: window.localStorage.getItem(scienceKey),
+        storageArea: window.localStorage,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+
+  try {
+    const scienceReviewKey = scienceReviewStorageKey();
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: scienceReviewKey,
+        newValue: window.localStorage.getItem(scienceReviewKey),
         storageArea: window.localStorage,
       }),
     );
