@@ -79,6 +79,18 @@ describe("tts engine", () => {
     expect(normalizeTextForHebrewTts("מֵ-א")).toBe("מֵ-א");
   });
 
+  it("normalizeTextForHebrewTts speaks the less-than sign", () => {
+    expect(normalizeTextForHebrewTts("5 < 8")).toBe("5  קָטָן מִ  8");
+  });
+
+  it("normalizeTextForHebrewTts speaks the greater-than sign", () => {
+    expect(normalizeTextForHebrewTts("8 > 5")).toBe("8  גָּדוֹל מִ  5");
+  });
+
+  it("normalizeTextForHebrewTts speaks the division sign", () => {
+    expect(normalizeTextForHebrewTts("10 ÷ 2")).toBe("10  חֶלְקֵי  2");
+  });
+
   it("stopSpeech does not throw without synthesis", () => {
     // @ts-expect-error test
     delete window.speechSynthesis;

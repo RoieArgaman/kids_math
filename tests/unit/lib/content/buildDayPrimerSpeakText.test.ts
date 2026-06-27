@@ -32,7 +32,7 @@ describe("buildDayPrimerSpeakText", () => {
       teachingSteps: ["שְׁנַיִם", "שְׁלוֹשָׁה"],
     });
     expect(buildDayPrimerSpeakText(day)).toBe(
-      "אֶחָד. שָׁלָב שֵׁנִי: שְׁנַיִם. שָׁלָב שְׁלִישִׁי: שְׁלוֹשָׁה",
+      "אֶחָד. שָׁלָב רִאשׁוֹן: שְׁנַיִם. שָׁלָב שֵׁנִי: שְׁלוֹשָׁה",
     );
     expect(hasDayTeachingPrimer(day)).toBe(true);
   });
@@ -50,8 +50,8 @@ describe("buildDayPrimerSpeakText", () => {
     });
     expect(buildDayPrimerSpeakChunks(day)).toEqual([
       "אֶחָד",
-      "שָׁלָב שֵׁנִי: שְׁנַיִם",
-      "שָׁלָב שְׁלִישִׁי: שְׁלוֹשָׁה",
+      "שָׁלָב רִאשׁוֹן: שְׁנַיִם",
+      "שָׁלָב שֵׁנִי: שְׁלוֹשָׁה",
     ]);
   });
 });

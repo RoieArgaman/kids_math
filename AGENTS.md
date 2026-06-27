@@ -936,6 +936,26 @@ review.** See `docs/AI_AUTHORING_GUIDELINES.md`. (This audit has already caught 
 deterministic checker structurally cannot — e.g. a false odd/even claim and a wrong-answer
 true/false item.)
 
+**Spoken-Content / Voice Review (MANDATORY when adding/editing any read-aloud text).**
+Most learner-facing copy is read aloud by the Web Speech engine (`lib/tts/engine.ts`):
+exercise prompts, teaching primers, worked examples, and the English layer. After any
+new or edited exercise, day content, primer, worked example, or other user-facing
+string, you MUST also review how it *sounds* — the deterministic checker and the
+content-accuracy audit do not cover pronunciation. Check:
+- **Niqqud & spelling** — typos that read as nonsense words (e.g. `רַג`↔`רָם`,
+  `קִפּוּאִים`↔`קְפִיצוֹת`, `זֶהֶרֶת`↔`זְהִירוּת`), and corrupted/stacked vowel marks.
+- **Grammar & gender agreement** — adjectives/verbs must agree with their noun
+  (e.g. `קְבוּצוֹת זֵהוֹת`, not `זֶהֶה`).
+- **Symbols spoken in words** — `+ = - × ÷ < >` are converted by
+  `normalizeTextForHebrewTts`; do not leave a math/comparison symbol that the engine
+  can't voice. Add new symbols to the normalizer (and its unit test) if needed.
+- **Step-label numbering** — primer/worked-example steps are announced starting at
+  `שָׁלָב רִאשׁוֹן` (see `buildDayPrimerSpeakText.ts` / `workedExampleSpeakText.ts`).
+
+Do this in-session as a fluent-Hebrew reader. Regression guards for known typos live in
+`lib/content/teachingPrimerHebrewLint.ts` (`FORBIDDEN_PATTERNS`) — add to them when you
+find a new class of mistake.
+
 ### Day Teaching Primer (hub copy + TTS)
 **Mode: MAX** when changing catalog, all grade primers, or app-wide TTS — Follow `.cursor/rules/day-teaching-primer.mdc` and `docs/TEACHING_PRIMER_GUIDELINES.md`; run `tests/unit/lib/content/teaching-primer-content.test.ts` on content changes.
 

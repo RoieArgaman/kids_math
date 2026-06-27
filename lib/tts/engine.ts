@@ -120,14 +120,19 @@ function runAfterQueueClear(run: () => void): void {
 /**
  * Normalize Hebrew text for TTS:
  * 1. Replace space-padded math operators with spoken Hebrew words.
- * 2. Fix hyphens between Hebrew letters and digits (read as "minus" on some engines).
+ * 2. Replace comparison / division symbols with spoken Hebrew words (otherwise read as
+ *    silence or a symbol name by the engine).
+ * 3. Fix hyphens between Hebrew letters and digits (read as "minus" on some engines).
  */
 export function normalizeTextForHebrewTts(text: string): string {
   let result = text
     .replace(/ \+ /g, " פְּלוּס ")
     .replace(/ = /g, " שָׁוֶה ")
     .replace(/ - /g, " פָּחוֹת ")
-    .replace(/×/g, " כָּפוּל ");
+    .replace(/×/g, " כָּפוּל ")
+    .replace(/÷/g, " חֶלְקֵי ")
+    .replace(/</g, " קָטָן מִ ")
+    .replace(/>/g, " גָּדוֹל מִ ");
   const dashClass = "[-\\u05BE\\u2212\\u2010-\\u2015]";
   result = result.replace(new RegExp(`(?<=[\\u0590-\\u05FF])${dashClass}(?=\\d)`, "g"), " ");
   return result;
