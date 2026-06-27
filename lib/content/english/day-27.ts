@@ -1,0 +1,95 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 27 — "Level B review" (Level B, A1). */
+export const englishDay27: WorkbookDay = {
+  id: "day-27",
+  dayNumber: 27,
+  title: "שיעור 27: חזרה — שלב ב",
+  week: 9,
+  objective: "לחזור על הדקדוק ואוצר המילים של שלב ב.",
+  teachingSummary: "היום נחזור על הדקדוק והמילים של שלב ב. מקשיבים, קוראים ובוחרים.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-27-section-0",
+      title: "חימום: a / an ורבים",
+      type: "warmup",
+      learningGoal: "לחזור על a/an ועל צורת רבים.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(27, 0, 1, "מה נכון?", ["a dog", "an dog", "a apple"], "a dog", [], 1, "abstract"),
+        multipleChoice(27, 0, 2, "מה נכון?", ["an apple", "a apple", "an dog"], "an apple", [], 1, "abstract"),
+        multipleChoice(27, 0, 3, "איך אומרים 'שני כלבים' באנגלית?", ["two dogs", "two dog", "a dogs"], "two dogs", [], 2, "abstract"),
+        listenChoose(27, 0, 4, "מה שמעתם?", "cats", ["חתולים", "חתול", "כלבים"], "חתולים", [], 2, "abstract"),
+      ],
+    },
+    {
+      id: "day-27-section-1",
+      title: "this / that ושמות גוף",
+      type: "verbal",
+      learningGoal: "לחזור על this/that ועל שמות גוף עם to be.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(27, 1, 1, "איך אומרים 'זה' (קרוב) באנגלית?", ["this", "that", "these"], "this", [], 1, "abstract"),
+        multipleChoice(27, 1, 2, "מה נכון?", ["I am happy", "I is happy", "I are happy"], "I am happy", [], 1, "abstract"),
+        multipleChoice(27, 1, 3, "מה נכון?", ["She is tall", "She am tall", "She are tall"], "She is tall", [], 2, "abstract"),
+        listenChoose(27, 1, 4, "מה שמעתם?", "that", ["ההוא (רחוק)", "זה (קרוב)", "הם"], "ההוא (רחוק)", [], 2, "abstract"),
+        letterTiles(27, 1, 5, "הרכיבו את המילה ששמעתם:", "this", [], 2, "abstract", "this"),
+      ],
+    },
+    {
+      id: "day-27-section-2",
+      title: "can / can't ו-I like",
+      type: "verbal",
+      learningGoal: "לחזור על can/can't, I like ומילות יחס.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(27, 2, 1, "איך אומרים 'אני יכול' באנגלית?", ["I can", "I can't", "I like"], "I can", [], 1, "abstract"),
+        multipleChoice(27, 2, 2, "קראו: \"A fish can swim.\" מה נכון?", ["דג יכול לשחות", "דג לא יכול לשחות", "כלב יכול לשחות"], "דג יכול לשחות", [], 2, "abstract"),
+        multipleChoice(27, 2, 3, "איך אומרים 'על' (on) באנגלית?", ["on", "in", "under"], "on", [], 1, "abstract"),
+        multipleChoice(27, 2, 4, "איך אומרים 'מתחת' באנגלית?", ["under", "on", "in"], "under", [], 2, "abstract"),
+        letterTiles(27, 2, 5, "הרכיבו את המילה ששמעתם:", "can", [], 2, "abstract", "can"),
+      ],
+    },
+    {
+      id: "day-27-section-3",
+      title: "חזרה כללית",
+      type: "review",
+      learningGoal: "לחזור על כל הנושאים של שלב ב.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(27, 3, 1, "איך אומרים 'גדול' באנגלית?", ["big", "small", "tall"], "big", [], 1, "abstract"),
+        multipleChoice(27, 3, 2, "מה פירוש המילה 'happy'?", ["שמח", "עצוב", "קר"], "שמח", [], 1, "abstract"),
+        trueFalse(27, 3, 3, "האם 'small' פירושו 'קטן'?", true, [], 1, "abstract"),
+        trueFalse(27, 3, 4, "האם 'I are happy' זה נכון?", false, [], 2, "abstract"),
+        multipleChoice(27, 3, 5, "מה נכון?", ["two cats", "two cat", "a cats"], "two cats", [], 2, "abstract"),
+        letterTiles(27, 3, 6, "הרכיבו את המילה ששמעתם:", "that", [], 2, "abstract", "that"),
+        matchPairs(
+          27,
+          3,
+          7,
+          "התאימו כל מילה לפירוש:",
+          [
+            { left: "big", right: "גדול" },
+            { left: "happy", right: "שמח" },
+            { left: "cold", right: "קר" },
+            { left: "tall", right: "גבוה" },
+          ],
+          [],
+          2,
+          "abstract",
+          { leftLang: "en", rightLang: "he" },
+        ),
+      ],
+    },
+  ],
+};

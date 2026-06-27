@@ -1,5 +1,5 @@
-import { EnglishHomeScreen } from "@/components/screens/english/EnglishHomeScreen";
+import { EnglishLevelPickerScreen } from "@/components/screens/english/EnglishLevelPickerScreen";
 
-export default function EnglishHomePage() {
-  return <EnglishHomeScreen />;
+export default function EnglishLevelPickerPage() {
+  return <EnglishLevelPickerScreen />;
 }

@@ -1,4 +1,4 @@
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getEnglishDays, type EnglishLevel } from "@/lib/content/english-workbook";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { ENGLISH_FINAL_EXAM_TARGET_COUNT } from "@/lib/english/final-exam/config";
 
@@ -33,21 +33,22 @@ function shuffle<T>(items: T[], rnd: () => number): T[] {
   return arr;
 }
 
-/** All English exercises across all days (the exam draws from these). */
-export function buildEnglishExamBank(): Exercise[] {
-  return getEnglishDays().flatMap((d) => d.sections.flatMap((s) => s.exercises));
+/** All exercises for one English level (that level's final exam draws from these). */
+export function buildEnglishExamBank(level: EnglishLevel): Exercise[] {
+  return getEnglishDays(level).flatMap((d) => d.sections.flatMap((s) => s.exercises));
 }
 
 /**
- * Deterministically pick exam questions for a seed. Caps at the available bank size,
- * so the exam works with one day now and scales as the curriculum grows.
+ * Deterministically pick exam questions for a seed, scoped to one level. Caps at the
+ * available bank size, so each level's exam scales with its own curriculum.
  */
 export function pickEnglishExamExerciseIds(params: {
+  level: EnglishLevel;
   seed: string;
   pickerVersion: PickerVersion;
   count?: number;
 }): ExerciseId[] {
-  const bank = buildEnglishExamBank();
+  const bank = buildEnglishExamBank(params.level);
   const target = Math.min(params.count ?? ENGLISH_FINAL_EXAM_TARGET_COUNT, bank.length);
   const rnd = mulberry32(hashStringToUint32(`${params.pickerVersion}:${params.seed}`));
   return shuffle(bank, rnd)

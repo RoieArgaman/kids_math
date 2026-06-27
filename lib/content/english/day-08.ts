@@ -1,0 +1,95 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 8 — "Letters A–G" (Pre-A1, listening-first). */
+export const englishDay08: WorkbookDay = {
+  id: "day-8",
+  dayNumber: 8,
+  title: "שיעור 8: האותיות A–G",
+  week: 2,
+  objective: "להכיר ולזהות את האותיות A עד G באנגלית.",
+  teachingSummary: "היום נכיר את האותיות A עד G. קודם מקשיבים ואז בוחרים.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-8-section-0",
+      title: "חימום: A B C",
+      type: "warmup",
+      learningGoal: "לזהות את האותיות הראשונות.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(8, 0, 1, "איזו אות שמעתם?", "A", ["A", "B", "C"], "A", [], 1, "abstract", "en"),
+        listenChoose(8, 0, 2, "איזו אות שמעתם?", "B", ["B", "A", "D"], "B", [], 1, "abstract", "en"),
+        listenChoose(8, 0, 3, "איזו אות שמעתם?", "C", ["C", "B", "E"], "C", [], 2, "abstract", "en"),
+        listenChoose(8, 0, 4, "איזו אות שמעתם?", "D", ["D", "C", "G"], "D", [], 2, "abstract", "en"),
+      ],
+    },
+    {
+      id: "day-8-section-1",
+      title: "עוד אותיות",
+      type: "verbal",
+      learningGoal: "לזהות את האותיות E F G.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(8, 1, 1, "איזו אות שמעתם?", "E", ["E", "F", "A"], "E", [], 1, "abstract", "en"),
+        listenChoose(8, 1, 2, "איזו אות שמעתם?", "F", ["F", "E", "B"], "F", [], 2, "abstract", "en"),
+        listenChoose(8, 1, 3, "איזו אות שמעתם?", "G", ["G", "C", "D"], "G", [], 2, "abstract", "en"),
+        multipleChoice(8, 1, 4, "איזו אות באה אחרי A?", ["B", "C", "D"], "B", [], 1, "abstract"),
+        letterTiles(8, 1, 5, "הרכיבו את המילה:", "bag", [], 2, "abstract", "bag"),
+      ],
+    },
+    {
+      id: "day-8-section-2",
+      title: "אות ראשונה במילה",
+      type: "verbal",
+      learningGoal: "לקשר בין מילה לאות הפותחת אותה.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(8, 2, 1, "באיזו אות מתחילה המילה?", "cat", ["C", "B", "D"], "C", [], 2, "abstract", "en"),
+        listenChoose(8, 2, 2, "באיזו אות מתחילה המילה?", "dog", ["D", "C", "E"], "D", [], 2, "abstract", "en"),
+        listenChoose(8, 2, 3, "באיזו אות מתחילה המילה?", "egg", ["E", "A", "F"], "E", [], 2, "abstract", "en"),
+        listenChoose(8, 2, 4, "באיזו אות מתחילה המילה?", "bag", ["B", "A", "C"], "B", [], 2, "abstract", "en"),
+        letterTiles(8, 2, 5, "הרכיבו את המילה:", "bed", [], 2, "abstract", "bed"),
+      ],
+    },
+    {
+      id: "day-8-section-3",
+      title: "חזרה",
+      type: "review",
+      learningGoal: "לחזור על האותיות A עד G.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(8, 3, 1, "באיזו אות מתחילה המילה?", "ant", ["A", "B", "C"], "A", [], 1, "abstract", "en"),
+        listenChoose(8, 3, 2, "באיזו אות מתחילה המילה?", "fan", ["F", "E", "G"], "F", [], 2, "abstract", "en"),
+        multipleChoice(8, 3, 3, "איזו אות באה אחרי F?", ["G", "E", "D"], "G", [], 2, "abstract"),
+        trueFalse(8, 3, 4, "האם האות הראשונה במילה 'cat' היא C?", true, [], 1, "abstract"),
+        trueFalse(8, 3, 5, "האם האות הראשונה במילה 'dog' היא B?", false, [], 2, "abstract"),
+        letterTiles(8, 3, 6, "הרכיבו את המילה:", "bag", [], 2, "abstract", "bag"),
+        matchPairs(
+          8,
+          3,
+          7,
+          "התאימו אות גדולה לאות קטנה:",
+          [
+            { left: "A", right: "a" },
+            { left: "B", right: "b" },
+            { left: "C", right: "c" },
+            { left: "D", right: "d" },
+          ],
+          [],
+          2,
+          "abstract",
+          { leftLang: "en", rightLang: "en" },
+        ),
+      ],
+    },
+  ],
+};

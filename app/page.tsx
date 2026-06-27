@@ -86,7 +86,7 @@ export default function SubjectPickerPage() {
           data-testid={testIds.screen.subjectPicker.englishCard()}
           className="surface border-s-[5px] rounded-[22px] p-5 shadow-sm hover:shadow-md transition-shadow"
           style={{ borderInlineStartColor: "#34d399" }}
-          href={routes.englishHome({ previewAll })}
+          href={routes.englishLevelPicker({ previewAll })}
           aria-label="אנגלית"
         >
           <div data-testid={childTid(testIds.screen.subjectPicker.englishCard(), "row")} className="flex items-start justify-between gap-3">

@@ -8,7 +8,7 @@ import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
 import { StarReward } from "@/components/StarReward";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllEnglishDays, type EnglishLevel } from "@/lib/content/english-workbook";
 import { COMPLETION_GATE_PERCENT, MAX_SECTION_WRONG_ANSWERS } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { useDayAnswers } from "@/lib/hooks/useDayAnswers";
@@ -18,7 +18,15 @@ import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import type { DayId, ExerciseId, SectionId } from "@/lib/types";
 
-export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; sectionId: SectionId }) {
+export function EnglishSectionScreen({
+  level,
+  dayId,
+  sectionId,
+}: {
+  level: EnglishLevel;
+  dayId: DayId;
+  sectionId: SectionId;
+}) {
   const [showReward, setShowReward] = useState(false);
 
   const { setAnswer, percentDone, sectionWrongCount, correctAnswers, resetSection } = useProgress(
@@ -26,7 +34,7 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
     { subject: "english", sectionId },
   );
 
-  const day = useMemo(() => getEnglishDays().find((d) => d.id === dayId), [dayId]);
+  const day = useMemo(() => getAllEnglishDays().find((d) => d.id === dayId), [dayId]);
   const section = useMemo(() => day?.sections.find((s) => s.id === sectionId), [day, sectionId]);
   const sectionIdx = useMemo(
     () => day?.sections.findIndex((s) => s.id === sectionId) ?? -1,
@@ -100,7 +108,7 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
           emoji="🔍"
           title="הַחֵלֶק לֹא נִמְצָא."
           actions={
-            <ButtonLink href={routes.englishDay(dayId)} className="w-full text-center">
+            <ButtonLink href={routes.englishDay(level, dayId)} className="w-full text-center">
               חֲזָרָה לַשִּׁעוּר
             </ButtonLink>
           }
@@ -126,7 +134,7 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
             emoji="🔒"
             title="צָרִיךְ לְהַשְׁלִים אֶת הַחֲלָקִים הַקּוֹדְמִים תְּחִילָה"
             actions={
-              <ButtonLink href={routes.englishDay(dayId)} className="w-full text-center">
+              <ButtonLink href={routes.englishDay(level, dayId)} className="w-full text-center">
                 חֲזָרָה לַשִּׁעוּר
               </ButtonLink>
             }
@@ -146,8 +154,8 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
         data-testid={testIds.screen.english.section.nav(dayId, sectionId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
-        <AppNavLink href={routes.englishDay(dayId)}>חֲזָרָה לַשִּׁעוּר</AppNavLink>
-        <AppNavLink href={routes.englishHome()}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
+        <AppNavLink href={routes.englishDay(level, dayId)}>חֲזָרָה לַשִּׁעוּר</AppNavLink>
+        <AppNavLink href={routes.englishHome(level)}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
       </div>
 
       <div
@@ -220,7 +228,7 @@ export function EnglishSectionScreen({ dayId, sectionId }: { dayId: DayId; secti
           <p data-testid={childTid(completionPanelId, "title")} className="mb-1 text-xl font-semibold text-[#047857]">
             הַחֵלֶק הוּשְׁלַם!
           </p>
-          <ButtonLink href={routes.englishDay(dayId)} className="w-full text-center">
+          <ButtonLink href={routes.englishDay(level, dayId)} className="w-full text-center">
             חֲזָרָה לַשִּׁעוּר 🎉
           </ButtonLink>
         </div>

@@ -31,11 +31,11 @@ test.describe("subject picker (home)", () => {
     await expect(page.getByTestId(testIds.screen.subjectPicker.root())).toBeVisible();
   });
 
-  test("English leads to the English home", async ({ page }) => {
+  test("English leads to the English level picker", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId(testIds.screen.subjectPicker.englishCardCta()).click();
     await expect(page).toHaveURL(/\/english$/);
-    await expect(page.getByTestId(testIds.screen.english.home.root())).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.english.levelPicker.root())).toBeVisible();
   });
 });
 

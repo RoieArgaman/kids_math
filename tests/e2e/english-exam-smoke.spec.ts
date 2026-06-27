@@ -3,7 +3,8 @@ import type { Exercise } from "@/lib/types";
 import { buildEnglishExamBank } from "@/lib/english/final-exam/picker";
 import { childTid, testIds } from "@/lib/testIds";
 
-const EXAM_KEY = "kids_math.english.final_exam.v1";
+const LEVEL = "a";
+const EXAM_KEY = `kids_math.english.final_exam.v1.level.${LEVEL}`;
 
 // Answer correctly WITHOUT pressing a per-question check (the exam grades in bulk on finish).
 async function answerOnly(page: Page, exercise: Exercise) {
@@ -52,7 +53,7 @@ test.describe("english final exam smoke", () => {
   });
 
   test("preview-unlocked exam: answer all correctly → pass", async ({ page }) => {
-    await page.goto("/english/exam?previewAll=1");
+    await page.goto(`/english/${LEVEL}/exam?previewAll=1`);
     await expect(page.getByTestId(testIds.screen.english.exam.root())).toBeVisible();
 
     const selectedIds: string[] = await page.evaluate((key) => {
@@ -61,7 +62,7 @@ test.describe("english final exam smoke", () => {
     }, EXAM_KEY);
     expect(selectedIds.length).toBeGreaterThanOrEqual(6);
 
-    const byId = new Map<string, Exercise>(buildEnglishExamBank().map((ex) => [ex.id, ex]));
+    const byId = new Map<string, Exercise>(buildEnglishExamBank(LEVEL).map((ex) => [ex.id, ex]));
     for (const id of selectedIds) {
       const ex = byId.get(id);
       expect(ex, `exercise ${id} in bank`).toBeTruthy();
@@ -76,7 +77,7 @@ test.describe("english final exam smoke", () => {
   });
 
   test("exam is locked from the English home until all days are complete", async ({ page }) => {
-    await page.goto("/english");
+    await page.goto(`/english/${LEVEL}`);
     await expect(page.getByTestId(testIds.screen.english.home.examCard())).toBeVisible();
     // No CTA when locked (fresh state).
     await expect(page.getByTestId(testIds.screen.english.home.examCardCta())).toHaveCount(0);

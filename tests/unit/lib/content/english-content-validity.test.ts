@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllEnglishDays } from "@/lib/content/english-workbook";
 import { isAnswerCorrect } from "@/lib/utils/exercise";
 import type { Exercise } from "@/lib/types";
 
-const days = getEnglishDays();
+const days = getAllEnglishDays();
 
 function canonicalAnswer(ex: Exercise): string {
   switch (ex.kind) {

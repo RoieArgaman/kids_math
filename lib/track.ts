@@ -3,7 +3,7 @@ import { DEFAULT_GRADE } from "@/lib/grades";
 import type { Subject } from "@/lib/subjects";
 import type { DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 import { getWorkbookDays, getWorkbookDaysById } from "@/lib/content/workbook";
-import { getEnglishDays, getEnglishDaysById } from "@/lib/content/english-workbook";
+import { getAllEnglishDays, getAllEnglishDaysById } from "@/lib/content/english-workbook";
 import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import {
   loadEnglishProgressState,
@@ -23,11 +23,11 @@ function isEnglish(opts: TrackOptions): boolean {
 }
 
 export function getTrackDays(opts: TrackOptions): WorkbookDay[] {
-  return isEnglish(opts) ? getEnglishDays() : getWorkbookDays(opts.grade ?? DEFAULT_GRADE);
+  return isEnglish(opts) ? getAllEnglishDays() : getWorkbookDays(opts.grade ?? DEFAULT_GRADE);
 }
 
 export function getTrackDaysById(opts: TrackOptions): Record<DayId, WorkbookDay> {
-  return isEnglish(opts) ? getEnglishDaysById() : getWorkbookDaysById(opts.grade ?? DEFAULT_GRADE);
+  return isEnglish(opts) ? getAllEnglishDaysById() : getWorkbookDaysById(opts.grade ?? DEFAULT_GRADE);
 }
 
 export function loadTrackProgress(opts: TrackOptions): WorkbookProgressState {

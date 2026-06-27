@@ -12,16 +12,20 @@ owns its own navigation tree below it.
 /grade/[grade]/day/[id]             Math day hub (sections)
 /grade/[grade]/day/[id]/section/[sectionId]   Math section (exercises)
 /grade/[grade]/gmat-challenge | /badges | /plan
-/english                            English home (day list, single Pre-A1 track)
-/english/day/[id]                   English day hub
-/english/day/[id]/section/[sectionId]         English section (exercises)
+/english                            English level picker → [ שלב א׳ · Pre-A1 ] [ שלב ב׳ · A1 ]
+/english/[level]                    English level home (day list)
+/english/[level]/day/[id]           English day hub
+/english/[level]/day/[id]/section/[sectionId] English section (exercises)
+/english/[level]/exam               English level final exam
 /admin/progress | /admin/users      Global admin
 /privacy | /cookies                 Legal
 ```
 
-Math is keyed by **grade** (`a`/`b`); English is a single subject-keyed track (no grade).
-See [`AGENTS.md`](../AGENTS.md) → Routing & Navigation and the `LearningTrack` model in
-`lib/subjects.ts` / `lib/track.ts`.
+Math is keyed by **grade** (`a`/`b`). English mirrors that with **two CEFR levels**
+(`a` = Pre-A1, `b` = A1) reusing the same `GradeId` axis: a level picker, per-level
+homes, and a per-level final exam, with Level B gated behind Level A's exam. Learner
+progress uses a single subject-keyed store (day IDs are disjoint across levels: A =
+day-1..14, B = day-15..28). See [`AGENTS.md`](../AGENTS.md) → Routing & Navigation.
 
 ## Route builders — always use these (never hardcode paths)
 
@@ -30,7 +34,8 @@ All in `lib/routes.ts`:
 - `routes.subjectPicker()` → `/` (the home)
 - `routes.mathHome()` → `/math` (the grade picker)
 - `routes.gradeHome(grade)` / `gradeDay` / `gradeSection` / `gradeGmatChallenge` / `gradeBadges` / `gradePlan`
-- `routes.englishHome()` / `englishDay(dayId)` / `englishSection(dayId, sectionId)` / `englishExam()`
+- `routes.englishLevelPicker()` → `/english` (the level picker)
+- `routes.englishHome(level)` / `englishDay(level, dayId)` / `englishSection(level, dayId, sectionId)` / `englishExam(level)`
 - `routes.gradePicker()` → **alias of `/math`** (kept so legacy "back to grade selection" links resolve correctly)
 
 **Link-direction rule:**

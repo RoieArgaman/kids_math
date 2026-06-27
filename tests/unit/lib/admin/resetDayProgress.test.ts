@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { getWorkbookDays } from "@/lib/content/workbook";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllEnglishDays } from "@/lib/content/english-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { resetAdminDayProgress, resetAdminEnglishDayProgress } from "@/lib/admin/resetDayProgress";
 import * as gmatStorage from "@/lib/gmat-challenge/storage";
@@ -122,7 +122,7 @@ describe("resetAdminDayProgress", () => {
 
 describe("resetAdminEnglishDayProgress", () => {
   function cascadeResetEnglish(state: WorkbookProgressState, startDayId: DayId): WorkbookProgressState {
-    const ordered = getEnglishDays();
+    const ordered = getAllEnglishDays();
     const startIndex = ordered.findIndex((d) => d.id === startDayId);
     let next = state;
     for (let i = startIndex; i < ordered.length; i++) {
@@ -136,7 +136,7 @@ describe("resetAdminEnglishDayProgress", () => {
   });
 
   it("cascades reset from the chosen English day through the end of the workbook", () => {
-    const firstDayId = getEnglishDays()[0].id as DayId;
+    const firstDayId = getAllEnglishDays()[0].id as DayId;
     const state: WorkbookProgressState = {
       ...createInitialWorkbookProgressState(),
       days: {
@@ -154,7 +154,7 @@ describe("resetAdminEnglishDayProgress", () => {
     const clearSpy = vi.spyOn(finalExamStorage, "clearFinalExamState");
     const gmatSpy = vi.spyOn(gmatStorage, "clearGmatChallengeState");
 
-    const firstDayId = getEnglishDays()[0].id as DayId;
+    const firstDayId = getAllEnglishDays()[0].id as DayId;
     resetAdminEnglishDayProgress(createInitialWorkbookProgressState(), firstDayId);
 
     expect(clearSpy).not.toHaveBeenCalled();

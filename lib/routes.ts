@@ -58,13 +58,15 @@ export const routes = {
   subjectPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/", opts),
   /** Math subject home (grade picker). */
   mathHome: (opts?: Omit<RouteOpts, "grade">) => withQuery("/math", opts),
-  /** English subject home (Pre-A1 day list). */
-  englishHome: (opts?: Omit<RouteOpts, "grade">) => withQuery("/english", opts),
-  englishDay: (dayId: string, opts?: Omit<RouteOpts, "grade">) =>
-    withQuery(`/english/day/${dayId}`, opts),
-  englishSection: (dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) =>
-    withQuery(`/english/day/${dayId}/section/${sectionId}`, opts),
-  englishExam: (opts?: Omit<RouteOpts, "grade">) => withQuery("/english/exam", opts),
+  /** English level picker (שלב א׳ / שלב ב׳) — the English analog of the grade picker. */
+  englishLevelPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/english", opts),
+  /** Home for a single English level (its lessons + that level's exam). */
+  englishHome: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/english/${level}`, opts),
+  englishDay: (level: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/english/${level}/day/${dayId}`, opts),
+  englishSection: (level: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) =>
+    withQuery(`/english/${level}/day/${dayId}/section/${sectionId}`, opts),
+  englishExam: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/english/${level}/exam`, opts),
   /**
    * Math grade picker. Now lives at /math (the home "/" is the subject picker).
    * All existing "back to grade selection" links resolve here automatically.

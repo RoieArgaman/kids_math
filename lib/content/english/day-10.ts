@@ -1,0 +1,95 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 10 — "Letters O–T" (Pre-A1, listening-first). */
+export const englishDay10: WorkbookDay = {
+  id: "day-10",
+  dayNumber: 10,
+  title: "שיעור 10: האותיות O–T",
+  week: 3,
+  objective: "להכיר ולזהות את האותיות O עד T באנגלית.",
+  teachingSummary: "היום נכיר את האותיות O עד T. קודם מקשיבים ואז בוחרים.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-10-section-0",
+      title: "חימום: O P Q",
+      type: "warmup",
+      learningGoal: "לזהות את האותיות O P Q.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(10, 0, 1, "איזו אות שמעתם?", "O", ["O", "P", "Q"], "O", [], 1, "abstract", "en"),
+        listenChoose(10, 0, 2, "איזו אות שמעתם?", "P", ["P", "O", "R"], "P", [], 1, "abstract", "en"),
+        listenChoose(10, 0, 3, "איזו אות שמעתם?", "Q", ["Q", "P", "S"], "Q", [], 2, "abstract", "en"),
+        listenChoose(10, 0, 4, "איזו אות שמעתם?", "R", ["R", "Q", "T"], "R", [], 2, "abstract", "en"),
+      ],
+    },
+    {
+      id: "day-10-section-1",
+      title: "עוד אותיות",
+      type: "verbal",
+      learningGoal: "לזהות את האותיות S T.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(10, 1, 1, "איזו אות שמעתם?", "S", ["S", "T", "O"], "S", [], 1, "abstract", "en"),
+        listenChoose(10, 1, 2, "איזו אות שמעתם?", "T", ["T", "S", "P"], "T", [], 2, "abstract", "en"),
+        listenChoose(10, 1, 3, "איזו אות שמעתם?", "O", ["O", "Q", "R"], "O", [], 2, "abstract", "en"),
+        multipleChoice(10, 1, 4, "איזו אות באה אחרי O?", ["P", "Q", "R"], "P", [], 1, "abstract"),
+        letterTiles(10, 1, 5, "הרכיבו את המילה:", "pot", [], 2, "abstract", "pot"),
+      ],
+    },
+    {
+      id: "day-10-section-2",
+      title: "אות ראשונה במילה",
+      type: "verbal",
+      learningGoal: "לקשר בין מילה לאות הפותחת אותה.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(10, 2, 1, "באיזו אות מתחילה המילה?", "pot", ["P", "O", "R"], "P", [], 2, "abstract", "en"),
+        listenChoose(10, 2, 2, "באיזו אות מתחילה המילה?", "rat", ["R", "P", "S"], "R", [], 2, "abstract", "en"),
+        listenChoose(10, 2, 3, "באיזו אות מתחילה המילה?", "sun", ["S", "T", "O"], "S", [], 2, "abstract", "en"),
+        listenChoose(10, 2, 4, "באיזו אות מתחילה המילה?", "top", ["T", "S", "P"], "T", [], 2, "abstract", "en"),
+        letterTiles(10, 2, 5, "הרכיבו את המילה:", "top", [], 2, "abstract", "top"),
+      ],
+    },
+    {
+      id: "day-10-section-3",
+      title: "חזרה",
+      type: "review",
+      learningGoal: "לחזור על האותיות O עד T.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(10, 3, 1, "באיזו אות מתחילה המילה?", "ox", ["O", "P", "Q"], "O", [], 2, "abstract", "en"),
+        listenChoose(10, 3, 2, "באיזו אות מתחילה המילה?", "queen", ["Q", "R", "S"], "Q", [], 2, "abstract", "en"),
+        multipleChoice(10, 3, 3, "איזו אות באה אחרי S?", ["T", "R", "Q"], "T", [], 2, "abstract"),
+        trueFalse(10, 3, 4, "האם האות הראשונה במילה 'sun' היא S?", true, [], 1, "abstract"),
+        trueFalse(10, 3, 5, "האם האות הראשונה במילה 'top' היא P?", false, [], 2, "abstract"),
+        letterTiles(10, 3, 6, "הרכיבו את המילה:", "pot", [], 2, "abstract", "pot"),
+        matchPairs(
+          10,
+          3,
+          7,
+          "התאימו אות גדולה לאות קטנה:",
+          [
+            { left: "O", right: "o" },
+            { left: "P", right: "p" },
+            { left: "R", right: "r" },
+            { left: "T", right: "t" },
+          ],
+          [],
+          2,
+          "abstract",
+          { leftLang: "en", rightLang: "en" },
+        ),
+      ],
+    },
+  ],
+};

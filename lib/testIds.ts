@@ -65,6 +65,15 @@ export const testIds = {
       gradeCardCta: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade, "cta"),
     },
     english: {
+      levelPicker: {
+        root: () => tid("screen", "english", "levelPicker"),
+        hero: () => tid("screen", "english", "levelPicker", "hero"),
+        levelCard: (level: string) => tid("screen", "english", "levelPicker", "levelCard", "level", level),
+        levelCardCta: (level: string) =>
+          tid("screen", "english", "levelPicker", "levelCard", "level", level, "cta"),
+        levelLockedHint: (level: string) =>
+          tid("screen", "english", "levelPicker", "levelCard", "level", level, "lockedHint"),
+      },
       home: {
         root: () => tid("screen", "english", "home"),
         hero: () => tid("screen", "english", "home", "hero"),

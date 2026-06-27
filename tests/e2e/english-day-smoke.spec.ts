@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type { Exercise } from "@/lib/types";
-import { getEnglishDaysById } from "@/lib/content/english-workbook";
+import { getAllEnglishDaysById } from "@/lib/content/english-workbook";
 import { childTid, testIds } from "@/lib/testIds";
 
+const LEVEL = "a";
 const DAY_ID = "day-1";
 
 async function answerExercise(page: import("@playwright/test").Page, exercise: Exercise) {
@@ -55,16 +56,18 @@ test.describe("english day smoke", () => {
   });
 
   test("learner reaches English from home and completes Day 1 end-to-end", async ({ page }) => {
-    // Home → English entry
+    // Home → English entry → level picker → Level A home
     await page.goto("/");
     await page.getByTestId(testIds.screen.subjectPicker.englishCardCta()).click();
+    await expect(page.getByTestId(testIds.screen.english.levelPicker.root())).toBeVisible();
+    await page.getByTestId(testIds.screen.english.levelPicker.levelCardCta(LEVEL)).click();
     await expect(page.getByTestId(testIds.screen.english.home.root())).toBeVisible();
 
     // English home → Day 1 hub
     await page.getByTestId(testIds.screen.english.home.dayCardCta(DAY_ID)).click();
     await expect(page.getByTestId(testIds.screen.english.day.root(DAY_ID))).toBeVisible();
 
-    const day = getEnglishDaysById()[DAY_ID]!;
+    const day = getAllEnglishDaysById()[DAY_ID]!;
 
     // Complete every section in order (warmup → teaching → review).
     for (const section of day.sections) {
@@ -81,7 +84,7 @@ test.describe("english day smoke", () => {
       await page.getByTestId(testIds.component.starReward.confirm()).click();
       await expect(page.getByTestId(testIds.component.starReward.overlay())).toHaveCount(0);
 
-      await page.goto(`/english/day/${DAY_ID}`);
+      await page.goto(`/english/${LEVEL}/day/${DAY_ID}`);
       await expect(page.getByTestId(testIds.screen.english.day.root(DAY_ID))).toBeVisible();
     }
 
