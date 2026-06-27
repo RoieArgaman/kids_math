@@ -50,7 +50,8 @@ describe("english cross-device sync (bundle v2)", () => {
     window.localStorage.setItem(ENGLISH_EXAM_KEY, JSON.stringify(englishExam));
 
     const bundle = buildBundleFromLocalStorage();
-    expect(bundle.bundleVersion).toBe(2);
+    // buildBundleFromLocalStorage now emits the latest version (v3 adds review).
+    expect(bundle.bundleVersion).toBe(3);
     expect(bundle.english?.workbook?.days["day-1"]?.isComplete).toBe(true);
     expect(bundle.english?.finalExam?.passed).toBe(true);
   });

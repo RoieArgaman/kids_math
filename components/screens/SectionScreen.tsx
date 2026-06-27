@@ -9,6 +9,7 @@ import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressHeader } from "@/components/ui/ProgressHeader";
 import { SectionBlock } from "@/components/SectionBlock";
+import { SpiralReviewBlock } from "@/components/review/SpiralReviewBlock";
 import { StarReward } from "@/components/StarReward";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
@@ -260,6 +261,11 @@ export function SectionScreen({
           ⚠️ {resetNotice}
         </div>
       ) : null}
+
+      {/* Ephemeral spiral-review block — warm-up only; never affects day progress */}
+      {sectionIdx === 0 && (
+        <SpiralReviewBlock grade={effectiveGrade} dayId={dayId} sectionId={sectionId} />
+      )}
 
       {/* Section exercises */}
       <div data-testid={childTid(sectionRootId, "sectionWrap")} className="mb-6 mt-3">

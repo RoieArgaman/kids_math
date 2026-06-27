@@ -15,6 +15,11 @@ import {
   englishFinalExamStorageKey,
   loadEnglishFinalExamState,
 } from "@/lib/english/final-exam/storage";
+import {
+  englishReviewStorageKey,
+  loadReviewState,
+  reviewStorageKey,
+} from "@/lib/review/storage";
 import type { GradeId } from "@/lib/grades";
 
 const GRADES: GradeId[] = ["a", "b"];
@@ -27,6 +32,7 @@ function buildGradeData(grade: GradeId): GradeProgressData {
     badges: loadBadgeState(grade),
     finalExam: loadFinalExamState(grade),
     gmat: loadGmatChallengeState(grade),
+    review: loadReviewState({ grade }),
   };
 }
 
@@ -34,12 +40,13 @@ function buildEnglishData(): EnglishProgressData {
   return {
     workbook: loadEnglishProgressState(),
     finalExam: loadEnglishFinalExamState(),
+    review: loadReviewState({ subject: "english" }),
   };
 }
 
 export function buildBundleFromLocalStorage(): UserProgressBundle {
   return {
-    bundleVersion: 2,
+    bundleVersion: 3,
     updatedAt: new Date().toISOString(),
     streak: loadStreakState(),
     grades: {
@@ -122,6 +129,10 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     if (data.gmat) {
       window.localStorage.setItem(`kids_math.gmat_challenge.v1.grade.${grade}`, JSON.stringify(data.gmat));
     }
+    // Review state (bundleVersion 3+). Absent on v1/v2 bundles — guard handles that.
+    if (data.review) {
+      window.localStorage.setItem(reviewStorageKey(grade), JSON.stringify(data.review));
+    }
   }
 
   // English subject (bundleVersion 2+). Optional — v1 bundles simply skip this block.
@@ -131,6 +142,10 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     }
     if (bundle.english.finalExam) {
       window.localStorage.setItem(englishFinalExamStorageKey(), JSON.stringify(bundle.english.finalExam));
+    }
+    // English review state (bundleVersion 3+). Absent on v1/v2 bundles — guard handles that.
+    if (bundle.english.review) {
+      window.localStorage.setItem(englishReviewStorageKey(), JSON.stringify(bundle.english.review));
     }
   }
 
@@ -150,12 +165,41 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     }
   }
 
+  // Review keys (bundleVersion 3+) — refresh open review/warm-up screens after a pull.
+  for (const grade of GRADES) {
+    try {
+      const key = reviewStorageKey(grade);
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key,
+          newValue: window.localStorage.getItem(key),
+          storageArea: window.localStorage,
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  }
+
   try {
     const englishKey = englishProgressStorageKey();
     window.dispatchEvent(
       new StorageEvent("storage", {
         key: englishKey,
         newValue: window.localStorage.getItem(englishKey),
+        storageArea: window.localStorage,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+
+  try {
+    const englishReviewKey = englishReviewStorageKey();
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: englishReviewKey,
+        newValue: window.localStorage.getItem(englishReviewKey),
         storageArea: window.localStorage,
       }),
     );
