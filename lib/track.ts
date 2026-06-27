@@ -4,11 +4,16 @@ import type { Subject } from "@/lib/subjects";
 import type { DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 import { getWorkbookDays, getWorkbookDaysById } from "@/lib/content/workbook";
 import { getAllEnglishDays, getAllEnglishDaysById } from "@/lib/content/english-workbook";
+import { getAllScienceDays, getAllScienceDaysById } from "@/lib/content/science-workbook";
 import { loadProgressState, saveProgressState } from "@/lib/progress/storage";
 import {
   loadEnglishProgressState,
   saveEnglishProgressState,
 } from "@/lib/english/storage";
+import {
+  loadScienceProgressState,
+  saveScienceProgressState,
+} from "@/lib/science/storage";
 
 /**
  * Track resolver — the single place that maps a {subject, grade} to its content
@@ -18,28 +23,48 @@ import {
  */
 export type TrackOptions = { subject?: Subject; grade?: GradeId };
 
-function isEnglish(opts: TrackOptions): boolean {
-  return opts.subject === "english";
-}
-
 export function getTrackDays(opts: TrackOptions): WorkbookDay[] {
-  return isEnglish(opts) ? getAllEnglishDays() : getWorkbookDays(opts.grade ?? DEFAULT_GRADE);
+  switch (opts.subject) {
+    case "english":
+      return getAllEnglishDays();
+    case "science":
+      return getAllScienceDays();
+    default:
+      return getWorkbookDays(opts.grade ?? DEFAULT_GRADE);
+  }
 }
 
 export function getTrackDaysById(opts: TrackOptions): Record<DayId, WorkbookDay> {
-  return isEnglish(opts) ? getAllEnglishDaysById() : getWorkbookDaysById(opts.grade ?? DEFAULT_GRADE);
+  switch (opts.subject) {
+    case "english":
+      return getAllEnglishDaysById();
+    case "science":
+      return getAllScienceDaysById();
+    default:
+      return getWorkbookDaysById(opts.grade ?? DEFAULT_GRADE);
+  }
 }
 
 export function loadTrackProgress(opts: TrackOptions): WorkbookProgressState {
-  return isEnglish(opts)
-    ? loadEnglishProgressState()
-    : loadProgressState({ grade: opts.grade ?? DEFAULT_GRADE });
+  switch (opts.subject) {
+    case "english":
+      return loadEnglishProgressState();
+    case "science":
+      return loadScienceProgressState();
+    default:
+      return loadProgressState({ grade: opts.grade ?? DEFAULT_GRADE });
+  }
 }
 
 export function saveTrackProgress(state: WorkbookProgressState, opts: TrackOptions): void {
-  if (isEnglish(opts)) {
-    saveEnglishProgressState(state);
-    return;
+  switch (opts.subject) {
+    case "english":
+      saveEnglishProgressState(state);
+      return;
+    case "science":
+      saveScienceProgressState(state);
+      return;
+    default:
+      saveProgressState(state, { grade: opts.grade ?? DEFAULT_GRADE });
   }
-  saveProgressState(state, { grade: opts.grade ?? DEFAULT_GRADE });
 }

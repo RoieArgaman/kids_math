@@ -37,13 +37,13 @@ afterEach(() => {
 });
 
 describe("review cross-device sync (bundle v3)", () => {
-  it("builds a v3 bundle including review for grades + english when present", () => {
+  it("builds a current bundle including review for grades + english when present", () => {
     window.localStorage.setItem(REVIEW_A_KEY, JSON.stringify(reviewState));
     window.localStorage.setItem(REVIEW_B_KEY, JSON.stringify(reviewState));
     window.localStorage.setItem(ENGLISH_REVIEW_KEY, JSON.stringify(reviewState));
 
     const bundle = buildBundleFromLocalStorage();
-    expect(bundle.bundleVersion).toBe(3);
+    expect(bundle.bundleVersion).toBe(4);
     expect(bundle.grades.a.review?.items["day-1-section-1-exercise-1"]?.box).toBe(3);
     expect(bundle.grades.b.review?.items["day-1-section-1-exercise-1"]?.box).toBe(3);
     expect(bundle.english?.review?.items["day-1-section-1-exercise-1"]?.box).toBe(3);
