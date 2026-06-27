@@ -53,8 +53,8 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 1. Read the file before editing
 2. Search for existing patterns (grep)
 3. Check helpers in `lib/`
-4. Check `docs/LEARNING_LOG.md` for past decisions
-5. Check `.cursor/rules/*.mdc` for domain conventions
+4. Check `.claude/docs/LEARNING_LOG.md` for past decisions
+5. Check `.claude/rules/*.mdc` for domain conventions (indexed under Reference Files)
 6. Check cross-file dependencies (grep for imports)
 
 ### Implementation
@@ -106,7 +106,40 @@ Use the escalation template from `AGENTS.md` → Escalation Playbook.
 
 ## Reference Files
 
-- `AGENTS.md` — **Complete workflow** (modes, checkpoints, gates, roles, handoff, security, escalation)
-- `.cursor/rules/*.mdc` — Domain rules (also applicable here)
-- `docs/LEARNING_LOG.md` — Project decisions and learnings
-- `docs/AI_PROMPT_LIBRARY.md` — Prompt templates
+Domain rules and docs now live under **`.claude/`** as the single home:
+`.claude/rules/*.mdc` (was `.cursor/rules/`) and `.claude/docs/*.md` (was `docs/`).
+The old `.cursor/rules/` and `docs/` paths are kept as **symlinks** into `.claude/`,
+so Cursor, Devin, and every existing reference still resolve unchanged.
+
+- `AGENTS.md` — **Complete workflow** (modes, checkpoints, gates, roles, handoff, security, escalation). Single source of truth; this file and `.devin/guidelines.md` defer to it.
+
+### Always-applied rules (auto-loaded into context)
+
+These mirror the `alwaysApply: true` rules Cursor always loads — imported so they're in context every session:
+
+@.claude/rules/agent-guidelines.mdc
+@.claude/rules/quality-gates.mdc
+@.claude/rules/testids.mdc
+@.claude/rules/learning-loop.mdc
+@.claude/rules/multi-agent-playbook.mdc
+@.claude/rules/agent-definer.mdc
+@.claude/rules/ai-prompt-templates.mdc
+
+### On-demand rules (read when the task matches)
+
+| Rule | Read when |
+|------|-----------|
+| `.claude/rules/add-subject.mdc` | Adding a new top-level subject (Math/English/Science siblings) |
+| `.claude/rules/add-grade.mdc` | Adding/changing a grade, grade routes, unlock gates |
+| `.claude/rules/build-school-year.mdc` | Building/extending a school-year curriculum |
+| `.claude/rules/timed-exam-session.mdc` | Adding/changing a timed exam |
+| `.claude/rules/day-teaching-primer.mdc` | Changing day teaching primers / hub copy / TTS |
+
+### Key docs (`.claude/docs/`)
+
+- `LEARNING_LOG.md` — project decisions and learnings (append per Learning Loop)
+- `AI_PROMPT_LIBRARY.md` / `AI_AUTHORING_GUIDELINES.md` — prompt + authoring templates
+- `PEDAGOGY_BENCHMARK_G1_G2.md`, `MOE_GRADE_A_B_SKILLTAG_MAP.md`, `VALIDATION_PLAN_G1_G2_PEDAGOGY.md` — pedagogy / MoE alignment
+- `ENGLISH_CURRICULUM.md`, `TEACHING_PRIMER_GUIDELINES.md` — subject/content guides
+- `NAVIGATION_IA.md`, `DEPLOYMENT.md`, `REGRESSION_TEST_PLAN.md` — IA, deploy, regression
+- Full list: `ls .claude/docs/`

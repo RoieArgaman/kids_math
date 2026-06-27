@@ -966,6 +966,8 @@ find a new class of mistake.
 
 ## Agent-Specific Entry Points
 
+> **File locations:** domain rules and docs live under `.claude/` (`.claude/rules/*.mdc`, `.claude/docs/*.md`) as the single home. The legacy `.cursor/rules/` and `docs/` paths are **symlinks** into `.claude/`, so references in this file and Cursor/Devin auto-loading keep working unchanged.
+
 | Agent | Entry File | Auto-enforcement |
 |-------|-----------|-----------------|
 | **Claude Code** | `CLAUDE.md` → `AGENTS.md` | Hooks in `.claude/settings.json` (typecheck, console.log, config protection, --no-verify block) |
