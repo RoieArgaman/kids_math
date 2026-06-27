@@ -1,0 +1,657 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`English Level A — id stability > day/section/exercise id structure is unchanged 1`] = `
+[
+  {
+    "dayNumber": 1,
+    "id": "day-1",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-1-section-0-exercise-1",
+          "day-1-section-0-exercise-2",
+          "day-1-section-0-exercise-3",
+          "day-1-section-0-exercise-4",
+        ],
+        "id": "day-1-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-1-section-1-exercise-1",
+          "day-1-section-1-exercise-2",
+          "day-1-section-1-exercise-3",
+          "day-1-section-1-exercise-4",
+          "day-1-section-1-exercise-5",
+        ],
+        "id": "day-1-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-1-section-2-exercise-1",
+          "day-1-section-2-exercise-2",
+          "day-1-section-2-exercise-3",
+          "day-1-section-2-exercise-4",
+          "day-1-section-2-exercise-5",
+        ],
+        "id": "day-1-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-1-section-3-exercise-1",
+          "day-1-section-3-exercise-2",
+          "day-1-section-3-exercise-3",
+          "day-1-section-3-exercise-4",
+          "day-1-section-3-exercise-5",
+          "day-1-section-3-exercise-6",
+          "day-1-section-3-exercise-7",
+        ],
+        "id": "day-1-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 2,
+    "id": "day-2",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-2-section-0-exercise-1",
+          "day-2-section-0-exercise-2",
+          "day-2-section-0-exercise-3",
+          "day-2-section-0-exercise-4",
+        ],
+        "id": "day-2-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-2-section-1-exercise-1",
+          "day-2-section-1-exercise-2",
+          "day-2-section-1-exercise-3",
+          "day-2-section-1-exercise-4",
+          "day-2-section-1-exercise-5",
+        ],
+        "id": "day-2-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-2-section-2-exercise-1",
+          "day-2-section-2-exercise-2",
+          "day-2-section-2-exercise-3",
+          "day-2-section-2-exercise-4",
+          "day-2-section-2-exercise-5",
+        ],
+        "id": "day-2-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-2-section-3-exercise-1",
+          "day-2-section-3-exercise-2",
+          "day-2-section-3-exercise-3",
+          "day-2-section-3-exercise-4",
+          "day-2-section-3-exercise-5",
+          "day-2-section-3-exercise-6",
+        ],
+        "id": "day-2-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 3,
+    "id": "day-3",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-3-section-0-exercise-1",
+          "day-3-section-0-exercise-2",
+          "day-3-section-0-exercise-3",
+          "day-3-section-0-exercise-4",
+        ],
+        "id": "day-3-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-3-section-1-exercise-1",
+          "day-3-section-1-exercise-2",
+          "day-3-section-1-exercise-3",
+          "day-3-section-1-exercise-4",
+          "day-3-section-1-exercise-5",
+        ],
+        "id": "day-3-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-3-section-2-exercise-1",
+          "day-3-section-2-exercise-2",
+          "day-3-section-2-exercise-3",
+          "day-3-section-2-exercise-4",
+          "day-3-section-2-exercise-5",
+        ],
+        "id": "day-3-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-3-section-3-exercise-1",
+          "day-3-section-3-exercise-2",
+          "day-3-section-3-exercise-3",
+          "day-3-section-3-exercise-4",
+          "day-3-section-3-exercise-5",
+          "day-3-section-3-exercise-6",
+        ],
+        "id": "day-3-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 4,
+    "id": "day-4",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-4-section-0-exercise-1",
+          "day-4-section-0-exercise-2",
+          "day-4-section-0-exercise-3",
+          "day-4-section-0-exercise-4",
+        ],
+        "id": "day-4-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-4-section-1-exercise-1",
+          "day-4-section-1-exercise-2",
+          "day-4-section-1-exercise-3",
+          "day-4-section-1-exercise-4",
+          "day-4-section-1-exercise-5",
+        ],
+        "id": "day-4-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-4-section-2-exercise-1",
+          "day-4-section-2-exercise-2",
+          "day-4-section-2-exercise-3",
+          "day-4-section-2-exercise-4",
+          "day-4-section-2-exercise-5",
+        ],
+        "id": "day-4-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-4-section-3-exercise-1",
+          "day-4-section-3-exercise-2",
+          "day-4-section-3-exercise-3",
+          "day-4-section-3-exercise-4",
+          "day-4-section-3-exercise-5",
+          "day-4-section-3-exercise-6",
+        ],
+        "id": "day-4-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 5,
+    "id": "day-5",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-5-section-0-exercise-1",
+          "day-5-section-0-exercise-2",
+          "day-5-section-0-exercise-3",
+          "day-5-section-0-exercise-4",
+        ],
+        "id": "day-5-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-5-section-1-exercise-1",
+          "day-5-section-1-exercise-2",
+          "day-5-section-1-exercise-3",
+          "day-5-section-1-exercise-4",
+          "day-5-section-1-exercise-5",
+        ],
+        "id": "day-5-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-5-section-2-exercise-1",
+          "day-5-section-2-exercise-2",
+          "day-5-section-2-exercise-3",
+          "day-5-section-2-exercise-4",
+          "day-5-section-2-exercise-5",
+        ],
+        "id": "day-5-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-5-section-3-exercise-1",
+          "day-5-section-3-exercise-2",
+          "day-5-section-3-exercise-3",
+          "day-5-section-3-exercise-4",
+          "day-5-section-3-exercise-5",
+          "day-5-section-3-exercise-6",
+        ],
+        "id": "day-5-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 6,
+    "id": "day-6",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-6-section-0-exercise-1",
+          "day-6-section-0-exercise-2",
+          "day-6-section-0-exercise-3",
+          "day-6-section-0-exercise-4",
+        ],
+        "id": "day-6-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-6-section-1-exercise-1",
+          "day-6-section-1-exercise-2",
+          "day-6-section-1-exercise-3",
+          "day-6-section-1-exercise-4",
+          "day-6-section-1-exercise-5",
+        ],
+        "id": "day-6-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-6-section-2-exercise-1",
+          "day-6-section-2-exercise-2",
+          "day-6-section-2-exercise-3",
+          "day-6-section-2-exercise-4",
+          "day-6-section-2-exercise-5",
+        ],
+        "id": "day-6-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-6-section-3-exercise-1",
+          "day-6-section-3-exercise-2",
+          "day-6-section-3-exercise-3",
+          "day-6-section-3-exercise-4",
+          "day-6-section-3-exercise-5",
+          "day-6-section-3-exercise-6",
+        ],
+        "id": "day-6-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 7,
+    "id": "day-7",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-7-section-0-exercise-1",
+          "day-7-section-0-exercise-2",
+          "day-7-section-0-exercise-3",
+          "day-7-section-0-exercise-4",
+        ],
+        "id": "day-7-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-7-section-1-exercise-1",
+          "day-7-section-1-exercise-2",
+          "day-7-section-1-exercise-3",
+          "day-7-section-1-exercise-4",
+          "day-7-section-1-exercise-5",
+        ],
+        "id": "day-7-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-7-section-2-exercise-1",
+          "day-7-section-2-exercise-2",
+          "day-7-section-2-exercise-3",
+          "day-7-section-2-exercise-4",
+          "day-7-section-2-exercise-5",
+        ],
+        "id": "day-7-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-7-section-3-exercise-1",
+          "day-7-section-3-exercise-2",
+          "day-7-section-3-exercise-3",
+          "day-7-section-3-exercise-4",
+          "day-7-section-3-exercise-5",
+          "day-7-section-3-exercise-6",
+        ],
+        "id": "day-7-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 8,
+    "id": "day-8",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-8-section-0-exercise-1",
+          "day-8-section-0-exercise-2",
+          "day-8-section-0-exercise-3",
+          "day-8-section-0-exercise-4",
+        ],
+        "id": "day-8-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-8-section-1-exercise-1",
+          "day-8-section-1-exercise-2",
+          "day-8-section-1-exercise-3",
+          "day-8-section-1-exercise-4",
+          "day-8-section-1-exercise-5",
+        ],
+        "id": "day-8-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-8-section-2-exercise-1",
+          "day-8-section-2-exercise-2",
+          "day-8-section-2-exercise-3",
+          "day-8-section-2-exercise-4",
+          "day-8-section-2-exercise-5",
+        ],
+        "id": "day-8-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-8-section-3-exercise-1",
+          "day-8-section-3-exercise-2",
+          "day-8-section-3-exercise-3",
+          "day-8-section-3-exercise-4",
+          "day-8-section-3-exercise-5",
+          "day-8-section-3-exercise-6",
+          "day-8-section-3-exercise-7",
+        ],
+        "id": "day-8-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 9,
+    "id": "day-9",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-9-section-0-exercise-1",
+          "day-9-section-0-exercise-2",
+          "day-9-section-0-exercise-3",
+          "day-9-section-0-exercise-4",
+        ],
+        "id": "day-9-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-9-section-1-exercise-1",
+          "day-9-section-1-exercise-2",
+          "day-9-section-1-exercise-3",
+          "day-9-section-1-exercise-4",
+          "day-9-section-1-exercise-5",
+        ],
+        "id": "day-9-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-9-section-2-exercise-1",
+          "day-9-section-2-exercise-2",
+          "day-9-section-2-exercise-3",
+          "day-9-section-2-exercise-4",
+          "day-9-section-2-exercise-5",
+        ],
+        "id": "day-9-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-9-section-3-exercise-1",
+          "day-9-section-3-exercise-2",
+          "day-9-section-3-exercise-3",
+          "day-9-section-3-exercise-4",
+          "day-9-section-3-exercise-5",
+          "day-9-section-3-exercise-6",
+          "day-9-section-3-exercise-7",
+        ],
+        "id": "day-9-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 10,
+    "id": "day-10",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-10-section-0-exercise-1",
+          "day-10-section-0-exercise-2",
+          "day-10-section-0-exercise-3",
+          "day-10-section-0-exercise-4",
+        ],
+        "id": "day-10-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-10-section-1-exercise-1",
+          "day-10-section-1-exercise-2",
+          "day-10-section-1-exercise-3",
+          "day-10-section-1-exercise-4",
+          "day-10-section-1-exercise-5",
+        ],
+        "id": "day-10-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-10-section-2-exercise-1",
+          "day-10-section-2-exercise-2",
+          "day-10-section-2-exercise-3",
+          "day-10-section-2-exercise-4",
+          "day-10-section-2-exercise-5",
+        ],
+        "id": "day-10-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-10-section-3-exercise-1",
+          "day-10-section-3-exercise-2",
+          "day-10-section-3-exercise-3",
+          "day-10-section-3-exercise-4",
+          "day-10-section-3-exercise-5",
+          "day-10-section-3-exercise-6",
+          "day-10-section-3-exercise-7",
+        ],
+        "id": "day-10-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 11,
+    "id": "day-11",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-11-section-0-exercise-1",
+          "day-11-section-0-exercise-2",
+          "day-11-section-0-exercise-3",
+          "day-11-section-0-exercise-4",
+        ],
+        "id": "day-11-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-11-section-1-exercise-1",
+          "day-11-section-1-exercise-2",
+          "day-11-section-1-exercise-3",
+          "day-11-section-1-exercise-4",
+          "day-11-section-1-exercise-5",
+        ],
+        "id": "day-11-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-11-section-2-exercise-1",
+          "day-11-section-2-exercise-2",
+          "day-11-section-2-exercise-3",
+          "day-11-section-2-exercise-4",
+          "day-11-section-2-exercise-5",
+        ],
+        "id": "day-11-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-11-section-3-exercise-1",
+          "day-11-section-3-exercise-2",
+          "day-11-section-3-exercise-3",
+          "day-11-section-3-exercise-4",
+          "day-11-section-3-exercise-5",
+          "day-11-section-3-exercise-6",
+          "day-11-section-3-exercise-7",
+        ],
+        "id": "day-11-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 12,
+    "id": "day-12",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-12-section-0-exercise-1",
+          "day-12-section-0-exercise-2",
+          "day-12-section-0-exercise-3",
+          "day-12-section-0-exercise-4",
+        ],
+        "id": "day-12-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-12-section-1-exercise-1",
+          "day-12-section-1-exercise-2",
+          "day-12-section-1-exercise-3",
+          "day-12-section-1-exercise-4",
+          "day-12-section-1-exercise-5",
+        ],
+        "id": "day-12-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-12-section-2-exercise-1",
+          "day-12-section-2-exercise-2",
+          "day-12-section-2-exercise-3",
+          "day-12-section-2-exercise-4",
+          "day-12-section-2-exercise-5",
+        ],
+        "id": "day-12-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-12-section-3-exercise-1",
+          "day-12-section-3-exercise-2",
+          "day-12-section-3-exercise-3",
+          "day-12-section-3-exercise-4",
+          "day-12-section-3-exercise-5",
+          "day-12-section-3-exercise-6",
+          "day-12-section-3-exercise-7",
+        ],
+        "id": "day-12-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 13,
+    "id": "day-13",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-13-section-0-exercise-1",
+          "day-13-section-0-exercise-2",
+          "day-13-section-0-exercise-3",
+          "day-13-section-0-exercise-4",
+        ],
+        "id": "day-13-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-13-section-1-exercise-1",
+          "day-13-section-1-exercise-2",
+          "day-13-section-1-exercise-3",
+          "day-13-section-1-exercise-4",
+          "day-13-section-1-exercise-5",
+        ],
+        "id": "day-13-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-13-section-2-exercise-1",
+          "day-13-section-2-exercise-2",
+          "day-13-section-2-exercise-3",
+          "day-13-section-2-exercise-4",
+          "day-13-section-2-exercise-5",
+        ],
+        "id": "day-13-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-13-section-3-exercise-1",
+          "day-13-section-3-exercise-2",
+          "day-13-section-3-exercise-3",
+          "day-13-section-3-exercise-4",
+          "day-13-section-3-exercise-5",
+          "day-13-section-3-exercise-6",
+        ],
+        "id": "day-13-section-3",
+      },
+    ],
+  },
+  {
+    "dayNumber": 14,
+    "id": "day-14",
+    "sections": [
+      {
+        "exerciseIds": [
+          "day-14-section-0-exercise-1",
+          "day-14-section-0-exercise-2",
+          "day-14-section-0-exercise-3",
+          "day-14-section-0-exercise-4",
+        ],
+        "id": "day-14-section-0",
+      },
+      {
+        "exerciseIds": [
+          "day-14-section-1-exercise-1",
+          "day-14-section-1-exercise-2",
+          "day-14-section-1-exercise-3",
+          "day-14-section-1-exercise-4",
+          "day-14-section-1-exercise-5",
+        ],
+        "id": "day-14-section-1",
+      },
+      {
+        "exerciseIds": [
+          "day-14-section-2-exercise-1",
+          "day-14-section-2-exercise-2",
+          "day-14-section-2-exercise-3",
+          "day-14-section-2-exercise-4",
+          "day-14-section-2-exercise-5",
+        ],
+        "id": "day-14-section-2",
+      },
+      {
+        "exerciseIds": [
+          "day-14-section-3-exercise-1",
+          "day-14-section-3-exercise-2",
+          "day-14-section-3-exercise-3",
+          "day-14-section-3-exercise-4",
+          "day-14-section-3-exercise-5",
+          "day-14-section-3-exercise-6",
+          "day-14-section-3-exercise-7",
+        ],
+        "id": "day-14-section-3",
+      },
+    ],
+  },
+]
+`;

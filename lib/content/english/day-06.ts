@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 6 — "My Body" (Pre-A1, listening-first). */
@@ -39,11 +33,11 @@ export const englishDay06: WorkbookDay = {
       learningGoal: "לקשר בין חלק גוף באנגלית לפירוש.",
       prerequisiteSkillTags: [],
       exercises: [
-        multipleChoice(6, 1, 1, "איך אומרים 'יד' באנגלית?", ["hand", "head", "leg"], "hand", [], 1, "abstract"),
-        multipleChoice(6, 1, 2, "איך אומרים 'עין' באנגלית?", ["eye", "ear", "leg"], "eye", [], 2, "abstract"),
+        listenChoose(6, 1, 1, "מה שמעתם?", "hand", ["יד", "ראש", "רגל"], "יד", [], 1, "abstract"),
+        listenChoose(6, 1, 2, "מה שמעתם?", "eye", ["עין", "אוזן", "רגל"], "עין", [], 2, "abstract"),
         listenChoose(6, 1, 3, "מה שמעתם?", "ear", ["אוזן", "עין", "יד"], "אוזן", [], 2, "abstract"),
         listenChoose(6, 1, 4, "מה שמעתם?", "head", ["ראש", "רגל", "עין"], "ראש", [], 1, "abstract"),
-        letterTiles(6, 1, 5, "הרכיבו את המילה ששמעתם:", "ear", [], 2, "abstract", "ear"),
+        listenChoose(6, 1, 5, "מה שמעתם?", "leg", ["רגל", "יד", "אוזן"], "רגל", [], 2, "abstract"),
       ],
     },
     {
@@ -54,10 +48,10 @@ export const englishDay06: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(6, 2, 1, "מה שמעתם?", "leg", ["רגל", "יד", "אוזן"], "רגל", [], 1, "abstract"),
-        multipleChoice(6, 2, 2, "איך אומרים 'ראש' באנגלית?", ["head", "hand", "eye"], "head", [], 2, "abstract"),
+        listenChoose(6, 2, 2, "מה שמעתם?", "head", ["ראש", "יד", "עין"], "ראש", [], 2, "abstract"),
         listenChoose(6, 2, 3, "מה שמעתם?", "hand", ["יד", "רגל", "אוזן"], "יד", [], 1, "abstract"),
-        multipleChoice(6, 2, 4, "איך אומרים 'אוזן' באנגלית?", ["ear", "eye", "leg"], "ear", [], 2, "abstract"),
-        letterTiles(6, 2, 5, "הרכיבו את המילה ששמעתם:", "leg", [], 2, "abstract", "leg"),
+        listenChoose(6, 2, 4, "מה שמעתם?", "ear", ["אוזן", "עין", "רגל"], "אוזן", [], 2, "abstract"),
+        listenChoose(6, 2, 5, "מה שמעתם?", "eye", ["עין", "ראש", "יד"], "עין", [], 2, "abstract"),
       ],
     },
     {
@@ -68,10 +62,10 @@ export const englishDay06: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(6, 3, 1, "מה שמעתם?", "eye", ["עין", "אוזן", "ראש"], "עין", [], 1, "abstract"),
-        multipleChoice(6, 3, 2, "איך אומרים 'רגל' באנגלית?", ["leg", "hand", "head"], "leg", [], 2, "abstract"),
-        trueFalse(6, 3, 3, "האם 'hand' פירושו 'יד'?", true, [], 1, "abstract"),
-        trueFalse(6, 3, 4, "האם 'head' פירושו 'עין'?", false, [], 2, "abstract"),
-        letterTiles(6, 3, 5, "הרכיבו את המילה ששמעתם:", "eye", [], 2, "abstract", "eye"),
+        listenChoose(6, 3, 2, "מה שמעתם?", "leg", ["רגל", "יד", "ראש"], "רגל", [], 2, "abstract"),
+        listenChoose(6, 3, 3, "מה שמעתם?", "hand", ["יד", "ראש", "עין"], "יד", [], 1, "abstract"),
+        listenChoose(6, 3, 4, "מה שמעתם?", "head", ["ראש", "עין", "אוזן"], "ראש", [], 2, "abstract"),
+        listenChoose(6, 3, 5, "מה שמעתם?", "ear", ["אוזן", "עין", "רגל"], "אוזן", [], 2, "abstract"),
         matchPairs(
           6,
           3,
@@ -85,7 +79,7 @@ export const englishDay06: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          { leftLang: "en", rightLang: "he", audioByLeft: { hand: "hand", head: "head", eye: "eye" } },
         ),
       ],
     },

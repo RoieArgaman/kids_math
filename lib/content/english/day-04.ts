@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 4 — "Animals" (Pre-A1, listening-first). */
@@ -39,11 +33,11 @@ export const englishDay04: WorkbookDay = {
       learningGoal: "לקשר בין שם חיה באנגלית לפירוש.",
       prerequisiteSkillTags: [],
       exercises: [
-        multipleChoice(4, 1, 1, "איך אומרים 'חתול' באנגלית?", ["cat", "dog", "cow"], "cat", [], 1, "abstract"),
-        multipleChoice(4, 1, 2, "איך אומרים 'כלב' באנגלית?", ["dog", "fish", "bird"], "dog", [], 1, "abstract"),
+        listenChoose(4, 1, 1, "מה שמעתם?", "cat", ["חתול", "כלב", "פרה"], "חתול", [], 1, "abstract"),
+        listenChoose(4, 1, 2, "מה שמעתם?", "dog", ["כלב", "דג", "ציפור"], "כלב", [], 1, "abstract"),
         listenChoose(4, 1, 3, "מה שמעתם?", "cow", ["פרה", "כלב", "דג"], "פרה", [], 2, "abstract"),
         listenChoose(4, 1, 4, "מה שמעתם?", "bird", ["ציפור", "פרה", "חתול"], "ציפור", [], 2, "abstract"),
-        letterTiles(4, 1, 5, "הרכיבו את המילה ששמעתם:", "cat", [], 2, "abstract", "cat"),
+        listenChoose(4, 1, 5, "מה שמעתם?", "fish", ["דג", "חתול", "כלב"], "דג", [], 2, "abstract"),
       ],
     },
     {
@@ -54,10 +48,10 @@ export const englishDay04: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(4, 2, 1, "מה שמעתם?", "fish", ["דג", "ציפור", "פרה"], "דג", [], 2, "abstract"),
-        multipleChoice(4, 2, 2, "איך אומרים 'פרה' באנגלית?", ["cow", "dog", "cat"], "cow", [], 2, "abstract"),
+        listenChoose(4, 2, 2, "מה שמעתם?", "cow", ["פרה", "כלב", "חתול"], "פרה", [], 2, "abstract"),
         listenChoose(4, 2, 3, "מה שמעתם?", "dog", ["כלב", "דג", "ציפור"], "כלב", [], 1, "abstract"),
-        multipleChoice(4, 2, 4, "איך אומרים 'ציפור' באנגלית?", ["bird", "fish", "cow"], "bird", [], 2, "abstract"),
-        letterTiles(4, 2, 5, "הרכיבו את המילה ששמעתם:", "dog", [], 2, "abstract", "dog"),
+        listenChoose(4, 2, 4, "מה שמעתם?", "bird", ["ציפור", "פרה", "דג"], "ציפור", [], 2, "abstract"),
+        listenChoose(4, 2, 5, "מה שמעתם?", "cat", ["חתול", "כלב", "פרה"], "חתול", [], 2, "abstract"),
       ],
     },
     {
@@ -68,10 +62,10 @@ export const englishDay04: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(4, 3, 1, "מה שמעתם?", "cat", ["חתול", "כלב", "דג"], "חתול", [], 1, "abstract"),
-        multipleChoice(4, 3, 2, "איך אומרים 'דג' באנגלית?", ["fish", "bird", "cow"], "fish", [], 2, "abstract"),
-        trueFalse(4, 3, 3, "האם 'dog' פירושו 'כלב'?", true, [], 1, "abstract"),
-        trueFalse(4, 3, 4, "האם 'cow' פירושו 'חתול'?", false, [], 2, "abstract"),
-        letterTiles(4, 3, 5, "הרכיבו את המילה ששמעתם:", "fish", [], 2, "abstract", "fish"),
+        listenChoose(4, 3, 2, "מה שמעתם?", "fish", ["דג", "ציפור", "פרה"], "דג", [], 2, "abstract"),
+        listenChoose(4, 3, 3, "מה שמעתם?", "dog", ["כלב", "חתול", "דג"], "כלב", [], 1, "abstract"),
+        listenChoose(4, 3, 4, "מה שמעתם?", "cow", ["פרה", "חתול", "ציפור"], "פרה", [], 2, "abstract"),
+        listenChoose(4, 3, 5, "מה שמעתם?", "bird", ["ציפור", "כלב", "דג"], "ציפור", [], 2, "abstract"),
         matchPairs(
           4,
           3,
@@ -85,7 +79,11 @@ export const englishDay04: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          {
+            leftLang: "en",
+            rightLang: "he",
+            audioByLeft: { dog: "dog", cat: "cat", bird: "bird" },
+          },
         ),
       ],
     },

@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /**
@@ -53,8 +47,8 @@ export const englishDay01: WorkbookDay = {
         listenChoose(1, 1, 1, "מָה שָׁמַעְתֶּם?", "hello", ["שָׁלוֹם", "לֹא", "אָדוֹם"], "שָׁלוֹם", [], 1, "abstract"),
         listenChoose(1, 1, 2, "מָה שָׁמַעְתֶּם?", "thank you", ["תּוֹדָה", "שָׁלוֹם", "כֵּן"], "תּוֹדָה", [], 2, "abstract"),
         listenChoose(1, 1, 3, "מָה שָׁמַעְתֶּם?", "goodbye", ["לְהִתְרָאוֹת", "תּוֹדָה", "כֵּן"], "לְהִתְרָאוֹת", [], 2, "abstract"),
-        multipleChoice(1, 1, 4, "אֵיךְ אוֹמְרִים 'תּוֹדָה' בְּאַנְגְּלִית?", ["thank you", "hello", "goodbye"], "thank you", [], 2, "abstract"),
-        multipleChoice(1, 1, 5, "אֵיךְ אוֹמְרִים 'שָׁלוֹם' בְּאַנְגְּלִית?", ["hello", "yes", "red"], "hello", [], 1, "abstract"),
+        listenChoose(1, 1, 4, "מָה שָׁמַעְתֶּם?", "yes", ["כֵּן", "לֹא", "תּוֹדָה"], "כֵּן", [], 2, "abstract"),
+        listenChoose(1, 1, 5, "מָה שָׁמַעְתֶּם?", "no", ["לֹא", "כֵּן", "שָׁלוֹם"], "לֹא", [], 1, "abstract"),
       ],
     },
     {
@@ -68,7 +62,7 @@ export const englishDay01: WorkbookDay = {
         listenChoose(1, 2, 2, "מָה שָׁמַעְתֶּם?", "blue", ["כָּחוֹל", "אָדוֹם", "צָהוֹב"], "כָּחוֹל", [], 1, "abstract"),
         listenChoose(1, 2, 3, "מָה שָׁמַעְתֶּם?", "green", ["יָרוֹק", "כָּחוֹל", "אָדוֹם"], "יָרוֹק", [], 2, "abstract"),
         listenChoose(1, 2, 4, "מָה שָׁמַעְתֶּם?", "yellow", ["צָהוֹב", "יָרוֹק", "כָּחוֹל"], "צָהוֹב", [], 2, "abstract"),
-        letterTiles(1, 2, 5, "הַרְכִּיבוּ אֶת הַמִּילָּה שֶׁשְּׁמַעְתֶּם:", "red", [], 2, "abstract", "red"),
+        listenChoose(1, 2, 5, "מָה שָׁמַעְתֶּם?", "hello", ["שָׁלוֹם", "אָדוֹם", "כָּחוֹל"], "שָׁלוֹם", [], 2, "abstract"),
       ],
     },
     {
@@ -80,10 +74,10 @@ export const englishDay01: WorkbookDay = {
       exercises: [
         listenChoose(1, 3, 1, "מָה שָׁמַעְתֶּם?", "hello", ["שָׁלוֹם", "לְהִתְרָאוֹת", "אָדוֹם"], "שָׁלוֹם", [], 1, "abstract"),
         listenChoose(1, 3, 2, "מָה שָׁמַעְתֶּם?", "blue", ["כָּחוֹל", "יָרוֹק", "צָהוֹב"], "כָּחוֹל", [], 2, "abstract"),
-        multipleChoice(1, 3, 3, "אֵיךְ אוֹמְרִים 'יָרוֹק' בְּאַנְגְּלִית?", ["green", "blue", "red"], "green", [], 2, "abstract"),
-        trueFalse(1, 3, 4, "הַאִם 'thank you' פֵּירוּשׁוֹ 'תּוֹדָה'?", true, [], 1, "abstract"),
-        trueFalse(1, 3, 5, "הַאִם 'red' פֵּירוּשׁוֹ 'כָּחוֹל'?", false, [], 2, "abstract"),
-        letterTiles(1, 3, 6, "הַרְכִּיבוּ אֶת הַמִּילָּה שֶׁשְּׁמַעְתֶּם:", "blue", [], 2, "abstract", "blue"),
+        listenChoose(1, 3, 3, "מָה שָׁמַעְתֶּם?", "green", ["יָרוֹק", "כָּחוֹל", "אָדוֹם"], "יָרוֹק", [], 2, "abstract"),
+        listenChoose(1, 3, 4, "מָה שָׁמַעְתֶּם?", "thank you", ["תּוֹדָה", "שָׁלוֹם", "כֵּן"], "תּוֹדָה", [], 1, "abstract"),
+        listenChoose(1, 3, 5, "מָה שָׁמַעְתֶּם?", "red", ["אָדוֹם", "כָּחוֹל", "יָרוֹק"], "אָדוֹם", [], 2, "abstract"),
+        listenChoose(1, 3, 6, "מָה שָׁמַעְתֶּם?", "yellow", ["צָהוֹב", "יָרוֹק", "כָּחוֹל"], "צָהוֹב", [], 2, "abstract"),
         matchPairs(
           1,
           3,
@@ -97,7 +91,11 @@ export const englishDay01: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          {
+            leftLang: "en",
+            rightLang: "he",
+            audioByLeft: { red: "red", blue: "blue", hello: "hello" },
+          },
         ),
       ],
     },

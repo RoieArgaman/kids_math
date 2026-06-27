@@ -26,6 +26,30 @@ phonics, reading, or grammar. This curriculum extends it to a real beginner prog
 young Hebrew-speaking child can complete on their own: **listening → the alphabet →
 phonics/decoding → reading → grammar → reading comprehension** — without ever typing.
 
+## Reading-readiness ladder (never ask the child to read ahead of instruction)
+
+A true beginner reads only Hebrew. The curriculum must never require *reading* (or
+encoding/spelling) English before it has taught that reading. This is enforced by
+`tests/unit/lib/english/readingReadiness.test.ts`.
+
+| Phase | Days | Taught | What the learner may be asked to read |
+|-------|------|--------|----------------------------------------|
+| 0 — pre-letter | 1–7 | Listening / vocabulary | **Nothing in English.** English is delivered only as *audio* (`listen_choose.audioText`, voiced by the English engine) or *tap-to-hear* tiles (`match_pairs.audioByLeft`). Answers are Hebrew words or digits. No `multiple_choice` / `true_false` / `letter_tiles`. |
+| 1 — alphabet | 8–11 | Letters A–Z | **Single letters** only. Words stay audio-supported. |
+| 2 — decoding | 12–14 | Initial sounds, CVC blending | **Short taught CVC words**, each heard the same day before it is read. |
+
+Practical rules when authoring/editing Level A:
+- Prefer `listen_choose` (hear English → choose the Hebrew meaning) for any pre-reading
+  comprehension check. Receptive (hear→understand) precedes productive (recall→produce).
+- Any `match_pairs` whose `leftLang` is `"en"` and whose tiles are **words** (length ≥ 2)
+  must provide `audioByLeft` for every word tile, so it can be heard, not only read.
+- English text must never be embedded inside a Hebrew prompt that is read aloud — the
+  prompt is voiced by the **Hebrew** TTS and would mispronounce it. Put the English on an
+  `AudioButton` (`lang="en"`) instead.
+- Exercise/section/day **IDs are storage keys** — when reworking content, swap an
+  exercise's *kind/content* in place; never rename IDs or change a section's exercise
+  count (`idStability.test.ts` guards this).
+
 ## How other countries teach a foreign language (the research we applied)
 
 - **CEFR** (Council of Europe; the framework Israel's MoE and most of Europe use for

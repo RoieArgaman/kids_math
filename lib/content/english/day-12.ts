@@ -88,7 +88,11 @@ export const englishDay12: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "en" },
+          {
+            leftLang: "en",
+            rightLang: "en",
+            audioByLeft: { cat: "cat", dog: "dog", ball: "ball", fish: "fish" },
+          },
         ),
       ],
     },

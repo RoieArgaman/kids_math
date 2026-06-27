@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { letterTiles, listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 14 — "Level A review (part 1)" (Pre-A1, listening-first). */
@@ -42,8 +36,8 @@ export const englishDay14: WorkbookDay = {
       exercises: [
         listenChoose(14, 1, 1, "מה שמעתם?", "dog", ["כלב", "חתול", "דג"], "כלב", [], 1, "abstract"),
         listenChoose(14, 1, 2, "מה שמעתם?", "fish", ["דג", "כלב", "חתול"], "דג", [], 1, "abstract"),
-        multipleChoice(14, 1, 3, "איך אומרים 'חתול' באנגלית?", ["cat", "dog", "fish"], "cat", [], 1, "abstract"),
-        multipleChoice(14, 1, 4, "איך אומרים 'יד' באנגלית?", ["hand", "eye", "book"], "hand", [], 1, "abstract"),
+        listenChoose(14, 1, 3, "מה שמעתם?", "cat", ["חתול", "כלב", "דג"], "חתול", [], 1, "abstract"),
+        listenChoose(14, 1, 4, "מה שמעתם?", "hand", ["יד", "עין", "ספר"], "יד", [], 1, "abstract"),
         listenChoose(14, 1, 5, "מה שמעתם?", "eye", ["עין", "יד", "ספר"], "עין", [], 1, "abstract"),
       ],
     },
@@ -55,7 +49,7 @@ export const englishDay14: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(14, 2, 1, "מה שמעתם?", "book", ["ספר", "עט", "יד"], "ספר", [], 1, "abstract"),
-        multipleChoice(14, 2, 2, "איך אומרים 'עט' באנגלית?", ["pen", "book", "eye"], "pen", [], 1, "abstract"),
+        listenChoose(14, 2, 2, "מה שמעתם?", "pen", ["עט", "ספר", "יד"], "עט", [], 1, "abstract"),
         listenChoose(14, 2, 3, "באיזו אות מתחילה המילה?", "sun", ["S", "H", "B"], "S", [], 1, "abstract", "en"),
         letterTiles(14, 2, 4, "הרכיבו את המילה ששמעתם:", "sun", [], 1, "abstract", "sun"),
         letterTiles(14, 2, 5, "הרכיבו את המילה ששמעתם:", "hat", [], 2, "abstract", "hat"),
@@ -70,9 +64,9 @@ export const englishDay14: WorkbookDay = {
       exercises: [
         listenChoose(14, 3, 1, "מה שמעתם?", "green", ["ירוק", "כחול", "אדום"], "ירוק", [], 1, "abstract"),
         listenChoose(14, 3, 2, "מה שמעתם?", "three", ["שלוש", "שתיים", "אחת"], "שלוש", [], 1, "abstract"),
-        multipleChoice(14, 3, 3, "איך אומרים 'כלב' באנגלית?", ["dog", "cat", "fish"], "dog", [], 1, "abstract"),
-        trueFalse(14, 3, 4, "האם 'eye' פירושו 'עין'?", true, [], 1, "abstract"),
-        trueFalse(14, 3, 5, "האם 'book' פירושו 'עט'?", false, [], 2, "abstract"),
+        listenChoose(14, 3, 3, "מה שמעתם?", "dog", ["כלב", "חתול", "דג"], "כלב", [], 1, "abstract"),
+        listenChoose(14, 3, 4, "מה שמעתם?", "eye", ["עין", "יד", "ספר"], "עין", [], 1, "abstract"),
+        listenChoose(14, 3, 5, "מה שמעתם?", "book", ["ספר", "עט", "יד"], "ספר", [], 2, "abstract"),
         letterTiles(14, 3, 6, "הרכיבו את המילה ששמעתם:", "red", [], 1, "abstract", "red"),
         matchPairs(
           14,
@@ -88,7 +82,11 @@ export const englishDay14: WorkbookDay = {
           [],
           1,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          {
+            leftLang: "en",
+            rightLang: "he",
+            audioByLeft: { blue: "blue", dog: "dog", hand: "hand", book: "book" },
+          },
         ),
       ],
     },
