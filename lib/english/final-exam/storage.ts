@@ -1,12 +1,18 @@
+import type { GradeId } from "@/lib/grades";
 import type { ExerciseId } from "@/lib/types";
 import type { EnglishFinalExamState, EnglishFinalExamStateV1 } from "@/lib/english/final-exam/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
 
-const ENGLISH_FINAL_EXAM_STORAGE_KEY = "kids_math.english.final_exam.v1";
+/**
+ * Each English level has its own final-exam state, keyed by level. `level`
+ * defaults to "a" so the legacy single key + all existing call sites (sync
+ * bundle, admin) keep resolving to Level A's exam with no change.
+ */
+const LEGACY_ENGLISH_FINAL_EXAM_STORAGE_KEY = "kids_math.english.final_exam.v1";
 
-/** Exposed for cross-tab listeners + sync. */
-export function englishFinalExamStorageKey(): string {
-  return ENGLISH_FINAL_EXAM_STORAGE_KEY;
+/** Exposed for cross-tab listeners + sync. Defaults to Level A. */
+export function englishFinalExamStorageKey(level: GradeId = "a"): string {
+  return `${LEGACY_ENGLISH_FINAL_EXAM_STORAGE_KEY}.level.${level}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -44,9 +50,28 @@ export function createInitialEnglishFinalExamState(params: {
   };
 }
 
-export function loadEnglishFinalExamState(): EnglishFinalExamState | null {
+/**
+ * One-time migration: the pre-level single key becomes Level A's key. Runs only
+ * when Level A has no level-scoped value yet.
+ */
+function migrateLegacyExamToLevelA(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const levelAKey = englishFinalExamStorageKey("a");
+    if (window.localStorage.getItem(levelAKey)) return;
+    const legacy = window.localStorage.getItem(LEGACY_ENGLISH_FINAL_EXAM_STORAGE_KEY);
+    if (!legacy) return;
+    window.localStorage.setItem(levelAKey, legacy);
+    window.localStorage.removeItem(LEGACY_ENGLISH_FINAL_EXAM_STORAGE_KEY);
+  } catch {
+    // private mode / quota — ignore
+  }
+}
+
+export function loadEnglishFinalExamState(level: GradeId = "a"): EnglishFinalExamState | null {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(ENGLISH_FINAL_EXAM_STORAGE_KEY);
+  if (level === "a") migrateLegacyExamToLevelA();
+  const raw = window.localStorage.getItem(englishFinalExamStorageKey(level));
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -82,17 +107,17 @@ export function loadEnglishFinalExamState(): EnglishFinalExamState | null {
   }
 }
 
-export function saveEnglishFinalExamState(state: EnglishFinalExamState): void {
+export function saveEnglishFinalExamState(state: EnglishFinalExamState, level: GradeId = "a"): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(ENGLISH_FINAL_EXAM_STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(englishFinalExamStorageKey(level), JSON.stringify(state));
     scheduleSync();
   } catch {
     // private mode / quota — ignore
   }
 }
 
-export function clearEnglishFinalExamState(): void {
+export function clearEnglishFinalExamState(level: GradeId = "a"): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(ENGLISH_FINAL_EXAM_STORAGE_KEY);
+  window.localStorage.removeItem(englishFinalExamStorageKey(level));
 }

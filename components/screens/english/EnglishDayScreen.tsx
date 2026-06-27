@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllEnglishDays, type EnglishLevel } from "@/lib/content/english-workbook";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { routes } from "@/lib/routes";
@@ -36,10 +36,10 @@ function getSectionCardState(
   return warmupComplete ? "open" : "locked";
 }
 
-export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
+export function EnglishDayScreen({ level, dayId }: { level: EnglishLevel; dayId: DayId }) {
   const router = useRouter();
   const { markComplete, percentDone, correctAnswers } = useProgress(dayId, { subject: "english" });
-  const day = useMemo(() => getEnglishDays().find((d) => d.id === dayId), [dayId]);
+  const day = useMemo(() => getAllEnglishDays().find((d) => d.id === dayId), [dayId]);
   const [showReward, setShowReward] = useState(false);
 
   const sectionStates = useMemo(() => {
@@ -64,7 +64,7 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
           emoji="🔍"
           title="הַשִּׁעוּר לֹא נִמְצָא."
           actions={
-            <ButtonLink href={routes.englishHome()} className="w-full text-center">
+            <ButtonLink href={routes.englishHome(level)} className="w-full text-center">
               חֲזָרָה לְאַנְגְּלִית
             </ButtonLink>
           }
@@ -86,8 +86,8 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
         data-testid={testIds.screen.english.day.nav(dayId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
-        <AppNavLink href={routes.englishHome()}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
-        <AppNavLink href={routes.subjectPicker()}>חֲזָרָה לַבְּחִירָה</AppNavLink>
+        <AppNavLink href={routes.englishHome(level)}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
+        <AppNavLink href={routes.englishLevelPicker()}>חֲזָרָה לִבְחִירַת שָׁלָב</AppNavLink>
       </div>
 
       <div
@@ -158,7 +158,7 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
                 ) : (
                   <Link
                     data-testid={testIds.screen.english.day.sectionCardCta(dayId, section.id)}
-                    href={routes.englishSection(dayId, section.id)}
+                    href={routes.englishSection(level, dayId, section.id)}
                     className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm ${
                       isCardComplete ? "border border-[#a7f3d0] bg-white text-[#047857]" : "btn-accent"
                     }`}
@@ -201,7 +201,7 @@ export function EnglishDayScreen({ dayId }: { dayId: DayId }) {
         visible={showReward}
         onConfirm={() => {
           setShowReward(false);
-          router.push(routes.englishHome());
+          router.push(routes.englishHome(level));
         }}
       />
     </main>

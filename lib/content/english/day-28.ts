@@ -1,0 +1,95 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 28 — "Final review before the exam" (Level B, A1). */
+export const englishDay28: WorkbookDay = {
+  id: "day-28",
+  dayNumber: 28,
+  title: "שיעור 28: חזרה אחרונה לפני המבחן",
+  week: 10,
+  objective: "לחזור על כל מה שלמדנו לקראת המבחן המסכם.",
+  teachingSummary: "כל הכבוד שהגעתם עד לכאן! היום נחזור על כל מה שלמדנו, בלי לחץ. אתם מוכנים למבחן.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-28-section-0",
+      title: "חימום: מילים ואותיות",
+      type: "warmup",
+      learningGoal: "לחזור על אוצר מילים ואותיות.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(28, 0, 1, "מה שמעתם?", "dog", ["כלב", "חתול", "ציפור"], "כלב", [], 1, "abstract"),
+        listenChoose(28, 0, 2, "מה שמעתם?", "cat", ["חתול", "כלב", "דג"], "חתול", [], 1, "abstract"),
+        multipleChoice(28, 0, 3, "איך אומרים 'אדום' באנגלית?", ["red", "blue", "green"], "red", [], 1, "abstract"),
+        multipleChoice(28, 0, 4, "מה פירוש המילה 'big'?", ["גדול", "קטן", "חם"], "גדול", [], 1, "abstract"),
+      ],
+    },
+    {
+      id: "day-28-section-1",
+      title: "קוראים מילים",
+      type: "verbal",
+      learningGoal: "לחזור על קריאת מילים פשוטות.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(28, 1, 1, "מה פירוש המילה 'cat'?", ["חתול", "כלב", "דג"], "חתול", [], 1, "abstract"),
+        multipleChoice(28, 1, 2, "מה פירוש המילה 'sun'?", ["שמש", "ירח", "כדור"], "שמש", [], 1, "abstract"),
+        listenChoose(28, 1, 3, "מה שמעתם?", "fish", ["דג", "כלב", "ציפור"], "דג", [], 1, "abstract"),
+        multipleChoice(28, 1, 4, "מה פירוש המילה 'happy'?", ["שמח", "עצוב", "קר"], "שמח", [], 1, "abstract"),
+        letterTiles(28, 1, 5, "הרכיבו את המילה ששמעתם:", "cat", [], 1, "abstract", "cat"),
+      ],
+    },
+    {
+      id: "day-28-section-2",
+      title: "דקדוק ומשפטים",
+      type: "verbal",
+      learningGoal: "לחזור על דקדוק וקריאת משפטים.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        multipleChoice(28, 2, 1, "מה נכון?", ["a dog", "an dog", "a apple"], "a dog", [], 1, "abstract"),
+        multipleChoice(28, 2, 2, "מה נכון?", ["I am happy", "I is happy", "I are happy"], "I am happy", [], 1, "abstract"),
+        multipleChoice(28, 2, 3, "קראו: \"The cat is big.\" מה נכון?", ["החתול גדול", "החתול קטן", "הכלב גדול"], "החתול גדול", [], 1, "abstract"),
+        trueFalse(28, 2, 4, "האם 'small' פירושו 'קטן'?", true, [], 1, "abstract"),
+        letterTiles(28, 2, 5, "הרכיבו את המילה ששמעתם:", "dog", [], 1, "abstract", "dog"),
+      ],
+    },
+    {
+      id: "day-28-section-3",
+      title: "חזרה אחרונה",
+      type: "review",
+      learningGoal: "לחזור על הכל ולהרגיש מוכנים למבחן.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(28, 3, 1, "מה שמעתם?", "bird", ["ציפור", "חתול", "דג"], "ציפור", [], 1, "abstract"),
+        multipleChoice(28, 3, 2, "איך אומרים 'קטן' באנגלית?", ["small", "big", "tall"], "small", [], 1, "abstract"),
+        multipleChoice(28, 3, 3, "קראו: \"I see a dog.\" מה נכון?", ["אני רואה כלב", "אני רואה חתול", "יש לי כלב"], "אני רואה כלב", [], 1, "abstract"),
+        trueFalse(28, 3, 4, "האם 'dog' פירושו 'כלב'?", true, [], 1, "abstract"),
+        trueFalse(28, 3, 5, "האם 'hot' פירושו 'קר'?", false, [], 1, "abstract"),
+        letterTiles(28, 3, 6, "הרכיבו את המילה ששמעתם:", "fish", [], 1, "abstract", "fish"),
+        matchPairs(
+          28,
+          3,
+          7,
+          "התאימו כל מילה לפירוש:",
+          [
+            { left: "dog", right: "כלב" },
+            { left: "cat", right: "חתול" },
+            { left: "big", right: "גדול" },
+            { left: "happy", right: "שמח" },
+          ],
+          [],
+          1,
+          "abstract",
+          { leftLang: "en", rightLang: "he" },
+        ),
+      ],
+    },
+  ],
+};

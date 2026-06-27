@@ -6,6 +6,30 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-06-27 (English curriculum → parity with Math: two CEFR levels, like grades)
+- **Trigger:** Finish English to parity with Math — full beginner program (alphabet,
+  phonics, decoding/reading, grammar, reading comprehension), CEFR-aligned, non-frustrating,
+  presented as two levels "like כיתות".
+- **What changed / where:**
+  - Content: authored `lib/content/english/day-08..28.ts` (21 new days; ~420 exercises) —
+    alphabet A–Z, initial sounds, CVC reading, word families, sight words, a/an, plurals,
+    this/that, pronouns + to be, can/can't, I like, prepositions, numbers 11–20, adjectives,
+    sentence reading. **No new exercise kinds** — all map onto `listen_choose`/`letter_tiles`/
+    `match_pairs`/`multiple_choice`/`true_false` (tap-only). Docs: `docs/ENGLISH_CURRICULUM.md`.
+  - Structure (grade-style, like Math): `/english` is a **level picker**; `/english/[level]`
+    homes; `/english/[level]/exam`; **Level B gated behind Level A's exam** (client-side, via
+    `lib/english/levels.ts`). Reuses the `GradeId` axis ("a"=Pre-A1, "b"=A1).
+  - **Single progress store kept** (`kids_math.english.workbook_progress.v1`): levels use
+    disjoint day IDs (A=day-1..14, B=day-15..28), so per-level progress falls out for free —
+    **no sync-bundle / admin / subjects changes needed.** Only the **exam** state is level-keyed
+    (`...final_exam.v1.level.{a|b}`); `loadEnglishFinalExamState(level="a")` migrates the legacy
+    single key → Level A and keeps sync/admin call sites working unchanged.
+  - Content split: `getEnglishDays(level)` / `getEnglishDaysById(level)` + `getAllEnglishDays()`
+    (track/admin/lookups). `routes.englishLevelPicker()` + level-keyed `englishHome/Day/Section/Exam`.
+- **How to reuse:** A "level/grade" UX without storage rework — keep one store + **disjoint day
+  IDs per level**, scope only the things that truly differ (here: the exam) by level, and gate
+  client-side. Mirror Math's grade-picker pattern for the screens/routes.
+
 ### 2026-06-13 (AI migration: structured math render + TTS manifest + accuracy backstop)
 - **Trigger:** Plan to "migrate AI" for better voice, more-accurate questions, and better question rendering (docs/AI_MIGRATION_PLAN.md, MAX, INV-FALLBACK = degrade to today's behavior on any issue).
 - **What changed / where:**

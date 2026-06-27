@@ -1,5 +1,5 @@
 import { getWorkbookDays } from "@/lib/content/workbook";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllEnglishDays } from "@/lib/content/english-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { clearGmatChallengeState } from "@/lib/gmat-challenge/storage";
 import { clearFinalExamState } from "@/lib/final-exam/storage";
@@ -66,7 +66,7 @@ export function resetAdminEnglishDayProgress(
   state: WorkbookProgressState,
   dayId: DayId,
 ): ResetAdminEnglishDayProgressResult | null {
-  const ordered = getEnglishDays();
+  const ordered = getAllEnglishDays();
   const startIndex = ordered.findIndex((d) => d.id === dayId);
   if (startIndex === -1) {
     return null;

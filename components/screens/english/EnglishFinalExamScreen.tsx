@@ -8,7 +8,8 @@ import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
-import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getEnglishDays, type EnglishLevel } from "@/lib/content/english-workbook";
+import { englishLevelLabel } from "@/lib/english/levels";
 import { loadEnglishProgressState } from "@/lib/english/storage";
 import {
   ENGLISH_FINAL_EXAM_MIN_COUNT,
@@ -36,13 +37,13 @@ function createSeed(): string {
   return `${Date.now()}-${Math.random()}`;
 }
 
-function allEnglishDaysComplete(): boolean {
+function allEnglishDaysComplete(level: EnglishLevel): boolean {
   const progress = loadEnglishProgressState();
-  const days = getEnglishDays();
+  const days = getEnglishDays(level);
   return days.length > 0 && days.every((d) => progress.days[d.id]?.isComplete);
 }
 
-export function EnglishFinalExamScreen() {
+export function EnglishFinalExamScreen({ level }: { level: EnglishLevel }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [previewAll, setPreviewAll] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -55,30 +56,30 @@ export function EnglishFinalExamScreen() {
 
   const exerciseById = useMemo(() => {
     const map = new Map<string, Exercise>();
-    for (const ex of buildEnglishExamBank()) map.set(ex.id, ex);
+    for (const ex of buildEnglishExamBank(level)) map.set(ex.id, ex);
     return map;
-  }, []);
+  }, [level]);
 
   useEffect(() => {
     const preview = getPreviewAllFromLocation();
     setPreviewAll(preview);
-    const isUnlocked = preview || allEnglishDaysComplete();
+    const isUnlocked = preview || allEnglishDaysComplete(level);
     setUnlocked(isUnlocked);
 
     if (isUnlocked) {
-      const existing = loadEnglishFinalExamState();
+      const existing = loadEnglishFinalExamState(level);
       if (existing) {
         setState(existing);
       } else {
         const seed = createSeed();
-        const selectedExerciseIds = pickEnglishExamExerciseIds({ seed, pickerVersion: 1 });
+        const selectedExerciseIds = pickEnglishExamExerciseIds({ level, seed, pickerVersion: 1 });
         const initial = createInitialEnglishFinalExamState({ selectedExerciseIds });
-        saveEnglishFinalExamState(initial);
+        saveEnglishFinalExamState(initial, level);
         setState(initial);
       }
     }
     setIsHydrated(true);
-  }, []);
+  }, [level]);
 
   const selectedExercises = useMemo((): Exercise[] => {
     if (!state) return [];
@@ -98,9 +99,9 @@ export function EnglishFinalExamScreen() {
   const submitted = Boolean(state?.submittedAt);
 
   const persist = useCallback((next: EnglishFinalExamState) => {
-    saveEnglishFinalExamState(next);
+    saveEnglishFinalExamState(next, level);
     setState(next);
-  }, []);
+  }, [level]);
 
   const onChangeValue = useCallback(
     (exerciseId: ExerciseId, value: string) => {
@@ -128,13 +129,13 @@ export function EnglishFinalExamScreen() {
   }, [persist, selectedExercises]);
 
   const onRetry = useCallback(() => {
-    clearEnglishFinalExamState();
+    clearEnglishFinalExamState(level);
     const seed = createSeed();
-    const selectedExerciseIds = pickEnglishExamExerciseIds({ seed, pickerVersion: 1 });
+    const selectedExerciseIds = pickEnglishExamExerciseIds({ level, seed, pickerVersion: 1 });
     const initial = createInitialEnglishFinalExamState({ selectedExerciseIds });
-    saveEnglishFinalExamState(initial);
+    saveEnglishFinalExamState(initial, level);
     setState(initial);
-  }, []);
+  }, [level]);
 
   if (!isHydrated) {
     return (
@@ -153,7 +154,7 @@ export function EnglishFinalExamScreen() {
           title="הַמִּבְחָן הַמְסַכֵּם נָעוּל"
           description="הַשְׁלִימוּ אֶת כָּל הַשִּׁעוּרִים בְּאַנְגְּלִית כְּדֵי לִפְתֹּחַ אֶת הַמִּבְחָן."
           actions={
-            <ButtonLink href={routes.englishHome({ previewAll })} className="w-full text-center">
+            <ButtonLink href={routes.englishHome(level, { previewAll })} className="w-full text-center">
               חֲזָרָה לְאַנְגְּלִית
             </ButtonLink>
           }
@@ -170,7 +171,7 @@ export function EnglishFinalExamScreen() {
           title="עוֹד מְעַט!"
           description="צָרִיךְ עוֹד תְּרְגּוּלִים כְּדֵי לִבְנוֹת מִבְחָן מְסַכֵּם."
           actions={
-            <ButtonLink href={routes.englishHome({ previewAll })} className="w-full text-center">
+            <ButtonLink href={routes.englishHome(level, { previewAll })} className="w-full text-center">
               חֲזָרָה לְאַנְגְּלִית
             </ButtonLink>
           }
@@ -186,7 +187,7 @@ export function EnglishFinalExamScreen() {
   return (
     <main data-testid={root}>
       <div data-testid={testIds.screen.english.exam.nav()} className="mb-3 flex items-center justify-between gap-3">
-        <AppNavLink href={routes.englishHome({ previewAll })}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
+        <AppNavLink href={routes.englishHome(level, { previewAll })}>חֲזָרָה לְאַנְגְּלִית</AppNavLink>
       </div>
 
       <div
@@ -194,7 +195,7 @@ export function EnglishFinalExamScreen() {
         className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
       >
         <p data-testid={childTid(stickyId, "title")} className="mb-1 text-lg font-bold">
-          📝 מִבְחָן מְסַכֵּם בְּאַנְגְּלִית
+          📝 מִבְחָן מְסַכֵּם · {englishLevelLabel(level)}
         </p>
         <ProgressBar value={Math.round((answeredCount / total) * 100)} label={`עָנִיתָ עַל ${answeredCount}/${total}`} />
       </div>
@@ -251,7 +252,7 @@ export function EnglishFinalExamScreen() {
             >
               מִבְחָן חָדָשׁ 🔄
             </button>
-            <ButtonLink href={routes.englishHome({ previewAll })} className="w-full text-center">
+            <ButtonLink href={routes.englishHome(level, { previewAll })} className="w-full text-center">
               חֲזָרָה לְאַנְגְּלִית
             </ButtonLink>
           </div>

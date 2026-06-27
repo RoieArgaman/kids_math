@@ -1,0 +1,95 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 9 — "Letters H–N" (Pre-A1, listening-first). */
+export const englishDay09: WorkbookDay = {
+  id: "day-9",
+  dayNumber: 9,
+  title: "שיעור 9: האותיות H–N",
+  week: 2,
+  objective: "להכיר ולזהות את האותיות H עד N באנגלית.",
+  teachingSummary: "היום נכיר את האותיות H עד N. קודם מקשיבים ואז בוחרים.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-9-section-0",
+      title: "חימום: H I J",
+      type: "warmup",
+      learningGoal: "לזהות את האותיות H I J.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(9, 0, 1, "איזו אות שמעתם?", "H", ["H", "I", "J"], "H", [], 1, "abstract", "en"),
+        listenChoose(9, 0, 2, "איזו אות שמעתם?", "I", ["I", "H", "K"], "I", [], 1, "abstract", "en"),
+        listenChoose(9, 0, 3, "איזו אות שמעתם?", "J", ["J", "I", "L"], "J", [], 2, "abstract", "en"),
+        listenChoose(9, 0, 4, "איזו אות שמעתם?", "K", ["K", "J", "N"], "K", [], 2, "abstract", "en"),
+      ],
+    },
+    {
+      id: "day-9-section-1",
+      title: "עוד אותיות",
+      type: "verbal",
+      learningGoal: "לזהות את האותיות L M N.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(9, 1, 1, "איזו אות שמעתם?", "L", ["L", "M", "H"], "L", [], 1, "abstract", "en"),
+        listenChoose(9, 1, 2, "איזו אות שמעתם?", "M", ["M", "N", "I"], "M", [], 2, "abstract", "en"),
+        listenChoose(9, 1, 3, "איזו אות שמעתם?", "N", ["N", "M", "K"], "N", [], 2, "abstract", "en"),
+        multipleChoice(9, 1, 4, "איזו אות באה אחרי H?", ["I", "J", "K"], "I", [], 1, "abstract"),
+        letterTiles(9, 1, 5, "הרכיבו את המילה:", "leg", [], 2, "abstract", "leg"),
+      ],
+    },
+    {
+      id: "day-9-section-2",
+      title: "אות ראשונה במילה",
+      type: "verbal",
+      learningGoal: "לקשר בין מילה לאות הפותחת אותה.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(9, 2, 1, "באיזו אות מתחילה המילה?", "hat", ["H", "I", "J"], "H", [], 2, "abstract", "en"),
+        listenChoose(9, 2, 2, "באיזו אות מתחילה המילה?", "ink", ["I", "H", "K"], "I", [], 2, "abstract", "en"),
+        listenChoose(9, 2, 3, "באיזו אות מתחילה המילה?", "jam", ["J", "L", "M"], "J", [], 2, "abstract", "en"),
+        listenChoose(9, 2, 4, "באיזו אות מתחילה המילה?", "kid", ["K", "J", "N"], "K", [], 2, "abstract", "en"),
+        letterTiles(9, 2, 5, "הרכיבו את המילה:", "net", [], 2, "abstract", "net"),
+      ],
+    },
+    {
+      id: "day-9-section-3",
+      title: "חזרה",
+      type: "review",
+      learningGoal: "לחזור על האותיות H עד N.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(9, 3, 1, "באיזו אות מתחילה המילה?", "leg", ["L", "M", "N"], "L", [], 2, "abstract", "en"),
+        listenChoose(9, 3, 2, "באיזו אות מתחילה המילה?", "milk", ["M", "N", "L"], "M", [], 2, "abstract", "en"),
+        listenChoose(9, 3, 3, "באיזו אות מתחילה המילה?", "net", ["N", "M", "K"], "N", [], 2, "abstract", "en"),
+        trueFalse(9, 3, 4, "האם האות הראשונה במילה 'hat' היא H?", true, [], 1, "abstract"),
+        trueFalse(9, 3, 5, "האם האות הראשונה במילה 'jam' היא K?", false, [], 2, "abstract"),
+        letterTiles(9, 3, 6, "הרכיבו את המילה:", "leg", [], 2, "abstract", "leg"),
+        matchPairs(
+          9,
+          3,
+          7,
+          "התאימו אות גדולה לאות קטנה:",
+          [
+            { left: "H", right: "h" },
+            { left: "J", right: "j" },
+            { left: "L", right: "l" },
+            { left: "N", right: "n" },
+          ],
+          [],
+          2,
+          "abstract",
+          { leftLang: "en", rightLang: "en" },
+        ),
+      ],
+    },
+  ],
+};

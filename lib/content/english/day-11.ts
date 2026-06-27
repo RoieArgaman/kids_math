@@ -1,0 +1,96 @@
+import {
+  letterTiles,
+  listenChoose,
+  matchPairs,
+  multipleChoice,
+  trueFalse,
+} from "@/lib/content/engine/exercise-factories";
+import type { WorkbookDay } from "@/lib/types";
+
+/** English Day 11 — "Letters U–Z and review" (Pre-A1, listening-first). */
+export const englishDay11: WorkbookDay = {
+  id: "day-11",
+  dayNumber: 11,
+  title: "שיעור 11: האותיות U–Z וחזרה",
+  week: 3,
+  objective: "להכיר את האותיות U עד Z ולחזור על כל האלפבית.",
+  teachingSummary: "היום נכיר את האותיות U עד Z ונחזור על כל האלפבית.",
+  teachingSteps: ["מקשיבים 🔊", "בוחרים את התשובה", "מתאימים ומרכיבים"],
+  spiralReviewTags: [],
+  unlockThresholdPercent: 100,
+  sections: [
+    {
+      id: "day-11-section-0",
+      title: "חימום: U V W",
+      type: "warmup",
+      learningGoal: "לזהות את האותיות U V W.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(11, 0, 1, "איזו אות שמעתם?", "U", ["U", "V", "W"], "U", [], 1, "abstract", "en"),
+        listenChoose(11, 0, 2, "איזו אות שמעתם?", "V", ["V", "U", "X"], "V", [], 1, "abstract", "en"),
+        listenChoose(11, 0, 3, "איזו אות שמעתם?", "W", ["W", "V", "Y"], "W", [], 2, "abstract", "en"),
+        listenChoose(11, 0, 4, "איזו אות שמעתם?", "X", ["X", "W", "Z"], "X", [], 2, "abstract", "en"),
+      ],
+    },
+    {
+      id: "day-11-section-1",
+      title: "עוד אותיות",
+      type: "verbal",
+      learningGoal: "לזהות את האותיות Y Z.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(11, 1, 1, "איזו אות שמעתם?", "Y", ["Y", "Z", "U"], "Y", [], 1, "abstract", "en"),
+        listenChoose(11, 1, 2, "איזו אות שמעתם?", "Z", ["Z", "Y", "V"], "Z", [], 2, "abstract", "en"),
+        listenChoose(11, 1, 3, "באיזו אות מתחילה המילה?", "van", ["V", "U", "W"], "V", [], 2, "abstract", "en"),
+        multipleChoice(11, 1, 4, "איזו אות באה אחרי U?", ["V", "W", "X"], "V", [], 1, "abstract"),
+        letterTiles(11, 1, 5, "הרכיבו את המילה:", "van", [], 2, "abstract", "van"),
+      ],
+    },
+    {
+      id: "day-11-section-2",
+      title: "אות ראשונה במילה",
+      type: "verbal",
+      learningGoal: "לקשר בין מילה לאות הפותחת אותה.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(11, 2, 1, "באיזו אות מתחילה המילה?", "web", ["W", "V", "Y"], "W", [], 2, "abstract", "en"),
+        listenChoose(11, 2, 2, "באיזו אות מתחילה המילה?", "yes", ["Y", "Z", "U"], "Y", [], 2, "abstract", "en"),
+        listenChoose(11, 2, 3, "באיזו אות מתחילה המילה?", "zoo", ["Z", "Y", "V"], "Z", [], 2, "abstract", "en"),
+        listenChoose(11, 2, 4, "באיזו אות מתחילה המילה?", "up", ["U", "V", "W"], "U", [], 2, "abstract", "en"),
+        letterTiles(11, 2, 5, "הרכיבו את המילה:", "box", [], 2, "abstract", "box"),
+      ],
+    },
+    {
+      id: "day-11-section-3",
+      title: "חזרה על כל האלפבית",
+      type: "review",
+      learningGoal: "לחזור על האותיות מ-A עד Z.",
+      prerequisiteSkillTags: [],
+      exercises: [
+        listenChoose(11, 3, 1, "באיזו אות מתחילה המילה?", "cat", ["C", "B", "D"], "C", [], 1, "abstract", "en"),
+        listenChoose(11, 3, 2, "באיזו אות מתחילה המילה?", "hat", ["H", "I", "J"], "H", [], 2, "abstract", "en"),
+        listenChoose(11, 3, 3, "באיזו אות מתחילה המילה?", "sun", ["S", "T", "R"], "S", [], 2, "abstract", "en"),
+        trueFalse(11, 3, 4, "האם האות הראשונה במילה 'van' היא V?", true, [], 1, "abstract"),
+        trueFalse(11, 3, 5, "האם האות הראשונה במילה 'zoo' היא Y?", false, [], 2, "abstract"),
+        letterTiles(11, 3, 6, "הרכיבו את המילה:", "box", [], 2, "abstract", "box"),
+        matchPairs(
+          11,
+          3,
+          7,
+          "התאימו אות גדולה לאות קטנה:",
+          [
+            { left: "U", right: "u" },
+            { left: "V", right: "v" },
+            { left: "Z", right: "z" },
+            { left: "A", right: "a" },
+            { left: "M", right: "m" },
+          ],
+          [],
+          2,
+          "abstract",
+          { leftLang: "en", rightLang: "en" },
+        ),
+      ],
+    },
+  ],
+};
