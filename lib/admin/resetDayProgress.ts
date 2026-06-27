@@ -1,5 +1,6 @@
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { getAllEnglishDays } from "@/lib/content/english-workbook";
+import { getAllScienceDays } from "@/lib/content/science-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { clearGmatChallengeState } from "@/lib/gmat-challenge/storage";
 import { clearFinalExamState } from "@/lib/final-exam/storage";
@@ -67,6 +68,35 @@ export function resetAdminEnglishDayProgress(
   dayId: DayId,
 ): ResetAdminEnglishDayProgressResult | null {
   const ordered = getAllEnglishDays();
+  const startIndex = ordered.findIndex((d) => d.id === dayId);
+  if (startIndex === -1) {
+    return null;
+  }
+
+  let next = state;
+  for (let i = startIndex; i < ordered.length; i++) {
+    next = resetDayProgress(next, ordered[i].id as DayId);
+  }
+
+  return { nextState: next };
+}
+
+export type ResetAdminScienceDayProgressResult = {
+  nextState: WorkbookProgressState;
+};
+
+/**
+ * Science admin "reset day" cascades from the chosen day through the end of the Science
+ * workbook (both grade levels share a single isolated store), mirroring the English
+ * cascade shape. Science has NO final exam, GMAT challenge, or grade-B unlock chain in
+ * its workbook, so this path has zero side effects — it only resets day progress and
+ * returns the next state for the caller to persist via the Science store.
+ */
+export function resetAdminScienceDayProgress(
+  state: WorkbookProgressState,
+  dayId: DayId,
+): ResetAdminScienceDayProgressResult | null {
+  const ordered = getAllScienceDays();
   const startIndex = ordered.findIndex((d) => d.id === dayId);
   if (startIndex === -1) {
     return null;

@@ -17,7 +17,11 @@ import {
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import type { DayId, Section, SectionId, WorkbookProgressState } from "@/lib/types";
-import { resetAdminDayProgress, resetAdminEnglishDayProgress } from "@/lib/admin/resetDayProgress";
+import {
+  resetAdminDayProgress,
+  resetAdminEnglishDayProgress,
+  resetAdminScienceDayProgress,
+} from "@/lib/admin/resetDayProgress";
 import { subjectLabel, type LearningTrack, type Subject } from "@/lib/subjects";
 import { getTrackDays, loadTrackProgress, saveTrackProgress } from "@/lib/track";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
@@ -80,11 +84,16 @@ export function AdminProgressScreen({
   }
 
   /** Resolved learning track + its testid/storage discriminator. */
-  const isEnglish = selectedSubject === "english";
-  const track: LearningTrack = isEnglish ? { subject: "english" } : { subject: "math", grade: selectedGrade };
-  /** testid token: math uses the grade ("a"/"b"); English uses "english". Keeps testid signatures stable. */
-  const trackKey = isEnglish ? "english" : selectedGrade;
-  const trackLabel = isEnglish ? subjectLabel("english") : `כיתה ${gradeLabel(selectedGrade)}`;
+  const isMath = selectedSubject === "math";
+  const track: LearningTrack =
+    selectedSubject === "english"
+      ? { subject: "english" }
+      : selectedSubject === "science"
+        ? { subject: "science" }
+        : { subject: "math", grade: selectedGrade };
+  /** testid token: math uses the grade ("a"/"b"); other subjects use their name ("english"/"science"). */
+  const trackKey = isMath ? selectedGrade : selectedSubject;
+  const trackLabel = isMath ? `כיתה ${gradeLabel(selectedGrade)}` : subjectLabel(selectedSubject);
 
   useEffect(() => {
     setSelectedGrade(initialGrade);
@@ -178,17 +187,20 @@ export function AdminProgressScreen({
   }
 
   async function handleReset(dayId: string): Promise<void> {
-    // English: isolated store, no final-exam / GMAT / grade-B side effects.
-    if (isEnglish) {
-      const englishResult = resetAdminEnglishDayProgress(progress, dayId as DayId);
-      if (!englishResult) {
+    // English / Science: isolated stores, no final-exam / GMAT / grade-B side effects.
+    if (!isMath) {
+      const isolatedResult =
+        selectedSubject === "english"
+          ? resetAdminEnglishDayProgress(progress, dayId as DayId)
+          : resetAdminScienceDayProgress(progress, dayId as DayId);
+      if (!isolatedResult) {
         setResetArmedDayId(null);
         setStatus({ kind: "error", message: `היום ${dayId} לא נמצא במחברת ${trackLabel}.` });
         return;
       }
       setResetArmedDayId(null);
       setResetArmedSectionKey(null);
-      persistNext(englishResult.nextState, `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`);
+      persistNext(isolatedResult.nextState, `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`);
       return;
     }
 
@@ -378,6 +390,10 @@ export function AdminProgressScreen({
                   setSelectedSubject("english");
                   return;
                 }
+                if (value === "science") {
+                  setSelectedSubject("science");
+                  return;
+                }
                 setSelectedSubject("math");
                 setSelectedGrade(value as GradeId);
               }}
@@ -390,6 +406,9 @@ export function AdminProgressScreen({
               </option>
               <option data-testid={childTid(rootTid, "gradeOption", "english")} value="english">
                 {subjectLabel("english")}
+              </option>
+              <option data-testid={childTid(rootTid, "gradeOption", "science")} value="science">
+                {subjectLabel("science")}
               </option>
             </select>
           </section>
@@ -421,7 +440,7 @@ export function AdminProgressScreen({
             >
               סמן את כל הימים כהושלמו
             </Button>
-            {!isEnglish ? (
+            {isMath ? (
               <Button
                 data-testid={testIds.screen.adminProgress.forceFinalExamComplete(trackKey)}
                 variant="outline"
