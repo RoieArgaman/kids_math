@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-06-27 (English: align reading demand to reading instruction — Level A)
+- **Trigger:** A true beginner (Hebrew only, cannot read English) was being asked to
+  *read* English to answer in the listening-first phase. The alphabet is taught on
+  Days 8–11 and CVC decoding on Days 12–14, yet Days 1–7 already required reading:
+  English-text `multiple_choice` options (no audio — `RandomizedChoiceButtons` is
+  text-only), `true_false` prompts embedding English (voiced by the *Hebrew* TTS),
+  audio-less `match_pairs` (`leftLang:"en"` with no `audioByLeft`), and `letter_tiles`
+  spelling whole words from audio before any letter was taught.
+- **Principle (reading-readiness ladder):** never require reading/encoding English
+  ahead of instruction. Phase 0 (Days 1–7) = audio-only, answers in Hebrew/digits;
+  Phase 1 (8–11) = single letters readable; Phase 2 (12–14) = short *taught* CVC words,
+  each heard the same day first.
+- **What changed / where:** content-only, IDs preserved (no storage migration). Days 1–7
+  `multiple_choice`/`true_false`/`letter_tiles` → `listen_choose` (English `audioText`
+  via the English voice → Hebrew/digit options); every English-word `match_pairs` tile
+  (`lib/content/english/day-01..07,12,13,14.ts`) gained `audioByLeft` so it is
+  tap-to-hear. Day 14 (Level-A review) got Phase-0 treatment for its vocab-recall items;
+  Days 8–11 unchanged (already letter-based). Guards added:
+  `tests/unit/lib/english/readingReadiness.test.ts` (per-phase rules) and
+  `idStability.test.ts` (snapshot of day/section/exercise IDs — proves no progress
+  orphaned).
+- **Gotcha:** flipping productive "how do you say X?" `multiple_choice` into receptive
+  `listen_choose` duplicates adjacent items within a review section. Fix is to retarget
+  to another same-day word with same-category distractors (de-dup within a section only;
+  cross-section repetition is fine for review days). The deterministic checker won't
+  catch this — it needs the AI content audit.
+
 ### 2026-06-27 (English curriculum → parity with Math: two CEFR levels, like grades)
 - **Trigger:** Finish English to parity with Math — full beginner program (alphabet,
   phonics, decoding/reading, grammar, reading comprehension), CEFR-aligned, non-frustrating,

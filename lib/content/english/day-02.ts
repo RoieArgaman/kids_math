@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 2 — "Numbers 1–10" (Pre-A1, listening-first). */
@@ -43,11 +37,11 @@ export const englishDay02: WorkbookDay = {
       learningGoal: "לקשר בין מספר לשם שלו באנגלית.",
       prerequisiteSkillTags: [],
       exercises: [
-        multipleChoice(2, 1, 1, "איך אומרים 5 באנגלית?", ["five", "four", "nine"], "five", [], 2, "abstract"),
-        multipleChoice(2, 1, 2, "איך אומרים 3 באנגלית?", ["three", "two", "ten"], "three", [], 1, "abstract"),
+        listenChoose(2, 1, 1, "מה שמעתם?", "four", ["4", "5", "3"], "4", [], 2, "abstract"),
+        listenChoose(2, 1, 2, "מה שמעתם?", "three", ["3", "2", "10"], "3", [], 1, "abstract"),
         listenChoose(2, 1, 3, "מה שמעתם?", "five", ["5", "4", "6"], "5", [], 2, "abstract"),
         listenChoose(2, 1, 4, "מה שמעתם?", "two", ["2", "8", "3"], "2", [], 1, "abstract"),
-        letterTiles(2, 1, 5, "הרכיבו את המספר ששמעתם:", "one", [], 2, "abstract", "one"),
+        listenChoose(2, 1, 5, "מה שמעתם?", "one", ["1", "2", "3"], "1", [], 2, "abstract"),
       ],
     },
     {
@@ -59,9 +53,9 @@ export const englishDay02: WorkbookDay = {
       exercises: [
         listenChoose(2, 2, 1, "מה שמעתם?", "seven", ["7", "6", "8"], "7", [], 2, "abstract"),
         listenChoose(2, 2, 2, "מה שמעתם?", "ten", ["10", "9", "1"], "10", [], 2, "abstract"),
-        multipleChoice(2, 2, 3, "איך אומרים 8 באנגלית?", ["eight", "nine", "six"], "eight", [], 2, "abstract"),
+        listenChoose(2, 2, 3, "מה שמעתם?", "eight", ["8", "9", "6"], "8", [], 2, "abstract"),
         listenChoose(2, 2, 4, "מה שמעתם?", "six", ["6", "7", "9"], "6", [], 2, "abstract"),
-        letterTiles(2, 2, 5, "הרכיבו את המספר ששמעתם:", "ten", [], 2, "abstract", "ten"),
+        listenChoose(2, 2, 5, "מה שמעתם?", "nine", ["9", "8", "10"], "9", [], 2, "abstract"),
       ],
     },
     {
@@ -72,10 +66,10 @@ export const englishDay02: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(2, 3, 1, "מה שמעתם?", "nine", ["9", "5", "7"], "9", [], 2, "abstract"),
-        multipleChoice(2, 3, 2, "איך אומרים 4 באנגלית?", ["four", "five", "two"], "four", [], 2, "abstract"),
-        trueFalse(2, 3, 3, "האם 'three' פירושו 3?", true, [], 1, "abstract"),
-        trueFalse(2, 3, 4, "האם 'ten' פירושו 2?", false, [], 2, "abstract"),
-        letterTiles(2, 3, 5, "הרכיבו את המספר ששמעתם:", "two", [], 2, "abstract", "two"),
+        listenChoose(2, 3, 2, "מה שמעתם?", "four", ["4", "5", "2"], "4", [], 2, "abstract"),
+        listenChoose(2, 3, 3, "מה שמעתם?", "three", ["3", "2", "4"], "3", [], 1, "abstract"),
+        listenChoose(2, 3, 4, "מה שמעתם?", "ten", ["10", "2", "9"], "10", [], 2, "abstract"),
+        listenChoose(2, 3, 5, "מה שמעתם?", "two", ["2", "1", "3"], "2", [], 2, "abstract"),
         matchPairs(
           2,
           3,
@@ -89,7 +83,11 @@ export const englishDay02: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "en" },
+          {
+            leftLang: "en",
+            rightLang: "en",
+            audioByLeft: { one: "one", five: "five", ten: "ten" },
+          },
         ),
       ],
     },

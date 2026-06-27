@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 7 — "In the Classroom" (Pre-A1, listening-first). */
@@ -39,11 +33,11 @@ export const englishDay07: WorkbookDay = {
       learningGoal: "לקשר בין חפץ באנגלית לפירוש.",
       prerequisiteSkillTags: [],
       exercises: [
-        multipleChoice(7, 1, 1, "איך אומרים 'ספר' באנגלית?", ["book", "pen", "bag"], "book", [], 1, "abstract"),
-        multipleChoice(7, 1, 2, "איך אומרים 'כיסא' באנגלית?", ["chair", "table", "pen"], "chair", [], 2, "abstract"),
+        listenChoose(7, 1, 1, "מה שמעתם?", "book", ["ספר", "עט", "תיק"], "ספר", [], 1, "abstract"),
+        listenChoose(7, 1, 2, "מה שמעתם?", "chair", ["כיסא", "שולחן", "עט"], "כיסא", [], 2, "abstract"),
         listenChoose(7, 1, 3, "מה שמעתם?", "table", ["שולחן", "כיסא", "תיק"], "שולחן", [], 2, "abstract"),
         listenChoose(7, 1, 4, "מה שמעתם?", "pen", ["עט", "ספר", "שולחן"], "עט", [], 1, "abstract"),
-        letterTiles(7, 1, 5, "הרכיבו את המילה ששמעתם:", "pen", [], 2, "abstract", "pen"),
+        listenChoose(7, 1, 5, "מה שמעתם?", "bag", ["תיק", "ספר", "כיסא"], "תיק", [], 2, "abstract"),
       ],
     },
     {
@@ -54,10 +48,10 @@ export const englishDay07: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(7, 2, 1, "מה שמעתם?", "bag", ["תיק", "ספר", "עט"], "תיק", [], 1, "abstract"),
-        multipleChoice(7, 2, 2, "איך אומרים 'שולחן' באנגלית?", ["table", "chair", "book"], "table", [], 2, "abstract"),
+        listenChoose(7, 2, 2, "מה שמעתם?", "table", ["שולחן", "כיסא", "ספר"], "שולחן", [], 2, "abstract"),
         listenChoose(7, 2, 3, "מה שמעתם?", "book", ["ספר", "תיק", "כיסא"], "ספר", [], 1, "abstract"),
-        multipleChoice(7, 2, 4, "איך אומרים 'תיק' באנגלית?", ["bag", "pen", "chair"], "bag", [], 2, "abstract"),
-        letterTiles(7, 2, 5, "הרכיבו את המילה ששמעתם:", "bag", [], 2, "abstract", "bag"),
+        listenChoose(7, 2, 4, "מה שמעתם?", "chair", ["כיסא", "שולחן", "תיק"], "כיסא", [], 2, "abstract"),
+        listenChoose(7, 2, 5, "מה שמעתם?", "pen", ["עט", "ספר", "תיק"], "עט", [], 2, "abstract"),
       ],
     },
     {
@@ -68,10 +62,10 @@ export const englishDay07: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(7, 3, 1, "מה שמעתם?", "chair", ["כיסא", "שולחן", "תיק"], "כיסא", [], 1, "abstract"),
-        multipleChoice(7, 3, 2, "איך אומרים 'עט' באנגלית?", ["pen", "book", "bag"], "pen", [], 2, "abstract"),
-        trueFalse(7, 3, 3, "האם 'book' פירושו 'ספר'?", true, [], 1, "abstract"),
-        trueFalse(7, 3, 4, "האם 'chair' פירושו 'שולחן'?", false, [], 2, "abstract"),
-        letterTiles(7, 3, 5, "הרכיבו את המילה ששמעתם:", "book", [], 2, "abstract", "book"),
+        listenChoose(7, 3, 2, "מה שמעתם?", "pen", ["עט", "ספר", "תיק"], "עט", [], 2, "abstract"),
+        listenChoose(7, 3, 3, "מה שמעתם?", "book", ["ספר", "עט", "כיסא"], "ספר", [], 1, "abstract"),
+        listenChoose(7, 3, 4, "מה שמעתם?", "table", ["שולחן", "כיסא", "תיק"], "שולחן", [], 2, "abstract"),
+        listenChoose(7, 3, 5, "מה שמעתם?", "bag", ["תיק", "ספר", "עט"], "תיק", [], 2, "abstract"),
         matchPairs(
           7,
           3,
@@ -85,7 +79,7 @@ export const englishDay07: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          { leftLang: "en", rightLang: "he", audioByLeft: { book: "book", pen: "pen", chair: "chair" } },
         ),
       ],
     },

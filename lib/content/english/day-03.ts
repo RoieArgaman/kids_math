@@ -1,10 +1,4 @@
-import {
-  letterTiles,
-  listenChoose,
-  matchPairs,
-  multipleChoice,
-  trueFalse,
-} from "@/lib/content/engine/exercise-factories";
+import { listenChoose, matchPairs } from "@/lib/content/engine/exercise-factories";
 import type { WorkbookDay } from "@/lib/types";
 
 /** English Day 3 — "Family" (Pre-A1, listening-first). */
@@ -39,11 +33,11 @@ export const englishDay03: WorkbookDay = {
       learningGoal: "לקשר בין מילה באנגלית לפירוש בעברית.",
       prerequisiteSkillTags: [],
       exercises: [
-        multipleChoice(3, 1, 1, "איך אומרים 'אחות' באנגלית?", ["sister", "brother", "mother"], "sister", [], 2, "abstract"),
-        multipleChoice(3, 1, 2, "איך אומרים 'אמא' באנגלית?", ["mother", "father", "baby"], "mother", [], 1, "abstract"),
+        listenChoose(3, 1, 1, "מה שמעתם?", "baby", ["תינוק", "אחות", "אמא"], "תינוק", [], 2, "abstract"),
+        listenChoose(3, 1, 2, "מה שמעתם?", "mother", ["אמא", "אבא", "אח"], "אמא", [], 1, "abstract"),
         listenChoose(3, 1, 3, "מה שמעתם?", "sister", ["אחות", "אח", "תינוק"], "אחות", [], 2, "abstract"),
         listenChoose(3, 1, 4, "מה שמעתם?", "father", ["אבא", "אח", "אמא"], "אבא", [], 1, "abstract"),
-        letterTiles(3, 1, 5, "הרכיבו את המילה ששמעתם:", "mom", [], 2, "abstract", "mom"),
+        listenChoose(3, 1, 5, "מה שמעתם?", "brother", ["אח", "אחות", "אבא"], "אח", [], 2, "abstract"),
       ],
     },
     {
@@ -54,10 +48,10 @@ export const englishDay03: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(3, 2, 1, "מה שמעתם?", "brother", ["אח", "אחות", "אבא"], "אח", [], 2, "abstract"),
-        multipleChoice(3, 2, 2, "איך אומרים 'אח' באנגלית?", ["brother", "sister", "baby"], "brother", [], 2, "abstract"),
+        listenChoose(3, 2, 2, "מה שמעתם?", "sister", ["אחות", "אח", "אמא"], "אחות", [], 2, "abstract"),
         listenChoose(3, 2, 3, "מה שמעתם?", "baby", ["תינוק", "אמא", "אבא"], "תינוק", [], 2, "abstract"),
-        multipleChoice(3, 2, 4, "איך אומרים 'אבא' באנגלית?", ["dad", "mom", "sister"], "dad", [], 2, "abstract"),
-        letterTiles(3, 2, 5, "הרכיבו את המילה ששמעתם:", "dad", [], 2, "abstract", "dad"),
+        listenChoose(3, 2, 4, "מה שמעתם?", "dad", ["אבא", "אמא", "אח"], "אבא", [], 2, "abstract"),
+        listenChoose(3, 2, 5, "מה שמעתם?", "mother", ["אמא", "אבא", "תינוק"], "אמא", [], 2, "abstract"),
       ],
     },
     {
@@ -68,10 +62,10 @@ export const englishDay03: WorkbookDay = {
       prerequisiteSkillTags: [],
       exercises: [
         listenChoose(3, 3, 1, "מה שמעתם?", "mother", ["אמא", "אחות", "אח"], "אמא", [], 1, "abstract"),
-        multipleChoice(3, 3, 2, "איך אומרים 'תינוק' באנגלית?", ["baby", "brother", "father"], "baby", [], 2, "abstract"),
-        trueFalse(3, 3, 3, "האם 'sister' פירושו 'אחות'?", true, [], 1, "abstract"),
-        trueFalse(3, 3, 4, "האם 'father' פירושו 'אמא'?", false, [], 2, "abstract"),
-        letterTiles(3, 3, 5, "הרכיבו את המילה ששמעתם:", "mom", [], 2, "abstract", "mom"),
+        listenChoose(3, 3, 2, "מה שמעתם?", "baby", ["תינוק", "אח", "אבא"], "תינוק", [], 2, "abstract"),
+        listenChoose(3, 3, 3, "מה שמעתם?", "sister", ["אחות", "אמא", "אח"], "אחות", [], 1, "abstract"),
+        listenChoose(3, 3, 4, "מה שמעתם?", "father", ["אבא", "אמא", "אחות"], "אבא", [], 2, "abstract"),
+        listenChoose(3, 3, 5, "מה שמעתם?", "brother", ["אח", "אחות", "אבא"], "אח", [], 2, "abstract"),
         matchPairs(
           3,
           3,
@@ -85,7 +79,11 @@ export const englishDay03: WorkbookDay = {
           [],
           2,
           "abstract",
-          { leftLang: "en", rightLang: "he" },
+          {
+            leftLang: "en",
+            rightLang: "he",
+            audioByLeft: { mother: "mother", father: "father", sister: "sister" },
+          },
         ),
       ],
     },
