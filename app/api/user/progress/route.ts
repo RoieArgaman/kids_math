@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
       typeof body === "object" && body !== null
         ? (body as Record<string, unknown>).bundleVersion
         : undefined;
-    // Accept v1 (math only) and v2 (adds English) — backward + forward compatible.
-    if (bundleVersion !== 1 && bundleVersion !== 2) {
+    // Accept v1 (math only), v2 (adds English), and v3 (adds per-track review) —
+    // backward + forward compatible.
+    if (bundleVersion !== 1 && bundleVersion !== 2 && bundleVersion !== 3) {
       return NextResponse.json({ error: "Invalid bundle" }, { status: 400 });
     }
 

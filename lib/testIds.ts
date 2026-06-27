@@ -243,6 +243,14 @@ export const testIds = {
         tid("screen", "section", "completionPanel", "grade", grade, "day", dayId, "section", sectionId),
       nextSectionCta: (grade: string, dayId: string, sectionId: string) =>
         tid("screen", "section", "cta", "next-section", "grade", grade, "day", dayId, "section", sectionId),
+      spiralReview: {
+        root: (grade: string, dayId: string, sectionId: string) =>
+          tid("screen", "section", "spiralReview", "grade", grade, "day", dayId, "section", sectionId),
+        header: (grade: string, dayId: string, sectionId: string) =>
+          tid("screen", "section", "spiralReview", "grade", grade, "day", dayId, "section", sectionId, "header"),
+        exercise: (grade: string, dayId: string, sectionId: string, exerciseId: string) =>
+          tid("screen", "section", "spiralReview", "grade", grade, "day", dayId, "section", sectionId, "exercise", exerciseId),
+      },
     },
   },
   layout: {
