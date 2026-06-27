@@ -13,7 +13,7 @@ export function buildWorkedExampleSpeakChunks(example: WorkedExample): string[] 
   if (promptSpeak) chunks.push(promptSpeak);
 
   const steps = example.steps.map((s) => s.trim()).filter(Boolean);
-  const stepLabels = ["שָׁלָב שֵׁנִי", "שָׁלָב שְׁלִישִׁי", "שָׁלָב רְבִיעִי", "שָׁלָב חֲמִישִׁי"];
+  const stepLabels = ["שָׁלָב רִאשׁוֹן", "שָׁלָב שֵׁנִי", "שָׁלָב שְׁלִישִׁי", "שָׁלָב רְבִיעִי", "שָׁלָב חֲמִישִׁי"];
   const labelSteps = chunks.length > 0;
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]!;

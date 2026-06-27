@@ -235,7 +235,7 @@ export const getRetryFeedbackText = (
   if (correct) {
     return attemptNumber <= 1
       ? "מְעוּלֶּה! תְשׁוּבָה נְכוֹנָה."
-      : "יָפֶה מְאֹד, הִצְלַחְתָּ לְתַקֵּן נָכוֹן.";
+      : "יָפֶה מְאֹד, הִצְלַחְתֶּם לְתַקֵּן נָכוֹן.";
   }
 
   if (normalized === null) {

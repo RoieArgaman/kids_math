@@ -37,8 +37,8 @@ type SpeakerButtonProps = {
   "data-exercise-focus"?: "true";
 };
 
-const DEFAULT_ARIA_IDLE = "השמעת הנחיה";
-const DEFAULT_ARIA_SPEAKING = "עצור השמעה";
+const DEFAULT_ARIA_IDLE = "הַשְׁמָעַת הַנְחָיָה";
+const DEFAULT_ARIA_SPEAKING = "עֲצֹר הַשְׁמָעָה";
 
 function SpeakerIcon({ baseTid }: { baseTid: string }) {
   return (

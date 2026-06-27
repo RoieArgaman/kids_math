@@ -10,6 +10,22 @@ export type HebrewLintIssue = {
   excerpt: string;
 };
 
+/**
+ * Build a niqqud-insensitive matcher from a Hebrew consonant skeleton.
+ * Spaces match one-or-more whitespace; any niqqud/cantillation marks between
+ * consonants are ignored. Lets us guard spoken-content typos regardless of how
+ * the vowel marks happen to be composed in the source.
+ */
+function skeleton(consonants: string): RegExp {
+  const nik = "[\\u0591-\\u05C7]*";
+  const body = Array.from(consonants)
+    .map((ch) =>
+      ch === " " ? "\\s+" : ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + nik,
+    )
+    .join("");
+  return new RegExp(body);
+}
+
 /** Patterns that indicate non-standard or child-unfriendly primer Hebrew. */
 const FORBIDDEN_PATTERNS: { id: string; re: RegExp }[] = [
   { id: "sounds-correct", re: /נִשְׁמַעַת נָכוֹן/ },
@@ -17,6 +33,20 @@ const FORBIDDEN_PATTERNS: { id: string; re: RegExp }[] = [
   { id: "double-bet", re: /נִתְרַגֵּל בְּבְ(?!\s*[עב])/ },
   { id: "work-in-security", re: /נַעֲבֹד לְאִטּוֹ וּבִבְטִיחוּת/ },
   { id: "work-slow-security", re: /וּבִבְטִיחוּת/ },
+  // Spoken-content typos caught during the voice/speech audit — guard against regressions.
+  { id: "spoken-typo-bekol-rag", re: skeleton("בקול רג") }, // should be "בְּקוֹל רָם"
+  { id: "spoken-typo-kipuim", re: skeleton("קפואים") }, // should be "קְפִיצוֹת"
+  { id: "spoken-typo-zaheret", re: skeleton("זהרת") }, // should be "זְהִירוּת"
+  { id: "spoken-typo-sheirit", re: skeleton("שאירית") }, // should be "שְׁאֵרִית"
+  { id: "spoken-typo-zohot", re: skeleton("זוהות") }, // should be "זֵהוֹת"
+  { id: "spoken-typo-mamrikim", re: skeleton("ממריקים") }, // should be "מְפָרְקִים"
+  { id: "spoken-typo-muvalgim", re: skeleton("מובלגים") }, // non-word
+  // Doubled "in/with a problem" prefix: first bet vocalized with anything but HIRIQ
+  // (the typo "בְּבְעָיוֹת"), vs. the correct bet+HIRIQ "בִּבְעָיוֹת". Codepoints, not
+  // literals, to avoid niqqud-composition pitfalls; anchored to ע so legit
+  // "בְּבֵית"-style words are not flagged.
+  // ב bet · ִ hiriq · ע ayin · [֑-ׇ] any niqqud mark
+  { id: "spoken-typo-double-bet-beaya", re: /ב(?![֑-ׇ]*ִ)[֑-ׇ]*ב[֑-ׇ]*ע/ },
 ];
 
 const EARLY_BAND_ABSTRACT_RE = /רַעֲיוֹן הַיּוֹם/;

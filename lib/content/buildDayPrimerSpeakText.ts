@@ -16,7 +16,7 @@ export function buildDayPrimerSpeakChunks(day: WorkbookDay): string[] {
   const summary = day.teachingSummary?.trim();
   if (summary) chunks.push(summary);
   const steps = day.teachingSteps?.map((s) => s.trim()).filter(Boolean) ?? [];
-  const stepLabels = ["שָׁלָב שֵׁנִי", "שָׁלָב שְׁלִישִׁי", "שָׁלָב רְבִיעִי"];
+  const stepLabels = ["שָׁלָב רִאשׁוֹן", "שָׁלָב שֵׁנִי", "שָׁלָב שְׁלִישִׁי", "שָׁלָב רְבִיעִי"];
   const labelSteps = Boolean(summary);
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]!;
