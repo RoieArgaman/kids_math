@@ -17,6 +17,12 @@ export function AdminHubScreen() {
     setIsUnlocked(isAdminUnlocked());
   }, []);
 
+  // Keep the unlock alive across in-app (client-side) navigation between admin
+  // screens. `pagehide` still clears it on tab close / reload / hard exit, and the
+  // session carries a TTL. We deliberately do NOT clear on unmount — otherwise
+  // moving hub → progress / parent-dashboard would wipe the unlock and re-prompt
+  // the PIN. The unlock is cleared explicitly only when leaving the admin area
+  // via "חזרה למסך הראשי".
   useEffect(() => {
     const onPageHide = () => {
       clearAdminSession();
@@ -24,9 +30,13 @@ export function AdminHubScreen() {
     window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
-      clearAdminSession();
     };
   }, []);
+
+  function handleExitAdmin(): void {
+    clearAdminSession();
+    setIsUnlocked(false);
+  }
 
   function handlePinSubmit(): void {
     const ok = unlockAdminSession(pin);
@@ -90,10 +100,24 @@ export function AdminHubScreen() {
   return (
     <main data-testid={rootTid} className="pb-10">
       <div data-testid={childTid(rootTid, "topNav")} className="mb-4 flex items-center gap-3">
-        <ButtonLink data-testid={childTid(rootTid, "navBack")} href={routes.gradePicker()}>
+        <ButtonLink
+          data-testid={childTid(rootTid, "navBack")}
+          href={routes.gradePicker()}
+          variant="outline"
+          onClick={handleExitAdmin}
+        >
           חזרה למסך הראשי
         </ButtonLink>
       </div>
+
+      <header data-testid={childTid(rootTid, "header")} className="mb-4 space-y-1 text-right">
+        <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[#2c2348]">
+          אזור הורים
+        </h1>
+        <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[#8a8298]">
+          בחרו לאן להיכנס. קוד הגישה יישאר פעיל עד שתצאו מהאזור.
+        </p>
+      </header>
 
       <div data-testid={childTid(rootTid, "cards")} className="grid gap-4 sm:grid-cols-2">
         <Surface data-testid={testIds.screen.adminHub.progressCard()} className="space-y-3 p-5 text-right">
@@ -109,7 +133,7 @@ export function AdminHubScreen() {
           <ButtonLink
             data-testid={testIds.screen.adminHub.progressCardCta()}
             href={routes.adminProgress()}
-            className="w-full"
+            className="inline-flex w-full justify-center text-center"
           >
             פתיחת ניהול
           </ButtonLink>
@@ -128,7 +152,7 @@ export function AdminHubScreen() {
           <ButtonLink
             data-testid={testIds.screen.adminHub.parentDashboardCardCta()}
             href={routes.parentDashboard()}
-            className="w-full"
+            className="inline-flex w-full justify-center text-center"
           >
             פתיחת לוח הורים
           </ButtonLink>
