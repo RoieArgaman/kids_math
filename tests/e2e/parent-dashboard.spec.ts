@@ -75,6 +75,41 @@ test("admin hub PIN gate blocks, then unlocks to two cards", async ({ page }) =>
   await expect(page.getByTestId(testIds.screen.adminHub.parentDashboardCard())).toBeVisible();
 });
 
+test("unlock once, then reach both screens via the cards without re-entering the PIN", async ({
+  page,
+}) => {
+  // Regression: client-side navigation between admin screens must NOT clear the
+  // unlock. Earlier each screen cleared the session on unmount, so clicking a card
+  // (a client-side navigation) wiped the unlock — the parent dashboard then bounced
+  // back to the hub PIN and was effectively unreachable.
+  await page.goto("/admin");
+  await page.getByTestId(testIds.screen.adminHub.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminHub.pinSubmit()).click();
+  await expect(page.getByTestId(testIds.screen.adminHub.parentDashboardCard())).toBeVisible();
+
+  // Hub → parent dashboard (no data seeded → empty state), no PIN re-prompt.
+  await page.getByTestId(testIds.screen.adminHub.parentDashboardCardCta()).click();
+  await expect(page).toHaveURL(/\/admin\/parent-dashboard$/);
+  await expect(page.getByTestId(testIds.screen.parentDashboard.emptyState())).toBeVisible();
+
+  // Parent dashboard → back to the hub (still unlocked: cards, no PIN).
+  await page.getByTestId(testIds.screen.parentDashboard.navBack()).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByTestId(testIds.screen.adminHub.progressCard())).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toHaveCount(0);
+
+  // Hub → progress, still no PIN re-prompt.
+  await page.getByTestId(testIds.screen.adminHub.progressCardCta()).click();
+  await expect(page).toHaveURL(/\/admin\/progress$/);
+  await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toHaveCount(0);
+
+  // Leaving the admin area clears the unlock → re-entering re-prompts the PIN.
+  await page.getByTestId(testIds.screen.adminProgress.navBack()).click();
+  await expect(page).toHaveURL("/math");
+  await page.goto("/admin");
+  await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toBeVisible();
+});
+
 test("parent dashboard redirects to the hub when locked", async ({ page }) => {
   await page.goto("/admin/parent-dashboard");
   await expect(page).toHaveURL(/\/admin$/);

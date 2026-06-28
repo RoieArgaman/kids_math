@@ -137,6 +137,12 @@ export function AdminProgressScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUnlocked, selectedSubject, selectedGrade]);
 
+  // Keep the unlock alive across in-app (client-side) navigation between admin
+  // screens. `pagehide` still clears it on tab close / reload / hard exit, and the
+  // session carries a TTL. We deliberately do NOT clear on unmount — otherwise
+  // returning to the hub (or moving to the parent dashboard) would wipe the unlock
+  // and re-prompt the PIN. The unlock is cleared explicitly only when leaving the
+  // admin area via "חזרה למסך הראשי".
   useEffect(() => {
     const onPageHide = () => {
       clearAdminSession();
@@ -144,9 +150,13 @@ export function AdminProgressScreen({
     window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
-      clearAdminSession();
     };
   }, []);
+
+  function handleExitAdmin(): void {
+    clearAdminSession();
+    setIsUnlocked(false);
+  }
 
   // Days are resolved per sub-track (level): Math by grade, English/Science by their
   // level (GradeId axis). English/Science persist both levels in one store with
@@ -401,7 +411,11 @@ export function AdminProgressScreen({
   return (
     <main data-testid={rootTid} className="pb-10">
       <div data-testid={childTid(rootTid, "topNav")} className="mb-4 flex items-center gap-3">
-        <ButtonLink data-testid={testIds.screen.adminProgress.navBack()} href={routes.gradePicker()}>
+        <ButtonLink
+          data-testid={testIds.screen.adminProgress.navBack()}
+          href={routes.gradePicker()}
+          onClick={handleExitAdmin}
+        >
           חזרה למסך הראשי
         </ButtonLink>
       </div>
