@@ -24,7 +24,6 @@ import {
   type ReviewInput,
   type ExamInput,
 } from "@/lib/parent/metrics";
-import { HeroHeader } from "@/components/ui/HeroHeader";
 import { Surface } from "@/components/ui/Surface";
 import { Chip } from "@/components/ui/Chip";
 import { ButtonLink } from "@/components/ui/Button";
@@ -186,7 +185,7 @@ function CorrectnessBar({ testId, correctPercent }: { testId: string; correctPer
   return (
     <div
       data-testid={childTid(testId, "bar")}
-      className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#f0ebfb]"
+      className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#f0ebfb]"
       aria-hidden
     >
       <div
@@ -273,6 +272,7 @@ export function ParentDashboardScreen() {
         </div>
         <CenteredPanel
           data-testid={testIds.screen.parentDashboard.emptyState()}
+          className="!min-h-0 py-16"
           emoji="🌱"
           title="עוד אין נתונים"
           description="כשהילד/ה יתחיל לתרגל, כאן יופיע מבט מלא על ההתקדמות."
@@ -344,7 +344,14 @@ export function ParentDashboardScreen() {
 
       {/* ① Snapshot */}
       <section data-testid={snapshotTid}>
-        <HeroHeader title="מבט מהיר 🌟" subtitle="סיכום קצר על ההתקדמות" />
+        <header data-testid={childTid(snapshotTid, "header")} className="mb-4 text-center">
+          <h2 data-testid={childTid(snapshotTid, "title")} className="text-xl font-bold text-[#2c2348]">
+            מבט מהיר 🌟
+          </h2>
+          <p data-testid={childTid(snapshotTid, "subtitle")} className="mt-1 text-sm text-[#8a8298]">
+            סיכום קצר על ההתקדמות
+          </p>
+        </header>
         <div data-testid={childTid(snapshotTid, "tiles")} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile
             testId={testIds.screen.parentDashboard.metricAccuracy()}
@@ -375,7 +382,10 @@ export function ParentDashboardScreen() {
         </div>
 
         {/* Per-subject accuracy */}
-        <div data-testid={childTid(snapshotTid, "subjectTiles")} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <p data-testid={childTid(snapshotTid, "subjectCaption")} className="mb-2 mt-4 text-xs font-medium text-[#8a8298]">
+          דיוק לפי מקצוע
+        </p>
+        <div data-testid={childTid(snapshotTid, "subjectTiles")} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {(Object.keys(accuracy.bySubject) as Subject[]).map((subject) => {
             const percent = accuracy.bySubject[subject];
             const testId = testIds.screen.parentDashboard.subjectAccuracy(subject);
@@ -398,8 +408,8 @@ export function ParentDashboardScreen() {
       </section>
 
       {/* ② Progress over time */}
-      <Surface data-testid={progressTid}>
-        <h2 data-testid={childTid(progressTid, "title")} className="mb-3 text-lg font-bold text-[#2c2348]">
+      <Surface data-testid={progressTid} className="p-5">
+        <h2 data-testid={childTid(progressTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           התקדמות לאורך זמן
         </h2>
         <div data-testid={childTid(progressTid, "rows")} className="space-y-2">
@@ -425,11 +435,11 @@ export function ParentDashboardScreen() {
       </Surface>
 
       {/* ③ Weak skills */}
-      <Surface data-testid={weakTid}>
-        <h2 data-testid={childTid(weakTid, "title")} className="text-lg font-bold text-[#2c2348]">
+      <Surface data-testid={weakTid} className="p-5">
+        <h2 data-testid={childTid(weakTid, "title")} className="mb-1 text-lg font-bold text-[#2c2348]">
           מה כדאי לחזק 💪
         </h2>
-        <p data-testid={childTid(weakTid, "subtitle")} className="mb-3 text-xs text-[#8a8298]">
+        <p data-testid={childTid(weakTid, "subtitle")} className="mb-4 text-xs text-[#8a8298]">
           לפי מיומנות · ניסיון ראשון
         </p>
         {filteredWeakSkills.length === 0 ? (
@@ -440,7 +450,7 @@ export function ParentDashboardScreen() {
             עוד אין מספיק נתונים כדי להעריך מיומנויות.
           </p>
         ) : (
-          <ul data-testid={childTid(weakTid, "list")} className="space-y-3">
+          <ul data-testid={childTid(weakTid, "list")} className="space-y-3.5">
             {filteredWeakSkills.map((entry) => {
               const correctPercent = 100 - Math.round(entry.wrongRate * 100);
               const rowTid = testIds.screen.parentDashboard.weakSkillRow(entry.subject, entry.tag);
@@ -464,8 +474,8 @@ export function ParentDashboardScreen() {
       </Surface>
 
       {/* ④ Review backlog */}
-      <Surface data-testid={reviewTid}>
-        <h2 data-testid={childTid(reviewTid, "title")} className="mb-3 text-lg font-bold text-[#2c2348]">
+      <Surface data-testid={reviewTid} className="p-5">
+        <h2 data-testid={childTid(reviewTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           תרגול חוזר 🔁
         </h2>
         <div data-testid={childTid(reviewTid, "counters")} className="grid grid-cols-3 gap-3">
@@ -491,21 +501,25 @@ export function ParentDashboardScreen() {
       </Surface>
 
       {/* ⑤ Encourage next */}
-      <Surface data-testid={encourageTid}>
-        <h2 data-testid={childTid(encourageTid, "title")} className="mb-2 text-lg font-bold text-[#2c2348]">
+      <Surface data-testid={encourageTid} className="p-5">
+        <h2 data-testid={childTid(encourageTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           מה לעודד עכשיו 🌱
         </h2>
         <p data-testid={childTid(encourageTid, "sentence")} className="mb-3 text-sm text-[#6b6577]">
           {encourageSentence}
         </p>
-        <Chip data-testid={testIds.screen.parentDashboard.encourageStep()} tone="success">
+        <Chip
+          data-testid={testIds.screen.parentDashboard.encourageStep()}
+          tone="success"
+          className="min-h-[44px] !px-4 !py-3 text-sm"
+        >
           {encourageStepLabel}
         </Chip>
       </Surface>
 
       {/* Exam results */}
-      <Surface data-testid={examTid}>
-        <h2 data-testid={childTid(examTid, "title")} className="mb-3 text-lg font-bold text-[#2c2348]">
+      <Surface data-testid={examTid} className="p-5">
+        <h2 data-testid={childTid(examTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           תוצאות מבחן מסכם
         </h2>
         <ul data-testid={childTid(examTid, "list")} className="space-y-2">
