@@ -91,8 +91,12 @@ export const routes = {
     withQuery(`/grade/${grade}/gmat-challenge`, opts),
   gradeBadges: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/grade/${grade}/badges`, opts),
+  /** Admin hub (PIN-gated): two cards — Progress (management) | Parent Dashboard (read-only). */
+  adminHub: (opts?: RouteOpts) => withQuery("/admin", opts),
   adminProgress: (opts?: RouteOpts) => withQuery("/admin/progress", opts),
   adminUsers: (opts?: RouteOpts) => withQuery("/admin/users", opts),
+  /** Read-only Parent Dashboard (PIN-gated via the admin hub). */
+  parentDashboard: (opts?: RouteOpts) => withQuery("/admin/parent-dashboard", opts),
   privacy: (opts?: RouteOpts) => withQuery("/privacy", opts),
   cookies: (opts?: RouteOpts) => withQuery("/cookies", opts),
 };

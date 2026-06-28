@@ -34,7 +34,7 @@ export default function SubjectPickerPage() {
         <Link
           data-testid={testIds.screen.subjectPicker.adminCta()}
           className="touch-button inline-flex"
-          href={routes.adminProgress()}
+          href={routes.adminHub()}
         >
           גִּישַׁת אַדְמִין
         </Link>
