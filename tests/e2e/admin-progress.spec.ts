@@ -401,16 +401,15 @@ test("admin refresh re-reads progress from storage without re-prompting the PIN"
   await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toHaveCount(0);
 });
 
-test("admin back navigation returns to grade picker", async ({ page }) => {
+test("admin back navigation returns to the hub, still unlocked", async ({ page }) => {
   await page.goto("/admin/progress?grade=a");
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
   await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
 
   await page.getByTestId(testIds.screen.adminProgress.navBack()).click();
 
-  await expect(page.getByTestId(testIds.screen.gradePicker.root())).toBeVisible();
-  await expect(page).toHaveURL("/math");
-
-  await page.goto("/admin/progress?grade=a");
-  await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toBeVisible();
+  // Back returns to the /admin hub and keeps the unlock (no PIN re-prompt).
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByTestId(testIds.screen.adminHub.progressCard())).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toHaveCount(0);
 });
