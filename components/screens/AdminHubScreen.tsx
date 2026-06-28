@@ -120,39 +120,43 @@ export function AdminHubScreen() {
       </header>
 
       <div data-testid={childTid(rootTid, "cards")} className="grid gap-4 sm:grid-cols-2">
-        <Surface data-testid={testIds.screen.adminHub.progressCard()} className="space-y-3 p-5 text-right">
-          <p data-testid={childTid(rootTid, "progressEmoji")} className="text-5xl" aria-hidden>
-            🛠️
-          </p>
-          <h2 data-testid={childTid(rootTid, "progressTitle")} className="text-xl font-bold text-[#2c2348]">
-            ניהול התקדמות
-          </h2>
-          <p data-testid={childTid(rootTid, "progressSubtitle")} className="text-sm text-[#8a8298]">
-            ניהול ימים ומקטעים (קיים)
-          </p>
+        <Surface data-testid={testIds.screen.adminHub.progressCard()} className="p-5 text-right">
+          <div data-testid={childTid(rootTid, "progressText")} className="space-y-2">
+            <p data-testid={childTid(rootTid, "progressEmoji")} className="text-5xl" aria-hidden>
+              🛠️
+            </p>
+            <h2 data-testid={childTid(rootTid, "progressTitle")} className="text-xl font-bold text-[#2c2348]">
+              ניהול התקדמות
+            </h2>
+            <p data-testid={childTid(rootTid, "progressSubtitle")} className="text-sm text-[#8a8298]">
+              ניהול ימים ומקטעים (קיים)
+            </p>
+          </div>
           <ButtonLink
             data-testid={testIds.screen.adminHub.progressCardCta()}
             href={routes.adminProgress()}
-            className="inline-flex w-full justify-center text-center"
+            className="mt-5 inline-flex w-full justify-center text-center"
           >
             פתיחת ניהול
           </ButtonLink>
         </Surface>
 
-        <Surface data-testid={testIds.screen.adminHub.parentDashboardCard()} className="space-y-3 p-5 text-right">
-          <p data-testid={childTid(rootTid, "parentDashboardEmoji")} className="text-5xl" aria-hidden>
-            📊
-          </p>
-          <h2 data-testid={childTid(rootTid, "parentDashboardTitle")} className="text-xl font-bold text-[#2c2348]">
-            לוח הורים
-          </h2>
-          <p data-testid={childTid(rootTid, "parentDashboardSubtitle")} className="text-sm text-[#8a8298]">
-            איך הולך לילד/ה — לצפייה בלבד
-          </p>
+        <Surface data-testid={testIds.screen.adminHub.parentDashboardCard()} className="p-5 text-right">
+          <div data-testid={childTid(rootTid, "parentDashboardText")} className="space-y-2">
+            <p data-testid={childTid(rootTid, "parentDashboardEmoji")} className="text-5xl" aria-hidden>
+              📊
+            </p>
+            <h2 data-testid={childTid(rootTid, "parentDashboardTitle")} className="text-xl font-bold text-[#2c2348]">
+              לוח הורים
+            </h2>
+            <p data-testid={childTid(rootTid, "parentDashboardSubtitle")} className="text-sm text-[#8a8298]">
+              איך הולך לילד/ה — לצפייה בלבד
+            </p>
+          </div>
           <ButtonLink
             data-testid={testIds.screen.adminHub.parentDashboardCardCta()}
             href={routes.parentDashboard()}
-            className="inline-flex w-full justify-center text-center"
+            className="mt-5 inline-flex w-full justify-center text-center"
           >
             פתיחת לוח הורים
           </ButtonLink>
