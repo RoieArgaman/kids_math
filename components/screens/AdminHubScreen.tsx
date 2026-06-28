@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
-import { Surface } from "@/components/ui/Surface";
+import { ActionCard } from "@/components/ui/Card";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
@@ -121,47 +121,37 @@ export function AdminHubScreen() {
       </header>
 
       <div data-testid={childTid(rootTid, "cards")} className="grid gap-4 sm:grid-cols-2">
-        <Surface data-testid={testIds.screen.adminHub.progressCard()} className="p-5 text-right">
-          <div data-testid={childTid(rootTid, "progressText")} className="space-y-2">
-            <p data-testid={childTid(rootTid, "progressEmoji")} className="text-5xl" aria-hidden>
-              🛠️
-            </p>
-            <h2 data-testid={childTid(rootTid, "progressTitle")} className="text-xl font-bold text-[#2c2348]">
-              ניהול התקדמות
-            </h2>
-            <p data-testid={childTid(rootTid, "progressSubtitle")} className="text-sm text-[#8a8298]">
-              ניהול ימים ומקטעים (קיים)
-            </p>
-          </div>
-          <ButtonLink
-            data-testid={testIds.screen.adminHub.progressCardCta()}
-            href={routes.adminProgress()}
-            className="mt-5 inline-flex w-full justify-center text-center"
-          >
-            פתיחת ניהול
-          </ButtonLink>
-        </Surface>
+        <ActionCard
+          data-testid={testIds.screen.adminHub.progressCard()}
+          bodyTestId={childTid(rootTid, "progressText")}
+          emojiTestId={childTid(rootTid, "progressEmoji")}
+          titleTestId={childTid(rootTid, "progressTitle")}
+          subtitleTestId={childTid(rootTid, "progressSubtitle")}
+          emoji="🛠️"
+          title="ניהול התקדמות"
+          subtitle="ניהול ימים ומקטעים (קיים)"
+          cta={{
+            href: routes.adminProgress(),
+            label: "פתיחת ניהול",
+            "data-testid": testIds.screen.adminHub.progressCardCta(),
+          }}
+        />
 
-        <Surface data-testid={testIds.screen.adminHub.parentDashboardCard()} className="p-5 text-right">
-          <div data-testid={childTid(rootTid, "parentDashboardText")} className="space-y-2">
-            <p data-testid={childTid(rootTid, "parentDashboardEmoji")} className="text-5xl" aria-hidden>
-              📊
-            </p>
-            <h2 data-testid={childTid(rootTid, "parentDashboardTitle")} className="text-xl font-bold text-[#2c2348]">
-              לוח הורים
-            </h2>
-            <p data-testid={childTid(rootTid, "parentDashboardSubtitle")} className="text-sm text-[#8a8298]">
-              איך הולך לילד/ה — לצפייה בלבד
-            </p>
-          </div>
-          <ButtonLink
-            data-testid={testIds.screen.adminHub.parentDashboardCardCta()}
-            href={routes.parentDashboard()}
-            className="mt-5 inline-flex w-full justify-center text-center"
-          >
-            פתיחת לוח הורים
-          </ButtonLink>
-        </Surface>
+        <ActionCard
+          data-testid={testIds.screen.adminHub.parentDashboardCard()}
+          bodyTestId={childTid(rootTid, "parentDashboardText")}
+          emojiTestId={childTid(rootTid, "parentDashboardEmoji")}
+          titleTestId={childTid(rootTid, "parentDashboardTitle")}
+          subtitleTestId={childTid(rootTid, "parentDashboardSubtitle")}
+          emoji="📊"
+          title="לוח הורים"
+          subtitle="איך הולך לילד/ה — לצפייה בלבד"
+          cta={{
+            href: routes.parentDashboard(),
+            label: "פתיחת לוח הורים",
+            "data-testid": testIds.screen.adminHub.parentDashboardCardCta(),
+          }}
+        />
       </div>
     </main>
   );
