@@ -259,8 +259,8 @@ test("admin can complete and reset English progress in its isolated store with n
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
   await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
 
-  // Switch to the English track.
-  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("english");
+  // Switch to the English subject (defaults to the first level, Pre-A1).
+  await page.getByTestId(testIds.screen.adminProgress.subjectSelect()).selectOption("english");
 
   // No final-exam control exists for English.
   await expect(page.getByTestId(testIds.screen.adminProgress.forceFinalExamComplete("english"))).toHaveCount(0);
@@ -312,8 +312,8 @@ test("admin can complete and reset Science progress in its isolated store with n
   await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
   await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
 
-  // Switch to the Science track.
-  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("science");
+  // Switch to the Science subject (defaults to the first level, כיתה א׳).
+  await page.getByTestId(testIds.screen.adminProgress.subjectSelect()).selectOption("science");
 
   // No final-exam control exists for Science (isolated store, like English).
   await expect(page.getByTestId(testIds.screen.adminProgress.forceFinalExamComplete("science"))).toHaveCount(0);
@@ -345,6 +345,60 @@ test("admin can complete and reset Science progress in its isolated store with n
   expect(JSON.parse(afterReset!).days["day-1"].isComplete).toBe(false);
 
   expect(lockGradeBCalled).toBe(false);
+});
+
+test("admin sub-track dropdown filters English days by level (Pre-A1 vs A1)", async ({ page }) => {
+  await page.goto("/admin/progress");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  // English defaults to its first level (Pre-A1): day-1 shown, A1's day-15 hidden.
+  await page.getByTestId(testIds.screen.adminProgress.subjectSelect()).selectOption("english");
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("english", "day-1"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("english", "day-15"))).toHaveCount(0);
+
+  // Switch the sub-track to A1 (level b): A1's day-15 shown, Pre-A1's day-1 hidden.
+  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("b");
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("english", "day-15"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("english", "day-1"))).toHaveCount(0);
+});
+
+test("admin sub-track dropdown filters Science days by level (כיתה א׳ vs ב׳)", async ({ page }) => {
+  await page.goto("/admin/progress");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  // Science defaults to level א׳: day-1 shown, level ב׳'s day-11 hidden.
+  await page.getByTestId(testIds.screen.adminProgress.subjectSelect()).selectOption("science");
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("science", "day-1"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("science", "day-11"))).toHaveCount(0);
+
+  // Switch the sub-track to level ב׳: day-11 shown, level א׳'s day-1 hidden.
+  await page.getByTestId(testIds.screen.adminProgress.gradeSelect()).selectOption("b");
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("science", "day-11"))).toBeVisible();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayRow("science", "day-1"))).toHaveCount(0);
+});
+
+test("admin refresh re-reads progress from storage without re-prompting the PIN", async ({ page }) => {
+  const ENGLISH_KEY = "kids_math.english.workbook_progress.v1";
+
+  await page.goto("/admin/progress");
+  await page.getByTestId(testIds.screen.adminProgress.pinInput()).fill("2109");
+  await page.getByTestId(testIds.screen.adminProgress.pinSubmit()).click();
+
+  // Use English (isolated store, no grade-B side effects).
+  await page.getByTestId(testIds.screen.adminProgress.subjectSelect()).selectOption("english");
+  await page.getByTestId(testIds.screen.adminProgress.markComplete("english", "day-1")).click();
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("english", "day-1"))).toContainText("הושלם");
+
+  // Mutate the store out-of-band, then refresh: the screen must reflect the new
+  // storage state (proves a real re-read) while keeping the admin session (no PIN).
+  await page.evaluate((key) => window.localStorage.removeItem(key), ENGLISH_KEY);
+  await page.getByTestId(testIds.screen.adminProgress.refresh()).click();
+
+  await expect(page.getByTestId(testIds.screen.adminProgress.dayState("english", "day-1"))).toContainText("לא הושלם");
+  await expect(page.getByTestId(testIds.screen.adminProgress.statusMessage())).toContainText("הנתונים עודכנו");
+  await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toHaveCount(0);
 });
 
 test("admin back navigation returns to grade picker", async ({ page }) => {

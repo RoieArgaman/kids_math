@@ -23,12 +23,38 @@ import {
   resetAdminScienceDayProgress,
 } from "@/lib/admin/resetDayProgress";
 import { subjectLabel, type LearningTrack, type Subject } from "@/lib/subjects";
-import { getTrackDays, loadTrackProgress, saveTrackProgress } from "@/lib/track";
+import { getWorkbookDays } from "@/lib/content/workbook";
+import { getEnglishDays } from "@/lib/content/english-workbook";
+import { getScienceDays } from "@/lib/content/science-workbook";
+import { loadTrackProgress, saveTrackProgress } from "@/lib/track";
 import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
 import { wipeGradeBClientState } from "@/lib/admin/wipeGradeBClientState";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
 
 type StatusState = { kind: "success" | "error"; message: string } | null;
+
+/** One selectable sub-track (level) within a subject. `value` is the GradeId axis ("a"/"b"). */
+type SubTrackOption = { value: GradeId; label: string };
+
+/**
+ * Sub-tracks (levels) per subject. Every subject has two levels keyed on the shared
+ * GradeId axis: Math/Science by Israeli grade (א׳/ב׳), English by CEFR level
+ * (Pre-A1/A1 — see lib/content/english-workbook.ts). When a subject grows more
+ * levels, extend its list here and the admin sub-track dropdown updates automatically.
+ */
+function subTrackOptions(subject: Subject): SubTrackOption[] {
+  if (subject === "english") {
+    return [
+      { value: "a", label: "Pre-A1" },
+      { value: "b", label: "A1" },
+    ];
+  }
+  // math + science both label by Israeli grade.
+  return [
+    { value: "a", label: `כיתה ${gradeLabel("a")}` },
+    { value: "b", label: `כיתה ${gradeLabel("b")}` },
+  ];
+}
 
 function sectionStatusLabel(section: Section, dayProgress: { correctAnswers: Record<string, boolean> } | undefined): string {
   if (!dayProgress || section.exercises.length === 0) {
@@ -93,7 +119,10 @@ export function AdminProgressScreen({
         : { subject: "math", grade: selectedGrade };
   /** testid token: math uses the grade ("a"/"b"); other subjects use their name ("english"/"science"). */
   const trackKey = isMath ? selectedGrade : selectedSubject;
-  const trackLabel = isMath ? `כיתה ${gradeLabel(selectedGrade)}` : subjectLabel(selectedSubject);
+  const subTrackLabel = subTrackOptions(selectedSubject).find((o) => o.value === selectedGrade)?.label ?? "";
+  const trackLabel = isMath
+    ? `כיתה ${gradeLabel(selectedGrade)}`
+    : `${subjectLabel(selectedSubject)} — ${subTrackLabel}`;
 
   useEffect(() => {
     setSelectedGrade(initialGrade);
@@ -119,7 +148,14 @@ export function AdminProgressScreen({
     };
   }, []);
 
-  const days = useMemo(() => getTrackDays(track), [selectedSubject, selectedGrade]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Days are resolved per sub-track (level): Math by grade, English/Science by their
+  // level (GradeId axis). English/Science persist both levels in one store with
+  // disjoint day IDs, so the level only filters which days are shown here.
+  const days = useMemo(() => {
+    if (selectedSubject === "english") return getEnglishDays(selectedGrade);
+    if (selectedSubject === "science") return getScienceDays(selectedGrade);
+    return getWorkbookDays(selectedGrade);
+  }, [selectedSubject, selectedGrade]);
   const regularDays = useMemo(() => days.filter((day) => day.id !== FINAL_EXAM_DAY_ID), [days]);
   const allRegularDaysComplete = useMemo(
     () => regularDays.every((day) => Boolean(progress.days[day.id as DayId]?.isComplete)),
@@ -134,6 +170,16 @@ export function AdminProgressScreen({
     saveTrackProgress(next, track);
     setProgress(next);
     setStatus({ kind: "success", message: successMessage });
+  }
+
+  function handleRefresh(): void {
+    // Soft refresh: re-read the current track's progress from storage in place.
+    // A full document reload would fire `pagehide` → clearAdminSession() and
+    // re-prompt for the PIN, so we deliberately avoid window.location.reload().
+    setResetArmedDayId(null);
+    setResetArmedSectionKey(null);
+    setProgress(loadTrackProgress(track));
+    setStatus({ kind: "success", message: "הנתונים עודכנו." });
   }
 
   function handlePinSubmit(): void {
@@ -371,46 +417,74 @@ export function AdminProgressScreen({
         </header>
 
         <div data-testid={childTid(rootTid, "body")} className="space-y-4">
-          <section data-testid={childTid(rootTid, "gradeSelector")} className="space-y-2 px-4">
-            <label data-testid={childTid(rootTid, "gradeLabel")} htmlFor="admin-grade" className="block text-sm font-semibold text-slate-700">
-              מסלול
-            </label>
-            <select
-              id="admin-grade"
-              data-testid={testIds.screen.adminProgress.gradeSelect()}
-              className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-              value={trackKey}
-              onChange={(event) => {
-                setResetArmedDayId(null);
-                setResetArmedSectionKey(null);
-                setExpandedDaySectionLists(new Set());
-                setStatus(null);
-                const value = event.target.value;
-                if (value === "english") {
-                  setSelectedSubject("english");
-                  return;
-                }
-                if (value === "science") {
-                  setSelectedSubject("science");
-                  return;
-                }
-                setSelectedSubject("math");
-                setSelectedGrade(value as GradeId);
-              }}
-            >
-              <option data-testid={childTid(rootTid, "gradeOption", "a")} value="a">
-                כיתה {gradeLabel("a")}
-              </option>
-              <option data-testid={childTid(rootTid, "gradeOption", "b")} value="b">
-                כיתה {gradeLabel("b")}
-              </option>
-              <option data-testid={childTid(rootTid, "gradeOption", "english")} value="english">
-                {subjectLabel("english")}
-              </option>
-              <option data-testid={childTid(rootTid, "gradeOption", "science")} value="science">
-                {subjectLabel("science")}
-              </option>
-            </select>
+          <section data-testid={childTid(rootTid, "gradeSelector")} className="flex flex-wrap gap-4 px-4">
+            <div data-testid={childTid(rootTid, "subjectField")} className="min-w-[12rem] flex-1 space-y-2">
+              <label
+                data-testid={childTid(rootTid, "subjectLabel")}
+                htmlFor="admin-subject"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                מקצוע
+              </label>
+              <select
+                id="admin-subject"
+                data-testid={testIds.screen.adminProgress.subjectSelect()}
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                value={selectedSubject}
+                onChange={(event) => {
+                  setResetArmedDayId(null);
+                  setResetArmedSectionKey(null);
+                  setExpandedDaySectionLists(new Set());
+                  setStatus(null);
+                  setSelectedSubject(event.target.value as Subject);
+                  // Reset to the first sub-track (level) when switching subjects.
+                  setSelectedGrade("a");
+                }}
+              >
+                <option data-testid={childTid(rootTid, "subjectOption", "math")} value="math">
+                  {subjectLabel("math")}
+                </option>
+                <option data-testid={childTid(rootTid, "subjectOption", "english")} value="english">
+                  {subjectLabel("english")}
+                </option>
+                <option data-testid={childTid(rootTid, "subjectOption", "science")} value="science">
+                  {subjectLabel("science")}
+                </option>
+              </select>
+            </div>
+
+            <div data-testid={childTid(rootTid, "subTrackField")} className="min-w-[12rem] flex-1 space-y-2">
+              <label
+                data-testid={childTid(rootTid, "gradeLabel")}
+                htmlFor="admin-grade"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                מסלול
+              </label>
+              <select
+                id="admin-grade"
+                data-testid={testIds.screen.adminProgress.gradeSelect()}
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                value={selectedGrade}
+                onChange={(event) => {
+                  setResetArmedDayId(null);
+                  setResetArmedSectionKey(null);
+                  setExpandedDaySectionLists(new Set());
+                  setStatus(null);
+                  setSelectedGrade(event.target.value as GradeId);
+                }}
+              >
+                {subTrackOptions(selectedSubject).map((opt) => (
+                  <option
+                    key={opt.value}
+                    data-testid={childTid(rootTid, "gradeOption", opt.value)}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </section>
 
           {ttsHydrated ? (
@@ -434,6 +508,13 @@ export function AdminProgressScreen({
           ) : null}
 
           <section data-testid={childTid(rootTid, "gradeActions")} className="flex flex-wrap items-center gap-3 px-4">
+            <Button
+              data-testid={testIds.screen.adminProgress.refresh()}
+              variant="outline"
+              onClick={handleRefresh}
+            >
+              רענן נתונים
+            </Button>
             <Button
               data-testid={testIds.screen.adminProgress.markAllDaysComplete(trackKey)}
               onClick={handleMarkAllDaysComplete}
