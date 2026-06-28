@@ -50,10 +50,20 @@ closer fit.
   interface, bump `bundleVersion` (additive), and gate the new field **optional** so
   old payloads still hydrate. Mirror the `english`/`science` blocks in `buildBundle*` +
   `hydrateLocalStorageFromBundle` (incl. the storage-event dispatch).
-- **Admin** `components/screens/AdminProgressScreen.tsx`: add an option to the track
-  selector. The final-exam control + grade-B side effects are gated on `isMath`;
-  single-store subjects share the isolated reset path (`resetAdmin<Subject>DayProgress`
-  in `lib/admin/resetDayProgress.ts` — zero side effects, mirrors English).
+- **Admin** `components/screens/AdminProgressScreen.tsx`: the selector is **two
+  dropdowns — Subject (`subjectSelect`) then sub-track/level (`gradeSelect`)**.
+  (1) Add an `<option>` to the **Subject** dropdown. (2) Add the subject's levels to
+  the `subTrackOptions(subject)` helper (values are the `GradeId` axis `"a"`/`"b"`;
+  English labels are CEFR `Pre-A1`/`A1`, Math/Science label by Israeli grade). (3) Add
+  the subject's arm to the `days` resolver in the screen so it shows **one level at a
+  time** via `get<Subject>Days(selectedGrade)` — single-store subjects keep both levels
+  in one store with disjoint day IDs, so the level only filters the displayed days
+  (load/save stay level-agnostic). The final-exam control + grade-B side effects are
+  gated on `isMath`; single-store subjects share the isolated reset path
+  (`resetAdmin<Subject>DayProgress` in `lib/admin/resetDayProgress.ts` — zero side
+  effects, mirrors English). A **"רענן נתונים"** (`refresh`) button soft-re-reads the
+  current track via `loadTrackProgress` — never `window.location.reload()`, which fires
+  `pagehide → clearAdminSession` and re-prompts the PIN.
 
 ## Checklist (in dependency order)
 
@@ -71,7 +81,8 @@ closer fit.
 6. **Routes + testIds** — `lib/routes.ts`, `lib/testIds.ts`. Run `npm run check:testids`.
 7. **Screens + app routes** — `components/screens/<subject>/*`, `app/<subject>/**`.
 8. **Subject picker card** — `app/page.tsx`.
-9. **Admin** — `AdminProgressScreen.tsx` selector + `resetAdmin<Subject>DayProgress`.
+9. **Admin** — `AdminProgressScreen.tsx`: Subject `<option>` + `subTrackOptions(subject)`
+   levels + `days` resolver arm (`get<Subject>Days(level)`); `resetAdmin<Subject>DayProgress`.
 10. **Tests** — storage isolation, final-exam, content guard (unit); `<subject>-day-smoke`
     + `<subject>-exam-smoke` (E2E); a Science-style admin E2E. Mirror the English specs.
 
