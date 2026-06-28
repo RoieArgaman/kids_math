@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { testIds } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 import { getWorkbookDaysById } from "@/lib/content/workbook";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
 
@@ -103,8 +103,13 @@ test("unlock once, then reach both screens via the cards without re-entering the
   await expect(page).toHaveURL(/\/admin\/progress$/);
   await expect(page.getByTestId(testIds.screen.adminProgress.pinInput())).toHaveCount(0);
 
-  // Leaving the admin area clears the unlock → re-entering re-prompts the PIN.
+  // Progress → back returns to the hub, still unlocked (no PIN re-prompt).
   await page.getByTestId(testIds.screen.adminProgress.navBack()).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toHaveCount(0);
+
+  // Leaving the admin area from the hub clears the unlock → re-entering re-prompts.
+  await page.getByTestId(childTid(testIds.screen.adminHub.root(), "navBack")).click();
   await expect(page).toHaveURL("/math");
   await page.goto("/admin");
   await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toBeVisible();
