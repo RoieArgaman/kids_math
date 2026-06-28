@@ -46,7 +46,7 @@ export default function MathGradePickerPage() {
         <Link
           data-testid={testIds.screen.gradePicker.adminCta()}
           className="touch-button inline-flex"
-          href={routes.adminProgress()}
+          href={routes.adminHub()}
         >
           גישת אדמין
         </Link>

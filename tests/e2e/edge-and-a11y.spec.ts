@@ -106,31 +106,50 @@ test.describe("keyboard + persistence basics (RTL)", () => {
   });
 
   test("numeric prompts render boxed math tokens", async ({ page }) => {
-    test.skip(process.platform !== "darwin", "Visual snapshot baseline is currently maintained on darwin.");
     const match = findMathExercise();
     if (!match) {
       test.skip(true, "No math-tokenizable numeric exercise found in warmup sections");
     }
 
-    // Accept the cookie-consent notice so its banner doesn't overlap the element screenshot.
+    // Accept the cookie-consent notice so its banner doesn't overlap the tokens.
     await page.evaluate((key) => window.localStorage.setItem(key, "1"), COOKIE_CONSENT_STORAGE_KEY);
     await page.goto(`/grade/a/day/${match!.dayId}/section/${match!.sectionId}`);
     const rootTid = testIds.component.exerciseBox.root(match!.exercise.id);
     const containerTid = childTid(rootTid, "mathTokens");
-    const firstToken = page
-      .getByTestId(containerTid)
-      .locator(`[data-testid^="${containerTid}.el.token.0."]`)
-      .first();
-    await expect(page.getByTestId(containerTid)).toBeVisible();
-    await expect(firstToken).toBeVisible();
-    await expect(
-      page.getByTestId(containerTid).locator(`[data-testid$=".question"]`),
-    ).toHaveCount(1);
-    // Small tolerance absorbs sub-pixel anti-aliasing drift across Chromium versions;
-    // a real layout/content change (e.g. an overlapping banner) diffs far above this.
-    await expect(page.getByTestId(containerTid)).toHaveScreenshot("math-token-row.png", {
-      maxDiffPixelRatio: 0.05,
-    });
+    const container = page.getByTestId(containerTid);
+    const tokens = container.locator(`[data-testid*=".el.token."]`);
+
+    await expect(container).toBeVisible();
+    await expect(tokens.first()).toBeVisible();
+    // Exactly one answer "?" slot, and at least the operand/operator tokens around it.
+    await expect(container.locator(`[data-testid$=".question"]`)).toHaveCount(1);
+    const count = await tokens.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Layout integrity, font-metric independent (replaces a brittle pixel snapshot
+    // that hard-failed on a few-px width drift between Chromium/font environments):
+    // every token is a visible non-empty box, the tokens read left-to-right
+    // (dir="ltr"), and they sit on a SINGLE row — the container is no taller than a
+    // token line, which catches wrapping or an overlapping banner pushing content.
+    const containerBox = await container.boundingBox();
+    expect(containerBox).not.toBeNull();
+
+    const boxes: { x: number; y: number; width: number; height: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      const box = await tokens.nth(i).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.width).toBeGreaterThan(0);
+      expect(box!.height).toBeGreaterThan(0);
+      boxes.push(box!);
+    }
+
+    const maxTokenHeight = Math.max(...boxes.map((b) => b.height));
+    // A wrapped second row would roughly double the container height.
+    expect(containerBox!.height).toBeLessThan(maxTokenHeight * 1.8);
+    // Left-to-right order (LTR isolation): each token starts at/after the previous one.
+    for (let i = 1; i < boxes.length; i++) {
+      expect(boxes[i].x).toBeGreaterThanOrEqual(boxes[i - 1].x - 1);
+    }
   });
 
   test("retry button shows on wrong answer and hides on correct answer", async ({ page }) => {

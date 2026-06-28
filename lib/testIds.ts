@@ -214,6 +214,51 @@ export const testIds = {
       statusMessage: () => tid("screen", "adminProgress", "statusMessage"),
       ttsToggle: () => tid("screen", "adminProgress", "tts", "toggle"),
     },
+    adminHub: {
+      root: () => tid("screen", "adminHub"),
+      pinInput: () => tid("screen", "adminHub", "pin", "input"),
+      pinSubmit: () => tid("screen", "adminHub", "pin", "submit"),
+      pinError: () => tid("screen", "adminHub", "pin", "error"),
+      progressCard: () => tid("screen", "adminHub", "card", "progress"),
+      progressCardCta: () => tid("screen", "adminHub", "card", "progress", "cta"),
+      parentDashboardCard: () => tid("screen", "adminHub", "card", "parentDashboard"),
+      parentDashboardCardCta: () => tid("screen", "adminHub", "card", "parentDashboard", "cta"),
+    },
+    parentDashboard: {
+      root: () => tid("screen", "parentDashboard"),
+      navBack: () => tid("screen", "parentDashboard", "nav", "back"),
+      subjectFilter: () => tid("screen", "parentDashboard", "subject", "filter"),
+      subjectFilterOption: (subject: string) =>
+        tid("screen", "parentDashboard", "subject", "filter", "option", subject),
+      emptyState: () => tid("screen", "parentDashboard", "emptyState"),
+      // ① Snapshot
+      snapshot: () => tid("screen", "parentDashboard", "section", "snapshot"),
+      metricAccuracy: () => tid("screen", "parentDashboard", "metric", "accuracy"),
+      metricStreak: () => tid("screen", "parentDashboard", "metric", "streak"),
+      metricDaysComplete: () => tid("screen", "parentDashboard", "metric", "daysComplete"),
+      metricLastActive: () => tid("screen", "parentDashboard", "metric", "lastActive"),
+      subjectAccuracy: (subject: string) =>
+        tid("screen", "parentDashboard", "metric", "accuracy", "subject", subject),
+      // ② Progress over time
+      progressSection: () => tid("screen", "parentDashboard", "section", "progress"),
+      // ③ Weak skills
+      weakSkillsSection: () => tid("screen", "parentDashboard", "section", "weakSkills"),
+      weakSkillRow: (subject: string, tag: string) =>
+        tid("screen", "parentDashboard", "weakSkill", "subject", subject, "tag", tag),
+      weakSkillsEmpty: () => tid("screen", "parentDashboard", "section", "weakSkills", "empty"),
+      // ④ Review backlog
+      reviewSection: () => tid("screen", "parentDashboard", "section", "review"),
+      reviewDue: () => tid("screen", "parentDashboard", "review", "due"),
+      reviewPracticing: () => tid("screen", "parentDashboard", "review", "practicing"),
+      reviewMastered: () => tid("screen", "parentDashboard", "review", "mastered"),
+      // ⑤ Encourage next
+      encourageSection: () => tid("screen", "parentDashboard", "section", "encourage"),
+      encourageStep: () => tid("screen", "parentDashboard", "encourage", "step"),
+      // Exam results
+      examSection: () => tid("screen", "parentDashboard", "section", "exam"),
+      examRow: (subject: string, level: string) =>
+        tid("screen", "parentDashboard", "exam", "subject", subject, "level", level),
+    },
     plan: {
       root: (grade: string) => tid("screen", "plan", "grade", grade),
       hero: (grade: string) => tid("screen", "plan", "hero", "grade", grade),
