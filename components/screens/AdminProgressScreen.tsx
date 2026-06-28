@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { Surface } from "@/components/ui/Surface";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
@@ -407,12 +408,12 @@ export function AdminProgressScreen({
   return (
     <main data-testid={rootTid} className="pb-10">
       <div data-testid={childTid(rootTid, "topNav")} className="mb-4 flex items-center gap-3">
-        <ButtonLink
+        <BackLink
           data-testid={testIds.screen.adminProgress.navBack()}
           href={routes.adminHub()}
         >
           חזרה לאזור הורים
-        </ButtonLink>
+        </BackLink>
       </div>
 
       <Surface data-testid={childTid(rootTid, "panel")} className="space-y-4 p-5">

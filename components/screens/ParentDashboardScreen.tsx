@@ -26,39 +26,12 @@ import {
 } from "@/lib/parent/metrics";
 import { Surface } from "@/components/ui/Surface";
 import { Chip } from "@/components/ui/Chip";
-import { ButtonLink } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
+import { Ltr } from "@/components/ui/Ltr";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { formatHebrewDate, formatMinutes } from "@/lib/utils/format";
 
 type SubjectFilter = "all" | Subject;
-
-/** LTR-wrapped numeral so percentages/counts render correctly inside an RTL view. */
-function Ltr({
-  children,
-  "data-testid": testId,
-}: {
-  children: React.ReactNode;
-  "data-testid"?: string;
-}) {
-  return (
-    <span dir="ltr" data-testid={testId}>
-      {children}
-    </span>
-  );
-}
-
-/** Friendly Hebrew date for the "last active" tile; "—" when null/unparseable. */
-function formatHebrewDate(iso: string | null): string {
-  if (!iso) return "—";
-  const ms = new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return "—";
-  return new Date(ms).toLocaleDateString("he-IL", { day: "numeric", month: "short" });
-}
-
-/** Approximate ms → whole minutes, Hebrew unit. */
-function formatMinutes(ms: number): string {
-  const minutes = Math.max(0, Math.round(ms / 60000));
-  return `${minutes} דק׳`;
-}
 
 /** The six learning tracks, built once from localStorage reads. */
 function buildViewModels(): ParentDashboardViewModels {
@@ -255,13 +228,13 @@ export function ParentDashboardScreen() {
   }
 
   const navBack = (
-    <ButtonLink
+    <BackLink
       data-testid={testIds.screen.parentDashboard.navBack()}
       href={routes.adminHub()}
       variant="outline"
     >
       חזרה לאזור הורים
-    </ButtonLink>
+    </BackLink>
   );
 
   if (!vm.hasAnyData) {

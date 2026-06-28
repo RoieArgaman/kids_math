@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { Surface } from "@/components/ui/Surface";
 import { routes } from "@/lib/routes";
@@ -100,14 +101,14 @@ export function AdminHubScreen() {
   return (
     <main data-testid={rootTid} className="pb-10">
       <div data-testid={childTid(rootTid, "topNav")} className="mb-4 flex items-center gap-3">
-        <ButtonLink
+        <BackLink
           data-testid={childTid(rootTid, "navBack")}
           href={routes.gradePicker()}
           variant="outline"
           onClick={handleExitAdmin}
         >
           חזרה למסך הראשי
-        </ButtonLink>
+        </BackLink>
       </div>
 
       <header data-testid={childTid(rootTid, "header")} className="mb-4 space-y-1 text-right">

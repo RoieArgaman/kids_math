@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ExerciseItem } from "@/components/exercises/ExerciseItem";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
-import { ButtonLink } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { LoadingPanel } from "@/components/ui/LoadingPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionBlock } from "@/components/SectionBlock";
@@ -242,13 +242,13 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               : "צריך להשלים את כל ימי הלימוד הקודמים כדי לפתוח את המבחן המסכם."
           }
           actions={
-            <ButtonLink
+            <BackLink
               data-testid={childTid(testIds.screen.finalExam.root(`${grade}.locked`), "cta", "home")}
               href={routes.gradeHome(grade, { previewAll })}
               className="w-full text-center"
             >
               חזרה לחוברת
-            </ButtonLink>
+            </BackLink>
           }
         />
       </main>

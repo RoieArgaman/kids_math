@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
-import { ButtonLink } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { CompletionPanel } from "@/components/ui/CompletionPanel";
 import { DayHeader } from "@/components/DayHeader";
@@ -166,9 +166,9 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           emoji="🔍"
           title="הַיּוֹם לֹא נִמְצָא."
           actions={
-            <ButtonLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
+            <BackLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
               חֲזָרָה לַחוֹבֶרֶת
-            </ButtonLink>
+            </BackLink>
           }
         />
       </main>
@@ -194,9 +194,9 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
           title="הַיּוֹם נָעוּל"
           description="צָרִיךְ לְהַשְׁלִים אֶת הַיּוֹם הַקּוֹדֵם בְּ-100% כְּדֵי לִפְתֹּחַ אֶת הַיּוֹם הַזֶּה."
           actions={
-            <ButtonLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
+            <BackLink href={routes.gradeHome(effectiveGrade, { previewAll })} className="w-full text-center">
               חֲזוֹר הַבַּיְתָה
-            </ButtonLink>
+            </BackLink>
           }
         />
       </main>
