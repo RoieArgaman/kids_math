@@ -53,9 +53,10 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 1. Read the file before editing
 2. Search for existing patterns (grep)
 3. Check helpers in `lib/`
-4. Check `.claude/docs/LEARNING_LOG.md` for past decisions
-5. Check `.claude/rules/*.mdc` for domain conventions (indexed under Reference Files)
-6. Check cross-file dependencies (grep for imports)
+4. **Reuse the shared UI library** (see `.claude/docs/UI_COMPONENTS.md`) before building new card/button/input/banner markup; run `npm run check:cards` for guidance
+5. Check `.claude/docs/LEARNING_LOG.md` for past decisions
+6. Check `.claude/rules/*.mdc` for domain conventions (indexed under Reference Files)
+7. Check cross-file dependencies (grep for imports)
 
 ### Implementation
 1. Minimal diffs — smallest correct change (PRO: ≤50 lines, ULTRA: ≤300 lines)
@@ -138,6 +139,7 @@ These mirror the `alwaysApply: true` rules Cursor always loads — imported so t
 ### Key docs (`.claude/docs/`)
 
 - `LEARNING_LOG.md` — project decisions and learnings (append per Learning Loop)
+- `UI_COMPONENTS.md` — shared UI/hook/util library catalog + canonical Card tokens (reuse before new card/button/input/banner markup; `npm run check:cards`)
 - `AI_PROMPT_LIBRARY.md` / `AI_AUTHORING_GUIDELINES.md` — prompt + authoring templates
 - `PEDAGOGY_BENCHMARK_G1_G2.md`, `MOE_GRADE_A_B_SKILLTAG_MAP.md`, `VALIDATION_PLAN_G1_G2_PEDAGOGY.md` — pedagogy / MoE alignment
 - `ENGLISH_CURRICULUM.md`, `TEACHING_PRIMER_GUIDELINES.md` — subject/content guides

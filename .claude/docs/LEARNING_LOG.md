@@ -6,6 +6,43 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-06-29 (DRY refactor: shared UI/hook/util library + canonical Card tokens + subject screen config)
+- **Trigger:** Repeated, near-identical markup and logic across screens (card containers,
+  back links, LTR numerals, status banners, PIN panels, admin unlock, exam scoring,
+  English vs Science screens). Goal: one shared library, zero behavior/visual change.
+- **What changed / where (docs phase):** catalogued the library in
+  `.claude/docs/UI_COMPONENTS.md` and added an advisory scanner `scripts/check-cards.mjs`
+  (`npm run check:cards` — **always exits 0**, NOT in the blocking `test:qa` chain).
+  Earlier phases (already committed on `refactor/shared-components-dry`) added:
+  - **UI:** `components/ui/Card.tsx` (`Card` + `ActionCard`), `Tile`, `SectionHeader`,
+    `Ltr`, `BackLink`, `PinInput`, `Field`, `Alert` (atop pre-existing `Surface`,
+    `Button`, `Chip`, `CenteredPanel`, `LoadingPanel`, `HeroHeader`, `ProgressBar`).
+  - **Hooks:** `lib/hooks/useAdminSession`, `useStatusMessage`, `useArmedConfirm`.
+  - **Utils:** `lib/utils/format`, `sanitize`, `guards`, and the pure scorer
+    `lib/exam/gradeExam.ts`.
+  - **Subject system:** `lib/subjects/subjectScreenConfig.ts` + `components/screens/subject/*`
+    unify **English** and **Science** behind one subject-blind screen set driven by a
+    per-subject `SubjectScreenConfig`.
+- **Canonical Card tokens (now the standard):** radius `20px`; padding `sm/md/lg` =
+  `p-4/p-5/p-6` (default `md`); card body rhythm `space-y-2`; `ActionCard` CTA gap `mt-5`;
+  CTA full-width, `min-h-[44px]`. Build cards via `<Card bodyClassName="space-y-2">` /
+  `<ActionCard>` rather than re-deriving these.
+- **Gotcha — Surface swallows layout classNames:** `Surface` puts its `className` on the
+  outer wrapper (padding works) but renders children inside an un-classed inner `<div>`,
+  so `space-y-*` / `flex` / `grid` / `gap-*` passed to `<Surface>` are silently ignored.
+  Fix: use `<Card bodyClassName=…>` (Card owns a body wrapper) or add your own inner
+  wrapper. `Card` exists precisely to make this predictable.
+- **gradeExam / threshold preservation:** `gradeExam` centralizes only the arithmetic
+  (`scorePercent = total>0 ? round(correct/total*100) : 0`; `passed = total>0 &&
+  scorePercent >= passPercent`). **The policy never moved into the shared code** — each
+  subject still passes its OWN `*_PASS_PERCENT` and its own total source. The shared
+  subject screens never branch on subject and never touch a threshold or storage key;
+  they forward through config callbacks, keeping per-subject storage/grading isolated.
+- **How to reuse next time:** extract by reproducing existing markup byte-for-byte
+  (adoption stays a no-op), forward `data-testid` via `childTid`, and keep *policy*
+  (thresholds, storage keys) in per-call-site config, not in the shared helper. Add new
+  shared components to `.claude/docs/UI_COMPONENTS.md` and run `npm run check:cards`.
+
 ### 2026-06-27 (English: align reading demand to reading instruction — Level A)
 - **Trigger:** A true beginner (Hebrew only, cannot read English) was being asked to
   *read* English to answer in the listening-first phase. The alphabet is taught on
