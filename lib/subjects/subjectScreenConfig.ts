@@ -1,10 +1,11 @@
 import type { GradeId } from "@/lib/grades";
 import type { HeroDecoration } from "@/components/ui/HeroHeader";
 import type { WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import type { Subject } from "@/lib/subjects";
 import { testIds } from "@/lib/testIds";
 import { routes, type RouteOpts } from "@/lib/routes";
 
-import { getEnglishDays, getEnglishTotalDays } from "@/lib/content/english-workbook";
+import { getEnglishDays, getEnglishTotalDays, getAllEnglishDays } from "@/lib/content/english-workbook";
 import {
   ENGLISH_LEVELS,
   englishLevelLabel,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/english/levels";
 import { loadEnglishProgressState } from "@/lib/english/storage";
 
-import { getScienceDays, getScienceTotalDays } from "@/lib/content/science-workbook";
+import { getScienceDays, getScienceTotalDays, getAllScienceDays } from "@/lib/content/science-workbook";
 import {
   SCIENCE_LEVELS,
   scienceLevelLabel,
@@ -36,11 +37,19 @@ export type SubjectScreenConfig = {
   /** Subject id — used only for keys/diagnostics, never to branch in the screen. */
   subject: "english" | "science";
 
+  /**
+   * Subject passed to the progress / answer hooks. Same value as `subject`,
+   * but typed as the hooks' `Subject` union so it can be forwarded directly.
+   */
+  progressSubject: Subject;
+
   /** Ordered list of levels for this subject (currently always ["a", "b"]). */
   levels: GradeId[];
 
   // --- Content + progress (isolated per subject) ---
   getDays: (level: GradeId) => WorkbookDay[];
+  /** All days across every level — used by Day/Section screens to resolve a dayId. */
+  getAllDays: () => WorkbookDay[];
   getTotalDays: (level: GradeId) => number;
   loadProgressState: () => WorkbookProgressState;
   isLevelUnlocked: (level: GradeId, opts?: { previewAll?: boolean }) => boolean;
@@ -48,12 +57,27 @@ export type SubjectScreenConfig = {
   // --- Labels ---
   levelLabel: (level: GradeId) => string;
   levelSubtitle: (level: GradeId) => string;
+  /** "חֲזָרָה לְאַנְגְּלִית" / "חֲזָרָה לְמַדָּעִים" — back-to-subject nav label. */
+  backToSubjectLabel: string;
 
   // --- Routes ---
   levelPickerRoute: (opts?: Omit<RouteOpts, "grade">) => string;
   homeRoute: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => string;
   dayRoute: (level: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) => string;
+  sectionRoute: (level: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) => string;
   examRoute: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => string;
+
+  // --- Day screen presentation ---
+  day: {
+    /** Emoji on an open (not-locked, not-complete) section card — "🔤" / "🔬". */
+    sectionCardEmoji: string;
+    testIds: typeof testIds.screen.english.day;
+  };
+
+  // --- Section screen presentation ---
+  section: {
+    testIds: typeof testIds.screen.english.section;
+  };
 
   // --- Home screen presentation ---
   home: {
@@ -91,20 +115,33 @@ const scienceDecorations: HeroDecoration[] = [
 
 export const englishScreenConfig: SubjectScreenConfig = {
   subject: "english",
+  progressSubject: "english",
   levels: ENGLISH_LEVELS,
 
   getDays: getEnglishDays,
+  getAllDays: getAllEnglishDays,
   getTotalDays: getEnglishTotalDays,
   loadProgressState: loadEnglishProgressState,
   isLevelUnlocked: isEnglishLevelUnlocked,
 
   levelLabel: englishLevelLabel,
   levelSubtitle: englishLevelSubtitle,
+  backToSubjectLabel: "חֲזָרָה לְאַנְגְּלִית",
 
   levelPickerRoute: routes.englishLevelPicker,
   homeRoute: routes.englishHome,
   dayRoute: routes.englishDay,
+  sectionRoute: routes.englishSection,
   examRoute: routes.englishExam,
+
+  day: {
+    sectionCardEmoji: "🔤",
+    testIds: testIds.screen.english.day,
+  },
+
+  section: {
+    testIds: testIds.screen.english.section,
+  },
 
   home: {
     heroTitlePrefix: "אַנְגְּלִית",
@@ -125,20 +162,33 @@ export const englishScreenConfig: SubjectScreenConfig = {
 
 export const scienceScreenConfig: SubjectScreenConfig = {
   subject: "science",
+  progressSubject: "science",
   levels: SCIENCE_LEVELS,
 
   getDays: getScienceDays,
+  getAllDays: getAllScienceDays,
   getTotalDays: getScienceTotalDays,
   loadProgressState: loadScienceProgressState,
   isLevelUnlocked: isScienceLevelUnlocked,
 
   levelLabel: scienceLevelLabel,
   levelSubtitle: scienceLevelSubtitle,
+  backToSubjectLabel: "חֲזָרָה לְמַדָּעִים",
 
   levelPickerRoute: routes.scienceLevelPicker,
   homeRoute: routes.scienceHome,
   dayRoute: routes.scienceDay,
+  sectionRoute: routes.scienceSection,
   examRoute: routes.scienceExam,
+
+  day: {
+    sectionCardEmoji: "🔬",
+    testIds: testIds.screen.science.day,
+  },
+
+  section: {
+    testIds: testIds.screen.science.section,
+  },
 
   home: {
     heroTitlePrefix: "מַדָּעִים",
