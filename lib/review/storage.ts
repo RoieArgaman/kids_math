@@ -3,6 +3,7 @@ import { DEFAULT_GRADE } from "@/lib/grades";
 import type { Subject } from "@/lib/subjects";
 import type { ExerciseId } from "@/lib/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { isBrowser, isObject } from "@/lib/utils/guards";
 import {
   REVIEW_STORAGE_SCHEMA_VERSION,
   type ReviewBox,
@@ -36,14 +37,6 @@ function keyFor(opts: ReviewTrackOptions): string {
     default:
       return reviewStorageKey(opts.grade ?? DEFAULT_GRADE);
   }
-}
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function isReviewBox(value: unknown): value is ReviewBox {

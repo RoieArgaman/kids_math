@@ -1,17 +1,10 @@
 import type { GradeId } from "@/lib/grades";
 import type { BadgeId, BadgeState } from "./types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { isBrowser, isObject } from "@/lib/utils/guards";
 
 function badgeStorageKey(grade: GradeId): string {
   return `kids_math.badges.v1.grade.${grade}`;
-}
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 export function createInitialBadgeState(grade: GradeId): BadgeState {

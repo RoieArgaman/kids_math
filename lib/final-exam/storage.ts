@@ -3,6 +3,11 @@ import type { ExerciseId } from "@/lib/types";
 import { FINAL_EXAM_QUESTION_COUNT } from "@/lib/final-exam/config";
 import type { FinalExamState, FinalExamStateV1 } from "@/lib/final-exam/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import {
+  sanitizeBooleanRecord,
+  sanitizeNumberRecord,
+  sanitizeStringRecord,
+} from "@/lib/utils/sanitize";
 
 const KEY_PREFIX = "kids_math.final_exam.v1.grade.";
 
@@ -12,33 +17,6 @@ function keyForGrade(grade: GradeId): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function sanitizeStringRecord(value: unknown): Record<string, string> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "string") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeBooleanRecord(value: unknown): Record<string, boolean> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "boolean") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeNumberRecord(value: unknown): Record<string, number> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, number> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "number" && Number.isFinite(v) && v >= 0) out[k] = v;
-  }
-  return out;
 }
 
 export function createInitialFinalExamState(params: {

@@ -1,6 +1,7 @@
 import { SCIENCE_FINAL_EXAM_PASS_PERCENT } from "@/lib/science/final-exam/config";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { gradeExam } from "@/lib/exam/gradeExam";
 
 export type ScienceFinalExamGradingResult = {
   total: number;
@@ -28,8 +29,11 @@ export function gradeScienceFinalExam(params: {
   }
 
   const correctCount = ids.filter((id) => Boolean(correctMap[id])).length;
-  const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-  const passed = total > 0 && scorePercent >= SCIENCE_FINAL_EXAM_PASS_PERCENT;
+  const { scorePercent, passed } = gradeExam({
+    correctCount,
+    total,
+    passPercent: SCIENCE_FINAL_EXAM_PASS_PERCENT,
+  });
 
   return { total, answeredCount, canFinish, correctMap, correctCount, scorePercent, passed };
 }

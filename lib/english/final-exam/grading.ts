@@ -1,6 +1,7 @@
 import { ENGLISH_FINAL_EXAM_PASS_PERCENT } from "@/lib/english/final-exam/config";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { isAnswerCorrect, normalizeAnswerValue } from "@/lib/utils/exercise";
+import { gradeExam } from "@/lib/exam/gradeExam";
 
 export type EnglishFinalExamGradingResult = {
   total: number;
@@ -28,8 +29,11 @@ export function gradeEnglishFinalExam(params: {
   }
 
   const correctCount = ids.filter((id) => Boolean(correctMap[id])).length;
-  const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-  const passed = total > 0 && scorePercent >= ENGLISH_FINAL_EXAM_PASS_PERCENT;
+  const { scorePercent, passed } = gradeExam({
+    correctCount,
+    total,
+    passPercent: ENGLISH_FINAL_EXAM_PASS_PERCENT,
+  });
 
   return { total, answeredCount, canFinish, correctMap, correctCount, scorePercent, passed };
 }

@@ -2,6 +2,7 @@ import { createInitialWorkbookProgressState } from "@/lib/progress/engine";
 import { sanitizeState } from "@/lib/progress/storage";
 import type { WorkbookProgressState } from "@/lib/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { isBrowser } from "@/lib/utils/guards";
 
 /**
  * Science-layer progress storage.
@@ -24,10 +25,6 @@ const SCIENCE_PROGRESS_STORAGE_KEY = "kids_math.science.workbook_progress.v1";
 /** Exposed for cross-tab `storage` listeners (must match load/save). */
 export function scienceProgressStorageKey(): string {
   return SCIENCE_PROGRESS_STORAGE_KEY;
-}
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
 export function loadScienceProgressState(): WorkbookProgressState {

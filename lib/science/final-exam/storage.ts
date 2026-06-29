@@ -2,6 +2,7 @@ import type { GradeId } from "@/lib/grades";
 import type { ExerciseId } from "@/lib/types";
 import type { ScienceFinalExamState, ScienceFinalExamStateV1 } from "@/lib/science/final-exam/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { sanitizeBooleanRecord, sanitizeStringRecord } from "@/lib/utils/sanitize";
 
 /**
  * Each Science level has its own final-exam state, keyed by level. Science is a
@@ -18,24 +19,6 @@ export function scienceFinalExamStorageKey(level: GradeId = "a"): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function sanitizeStringRecord(value: unknown): Record<string, string> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "string") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeBooleanRecord(value: unknown): Record<string, boolean> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "boolean") out[k] = v;
-  }
-  return out;
 }
 
 export function createInitialScienceFinalExamState(params: {

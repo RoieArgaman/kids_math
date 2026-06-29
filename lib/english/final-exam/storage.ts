@@ -2,6 +2,7 @@ import type { GradeId } from "@/lib/grades";
 import type { ExerciseId } from "@/lib/types";
 import type { EnglishFinalExamState, EnglishFinalExamStateV1 } from "@/lib/english/final-exam/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { sanitizeBooleanRecord, sanitizeStringRecord } from "@/lib/utils/sanitize";
 
 /**
  * Each English level has its own final-exam state, keyed by level. `level`
@@ -17,24 +18,6 @@ export function englishFinalExamStorageKey(level: GradeId = "a"): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function sanitizeStringRecord(value: unknown): Record<string, string> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "string") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeBooleanRecord(value: unknown): Record<string, boolean> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "boolean") out[k] = v;
-  }
-  return out;
 }
 
 export function createInitialEnglishFinalExamState(params: {
