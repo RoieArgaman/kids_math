@@ -1,53 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { useState } from "react";
 import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { ActionCard } from "@/components/ui/Card";
+import { PinInput } from "@/components/ui/PinInput";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
-import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
+import { useAdminSession } from "@/lib/hooks/useAdminSession";
 
 export function AdminHubScreen() {
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { isUnlocked, unlock, exit } = useAdminSession();
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState("");
 
-  useEffect(() => {
-    setIsUnlocked(isAdminUnlocked());
-  }, []);
-
-  // Keep the unlock alive across in-app (client-side) navigation between admin
-  // screens. `pagehide` still clears it on tab close / reload / hard exit, and the
-  // session carries a TTL. We deliberately do NOT clear on unmount — otherwise
-  // moving hub → progress / parent-dashboard would wipe the unlock and re-prompt
-  // the PIN. The unlock is cleared explicitly only when leaving the admin area
-  // via "חזרה למסך הראשי".
-  useEffect(() => {
-    const onPageHide = () => {
-      clearAdminSession();
-    };
-    window.addEventListener("pagehide", onPageHide);
-    return () => {
-      window.removeEventListener("pagehide", onPageHide);
-    };
-  }, []);
-
   function handleExitAdmin(): void {
-    clearAdminSession();
-    setIsUnlocked(false);
+    exit();
   }
 
   function handlePinSubmit(): void {
-    const ok = unlockAdminSession(pin);
+    const ok = unlock(pin);
     if (!ok) {
       setPinError("PIN שגוי, נסו שוב.");
       return;
     }
     setPinError("");
     setPin("");
-    setIsUnlocked(true);
   }
 
   const rootTid = testIds.screen.adminHub.root();
@@ -61,37 +39,21 @@ export function AdminHubScreen() {
         description="לאחר הזנת קוד הגישה תיפתח בחירה בין ניהול התקדמות ללוח ההורים."
         actions={
           <div data-testid={childTid(rootTid, "pinPanel")} className="space-y-3 text-right">
-            <label data-testid={childTid(rootTid, "pinLabel")} htmlFor="admin-hub-pin" className="block text-sm font-semibold text-[#4f4860]">
-              קוד גישה
-            </label>
-            <input
+            <PinInput
               id="admin-hub-pin"
-              data-testid={testIds.screen.adminHub.pinInput()}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
-              type="password"
-              inputMode="numeric"
-              dir="ltr"
-              autoComplete="off"
               value={pin}
-              onChange={(event) => setPin(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handlePinSubmit();
+              onChange={setPin}
+              onSubmit={handlePinSubmit}
+              label="קוד גישה"
+              submitLabel="כניסה"
+              error={pinError || undefined}
+              testIds={{
+                label: childTid(rootTid, "pinLabel"),
+                input: testIds.screen.adminHub.pinInput(),
+                error: testIds.screen.adminHub.pinError(),
+                submit: testIds.screen.adminHub.pinSubmit(),
               }}
-              aria-invalid={pinError ? "true" : "false"}
-              aria-describedby={pinError ? "admin-hub-pin-error" : undefined}
             />
-            {pinError ? (
-              <p
-                id="admin-hub-pin-error"
-                data-testid={testIds.screen.adminHub.pinError()}
-                className="text-sm font-semibold text-[#b91c1c]"
-              >
-                {pinError}
-              </p>
-            ) : null}
-            <Button data-testid={testIds.screen.adminHub.pinSubmit()} className="w-full" onClick={handlePinSubmit}>
-              כניסה
-            </Button>
           </div>
         }
       />

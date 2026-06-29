@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert } from "@/components/ui/Alert";
+import { Field } from "@/components/ui/Field";
+import { useStatusMessage } from "@/lib/hooks/useStatusMessage";
 import { useAuth } from "@/lib/auth/context";
 import { testIds } from "@/lib/testIds";
 
@@ -16,7 +19,10 @@ export function AdminUsersScreen() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [statusMsg, setStatusMsg] = useState("");
+  const { status: statusMsg, setStatus: setStatusMsg } = useStatusMessage<string>({
+    initial: "",
+    autoDismissMs: 3000,
+  });
 
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -85,7 +91,6 @@ export function AdminUsersScreen() {
         setNewPassword("");
         setNewIsAdmin(false);
         setStatusMsg("המשתמש נוסף בהצלחה ✓");
-        setTimeout(() => setStatusMsg(""), 3000);
         await fetchUsers();
       } catch {
         setAddError("שגיאה ביצירת המשתמש");
@@ -93,7 +98,7 @@ export function AdminUsersScreen() {
         setAdding(false);
       }
     },
-    [newUsername, newPassword, newIsAdmin, fetchUsers],
+    [newUsername, newPassword, newIsAdmin, fetchUsers, setStatusMsg],
   );
 
   const handleDelete = useCallback(
@@ -110,13 +115,12 @@ export function AdminUsersScreen() {
         }
         setConfirmDeleteId(null);
         setStatusMsg("המשתמש נמחק ✓");
-        setTimeout(() => setStatusMsg(""), 3000);
         await fetchUsers();
       } catch {
         setError("שגיאה במחיקת המשתמש");
       }
     },
-    [fetchUsers],
+    [fetchUsers, setStatusMsg],
   );
 
   const openChangePw = useCallback((userId: string) => {
@@ -150,14 +154,13 @@ export function AdminUsersScreen() {
         setChangePwUserId(null);
         setChangePwValue("");
         setStatusMsg("הסיסמה עודכנה ✓");
-        setTimeout(() => setStatusMsg(""), 3000);
       } catch {
         setChangePwError("שגיאה בשינוי הסיסמה");
       } finally {
         setChangePwBusy(false);
       }
     },
-    [changePwValue],
+    [changePwValue, setStatusMsg],
   );
 
   if (!isAdminUser) {
@@ -173,9 +176,9 @@ export function AdminUsersScreen() {
       <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-slate-800">ניהול משתמשים</h1>
 
       {statusMsg && (
-        <p data-testid="km.autogen.adminusersscreen.node.idx.2" className="mb-4 rounded-xl bg-[#d1fae5] px-4 py-2.5 text-center text-sm font-medium text-[#047857]">
+        <Alert data-testid="km.autogen.adminusersscreen.node.idx.2" tone="success" className="mb-4">
           {statusMsg}
-        </p>
+        </Alert>
       )}
 
       {/* Add user form */}
@@ -186,8 +189,11 @@ export function AdminUsersScreen() {
           onSubmit={handleAdd}
           noValidate
         >
-          <div data-testid="km.autogen.adminusersscreen.node.idx.5" className="mb-3">
-            <label data-testid="km.autogen.adminusersscreen.node.idx.6" className="mb-1 block text-sm font-semibold text-slate-600">שם משתמש</label>
+          <Field
+            data-testid="km.autogen.adminusersscreen.node.idx.5"
+            labelTestId="km.autogen.adminusersscreen.node.idx.6"
+            label="שם משתמש"
+          >
             <input
               data-testid={testIds.component.adminUsers.usernameInput()}
               type="text"
@@ -197,9 +203,12 @@ export function AdminUsersScreen() {
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
-          </div>
-          <div data-testid="km.autogen.adminusersscreen.node.idx.7" className="mb-3">
-            <label data-testid="km.autogen.adminusersscreen.node.idx.8" className="mb-1 block text-sm font-semibold text-slate-600">סיסמה</label>
+          </Field>
+          <Field
+            data-testid="km.autogen.adminusersscreen.node.idx.7"
+            labelTestId="km.autogen.adminusersscreen.node.idx.8"
+            label="סיסמה"
+          >
             <input
               data-testid={testIds.component.adminUsers.passwordInput()}
               type="text"
@@ -209,7 +218,7 @@ export function AdminUsersScreen() {
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
-          </div>
+          </Field>
           <div data-testid="km.autogen.adminusersscreen.node.idx.9" className="mb-4 flex items-center gap-2">
             <input
               data-testid={testIds.component.adminUsers.adminToggle()}
