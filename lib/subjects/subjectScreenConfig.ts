@@ -1,6 +1,6 @@
 import type { GradeId } from "@/lib/grades";
 import type { HeroDecoration } from "@/components/ui/HeroHeader";
-import type { WorkbookDay, WorkbookProgressState } from "@/lib/types";
+import type { Exercise, ExerciseId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 import type { Subject } from "@/lib/subjects";
 import { testIds } from "@/lib/testIds";
 import { routes, type RouteOpts } from "@/lib/routes";
@@ -13,6 +13,18 @@ import {
   isEnglishLevelUnlocked,
 } from "@/lib/english/levels";
 import { loadEnglishProgressState } from "@/lib/english/storage";
+import {
+  ENGLISH_FINAL_EXAM_MIN_COUNT,
+  ENGLISH_FINAL_EXAM_PASS_PERCENT,
+} from "@/lib/english/final-exam/config";
+import { buildEnglishExamBank, pickEnglishExamExerciseIds } from "@/lib/english/final-exam/picker";
+import { gradeEnglishFinalExam } from "@/lib/english/final-exam/grading";
+import {
+  clearEnglishFinalExamState,
+  createInitialEnglishFinalExamState,
+  loadEnglishFinalExamState,
+  saveEnglishFinalExamState,
+} from "@/lib/english/final-exam/storage";
 
 import { getScienceDays, getScienceTotalDays, getAllScienceDays } from "@/lib/content/science-workbook";
 import {
@@ -22,6 +34,86 @@ import {
   isScienceLevelUnlocked,
 } from "@/lib/science/levels";
 import { loadScienceProgressState } from "@/lib/science/storage";
+import {
+  SCIENCE_FINAL_EXAM_MIN_COUNT,
+  SCIENCE_FINAL_EXAM_PASS_PERCENT,
+} from "@/lib/science/final-exam/config";
+import { buildScienceExamBank, pickScienceExamExerciseIds } from "@/lib/science/final-exam/picker";
+import { gradeScienceFinalExam } from "@/lib/science/final-exam/grading";
+import {
+  clearScienceFinalExamState,
+  createInitialScienceFinalExamState,
+  loadScienceFinalExamState,
+  saveScienceFinalExamState,
+} from "@/lib/science/final-exam/storage";
+
+/**
+ * Structural final-exam state shared by the SHARED SubjectFinalExamScreen.
+ * English's `EnglishFinalExamState` and Science's `ScienceFinalExamState` are
+ * structurally identical (both the V1 shape); this alias lets the screen read
+ * either through the config without importing a subject's state type. Each
+ * subject still owns its OWN storage keys, picker, config, and grading.
+ */
+export type FinalExamState = {
+  version: 1;
+  createdAt: string;
+  pickerVersion: 1;
+  selectedExerciseIds: ExerciseId[];
+  answers: Record<ExerciseId, string>;
+  correctMap: Record<ExerciseId, boolean>;
+  submittedAt?: string;
+  scorePercent?: number;
+  passed?: boolean;
+};
+
+/** Structural grading result shared by the SHARED SubjectFinalExamScreen. */
+export type FinalExamGradingResult = {
+  total: number;
+  answeredCount: number;
+  correctCount: number;
+  scorePercent: number;
+  passed: boolean;
+  correctMap: Record<ExerciseId, boolean>;
+  canFinish: boolean;
+};
+
+/**
+ * Final-exam wiring for the SHARED SubjectFinalExamScreen. Captures everything
+ * that differs between the English and Science exam screens: the exam bank /
+ * picker, isolated storage, grading (each subject calls `gradeExam` with its OWN
+ * pass percent — never changed here), thresholds, copy, and the locked-notice text.
+ *
+ * CRITICAL — grading & storage isolation: thresholds and storage are wired
+ * per subject; the shared screen never branches on subject and never touches a
+ * threshold or storage key. It only forwards through these callbacks.
+ */
+export type SubjectFinalExamConfig = {
+  /** Minimum exercises required to assemble a valid exam (subject-owned). */
+  minCount: number;
+  /** Pass threshold % shown in the retry copy (subject-owned, English 80 / Science 80). */
+  passPercent: number;
+
+  /** All exam-bank exercises for a level — used to resolve selected ids. */
+  buildExamBank: (level: GradeId) => Exercise[];
+  /** Deterministic pick of exercise ids for a fresh exam (subject-owned seed/version). */
+  pickExerciseIds: (params: { level: GradeId; seed: string; pickerVersion: 1 }) => ExerciseId[];
+
+  /** Grade the exam via the subject's grading module (which applies its own passPercent). */
+  grade: (params: { selectedExercises: Exercise[]; answers: Record<ExerciseId, string> }) => FinalExamGradingResult;
+
+  /** Isolated per-subject exam-state storage. */
+  loadState: (level: GradeId) => FinalExamState | null;
+  saveState: (state: FinalExamState, level: GradeId) => void;
+  clearState: (level: GradeId) => void;
+  createInitialState: (params: { selectedExerciseIds: ExerciseId[] }) => FinalExamState;
+
+  /** Per-level title suffix: "📝 מִבְחָן מְסַכֵּם · {label}". */
+  levelLabel: (level: GradeId) => string;
+  /** Locked-notice description (subject-specific phrasing). */
+  lockedDescription: string;
+
+  testIds: typeof testIds.screen.english.exam;
+};
 
 /**
  * Per-subject configuration that drives the SHARED subject Home + LevelPicker
@@ -66,6 +158,9 @@ export type SubjectScreenConfig = {
   dayRoute: (level: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) => string;
   sectionRoute: (level: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) => string;
   examRoute: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => string;
+
+  // --- Final exam screen (isolated grading/storage per subject) ---
+  exam: SubjectFinalExamConfig;
 
   // --- Day screen presentation ---
   day: {
@@ -134,6 +229,21 @@ export const englishScreenConfig: SubjectScreenConfig = {
   sectionRoute: routes.englishSection,
   examRoute: routes.englishExam,
 
+  exam: {
+    minCount: ENGLISH_FINAL_EXAM_MIN_COUNT,
+    passPercent: ENGLISH_FINAL_EXAM_PASS_PERCENT,
+    buildExamBank: buildEnglishExamBank,
+    pickExerciseIds: pickEnglishExamExerciseIds,
+    grade: gradeEnglishFinalExam,
+    loadState: loadEnglishFinalExamState,
+    saveState: saveEnglishFinalExamState,
+    clearState: clearEnglishFinalExamState,
+    createInitialState: createInitialEnglishFinalExamState,
+    levelLabel: englishLevelLabel,
+    lockedDescription: "הַשְׁלִימוּ אֶת כָּל הַשִּׁעוּרִים בְּאַנְגְּלִית כְּדֵי לִפְתֹּחַ אֶת הַמִּבְחָן.",
+    testIds: testIds.screen.english.exam,
+  },
+
   day: {
     sectionCardEmoji: "🔤",
     testIds: testIds.screen.english.day,
@@ -180,6 +290,21 @@ export const scienceScreenConfig: SubjectScreenConfig = {
   dayRoute: routes.scienceDay,
   sectionRoute: routes.scienceSection,
   examRoute: routes.scienceExam,
+
+  exam: {
+    minCount: SCIENCE_FINAL_EXAM_MIN_COUNT,
+    passPercent: SCIENCE_FINAL_EXAM_PASS_PERCENT,
+    buildExamBank: buildScienceExamBank,
+    pickExerciseIds: pickScienceExamExerciseIds,
+    grade: gradeScienceFinalExam,
+    loadState: loadScienceFinalExamState,
+    saveState: saveScienceFinalExamState,
+    clearState: clearScienceFinalExamState,
+    createInitialState: createInitialScienceFinalExamState,
+    levelLabel: scienceLevelLabel,
+    lockedDescription: "הַשְׁלִימוּ אֶת כָּל הַשִּׁעוּרִים בַּמַּדָּעִים כְּדֵי לִפְתֹּחַ אֶת הַמִּבְחָן.",
+    testIds: testIds.screen.science.exam,
+  },
 
   day: {
     sectionCardEmoji: "🔬",
