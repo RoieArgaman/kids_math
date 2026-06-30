@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { PinInput } from "@/components/ui/PinInput";
 import { Surface } from "@/components/ui/Surface";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { saveFinalExamState } from "@/lib/final-exam/storage";
@@ -27,8 +29,10 @@ import { getWorkbookDays } from "@/lib/content/workbook";
 import { getEnglishDays } from "@/lib/content/english-workbook";
 import { getScienceDays } from "@/lib/content/science-workbook";
 import { loadTrackProgress, saveTrackProgress } from "@/lib/track";
-import { clearAdminSession, isAdminUnlocked, unlockAdminSession } from "@/lib/admin/session";
 import { wipeGradeBClientState } from "@/lib/admin/wipeGradeBClientState";
+import { useAdminSession } from "@/lib/hooks/useAdminSession";
+import { useArmedConfirm } from "@/lib/hooks/useArmedConfirm";
+import { useStatusMessage } from "@/lib/hooks/useStatusMessage";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
 
 type StatusState = { kind: "success" | "error"; message: string } | null;
@@ -77,17 +81,25 @@ export function AdminProgressScreen({
   initialGrade?: GradeId;
   initialSubject?: Subject;
 }) {
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { isUnlocked, unlock } = useAdminSession();
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState("");
 
   const [selectedGrade, setSelectedGrade] = useState<GradeId>(initialGrade);
   const [selectedSubject, setSelectedSubject] = useState<Subject>(initialSubject);
   const [progress, setProgress] = useState<WorkbookProgressState>(createInitialWorkbookProgressState);
-  const [status, setStatus] = useState<StatusState>(null);
-  const [resetArmedDayId, setResetArmedDayId] = useState<string | null>(null);
+  const { status, setStatus } = useStatusMessage<StatusState>({ initial: null });
+  const {
+    armedId: resetArmedDayId,
+    arm: armDayReset,
+    disarm: disarmDayReset,
+  } = useArmedConfirm();
   /** `dayId|sectionId` when section reset confirm is armed; mutually exclusive with day reset armed. */
-  const [resetArmedSectionKey, setResetArmedSectionKey] = useState<string | null>(null);
+  const {
+    armedId: resetArmedSectionKey,
+    arm: armSectionReset,
+    disarm: disarmSectionReset,
+  } = useArmedConfirm();
   /** Day ids whose per-section lists are expanded (default: all collapsed). */
   const [expandedDaySectionLists, setExpandedDaySectionLists] = useState<Set<DayId>>(() => new Set());
   const [resetBusy, setResetBusy] = useState(false);
@@ -96,8 +108,8 @@ export function AdminProgressScreen({
   function toggleDaySectionsList(dayId: DayId): void {
     setExpandedDaySectionLists((prev) => {
       const willCollapse = prev.has(dayId);
-      if (willCollapse) {
-        setResetArmedSectionKey((k) => (k?.startsWith(`${dayId}|`) ? null : k));
+      if (willCollapse && resetArmedSectionKey?.startsWith(`${dayId}|`)) {
+        disarmSectionReset();
       }
       const next = new Set(prev);
       if (willCollapse) {
@@ -127,7 +139,6 @@ export function AdminProgressScreen({
   useEffect(() => {
     setSelectedGrade(initialGrade);
     setSelectedSubject(initialSubject);
-    setIsUnlocked(isAdminUnlocked());
   }, [initialGrade, initialSubject]);
 
   useEffect(() => {
@@ -136,23 +147,6 @@ export function AdminProgressScreen({
     // `track` is derived from selectedSubject/selectedGrade; those drive reloads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUnlocked, selectedSubject, selectedGrade]);
-
-  // Keep the unlock alive across in-app (client-side) navigation between admin
-  // screens. `pagehide` still clears it on tab close / reload / hard exit, and the
-  // session carries a TTL. We deliberately do NOT clear on unmount — otherwise
-  // returning to the hub (or moving to the parent dashboard) would wipe the unlock
-  // and re-prompt the PIN. Back here returns to the hub (still unlocked); the
-  // unlock is cleared explicitly only when leaving the admin area from the hub
-  // via "חזרה למסך הראשי".
-  useEffect(() => {
-    const onPageHide = () => {
-      clearAdminSession();
-    };
-    window.addEventListener("pagehide", onPageHide);
-    return () => {
-      window.removeEventListener("pagehide", onPageHide);
-    };
-  }, []);
 
   // Days are resolved per sub-track (level): Math by grade, English/Science by their
   // level (GradeId axis). English/Science persist both levels in one store with
@@ -182,14 +176,14 @@ export function AdminProgressScreen({
     // Soft refresh: re-read the current track's progress from storage in place.
     // A full document reload would fire `pagehide` → clearAdminSession() and
     // re-prompt for the PIN, so we deliberately avoid window.location.reload().
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
     setProgress(loadTrackProgress(track));
     setStatus({ kind: "success", message: "הנתונים עודכנו." });
   }
 
   function handlePinSubmit(): void {
-    const ok = unlockAdminSession(pin);
+    const ok = unlock(pin);
     if (!ok) {
       setPinError("PIN שגוי, נסו שוב.");
       setStatus({ kind: "error", message: "הגישה נדחתה. הקוד שהוקלד שגוי." });
@@ -197,7 +191,6 @@ export function AdminProgressScreen({
     }
     setPinError("");
     setPin("");
-    setIsUnlocked(true);
     setStatus({ kind: "success", message: "גישה אושרה. אפשר לערוך התקדמות." });
   }
 
@@ -208,8 +201,8 @@ export function AdminProgressScreen({
     }
     const day = days.find((item) => item.id === dayId);
     const next = forceMarkDayComplete(progress, dayId as DayId, { day, fillAnswers: true });
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
     persistNext(next, `יום ${dayId} סומן כהושלם.`);
   }
 
@@ -219,8 +212,8 @@ export function AdminProgressScreen({
       return;
     }
     const next = forceMarkSectionComplete(progress, dayId as DayId, sectionId, { day });
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
     const sectionTitle = day.sections.find((s) => s.id === sectionId)?.title ?? sectionId;
     persistNext(next, `מקטע סומן כהושלם: ${sectionTitle}`);
   }
@@ -233,8 +226,8 @@ export function AdminProgressScreen({
     const totalExercises = day.sections.reduce((n, s) => n + s.exercises.length, 0);
     const exerciseIds = section.exercises.map((e) => e.id);
     const next = resetSectionProgress(progress, dayId as DayId, section.id, exerciseIds, totalExercises);
-    setResetArmedSectionKey(null);
-    setResetArmedDayId(null);
+    disarmSectionReset();
+    disarmDayReset();
     persistNext(next, `מקטע אופס: ${section.title}`);
   }
 
@@ -246,19 +239,19 @@ export function AdminProgressScreen({
           ? resetAdminEnglishDayProgress(progress, dayId as DayId)
           : resetAdminScienceDayProgress(progress, dayId as DayId);
       if (!isolatedResult) {
-        setResetArmedDayId(null);
+        disarmDayReset();
         setStatus({ kind: "error", message: `היום ${dayId} לא נמצא במחברת ${trackLabel}.` });
         return;
       }
-      setResetArmedDayId(null);
-      setResetArmedSectionKey(null);
+      disarmDayReset();
+      disarmSectionReset();
       persistNext(isolatedResult.nextState, `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`);
       return;
     }
 
     const result = resetAdminDayProgress(progress, dayId as DayId, selectedGrade);
     if (!result) {
-      setResetArmedDayId(null);
+      disarmDayReset();
       setStatus({ kind: "error", message: `היום ${dayId} לא נמצא במחברת של כיתה ${gradeLabel(selectedGrade)}.` });
       return;
     }
@@ -266,8 +259,8 @@ export function AdminProgressScreen({
     const { nextState, shouldRevokeGradeBUnlock } = result;
     saveTrackProgress(nextState, track);
     setProgress(nextState);
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
 
     const baseMessage = `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`;
 
@@ -306,8 +299,8 @@ export function AdminProgressScreen({
       (acc, day) => forceMarkDayComplete(acc, day.id as DayId, { day, fillAnswers: true }),
       progress,
     );
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
     persistNext(next, `כל ימי הלימוד ב${trackLabel} סומנו כהושלמו.`);
   }
 
@@ -347,8 +340,8 @@ export function AdminProgressScreen({
       saveTrackProgress(nextProgress, track);
       return nextProgress;
     });
-    setResetArmedDayId(null);
-    setResetArmedSectionKey(null);
+    disarmDayReset();
+    disarmSectionReset();
 
     setStatus({
       kind: "success",
@@ -367,37 +360,21 @@ export function AdminProgressScreen({
         description="הכניסו קוד גישה כדי לנהל התקדמות ימים."
         actions={
           <div data-testid={childTid(rootTid, "pinPanel")} className="space-y-3 text-right">
-            <label data-testid={childTid(rootTid, "pinLabel")} htmlFor="admin-pin" className="block text-sm font-semibold text-[#4f4860]">
-              קוד גישה
-            </label>
-            <input
+            <PinInput
               id="admin-pin"
-              data-testid={testIds.screen.adminProgress.pinInput()}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
-              type="password"
-              inputMode="numeric"
-              dir="ltr"
-              autoComplete="off"
               value={pin}
-              onChange={(event) => setPin(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handlePinSubmit();
+              onChange={setPin}
+              onSubmit={handlePinSubmit}
+              label="קוד גישה"
+              submitLabel="כניסה"
+              error={pinError || undefined}
+              testIds={{
+                label: childTid(rootTid, "pinLabel"),
+                input: testIds.screen.adminProgress.pinInput(),
+                error: testIds.screen.adminProgress.pinError(),
+                submit: testIds.screen.adminProgress.pinSubmit(),
               }}
-              aria-invalid={pinError ? "true" : "false"}
-              aria-describedby={pinError ? "admin-pin-error" : undefined}
             />
-            {pinError ? (
-              <p
-                id="admin-pin-error"
-                data-testid={testIds.screen.adminProgress.pinError()}
-                className="text-sm font-semibold text-[#b91c1c]"
-              >
-                {pinError}
-              </p>
-            ) : null}
-            <Button data-testid={testIds.screen.adminProgress.pinSubmit()} className="w-full" onClick={handlePinSubmit}>
-              כניסה
-            </Button>
           </div>
         }
       />
@@ -407,12 +384,12 @@ export function AdminProgressScreen({
   return (
     <main data-testid={rootTid} className="pb-10">
       <div data-testid={childTid(rootTid, "topNav")} className="mb-4 flex items-center gap-3">
-        <ButtonLink
+        <BackLink
           data-testid={testIds.screen.adminProgress.navBack()}
           href={routes.adminHub()}
         >
           חזרה לאזור הורים
-        </ButtonLink>
+        </BackLink>
       </div>
 
       <Surface data-testid={childTid(rootTid, "panel")} className="space-y-4 p-5">
@@ -441,8 +418,8 @@ export function AdminProgressScreen({
                 className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedSubject}
                 onChange={(event) => {
-                  setResetArmedDayId(null);
-                  setResetArmedSectionKey(null);
+                  disarmDayReset();
+                  disarmSectionReset();
                   setExpandedDaySectionLists(new Set());
                   setStatus(null);
                   setSelectedSubject(event.target.value as Subject);
@@ -476,8 +453,8 @@ export function AdminProgressScreen({
                 className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedGrade}
                 onChange={(event) => {
-                  setResetArmedDayId(null);
-                  setResetArmedSectionKey(null);
+                  disarmDayReset();
+                  disarmSectionReset();
                   setExpandedDaySectionLists(new Set());
                   setStatus(null);
                   setSelectedGrade(event.target.value as GradeId);
@@ -650,8 +627,8 @@ export function AdminProgressScreen({
                                       variant="outline"
                                       disabled={resetBusy}
                                       onClick={() => {
-                                        setResetArmedDayId(null);
-                                        setResetArmedSectionKey(sectionKey);
+                                        disarmDayReset();
+                                        armSectionReset(sectionKey);
                                       }}
                                     >
                                       אפס מקטע
@@ -663,7 +640,7 @@ export function AdminProgressScreen({
                                         className="min-h-[44px] text-sm"
                                         variant="outline"
                                         disabled={resetBusy}
-                                        onClick={() => setResetArmedSectionKey(null)}
+                                        onClick={() => disarmSectionReset()}
                                       >
                                         ביטול
                                       </Button>
@@ -700,8 +677,8 @@ export function AdminProgressScreen({
                         variant="outline"
                         disabled={resetBusy}
                         onClick={() => {
-                          setResetArmedSectionKey(null);
-                          setResetArmedDayId(day.id);
+                          disarmSectionReset();
+                          armDayReset(day.id);
                         }}
                       >
                         אפס התקדמות יום
@@ -712,7 +689,7 @@ export function AdminProgressScreen({
                           data-testid={testIds.screen.adminProgress.resetCancel(trackKey, day.id)}
                           variant="outline"
                           disabled={resetBusy}
-                          onClick={() => setResetArmedDayId(null)}
+                          onClick={() => disarmDayReset()}
                         >
                           ביטול
                         </Button>

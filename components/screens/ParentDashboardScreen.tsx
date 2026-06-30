@@ -24,41 +24,16 @@ import {
   type ReviewInput,
   type ExamInput,
 } from "@/lib/parent/metrics";
-import { Surface } from "@/components/ui/Surface";
+import { Card } from "@/components/ui/Card";
+import { Tile } from "@/components/ui/Tile";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Chip } from "@/components/ui/Chip";
-import { ButtonLink } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
+import { Ltr } from "@/components/ui/Ltr";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { formatHebrewDate, formatMinutes } from "@/lib/utils/format";
 
 type SubjectFilter = "all" | Subject;
-
-/** LTR-wrapped numeral so percentages/counts render correctly inside an RTL view. */
-function Ltr({
-  children,
-  "data-testid": testId,
-}: {
-  children: React.ReactNode;
-  "data-testid"?: string;
-}) {
-  return (
-    <span dir="ltr" data-testid={testId}>
-      {children}
-    </span>
-  );
-}
-
-/** Friendly Hebrew date for the "last active" tile; "—" when null/unparseable. */
-function formatHebrewDate(iso: string | null): string {
-  if (!iso) return "—";
-  const ms = new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return "—";
-  return new Date(ms).toLocaleDateString("he-IL", { day: "numeric", month: "short" });
-}
-
-/** Approximate ms → whole minutes, Hebrew unit. */
-function formatMinutes(ms: number): string {
-  const minutes = Math.max(0, Math.round(ms / 60000));
-  return `${minutes} דק׳`;
-}
 
 /** The six learning tracks, built once from localStorage reads. */
 function buildViewModels(): ParentDashboardViewModels {
@@ -113,70 +88,6 @@ function buildViewModels(): ParentDashboardViewModels {
   const streak = loadStreakState();
 
   return deriveAllMetrics({ tracks, reviews, exams, streak });
-}
-
-/** Small labelled stat tile used in the snapshot grid. */
-function StatTile({
-  testId,
-  label,
-  children,
-}: {
-  testId: string;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      data-testid={testId}
-      className="rounded-2xl border border-[#e7defb] bg-white/70 p-4 text-center"
-    >
-      <div
-        data-testid={childTid(testId, "value")}
-        className="text-2xl font-bold text-[#2c2348]"
-      >
-        {children}
-      </div>
-      <div
-        data-testid={childTid(testId, "label")}
-        className="mt-1 text-xs font-medium text-[#8a8298]"
-      >
-        {label}
-      </div>
-    </div>
-  );
-}
-
-/** Counter tile for the review backlog. */
-function CounterTile({
-  testId,
-  label,
-  tone,
-  value,
-}: {
-  testId: string;
-  label: string;
-  tone: "neutral" | "success" | "warning";
-  value: number;
-}) {
-  const toneBg =
-    tone === "success"
-      ? "bg-[#d1fae5] text-[#047857]"
-      : tone === "warning"
-        ? "bg-[#fef3c7] text-[#92400e]"
-        : "bg-[#f3effb] text-[#6b6577]";
-  return (
-    <div
-      data-testid={testId}
-      className={["rounded-2xl p-4 text-center", toneBg].join(" ")}
-    >
-      <div data-testid={childTid(testId, "value")} className="text-2xl font-bold">
-        <Ltr>{value}</Ltr>
-      </div>
-      <div data-testid={childTid(testId, "label")} className="mt-1 text-xs font-medium">
-        {label}
-      </div>
-    </div>
-  );
 }
 
 /** Thin correctness bar. `correctPercent` is 0–100. */
@@ -255,13 +166,13 @@ export function ParentDashboardScreen() {
   }
 
   const navBack = (
-    <ButtonLink
+    <BackLink
       data-testid={testIds.screen.parentDashboard.navBack()}
       href={routes.adminHub()}
       variant="outline"
     >
       חזרה לאזור הורים
-    </ButtonLink>
+    </BackLink>
   );
 
   if (!vm.hasAnyData) {
@@ -344,41 +255,40 @@ export function ParentDashboardScreen() {
 
       {/* ① Snapshot */}
       <section data-testid={snapshotTid}>
-        <header data-testid={childTid(snapshotTid, "header")} className="mb-4 text-center">
-          <h2 data-testid={childTid(snapshotTid, "title")} className="text-xl font-bold text-[#2c2348]">
-            מבט מהיר 🌟
-          </h2>
-          <p data-testid={childTid(snapshotTid, "subtitle")} className="mt-1 text-sm text-[#8a8298]">
-            סיכום קצר על ההתקדמות
-          </p>
-        </header>
+        <SectionHeader
+          data-testid={childTid(snapshotTid, "header")}
+          titleTestId={childTid(snapshotTid, "title")}
+          subtitleTestId={childTid(snapshotTid, "subtitle")}
+          title="מבט מהיר 🌟"
+          subtitle="סיכום קצר על ההתקדמות"
+        />
         <div data-testid={childTid(snapshotTid, "tiles")} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile
-            testId={testIds.screen.parentDashboard.metricAccuracy()}
+          <Tile
+            data-testid={testIds.screen.parentDashboard.metricAccuracy()}
             label="דיוק בניסיון ראשון"
           >
             {accuracy.overall === null ? "—" : <Ltr>{accuracy.overall}%</Ltr>}
-          </StatTile>
-          <StatTile
-            testId={testIds.screen.parentDashboard.metricStreak()}
+          </Tile>
+          <Tile
+            data-testid={testIds.screen.parentDashboard.metricStreak()}
             label="ימים ברצף · בכל המקצועות"
           >
             <Ltr>🔥 {streak.current}</Ltr>
-          </StatTile>
-          <StatTile
-            testId={testIds.screen.parentDashboard.metricDaysComplete()}
+          </Tile>
+          <Tile
+            data-testid={testIds.screen.parentDashboard.metricDaysComplete()}
             label="ימים בכל המקצועות"
           >
             <Ltr>
               {daysSections.daysComplete}/{daysSections.totalDays}
             </Ltr>
-          </StatTile>
-          <StatTile
-            testId={testIds.screen.parentDashboard.metricLastActive()}
+          </Tile>
+          <Tile
+            data-testid={testIds.screen.parentDashboard.metricLastActive()}
             label="פעילות אחרונה"
           >
             <Ltr>{formatHebrewDate(vm.lastActiveIso)}</Ltr>
-          </StatTile>
+          </Tile>
         </div>
 
         {/* Per-subject accuracy */}
@@ -408,7 +318,7 @@ export function ParentDashboardScreen() {
       </section>
 
       {/* ② Progress over time */}
-      <Surface data-testid={progressTid} className="p-5">
+      <Card data-testid={progressTid} padding="md">
         <h2 data-testid={childTid(progressTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           התקדמות לאורך זמן
         </h2>
@@ -432,10 +342,10 @@ export function ParentDashboardScreen() {
             </span>
           </div>
         </div>
-      </Surface>
+      </Card>
 
       {/* ③ Weak skills */}
-      <Surface data-testid={weakTid} className="p-5">
+      <Card data-testid={weakTid} padding="md">
         <h2 data-testid={childTid(weakTid, "title")} className="mb-1 text-lg font-bold text-[#2c2348]">
           מה כדאי לחזק 💪
         </h2>
@@ -471,37 +381,40 @@ export function ParentDashboardScreen() {
             })}
           </ul>
         )}
-      </Surface>
+      </Card>
 
       {/* ④ Review backlog */}
-      <Surface data-testid={reviewTid} className="p-5">
+      <Card data-testid={reviewTid} padding="md">
         <h2 data-testid={childTid(reviewTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           תרגול חוזר 🔁
         </h2>
         <div data-testid={childTid(reviewTid, "counters")} className="grid grid-cols-3 gap-3">
-          <CounterTile
-            testId={testIds.screen.parentDashboard.reviewDue()}
+          <Tile
+            data-testid={testIds.screen.parentDashboard.reviewDue()}
             label="ממתינים לחזרה"
             tone="warning"
-            value={reviewBacklog.due}
-          />
-          <CounterTile
-            testId={testIds.screen.parentDashboard.reviewPracticing()}
+          >
+            <Ltr>{reviewBacklog.due}</Ltr>
+          </Tile>
+          <Tile
+            data-testid={testIds.screen.parentDashboard.reviewPracticing()}
             label="עדיין בתרגול"
             tone="neutral"
-            value={reviewBacklog.practicing}
-          />
-          <CounterTile
-            testId={testIds.screen.parentDashboard.reviewMastered()}
+          >
+            <Ltr>{reviewBacklog.practicing}</Ltr>
+          </Tile>
+          <Tile
+            data-testid={testIds.screen.parentDashboard.reviewMastered()}
             label="נשלטו 🎉"
             tone="success"
-            value={reviewBacklog.mastered}
-          />
+          >
+            <Ltr>{reviewBacklog.mastered}</Ltr>
+          </Tile>
         </div>
-      </Surface>
+      </Card>
 
       {/* ⑤ Encourage next */}
-      <Surface data-testid={encourageTid} className="p-5">
+      <Card data-testid={encourageTid} padding="md">
         <h2 data-testid={childTid(encourageTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           מה לעודד עכשיו 🌱
         </h2>
@@ -515,10 +428,10 @@ export function ParentDashboardScreen() {
         >
           {encourageStepLabel}
         </Chip>
-      </Surface>
+      </Card>
 
       {/* Exam results */}
-      <Surface data-testid={examTid} className="p-5">
+      <Card data-testid={examTid} padding="md">
         <h2 data-testid={childTid(examTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           תוצאות מבחן מסכם
         </h2>
@@ -553,7 +466,7 @@ export function ParentDashboardScreen() {
             );
           })}
         </ul>
-      </Surface>
+      </Card>
     </main>
   );
 }

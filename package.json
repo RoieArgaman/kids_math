@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "check:testids": "node scripts/check-testids.mjs",
+    "check:cards": "node scripts/check-cards.mjs",
     "codemod:add-testids": "node scripts/add-missing-testids.mjs",
     "codemod:dedupe-testids": "node scripts/dedupe-testids.mjs",
     "test:qa": "npm run lint && npm run test:unit && npm run build && npm run test:e2e",

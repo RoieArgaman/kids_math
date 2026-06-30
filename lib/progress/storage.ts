@@ -3,6 +3,7 @@ import type { GradeId } from "@/lib/grades";
 import { DEFAULT_GRADE } from "@/lib/grades";
 import type { DayProgressState, WorkbookProgressState } from "@/lib/types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import { isBrowser, isObject } from "@/lib/utils/guards";
 
 /** Current v2 storage schema version. Increment when the persisted shape changes. */
 export const STORAGE_SCHEMA_VERSION = 2;
@@ -18,14 +19,6 @@ export function workbookProgressStorageKey(grade: GradeId): string {
 
 function progressStorageKeyForGrade(grade: GradeId): string {
   return workbookProgressStorageKey(grade);
-}
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function isDayProgressState(value: unknown): value is DayProgressState {

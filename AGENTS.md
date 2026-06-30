@@ -706,8 +706,9 @@ If a CRITICAL security finding is discovered at any point:
 - Client state in `components/screens/**` and `lib/hooks/**`
 
 ### UI / Tailwind
+- **Reuse the shared UI library before building new card/button/input/banner markup** — full catalog + canonical Card tokens in `.claude/docs/UI_COMPONENTS.md`; run `npm run check:cards` for advisory guidance
 - Reuse existing design tokens from `app/globals.css` and `tailwind.config.ts`
-- Reuse UI primitives: `Surface`, `Button`, `ButtonLink`, `Chip`, `HeroHeader`, `CenteredPanel`
+- Reuse UI primitives: `Surface`, `Button`, `ButtonLink`, `Chip`, `HeroHeader`, `CenteredPanel`, `Card`, `ActionCard`, `Tile`, `SectionHeader`, `Ltr`, `BackLink`, `PinInput`, `Field`, `Alert`
 - Visible focus styles (`:focus-visible`), touch targets 44-52px
 - RTL by default; `dir="ltr"` only for math inputs/expressions
 

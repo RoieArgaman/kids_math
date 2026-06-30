@@ -5,6 +5,11 @@ import { SECTION_QUESTION_COUNTS } from "./config";
 import type { GmatChallengeStateV1, GmatSectionKey } from "./types";
 import { GMAT_SECTION_ORDER_DEFAULT } from "./types";
 import { scheduleSync } from "@/lib/auth/serverSync";
+import {
+  sanitizeBooleanRecord,
+  sanitizeNumberRecord,
+  sanitizeStringRecord,
+} from "@/lib/utils/sanitize";
 
 const KEY_PREFIX = "kids_math.gmat_challenge.v1.grade.";
 
@@ -14,33 +19,6 @@ function keyForGrade(grade: GradeId): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function sanitizeStringRecord(value: unknown): Record<string, string> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "string") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeBooleanRecord(value: unknown): Record<string, boolean> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "boolean") out[k] = v;
-  }
-  return out;
-}
-
-function sanitizeNumberRecord(value: unknown): Record<string, number> {
-  if (!isRecord(value)) return {};
-  const out: Record<string, number> = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "number" && Number.isFinite(v) && v >= 0) out[k] = v;
-  }
-  return out;
 }
 
 const PHASES: ReadonlySet<ExamPhase> = new Set<ExamPhase>([

@@ -1,19 +1,13 @@
 "use client";
 
 import { childTid } from "@/lib/testIds";
+import { formatClock } from "@/lib/utils/format";
 
 type TimedExamSectionHeaderProps = {
   rootTestId: string;
   sectionTitle: string;
   remainingSeconds: number;
 };
-
-function formatClock(totalSeconds: number): string {
-  const s = Math.max(0, totalSeconds);
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${r.toString().padStart(2, "0")}`;
-}
 
 export function TimedExamSectionHeader({
   rootTestId,

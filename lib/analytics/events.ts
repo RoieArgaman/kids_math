@@ -5,6 +5,7 @@ import type {
   ExerciseId,
   SectionId,
 } from "@/lib/types";
+import { isBrowser, isObject } from "@/lib/utils/guards";
 
 const ANALYTICS_STORAGE_KEY = "kids_math.analytics_events.v1";
 const ANALYTICS_SCHEMA_VERSION = 1;
@@ -39,14 +40,6 @@ interface LogEventInput {
   sectionId?: SectionId;
   exerciseId?: ExerciseId;
   payload?: Record<string, string | number | boolean | null>;
-}
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function isAnalyticsEventName(value: unknown): value is AnalyticsEventName {
