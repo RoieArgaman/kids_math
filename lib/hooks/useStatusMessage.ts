@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/** Module-level default so the hook's `setStatus` stays identity-stable across renders. */
+const defaultIsEmpty = (value: unknown): boolean => !value;
+
 interface UseStatusMessageOptions<T> {
   /** Initial / cleared value. */
   initial: T;
@@ -24,7 +27,7 @@ interface UseStatusMessageOptions<T> {
 export function useStatusMessage<T>({
   initial,
   autoDismissMs,
-  isEmpty = (value) => !value,
+  isEmpty = defaultIsEmpty,
 }: UseStatusMessageOptions<T>): {
   status: T;
   setStatus: (next: T) => void;
@@ -34,6 +37,10 @@ export function useStatusMessage<T>({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialRef = useRef(initial);
   initialRef.current = initial;
+  // Read `isEmpty` through a ref so a caller passing an inline predicate doesn't
+  // churn `setStatus`'s identity every render.
+  const isEmptyRef = useRef(isEmpty);
+  isEmptyRef.current = isEmpty;
 
   const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
@@ -46,13 +53,13 @@ export function useStatusMessage<T>({
     (next: T) => {
       clearTimer();
       setStatusState(next);
-      if (autoDismissMs !== undefined && !isEmpty(next)) {
+      if (autoDismissMs !== undefined && !isEmptyRef.current(next)) {
         timeoutRef.current = setTimeout(() => {
           setStatusState(initialRef.current);
         }, autoDismissMs);
       }
     },
-    [autoDismissMs, clearTimer, isEmpty],
+    [autoDismissMs, clearTimer],
   );
 
   const clear = useCallback(() => {
