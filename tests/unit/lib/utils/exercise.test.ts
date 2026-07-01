@@ -44,8 +44,25 @@ describe("getRetryFeedbackText hinting", () => {
       answer: 5,
       meta: { skillTags: ["addition"], difficulty: 1, representation: "abstract" },
     };
-    const msg = getRetryFeedbackText(ex, "6", 1);
+    // "4" is a near-miss (|4-5| = 1) and matches NO misconception pattern (not 2+3, |2-3|, or 2×3),
+    // so the near-miss message fires. (A misconception match would intentionally outrank near-miss.)
+    const msg = getRetryFeedbackText(ex, "4", 1);
     expect(msg).toBe(NEAR_MISS_FEEDBACK_TEXT);
+  });
+
+  it("misconception feedback outranks the ±1 near-miss when both match", () => {
+    const ex: Exercise = {
+      id: makeId(3),
+      kind: "number_input",
+      prompt: "2 + 3",
+      answer: 5,
+      meta: { skillTags: ["addition"], difficulty: 1, representation: "abstract" },
+    };
+    // "6" is BOTH a near-miss (|6-5| = 1) AND exactly 2×3 (multiplied instead of added).
+    // The specific misconception message is more useful, so it wins.
+    const msg = getRetryFeedbackText(ex, "6", 1);
+    expect(msg).not.toBe(NEAR_MISS_FEEDBACK_TEXT);
+    expect(msg).toContain("לְחַבֵּר");
   });
 
   it("does NOT show near-miss for multiple_choice kind", () => {

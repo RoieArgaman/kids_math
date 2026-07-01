@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getWorkbookDays } from "@/lib/content/workbook";
 import { validateExerciseArithmetic } from "@/lib/content/engine/validate";
+import { multipleChoice, numberInput } from "@/lib/content/engine/exercise-factories";
 import type { Exercise, WorkbookDay } from "@/lib/types";
 
 const UNRESOLVED_PLACEHOLDER_REGEX = /=\s*\?|(\?\s*[+\-×÷])|([+\-×÷]\s+\?(?:\s|$))/;
@@ -30,6 +31,29 @@ function assertExercise(ex: Exercise): void {
       `number_line_jump mismatch at ${ex.id}: start=${ex.start}, end=${ex.end}, step=${ex.step}, expected=${computed}`,
     ).toBe(computed);
     expect(ex.answer).toBeGreaterThan(0);
+  }
+
+  // Authored misconception rules (opt-in, additive): each must carry non-empty feedback
+  // and must NOT collide with the exercise's own correct answer (that would be a content bug).
+  if (ex.misconceptions != null) {
+    for (const rule of ex.misconceptions) {
+      expect(
+        typeof rule.feedback === "string" && rule.feedback.trim().length > 0,
+        `empty misconception feedback at ${ex.id}`,
+      ).toBe(true);
+
+      if (ex.kind === "number_input" || ex.kind === "number_line_jump") {
+        expect(
+          rule.match !== ex.answer,
+          `misconception match equals correct answer at ${ex.id}: ${String(rule.match)}`,
+        ).toBe(true);
+      } else if (ex.kind === "multiple_choice") {
+        expect(
+          String(rule.match) !== ex.answer,
+          `misconception match equals correct answer at ${ex.id}: ${String(rule.match)}`,
+        ).toBe(true);
+      }
+    }
   }
 }
 
@@ -139,5 +163,94 @@ describe("validateExerciseArithmetic (deterministic accuracy backstop)", () => {
       meta: baseMeta,
     } as Exercise;
     expect(validateExerciseArithmetic(wordProblem)).toBeNull();
+  });
+});
+
+describe("misconception content guard", () => {
+  it("passes a number_input exercise with a valid misconception exemplar", () => {
+    // 7 + 5 = 12. A common miscount lands on 11 (child stops one short).
+    const ex = numberInput(
+      1,
+      1,
+      1,
+      "חַשְּׁבוּ אֶת הַסְּכוּם שֶׁל 7 וְ-5",
+      12,
+      ["addition"],
+      1,
+      "abstract",
+      0,
+      20,
+      undefined,
+      [{ match: 11, feedback: "כִּמְעַט! נִסְפֹּר שׁוּב מ-7 וְנוֹסִיף 5 אֶצְבָּעוֹת." }],
+    );
+    expect(() => assertExercise(ex)).not.toThrow();
+  });
+
+  it("passes a multiple_choice exercise with a valid misconception exemplar", () => {
+    const ex = multipleChoice(
+      1,
+      1,
+      2,
+      "אֵיזֶה מִסְפָּר גָּדוֹל יוֹתֵר?",
+      ["8", "9", "10"],
+      "10",
+      ["comparing"],
+      1,
+      "abstract",
+      [{ match: "8", feedback: "בִּדְקוּ שׁוּב: 10 גָּדוֹל מִ-8." }],
+    );
+    expect(() => assertExercise(ex)).not.toThrow();
+  });
+
+  it("throws when a number_input misconception match equals the correct answer", () => {
+    const ex = numberInput(
+      1,
+      1,
+      3,
+      "חַשְּׁבוּ אֶת הַסְּכוּם שֶׁל 7 וְ-5",
+      12,
+      ["addition"],
+      1,
+      "abstract",
+      0,
+      20,
+      undefined,
+      [{ match: 12, feedback: "זֶה בְּעֶצֶם הַתְּשׁוּבָה הַנְּכוֹנָה!" }],
+    );
+    expect(() => assertExercise(ex)).toThrow();
+  });
+
+  it("throws when a multiple_choice misconception match equals the correct answer", () => {
+    const ex = multipleChoice(
+      1,
+      1,
+      4,
+      "אֵיזֶה מִסְפָּר גָּדוֹל יוֹתֵר?",
+      ["8", "9", "10"],
+      "10",
+      ["comparing"],
+      1,
+      "abstract",
+      [{ match: "10", feedback: "זֶה בְּעֶצֶם הַתְּשׁוּבָה הַנְּכוֹנָה!" }],
+    );
+    expect(() => assertExercise(ex)).toThrow();
+  });
+
+  it("throws when misconception feedback is empty", () => {
+    const ex = numberInput(
+      1,
+      1,
+      5,
+      "חַשְּׁבוּ אֶת הַסְּכוּם שֶׁל 7 וְ-5",
+      12,
+      ["addition"],
+      1,
+      "abstract",
+      0,
+      20,
+      undefined,
+      [{ match: 11, feedback: "   " }],
+    );
+    expect(() => assertExercise(ex)).toThrow();
   });
 });

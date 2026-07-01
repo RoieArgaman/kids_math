@@ -2,6 +2,7 @@ import type {
   DifficultyLevel,
   Exercise,
   ExerciseId,
+  MisconceptionRule,
   RepresentationType,
   SectionId,
   SkillTag,
@@ -67,6 +68,7 @@ export const numberInput = (
   min?: number,
   max?: number,
   hint?: string,
+  misconceptions?: MisconceptionRule[],
 ): ExerciseByKind<"number_input"> => ({
   id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
   kind: "number_input",
@@ -75,6 +77,7 @@ export const numberInput = (
   min,
   max,
   hint,
+  misconceptions,
   meta: meta(skillTags, difficulty, representation),
 });
 
@@ -88,12 +91,14 @@ export const multipleChoice = (
   skillTags: SkillTag[],
   difficulty: DifficultyLevel,
   representation: RepresentationType,
+  misconceptions?: MisconceptionRule[],
 ): ExerciseByKind<"multiple_choice"> => ({
   id: toExerciseId(dayNumber, sectionNumber, exerciseNumber),
   kind: "multiple_choice",
   prompt,
   options,
   answer,
+  misconceptions,
   meta: meta(skillTags, difficulty, representation),
 });
 
