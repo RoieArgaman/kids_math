@@ -5,6 +5,7 @@ import {
   isAnswerCorrect,
   isNearMiss,
   NEAR_MISS_FEEDBACK_TEXT,
+  normalizeAnswerValue,
 } from "@/lib/utils/exercise";
 
 const makeId = (n: number): ExerciseId => `day-1-section-1-exercise-${n}` as ExerciseId;
@@ -173,5 +174,67 @@ describe("isAnswerCorrect", () => {
     };
 
     expect(isAnswerCorrect(ex, "2")).toBe(true);
+  });
+
+  const numberInput = (answer: number): Exercise => ({
+    id: makeId(30),
+    kind: "number_input",
+    prompt: "7 + 5",
+    answer,
+    meta: { skillTags: ["addition"], difficulty: 1, representation: "abstract" },
+  });
+
+  it("accepts a numeric string with surrounding whitespace for number_input", () => {
+    expect(isAnswerCorrect(numberInput(12), "  12  ")).toBe(true);
+  });
+
+  it("accepts the raw number type for number_input", () => {
+    expect(isAnswerCorrect(numberInput(12), 12)).toBe(true);
+  });
+
+  it("rejects the wrong number for number_input", () => {
+    expect(isAnswerCorrect(numberInput(12), "13")).toBe(false);
+  });
+
+  it("rejects non-numeric text for a number_input (numbers-only rule)", () => {
+    // Students type digits; a word answer must never be graded correct.
+    expect(isAnswerCorrect(numberInput(12), "twelve")).toBe(false);
+    expect(isAnswerCorrect(numberInput(12), "שתים עשרה")).toBe(false);
+  });
+
+  it("rejects an empty / whitespace answer", () => {
+    expect(isAnswerCorrect(numberInput(12), "")).toBe(false);
+    expect(isAnswerCorrect(numberInput(12), "   ")).toBe(false);
+    expect(isAnswerCorrect(numberInput(12), null)).toBe(false);
+    expect(isAnswerCorrect(numberInput(12), undefined)).toBe(false);
+  });
+});
+
+describe("normalizeAnswerValue", () => {
+  it("passes finite numbers through and rejects non-finite ones", () => {
+    expect(normalizeAnswerValue(5)).toBe(5);
+    expect(normalizeAnswerValue(0)).toBe(0);
+    expect(normalizeAnswerValue(Number.NaN)).toBeNull();
+    expect(normalizeAnswerValue(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+
+  it("coerces numeric strings (trimmed) to numbers", () => {
+    expect(normalizeAnswerValue(" 42 ")).toBe(42);
+    expect(normalizeAnswerValue("3.5")).toBe(3.5);
+    expect(normalizeAnswerValue("-7")).toBe(-7);
+  });
+
+  it("returns null for empty or whitespace-only strings", () => {
+    expect(normalizeAnswerValue("")).toBeNull();
+    expect(normalizeAnswerValue("   ")).toBeNull();
+  });
+
+  it("normalizes non-numeric text (lowercased, punctuation stripped)", () => {
+    expect(normalizeAnswerValue("Hello, World!")).toBe("hello world");
+  });
+
+  it("returns null for unsupported value types", () => {
+    expect(normalizeAnswerValue({})).toBeNull();
+    expect(normalizeAnswerValue([])).toBeNull();
   });
 });

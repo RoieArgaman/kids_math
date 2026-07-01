@@ -14,8 +14,41 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
-  build-and-test:
+  # Fast gate: lint + testid coverage + unit tests (~45s). Runs in parallel with the
+  # e2e shards below, so a lint/unit failure surfaces without waiting on the browser suite.
+  lint-and-unit:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check data-testid coverage
+        run: npm run check:testids
+
+      - name: Unit tests
+        run: npm run test:unit
+
+  # E2E, split across 3 parallel shards. Each shard is self-contained (builds its own
+  # production server) so the shards run fully in parallel — 3 parallel builds cost the
+  # same wall-clock as one, and the shared .next/cache keeps them incremental. This is
+  # faster end-to-end than a single shared build that would serialize build -> e2e.
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      # One failing shard should not cancel the others — we want the full failure picture.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
 
@@ -42,20 +75,11 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Check data-testid coverage
-        run: npm run check:testids
-
       - name: Build
         run: npm run build
-
-      - name: Unit tests
-        run: npm run test:unit
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: E2E tests
-        run: npm run test:e2e
+      - name: E2E tests (shard ${{ matrix.shard }}/3)
+        run: npx playwright test --shard=${{ matrix.shard }}/3

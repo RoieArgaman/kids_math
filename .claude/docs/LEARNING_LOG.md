@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-01 (CI: parallelize + shard E2E; push logic down the test pyramid)
+- **Trigger:** CI took ~7 min. Per-step timing showed **E2E = 308s (~74%)** in a single
+  serial job; everything else (lint 5s, testids 2s, build 35s, unit 17s, pw-install 14s)
+  was minor. One test — `all-days-completion.spec.ts` — was a single `test()` looping every
+  day for grades A **and** B under an 8-min timeout, so no sharding could break it up.
+- **What changed / where:**
+  - `.github/workflows/ci.yml` split into two parallel jobs: `lint-and-unit` (fast gate)
+    and `e2e` as a **3-way shard matrix** (`--shard=i/3`, `fail-fast: false`).
+  - **Deliberate deviation from the plan's "build once + artifact" idea:** a shared build
+    would *serialize* build→e2e (critical path ≈ 220s). Instead each shard builds itself in
+    parallel — 3 parallel builds cost the same wall-clock as one, and the shared `.next/cache`
+    keeps them incremental. Faster wall-clock (~3 min) at the cost of more CPU-minutes.
+  - Split the mega-test into **per-day tests** (56 tests) so Playwright distributes them —
+    shards now balance at **61/61/61**. Coverage is identical (each day still seeds all prior
+    days complete, then completes that day).
+  - `deploy.yml` unchanged and still safe: it gates on `workflow_run` **"CI"** `conclusion==success`,
+    which is only true when *all* jobs (both matrix shards included) pass.
+- **Added fast unit tests (pull logic down from slow E2E):** storage round-trip / backward-compat
+  for the previously-untested learner-data stores (`streak`, `badges`, `science/final-exam`,
+  `english/final-exam` incl. its legacy→level-A migration); route-builder branches
+  (Science/grade/admin builders, `preserveKeys`, `previewAll` carry/clear); answer-grading
+  edge cases (numbers-only rule, whitespace/format normalization); and a **test-only** exercise
+  of the grade-B unlock gate in `middleware.ts` (redirect vs passthrough — no middleware edits).
+- **Takeaway:** for GH Actions, parallel self-contained shards beat a shared build artifact on
+  wall-clock, because artifacts add a serial job dependency. Balance shards by making sure no
+  single `test()` hoards work.
+
 ### 2026-06-29 (DRY refactor: shared UI/hook/util library + canonical Card tokens + subject screen config)
 - **Trigger:** Repeated, near-identical markup and logic across screens (card containers,
   back links, LTR numerals, status banners, PIN panels, admin unlock, exam scoring,

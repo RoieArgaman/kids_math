@@ -27,9 +27,11 @@ function previousDayIds(dayId: DayId): DayId[] {
   return Array.from({ length: n - 1 }, (_, i) => `day-${i + 1}` as DayId);
 }
 
+// One test per (grade, day). Each day is independent — it seeds all prior days as
+// completed, then completes exactly this day — so splitting the former single mega-loop
+// into per-day tests keeps identical coverage while letting Playwright distribute the
+// work across shards/workers (the old single test pinned one worker for ~8 minutes).
 test.describe("all days completion", () => {
-  test.setTimeout(8 * 60 * 1000);
-
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
     await page.goto("/");
@@ -37,20 +39,20 @@ test.describe("all days completion", () => {
   });
 
   for (const grade of ["a", "b"] as const) {
-    test(`grade ${grade.toUpperCase()} can complete every workbook day`, async ({ page, context }) => {
-      if (grade === "b") {
-        await context.addCookies([
-          {
-            name: "kids_math.unlocked_grade_b",
-            value: "1",
-            url: getCookieUrl(),
-          },
-        ]);
-      }
+    for (const dayId of allDayIdsForGrade(grade)) {
+      test(`grade ${grade.toUpperCase()} can complete ${dayId}`, async ({ page, context }) => {
+        test.setTimeout(90 * 1000);
 
-      const dayIds = allDayIdsForGrade(grade);
+        if (grade === "b") {
+          await context.addCookies([
+            {
+              name: "kids_math.unlocked_grade_b",
+              value: "1",
+              url: getCookieUrl(),
+            },
+          ]);
+        }
 
-      for (const dayId of dayIds) {
         const completedDays = Object.fromEntries(
           previousDayIds(dayId).map((id) => [id, createCompletedDayProgressState(id)]),
         ) as Record<DayId, ReturnType<typeof createCompletedDayProgressState>>;
@@ -66,7 +68,7 @@ test.describe("all days completion", () => {
         await page.getByTestId(testIds.component.starReward.confirm()).click();
         await dismissDayCompletionCelebration(page);
         await expect(page).toHaveURL(new RegExp(`/grade/${grade}/?$`));
-      }
-    });
+      });
+    }
   }
 });
