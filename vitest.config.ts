@@ -19,6 +19,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["tests/unit/**/*.test.ts"],
+    // .tsx included so JSX component tests are collected — a *.test.tsx file
+    // would otherwise be silently skipped (pass with zero tests = false green).
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
   },
 });

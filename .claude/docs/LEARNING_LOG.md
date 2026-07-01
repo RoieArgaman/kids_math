@@ -6,6 +6,80 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-01 (Component tests: extended to EVERY component — 88/88)
+- **Trigger:** after the shared UI library was covered, extended component tests to all
+  remaining 64 components (leaf, exercises, providers, layout, auth, teaching-primer,
+  timed-exam, review, and all screens). Unit suite now **868 tests / 137 files**.
+- **Patterns that worked (reusable for future component tests):**
+  - **Config-wrapper screens** (English/Science → subject screens): mock the delegate
+    subject screen and assert it was called with the right `config` + props — a clean
+    contract test with no content/routing setup.
+  - **Shared subject screens**: render with the real `englishScreenConfig` and drive them
+    to a **gated state** — not-found (bogus dayId/sectionId), locked exam (no progress),
+    loading — which renders a stable root without needing full curriculum data.
+  - **Gated/PIN screens** (AdminHub, AdminProgress, AdminUsers, ParentDashboard): mock the
+    gate hook (`useAdminSession` / `useAuth` / `useRouter`) to the locked/loading branch.
+  - **Content-heavy screens** (Home, Plan, BadgeGallery): they hydrate synchronously under
+    RTL's effect flush and render fully with real content + real `useBadges` — just assert
+    the hydrated `root(grade)` testid.
+  - **`useRouter`**: `vi.mock("next/navigation", ...)`. **`useProgress`/`useDayAnswers`/
+    `useExerciseFocus`/`useSectionReset`/`useDayUnlockStatus`**: mock to permissive defaults.
+  - **Gotcha:** `AdminProgressScreen` calls `useAdminTtsEnabled` (AdminTtsProvider) *before*
+    its PIN gate, so even the locked-state test must mock that provider hook.
+- **Deliberate depth choice:** heavy screens are smoke-tested at their gated/loading roots
+  (mount-without-crash + correct branch) rather than fully exercised — the full user
+  journeys stay owned by the E2E suite; these units catch import/render/wiring regressions
+  fast.
+
+### 2026-07-01 (Component tests: full coverage of the shared UI library + Testing Library)
+- **Trigger:** the vitest `include` was `**/*.test.ts` only, so a `*.test.tsx` file would be
+  **silently skipped** (pass with 0 tests = false green). Component coverage was also just 3
+  primitives (Card/SectionHeader/Tile), rendered via `renderToStaticMarkup` string assertions.
+- **What changed / where:**
+  - Widened `vitest.config.ts` include to `**/*.test.{ts,tsx}` (the footgun fix).
+  - Added `@testing-library/react` + `user-event` + `jest-dom` (+ `dom`); `vitest.setup.ts`
+    now imports `@testing-library/jest-dom/vitest` and calls `cleanup()` after each test.
+  - **Full coverage of all 24 `components/ui/` primitives** — one `*.test.tsx` per component
+    (67 tests). Interaction (Button/PinInput/StudentTtsToggle), effects + fake timers
+    (StreakBadge/MetacognitionToast auto-dismiss), error boundary (throw → recovery UI, and
+    Next control-flow digests re-thrown), and TTS via `vi.mock("@/lib/tts/engine")`.
+- **Scope decision:** "full coverage" = the shared UI library only. The ~64 screen/exercise/
+  timed-exam components are wired to routing/storage/context — unit-testing them needs heavy
+  mocking for low marginal value and they're already covered by E2E. Component **unit** tests
+  are for the reusable primitives; screens stay E2E.
+- **Takeaways:** (1) real `next/link` renders a plain `<a href>` in jsdom — no router mock
+  needed for href/class assertions. (2) jsdom has no `window.speechSynthesis`, so
+  `SpeakerButton`/TTS components must mock `@/lib/tts/engine` (Hebrew hides when unsupported;
+  English stays visible-but-disabled). (3) `npm ci` in CI installs devDeps, so Testing Library
+  is available in the `lint-and-unit` job; `deploy.yml`'s `--omit=dev` is unaffected (no tests).
+
+### 2026-07-01 (CI: parallelize + shard E2E; push logic down the test pyramid)
+- **Trigger:** CI took ~7 min. Per-step timing showed **E2E = 308s (~74%)** in a single
+  serial job; everything else (lint 5s, testids 2s, build 35s, unit 17s, pw-install 14s)
+  was minor. One test — `all-days-completion.spec.ts` — was a single `test()` looping every
+  day for grades A **and** B under an 8-min timeout, so no sharding could break it up.
+- **What changed / where:**
+  - `.github/workflows/ci.yml` split into two parallel jobs: `lint-and-unit` (fast gate)
+    and `e2e` as a **3-way shard matrix** (`--shard=i/3`, `fail-fast: false`).
+  - **Deliberate deviation from the plan's "build once + artifact" idea:** a shared build
+    would *serialize* build→e2e (critical path ≈ 220s). Instead each shard builds itself in
+    parallel — 3 parallel builds cost the same wall-clock as one, and the shared `.next/cache`
+    keeps them incremental. Faster wall-clock (~3 min) at the cost of more CPU-minutes.
+  - Split the mega-test into **per-day tests** (56 tests) so Playwright distributes them —
+    shards now balance at **61/61/61**. Coverage is identical (each day still seeds all prior
+    days complete, then completes that day).
+  - `deploy.yml` unchanged and still safe: it gates on `workflow_run` **"CI"** `conclusion==success`,
+    which is only true when *all* jobs (both matrix shards included) pass.
+- **Added fast unit tests (pull logic down from slow E2E):** storage round-trip / backward-compat
+  for the previously-untested learner-data stores (`streak`, `badges`, `science/final-exam`,
+  `english/final-exam` incl. its legacy→level-A migration); route-builder branches
+  (Science/grade/admin builders, `preserveKeys`, `previewAll` carry/clear); answer-grading
+  edge cases (numbers-only rule, whitespace/format normalization); and a **test-only** exercise
+  of the grade-B unlock gate in `middleware.ts` (redirect vs passthrough — no middleware edits).
+- **Takeaway:** for GH Actions, parallel self-contained shards beat a shared build artifact on
+  wall-clock, because artifacts add a serial job dependency. Balance shards by making sure no
+  single `test()` hoards work.
+
 ### 2026-06-29 (DRY refactor: shared UI/hook/util library + canonical Card tokens + subject screen config)
 - **Trigger:** Repeated, near-identical markup and logic across screens (card containers,
   back links, LTR numerals, status banners, PIN panels, admin unlock, exam scoring,
