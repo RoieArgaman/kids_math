@@ -6,6 +6,28 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-01 (Component tests: full coverage of the shared UI library + Testing Library)
+- **Trigger:** the vitest `include` was `**/*.test.ts` only, so a `*.test.tsx` file would be
+  **silently skipped** (pass with 0 tests = false green). Component coverage was also just 3
+  primitives (Card/SectionHeader/Tile), rendered via `renderToStaticMarkup` string assertions.
+- **What changed / where:**
+  - Widened `vitest.config.ts` include to `**/*.test.{ts,tsx}` (the footgun fix).
+  - Added `@testing-library/react` + `user-event` + `jest-dom` (+ `dom`); `vitest.setup.ts`
+    now imports `@testing-library/jest-dom/vitest` and calls `cleanup()` after each test.
+  - **Full coverage of all 24 `components/ui/` primitives** — one `*.test.tsx` per component
+    (67 tests). Interaction (Button/PinInput/StudentTtsToggle), effects + fake timers
+    (StreakBadge/MetacognitionToast auto-dismiss), error boundary (throw → recovery UI, and
+    Next control-flow digests re-thrown), and TTS via `vi.mock("@/lib/tts/engine")`.
+- **Scope decision:** "full coverage" = the shared UI library only. The ~64 screen/exercise/
+  timed-exam components are wired to routing/storage/context — unit-testing them needs heavy
+  mocking for low marginal value and they're already covered by E2E. Component **unit** tests
+  are for the reusable primitives; screens stay E2E.
+- **Takeaways:** (1) real `next/link` renders a plain `<a href>` in jsdom — no router mock
+  needed for href/class assertions. (2) jsdom has no `window.speechSynthesis`, so
+  `SpeakerButton`/TTS components must mock `@/lib/tts/engine` (Hebrew hides when unsupported;
+  English stays visible-but-disabled). (3) `npm ci` in CI installs devDeps, so Testing Library
+  is available in the `lint-and-unit` job; `deploy.yml`'s `--omit=dev` is unaffected (no tests).
+
 ### 2026-07-01 (CI: parallelize + shard E2E; push logic down the test pyramid)
 - **Trigger:** CI took ~7 min. Per-step timing showed **E2E = 308s (~74%)** in a single
   serial job; everything else (lint 5s, testids 2s, build 35s, unit 17s, pw-install 14s)
