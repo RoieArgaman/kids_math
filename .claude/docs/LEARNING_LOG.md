@@ -6,6 +6,31 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-01 (Component tests: extended to EVERY component — 88/88)
+- **Trigger:** after the shared UI library was covered, extended component tests to all
+  remaining 64 components (leaf, exercises, providers, layout, auth, teaching-primer,
+  timed-exam, review, and all screens). Unit suite now **868 tests / 137 files**.
+- **Patterns that worked (reusable for future component tests):**
+  - **Config-wrapper screens** (English/Science → subject screens): mock the delegate
+    subject screen and assert it was called with the right `config` + props — a clean
+    contract test with no content/routing setup.
+  - **Shared subject screens**: render with the real `englishScreenConfig` and drive them
+    to a **gated state** — not-found (bogus dayId/sectionId), locked exam (no progress),
+    loading — which renders a stable root without needing full curriculum data.
+  - **Gated/PIN screens** (AdminHub, AdminProgress, AdminUsers, ParentDashboard): mock the
+    gate hook (`useAdminSession` / `useAuth` / `useRouter`) to the locked/loading branch.
+  - **Content-heavy screens** (Home, Plan, BadgeGallery): they hydrate synchronously under
+    RTL's effect flush and render fully with real content + real `useBadges` — just assert
+    the hydrated `root(grade)` testid.
+  - **`useRouter`**: `vi.mock("next/navigation", ...)`. **`useProgress`/`useDayAnswers`/
+    `useExerciseFocus`/`useSectionReset`/`useDayUnlockStatus`**: mock to permissive defaults.
+  - **Gotcha:** `AdminProgressScreen` calls `useAdminTtsEnabled` (AdminTtsProvider) *before*
+    its PIN gate, so even the locked-state test must mock that provider hook.
+- **Deliberate depth choice:** heavy screens are smoke-tested at their gated/loading roots
+  (mount-without-crash + correct branch) rather than fully exercised — the full user
+  journeys stay owned by the E2E suite; these units catch import/render/wiring regressions
+  fast.
+
 ### 2026-07-01 (Component tests: full coverage of the shared UI library + Testing Library)
 - **Trigger:** the vitest `include` was `**/*.test.ts` only, so a `*.test.tsx` file would be
   **silently skipped** (pass with 0 tests = false green). Component coverage was also just 3
