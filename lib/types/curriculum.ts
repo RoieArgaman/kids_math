@@ -45,6 +45,19 @@ export interface CurriculumMeta {
   misconceptionTarget?: string;
 }
 
+/**
+ * Authored misconception feedback: when the learner's (normalized) wrong answer equals
+ * `match`, show `feedback` instead of the generic retry text. Opt-in and strictly additive —
+ * absent → today's behavior. `match` must never equal the exercise's correct answer
+ * (guarded by content-validity tests). Authored entries require MoE review + content audit.
+ */
+export interface MisconceptionRule {
+  /** The specific wrong answer this rule explains (numeric for number kinds; option string for choices). */
+  match: number | string;
+  /** Encouraging, fix-focused Hebrew feedback in G1–G2 language (names the fix, not the failure). */
+  feedback: string;
+}
+
 export type ExerciseKind =
   | "number_input"
   | "multiple_choice"
@@ -68,6 +81,12 @@ interface BaseExercise {
   mathExpression?: string;
   explanation?: string;
   hint?: string;
+  /**
+   * Optional authored misconception→feedback rules (opt-in, additive). When the learner's
+   * wrong answer matches a rule's `match`, its `feedback` is shown instead of generic retry
+   * text (and outranks the code heuristic). Absent → today's behavior unchanged.
+   */
+  misconceptions?: MisconceptionRule[];
   meta: CurriculumMeta;
 }
 

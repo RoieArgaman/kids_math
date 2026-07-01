@@ -1,4 +1,5 @@
 import type { AnswerValue, Exercise } from "../types";
+import { detectMisconception, matchAuthoredMisconception } from "./misconceptions";
 
 const HEBREW_NIQUD_REGEX = /[֑-ׇ]/g;
 const PUNCTUATION_REGEX = /[.,/#!$%^&*;:{}=\-_`~()?"'!]/g;
@@ -240,6 +241,19 @@ export const getRetryFeedbackText = (
 
   if (normalized === null) {
     return "לֹא נִקְלְטָה תְשׁוּבָה. נַסּוּ לְהָזִין תְשׁוּבָה מְלֵאָה וּבְרוּרָה.";
+  }
+
+  // Misconception-aware feedback: authored overrides outrank the code heuristic, and both
+  // outrank the weaker ±1 near-miss. Each returns null unless it matches exactly, so
+  // exercises with no known misconception fall through to today's generic path unchanged.
+  const authoredMisconception = matchAuthoredMisconception(exercise, rawAnswer);
+  if (authoredMisconception) {
+    return authoredMisconception.feedback;
+  }
+
+  const detectedMisconception = detectMisconception(exercise, rawAnswer);
+  if (detectedMisconception) {
+    return detectedMisconception.feedback;
   }
 
   if (isNearMiss(exercise, rawAnswer)) {
