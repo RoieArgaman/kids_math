@@ -147,7 +147,7 @@ describe("tts engine", () => {
     expect(speak).toHaveBeenCalledTimes(1);
   });
 
-  it("speakHebrew cancels and defers when synthesis is already active", async () => {
+  it("speakHebrew cancels and defers (via a settle delay) when synthesis is already active", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
     const resume = vi.fn();
@@ -183,9 +183,9 @@ describe("tts engine", () => {
 
     speakHebrew("שלום");
     expect(cancel).toHaveBeenCalledTimes(1);
-    expect(speak).not.toHaveBeenCalled();
+    expect(speak).not.toHaveBeenCalled(); // deferred — Chrome drops speak() right after cancel()
 
-    await Promise.resolve();
+    vi.advanceTimersByTime(130); // settle delay elapses
     expect(speak).toHaveBeenCalledTimes(1);
   });
 
@@ -441,5 +441,29 @@ describe("tts engine — auto-play unlock", () => {
     engine.unlockAudioPlayback();
     engine.unlockAudioPlayback();
     expect(engine.isAudioPlaybackUnlocked()).toBe(true);
+  });
+
+  it("auto-play is polite: it does NOT speak (or cancel) when speech is already active", async () => {
+    const engine = await freshEngine();
+    // Simulate a user-initiated utterance already playing.
+    // @ts-expect-error test mock
+    window.speechSynthesis.speaking = true;
+    const cancel = vi.fn();
+    // @ts-expect-error test mock
+    window.speechSynthesis.cancel = cancel;
+
+    engine.unlockAudioPlayback(); // already unlocked path is fine; flush happens on this call
+    engine.autoSpeakHebrew("שלום"); // unlocked → runs immediately, but speech is busy
+
+    expect(speak).not.toHaveBeenCalled(); // skipped — did not clobber the active utterance
+    expect(cancel).not.toHaveBeenCalled(); // and did not cancel it
+  });
+
+  it("auto-play speaks when nothing is playing", async () => {
+    const engine = await freshEngine();
+    engine.unlockAudioPlayback();
+    speak.mockClear();
+    engine.autoSpeakHebrew("שלום"); // idle → plays
+    expect(speak).toHaveBeenCalledTimes(1);
   });
 });

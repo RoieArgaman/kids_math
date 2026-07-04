@@ -48,6 +48,21 @@ describe("SpeakerButton (Hebrew / icon)", () => {
     expect(engine.speakHebrewChunks).toHaveBeenCalledWith(["a", "b"], expect.any(Function));
     expect(engine.speakHebrew).not.toHaveBeenCalled();
   });
+
+  // Regression: a blanket stopSpeech() on every unmount cancelled OTHER speech (StrictMode
+  // double-mount, unrelated re-renders) right after it started — the "no sound" bug.
+  it("does NOT stop speech on unmount when this button never started speaking", () => {
+    const { unmount } = render(<SpeakerButton lang="he" text="שלום" dataTestId="km.test.spk" />);
+    unmount();
+    expect(engine.stopSpeech).not.toHaveBeenCalled();
+  });
+
+  it("DOES stop speech on unmount when this button is actively speaking", async () => {
+    const { unmount } = render(<SpeakerButton lang="he" text="שלום" dataTestId="km.test.spk" />);
+    await userEvent.click(screen.getByTestId("km.test.spk")); // this button is now speaking
+    unmount();
+    expect(engine.stopSpeech).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("SpeakerButton (English / labeled)", () => {

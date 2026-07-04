@@ -128,6 +128,13 @@ export function SpeakerButton({
     () => typeof window !== "undefined" && checkAvailable(),
   );
 
+  // Mirror isSpeaking into a ref so the []-deps unmount cleanup can tell whether THIS
+  // button is the current speaker (see the pagehide/unmount effect below).
+  const isSpeakingRef = useRef(false);
+  useEffect(() => {
+    isSpeakingRef.current = isSpeaking;
+  }, [isSpeaking]);
+
   // Voices may populate asynchronously; re-check on mount and on voiceschanged.
   useEffect(() => {
     const sync = () => setAvailable(checkAvailable());
@@ -152,8 +159,13 @@ export function SpeakerButton({
     window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
-      stopSpeech();
-      setIsSpeaking(false);
+      // Only cancel speech THIS button is actually playing. A blanket stopSpeech() here
+      // cancels EVERY utterance on any unmount — including React StrictMode's dev
+      // double-mount and unrelated parent re-renders — which was silencing auto-play and
+      // on-demand speech right after it started (the "no sound" bug).
+      if (isSpeakingRef.current) {
+        stopSpeech();
+      }
     };
   }, []);
 

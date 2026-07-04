@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-04 (TTS root cause — the app was cancelling its own speech)
+- **Trigger:** on Chrome/macOS neither auto-play nor the on-demand 🔊 button produced sound.
+  A user-run console diagnostic was decisive: `getVoices()` = 199 incl. **Carmit (he-IL,
+  local=true)** — so a working Hebrew voice **exists** — and a raw `speak()` fired
+  **`ERROR: canceled` at ~1132ms**. The snippet never cancels after speaking, so the cancel
+  came from the running app. Root cause = **the app cancels its own speech**, not the browser.
+- **Three self-cancel sources fixed:**
+  1. **Auto-play fought on-demand speech.** The deferred auto-play flushed on the first
+     gesture and ran through `cancelActiveSpeechIfNeeded`, cancelling whatever was playing
+     (incl. a prompt the user just tapped). Fix: `autoSpeakHebrew*` are now **polite** — they
+     skip (never cancel) when `isSpeechBusy()`. On-demand `speakHebrew*` stay authoritative.
+  2. **`cancel()`→`speak()` race.** Chrome drops a `speak()` issued on the same tick/microtask
+     as a `cancel()`. `runAfterQueueClear` now waits `SPEAK_RESTART_DELAY_MS` (130ms, a
+     macrotask) after cancelling before speaking the replacement.
+  3. **Blanket unmount cancel (C1).** `SpeakerButton` called `stopSpeech()` on **every**
+     unmount → React StrictMode's dev double-mount and unrelated re-renders cancelled speech
+     right after it started. Fix: an `isSpeakingRef` guard — only stop speech this button
+     actually owns.
+- **Verified in a real browser (call-sequence, not audio):** entering a section → auto-play =
+  a single `speak`, **no cancel**; tapping 🔊 → `CANCEL` → 130ms settle → `speak`, with **no
+  trailing self-cancel** (the ~1132ms killer is gone). Audible confirmation is the user's on
+  Chrome/Mac (a working Carmit voice is present, so it should now sound).
+- **Dropped the pre-recorded-audio plan** (Phase 2): unnecessary once we knew a local Hebrew
+  voice exists and the bug was our own cancellation. No Cloud TTS key / no committed audio.
+- **Tests:** engine — polite-auto-play (skip when busy) + settle-delay cancel→speak; SpeakerButton
+  — unmount does/doesn't `stopSpeech` based on ownership. Unit 876/876.
+
 ### 2026-07-04 (TTS wedge fix — async voice loading + watchdog)
 - **Trigger:** even the tap-to-play button (a real user gesture, so NOT the autoplay-policy
   issue) produced no sound and stayed stuck on the "stop" icon.

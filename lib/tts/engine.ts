@@ -143,10 +143,22 @@ function primeSpeechVoices(): void {
   }
 }
 
+/** True when something (manifest audio or the synthesis engine) is already speaking. */
+function isSpeechBusy(): boolean {
+  if (currentAudio) return true;
+  if (!isBrowser() || !window.speechSynthesis) return false;
+  return window.speechSynthesis.speaking || window.speechSynthesis.pending;
+}
+
+// After cancel(), Chrome DROPS a speak() issued on the same tick (and even the next
+// microtask) — the classic "cancel then immediately speak does nothing" bug. Let the
+// cancel settle on a macrotask before speaking the replacement.
+const SPEAK_RESTART_DELAY_MS = 130;
+
 function runAfterQueueClear(run: () => void): void {
   const cleared = cancelActiveSpeechIfNeeded();
   if (cleared) {
-    queueMicrotask(run);
+    setTimeout(run, SPEAK_RESTART_DELAY_MS);
   } else {
     run();
   }
@@ -394,14 +406,24 @@ function requestAutoPlay(run: () => void): void {
   pendingAutoPlay = run;
 }
 
-/** Auto-play a Hebrew prompt (deferred until unlock if the user hasn't interacted yet). */
+// Auto-play is POLITE: it must never cancel speech that is already playing — in
+// particular a prompt the user just tapped the 🔊 button for. On-demand speech
+// (speakHebrew/speakHebrewChunks from SpeakerButton) stays authoritative and cancels.
+
+/** Auto-play a Hebrew prompt (deferred until unlock; skipped if speech is already playing). */
 export function autoSpeakHebrew(text: string, options?: SpeakOptions): void {
-  requestAutoPlay(() => speakHebrew(text, undefined, options));
+  requestAutoPlay(() => {
+    if (isSpeechBusy()) return;
+    speakHebrew(text, undefined, options);
+  });
 }
 
-/** Auto-play chunked Hebrew (e.g. a teaching primer), deferred until unlock. */
+/** Auto-play chunked Hebrew (deferred until unlock; skipped if speech is already playing). */
 export function autoSpeakHebrewChunks(parts: string[], options?: SpeakOptions): void {
-  requestAutoPlay(() => speakHebrewChunks(parts, undefined, options));
+  requestAutoPlay(() => {
+    if (isSpeechBusy()) return;
+    speakHebrewChunks(parts, undefined, options);
+  });
 }
 
 export function speakHebrewChunks(
