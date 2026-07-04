@@ -6,6 +6,31 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-04 (TTS wedge fix — async voice loading + watchdog)
+- **Trigger:** even the tap-to-play button (a real user gesture, so NOT the autoplay-policy
+  issue) produced no sound and stayed stuck on the "stop" icon.
+- **Root cause:** the audio manifest ships **empty** (`audioManifest.data.json` = `{}`), so
+  playback always falls back to the browser's Web Speech engine. Chromium loads voices
+  **asynchronously** — `getVoices()` returns `[]` right after load, then populates (observed
+  0 → 180). Calling `speechSynthesis.speak()` during that empty window **wedges** the engine:
+  the utterance never starts and no `start`/`end`/`error` events ever fire → no sound, and the
+  speaker button's `onEnd` never runs so it stays stuck in "playing".
+- **Fix (`lib/tts/engine.ts`):**
+  - `whenVoicesReady()` gates `speakHebrew`/`speakHebrewChunks` — defer speaking until
+    `getVoices()` is non-empty (listen for `voiceschanged`, 1s timeout fallback).
+  - `speakViaSynthesis` now has a **watchdog**: if `onstart` doesn't fire within 3s the
+    utterance was dropped → call `onEnd` so the caller (button) never gets stuck. Plus a
+    5s `resume()` **keep-alive** for Chrome's ~15s long-utterance pause bug. `onEnd` fires
+    exactly once across end/error/watchdog.
+- **Verified in a real browser:** button `aria-pressed` no longer sticks (resets via watchdog);
+  voices confirmed loading async (0 → 180). **Caveat:** headless Chromium has no audio device,
+  so audible output can't be verified here — it still depends on the user's browser/OS having a
+  working Hebrew voice. The durable cross-browser fix is generating the neural-audio manifest
+  (`scripts/generate-audio.mjs`, offline, needs a Cloud TTS key) so playback stops depending on
+  browser voices — see [[project_ai_migration_plan]].
+- **Tests:** engine unit tests for voice-ready deferral + watchdog `onEnd`; existing synthesis
+  tests updated to report a ready voice (`HE_VOICE`) since speak now waits for voices.
+
 ### 2026-07-04 (Student TTS toggle removed — voice always on — AND auto-play actually plays)
 - **Trigger:** product decision — voice should just be on for every student, no per-child
   control. But removing the toggle exposed a deeper bug: **auto-play produced NO sound in

@@ -8,6 +8,16 @@ import {
   stopSpeech,
 } from "@/lib/tts/engine";
 
+// A loaded Hebrew voice — speakHebrew now waits for voices before speaking (empty
+// getVoices() wedges Chromium), so the synthesis tests must report a ready voice.
+const HE_VOICE = {
+  name: "Carmit",
+  lang: "he-IL",
+  localService: true,
+  default: false,
+  voiceURI: "Carmit",
+} as unknown as SpeechSynthesisVoice;
+
 /** Matches dash class in `lib/tts/engine.ts` — keep in sync for regression coverage. */
 const DASH_CODEPOINTS: readonly { label: string; dash: string }[] = [
   { label: "U+002D hyphen-minus", dash: "-" },
@@ -101,7 +111,7 @@ describe("tts engine", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
     const resume = vi.fn();
-    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const getVoices = vi.fn(() => [HE_VOICE]);
     const addEventListener = vi.fn();
 
     class MockUtterance {
@@ -141,7 +151,7 @@ describe("tts engine", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
     const resume = vi.fn();
-    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const getVoices = vi.fn(() => [HE_VOICE]);
     const addEventListener = vi.fn();
 
     class MockUtterance {
@@ -183,7 +193,7 @@ describe("tts engine", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
     const resume = vi.fn();
-    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const getVoices = vi.fn(() => [HE_VOICE]);
     const addEventListener = vi.fn();
 
     class MockUtterance {
@@ -218,7 +228,7 @@ describe("tts engine", () => {
     const speak = vi.fn();
     const cancel = vi.fn();
     const resume = vi.fn();
-    const getVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
+    const getVoices = vi.fn(() => [HE_VOICE]);
     const addEventListener = vi.fn();
 
     class MockUtterance {
@@ -250,6 +260,90 @@ describe("tts engine", () => {
     const second = speak.mock.calls[1][0] as MockUtterance;
     second.onend?.();
     expect(onEnd).toHaveBeenCalled();
+  });
+
+  it("waits for voices before speaking, then speaks once voiceschanged fires", () => {
+    const speak = vi.fn();
+    let voices: SpeechSynthesisVoice[] = [];
+    let voicesChangedCb: (() => void) | null = null;
+    const addEventListener = vi.fn((ev: string, cb: () => void) => {
+      if (ev === "voiceschanged") voicesChangedCb = cb;
+    });
+    const removeEventListener = vi.fn();
+
+    class MockUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      pitch = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    // @ts-expect-error test mock
+    window.speechSynthesis = {
+      speak,
+      cancel: vi.fn(),
+      resume: vi.fn(),
+      getVoices: () => voices,
+      addEventListener,
+      removeEventListener,
+      speaking: false,
+      pending: false,
+    };
+    // @ts-expect-error test mock
+    window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
+
+    speakHebrew("שלום");
+    expect(speak).not.toHaveBeenCalled(); // voices empty → speaking would wedge, so deferred
+
+    voices = [HE_VOICE];
+    voicesChangedCb?.(); // voices arrive
+    expect(speak).toHaveBeenCalledTimes(1);
+  });
+
+  it("fires onEnd via the watchdog when the utterance never starts (dropped / no audio)", () => {
+    const speak = vi.fn(); // never triggers onstart/onend — mimics a wedged/silent engine
+
+    class MockUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      pitch = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    // @ts-expect-error test mock
+    window.speechSynthesis = {
+      speak,
+      cancel: vi.fn(),
+      resume: vi.fn(),
+      getVoices: () => [HE_VOICE],
+      addEventListener: vi.fn(),
+      speaking: false,
+      pending: false,
+    };
+    // @ts-expect-error test mock
+    window.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
+
+    const onEnd = vi.fn();
+    speakHebrew("שלום", onEnd);
+    expect(speak).toHaveBeenCalledTimes(1);
+    expect(onEnd).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(3000);
+    expect(onEnd).toHaveBeenCalledTimes(1); // watchdog reset — button never stuck
   });
 });
 
@@ -284,7 +378,7 @@ describe("tts engine — auto-play unlock", () => {
       speak,
       cancel: vi.fn(),
       resume: vi.fn(),
-      getVoices: vi.fn(() => [] as SpeechSynthesisVoice[]),
+      getVoices: vi.fn(() => [HE_VOICE]),
       addEventListener: vi.fn(),
       speaking: false,
       pending: false,

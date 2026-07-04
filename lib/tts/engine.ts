@@ -45,14 +45,49 @@ export function isEnglishVoiceAvailable(): boolean {
   return pickEnglishVoice() !== null;
 }
 
-let voicesListenerAttached = false;
+function hasVoices(): boolean {
+  if (!isBrowser() || !window.speechSynthesis) return false;
+  try {
+    return window.speechSynthesis.getVoices().length > 0;
+  } catch {
+    return false;
+  }
+}
 
-function ensureVoicesLoaded(): void {
-  if (!isBrowser() || !window.speechSynthesis || voicesListenerAttached) return;
-  voicesListenerAttached = true;
-  window.speechSynthesis.addEventListener("voiceschanged", () => {
-    // Voices may populate asynchronously on some engines.
-  });
+/**
+ * Run `run` once the speech engine has loaded its voices.
+ *
+ * Chromium loads voices asynchronously: `getVoices()` returns `[]` right after
+ * page load and populates later, firing `voiceschanged`. Calling `speak()` during
+ * that empty window WEDGES the engine — the utterance never starts and no
+ * start/end/error events ever fire (the "no sound + stuck button" bug). So we
+ * defer speaking until voices exist, with a timeout fallback for engines that
+ * never fire `voiceschanged` (or already had voices).
+ */
+function whenVoicesReady(run: () => void): void {
+  if (!isBrowser() || !window.speechSynthesis || hasVoices()) {
+    run();
+    return;
+  }
+  let done = false;
+  const go = () => {
+    if (done) return;
+    done = true;
+    try {
+      window.speechSynthesis.removeEventListener("voiceschanged", go);
+    } catch {
+      // ignore
+    }
+    run();
+  };
+  try {
+    window.speechSynthesis.addEventListener("voiceschanged", go);
+  } catch {
+    // ignore — timeout below still fires
+  }
+  // Fallback: some engines never emit voiceschanged, or voices arrive between the
+  // hasVoices() check and now. Cap the wait so speech is never lost.
+  setTimeout(go, 1000);
 }
 
 let chunkSpeakGeneration = 0;
@@ -168,15 +203,59 @@ function speakViaSynthesis(
   if (voice) {
     utterance.voice = voice;
   }
-  utterance.onend = () => {
+
+  let finished = false;
+  let keepAlive: ReturnType<typeof setInterval> | null = null;
+  let startWatchdog: ReturnType<typeof setTimeout> | null = null;
+
+  const cleanup = () => {
+    if (keepAlive !== null) {
+      clearInterval(keepAlive);
+      keepAlive = null;
+    }
+    if (startWatchdog !== null) {
+      clearTimeout(startWatchdog);
+      startWatchdog = null;
+    }
+  };
+  // Fire onEnd exactly once (end, error, or the never-started watchdog) so the
+  // caller (e.g. the speaker button) is never left stuck in the "playing" state.
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    cleanup();
     onEnd?.();
   };
-  utterance.onerror = () => {
-    onEnd?.();
+
+  utterance.onstart = () => {
+    if (startWatchdog !== null) {
+      clearTimeout(startWatchdog);
+      startWatchdog = null;
+    }
+    // Chrome silently pauses synthesis after ~15s; a periodic resume keeps long
+    // utterances (primer chunks, worked examples) playing to the end.
+    keepAlive = setInterval(() => {
+      try {
+        const synth = window.speechSynthesis;
+        if (synth && synth.speaking && !synth.paused) synth.resume();
+      } catch {
+        // ignore
+      }
+    }, 5000);
   };
+  utterance.onend = finish;
+  utterance.onerror = finish;
+
   primeSpeechVoices();
   resumeSynthesis();
   window.speechSynthesis!.speak(utterance);
+
+  // If the utterance is dropped (engine wedged / no audio device / missing voice),
+  // `onstart` never fires — reset the caller after a grace period so the UI recovers.
+  startWatchdog = setTimeout(() => {
+    startWatchdog = null;
+    finish();
+  }, 3000);
 }
 
 function speakUtterance(
@@ -222,14 +301,17 @@ export function speakHebrew(text: string, onEnd?: () => void, options?: SpeakOpt
     onEnd?.();
     return;
   }
-  ensureVoicesLoaded();
   const trimmed = text.replace(/\s+/g, " ").trim();
   if (!trimmed) {
     onEnd?.();
     return;
   }
-  runAfterQueueClear(() => {
-    speakUtterance(trimmed, options, onEnd);
+  // Wait for voices before speaking — speaking while getVoices() is empty wedges
+  // Chromium (no sound, no end/error events).
+  whenVoicesReady(() => {
+    runAfterQueueClear(() => {
+      speakUtterance(trimmed, options, onEnd);
+    });
   });
 }
 
@@ -331,8 +413,6 @@ export function speakHebrewChunks(
     onEnd?.();
     return;
   }
-  ensureVoicesLoaded();
-
   const chunks = parts.map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean);
   if (chunks.length === 0) {
     onEnd?.();
@@ -364,5 +444,8 @@ export function speakHebrewChunks(
     speakAt(0);
   };
 
-  runAfterQueueClear(startChunks);
+  // Wait for voices before speaking (see speakHebrew) so the engine never wedges.
+  whenVoicesReady(() => {
+    runAfterQueueClear(startChunks);
+  });
 }
