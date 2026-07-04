@@ -1,15 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ExerciseBox } from "@/components/ExerciseBox";
 import type { Exercise } from "@/lib/types";
 import { childTid, testIds } from "@/lib/testIds";
+import { autoSpeakHebrew } from "@/lib/tts/engine";
 
+// Auto-play is gated only by the admin master switch now (no student toggle); flip
+// this per test to exercise both branches.
+let mockAdminTtsEnabled = false;
 vi.mock("@/lib/hooks/useAdminTtsEnabled", () => ({
-  useAdminTtsEnabled: () => ({ ttsEnabled: false, hydrated: true }),
-}));
-vi.mock("@/components/providers/StudentTtsProvider", () => ({
-  useStudentTts: () => ({ autoPlay: false, setAutoPlay: vi.fn(), hydrated: true }),
+  useAdminTtsEnabled: () => ({ ttsEnabled: mockAdminTtsEnabled, hydrated: true }),
 }));
 vi.mock("@/lib/tts/engine", () => ({
   isTtsSupported: vi.fn(() => true),
@@ -17,8 +18,17 @@ vi.mock("@/lib/tts/engine", () => ({
   speakHebrew: vi.fn(),
   speakEnglish: vi.fn(),
   speakHebrewChunks: vi.fn(),
+  autoSpeakHebrew: vi.fn(),
+  autoSpeakHebrewChunks: vi.fn(),
+  unlockAudioPlayback: vi.fn(),
+  isAudioPlaybackUnlocked: vi.fn(() => false),
   stopSpeech: vi.fn(),
 }));
+
+beforeEach(() => {
+  mockAdminTtsEnabled = false;
+  vi.mocked(autoSpeakHebrew).mockClear();
+});
 
 const EX = "day-1-section-1-exercise-1";
 const meta = { skillTags: [], difficulty: 1, representation: "abstract" } as const;
@@ -66,5 +76,18 @@ describe("ExerciseBox", () => {
     );
     expect(screen.getByTestId(childTid(BASE, "feedback"))).toHaveTextContent("לא מדויק");
     expect(screen.getByTestId(testIds.component.exerciseBox.retry(EX))).toBeInTheDocument();
+  });
+
+  it("requests prompt auto-play on mount when admin TTS is enabled (no student toggle needed)", () => {
+    mockAdminTtsEnabled = true;
+    render(<ExerciseBox exercise={exercise} value="" {...noop} />);
+    // autoSpeakHebrew defers until the audio-unlock gesture, so it's the auto-play entry point.
+    expect(autoSpeakHebrew).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not auto-play when admin TTS is disabled", () => {
+    mockAdminTtsEnabled = false;
+    render(<ExerciseBox exercise={exercise} value="" {...noop} />);
+    expect(autoSpeakHebrew).not.toHaveBeenCalled();
   });
 });

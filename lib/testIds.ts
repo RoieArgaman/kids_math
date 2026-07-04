@@ -502,7 +502,6 @@ export const testIds = {
       adminUsersLink: () => tid("component", "auth", "avatar", "adminUsers"),
     },
     topBar: {
-      studentTtsToggle: () => tid("component", "topBar", "studentTts", "toggle"),
       authSection: () => tid("component", "topBar", "auth", "section"),
     },
     metacognitionToast: {

@@ -7,6 +7,12 @@ alwaysApply: true
 
 > **Canonical source: `AGENTS.md`** — this file provides Cursor-specific details.
 
+> ⚠️ **Tests run on CI, not locally.** The full/long suite (`test:e2e`, `test:qa`) runs
+> **only on the PR's CI** — it's faster and costs far fewer tokens. Locally run only the
+> fast gates (`tsc`, `lint`, `check:testids`, `test:unit`). "READY" = fast gates pass +
+> PR CI green; report the CI Suite field as `DEFERRED TO CI`. See `AGENTS.md` → Testing
+> Strategy → Where tests run.
+
 ## Quality Gates by Mode
 
 ### PRO
@@ -23,16 +29,15 @@ npm run lint
 npm run check:testids
 npm run build
 npm run test:unit
-npm run test:e2e -- <SPECIFIC-spec-files>   # MUST name exact specs
-# Then: MCP Playwright visual check (if ANY UI changed)
-# Then: npm run test:qa  (full CI suite — must all pass before READY)
+# MCP Playwright visual check (if ANY UI changed)
+# test:e2e / test:qa → PR's CI, NOT locally. Push and confirm CI is green before READY.
 ```
 
 ### MAX
 ```bash
-npm run test:qa   # Full suite, no exceptions
-# Then: MCP Playwright visual check (ALWAYS — all changed screens)
-# CI is already covered by test:qa
+npx tsc --noEmit && npm run lint && npm run check:testids && npm run test:unit
+# MCP Playwright visual check (ALWAYS — all changed screens)
+# test:e2e / test:qa → PR's CI, NOT locally. PR CI must be green before READY.
 ```
 
 ## Mandatory Test Targeting (specific, not "targeted")
@@ -78,10 +83,10 @@ Lint:        [PASS/FAIL]
 TestIDs:     [PASS/FAIL]
 Build:       [PASS/FAIL/SKIPPED — reason]
 Unit:        [PASS/FAIL/SKIPPED — reason] (X passed, Y failed)
-E2E:         [PASS/FAIL/SKIPPED — reason] (X passed, Y failed; specs: list)
+E2E:         [DEFERRED TO CI — runs on PR pipeline, not locally]
 Security:    [PASS/FAIL] (findings with severity)
 Visual:      [PASS/FAIL/SKIPPED — reason] (screens checked: list)
-CI Suite:    [PASS/FAIL] (lint ✓, testids ✓, build ✓, unit X/X ✓, e2e X/X ✓)
+CI Suite:    [DEFERRED TO CI / GREEN — PR run link] (local fast gates: lint ✓, testids ✓, unit X/X ✓)
 Diff:        [X files, Y insertions, Z deletions]
 
 Self-Review: [CLEAN / X issues caught and fixed]
@@ -98,7 +103,7 @@ READY if ALL true:
 - All gates PASS (or SKIPPED with valid reason)
 - Security gate PASS
 - Visual verification PASS (or SKIPPED with valid reason)
-- CI Suite PASS (ULTRA/MAX: full test:qa must pass)
+- CI Suite green on the **PR's CI** (ULTRA/MAX) — not run locally; local fast gates (tsc/lint/testids/unit) pass
 - Report 100% filled (no blanks)
 - Self-review completed
 - Learning updated (ULTRA/MAX) or justified skip

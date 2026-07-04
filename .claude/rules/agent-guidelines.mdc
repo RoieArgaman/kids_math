@@ -232,7 +232,7 @@ Tie-breaker: smallest safe change that preserves behavior while satisfying highe
 
 - Keep changes focused and easy to review
 - PR descriptions must include: summary, test plan, storage/analytics considerations
-- **Run `npm run test:qa` before declaring PR ready** — CI must pass
+- **Do NOT run `npm run test:qa`/`test:e2e` locally** — the full suite runs on the **PR's CI** (faster, fewer tokens). Locally run only the fast gates (tsc/lint/check:testids/test:unit), then push and confirm the PR's CI is green before declaring READY. See `AGENTS.md` → Testing Strategy → Where tests run.
 
 ## Learning Loop
 

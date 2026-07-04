@@ -6,12 +6,6 @@ import { useAuth } from "@/lib/auth/context";
 import { testIds } from "@/lib/testIds";
 
 vi.mock("@/lib/auth/context", () => ({ useAuth: vi.fn() }));
-vi.mock("@/lib/hooks/useAdminTtsEnabled", () => ({
-  useAdminTtsEnabled: () => ({ ttsEnabled: false, hydrated: true }),
-}));
-vi.mock("@/components/providers/StudentTtsProvider", () => ({
-  useStudentTts: () => ({ autoPlay: false, setAutoPlay: vi.fn(), hydrated: true }),
-}));
 
 function setAuth(value: Record<string, unknown>) {
   vi.mocked(useAuth).mockReturnValue({ login: vi.fn(), logout: vi.fn(), ...value } as ReturnType<typeof useAuth>);

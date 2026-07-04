@@ -9,15 +9,16 @@ vi.mock("@/lib/hooks/useSpiralReview", () => ({ useSpiralReview: vi.fn() }));
 vi.mock("@/lib/hooks/useAdminTtsEnabled", () => ({
   useAdminTtsEnabled: () => ({ ttsEnabled: false, hydrated: true }),
 }));
-vi.mock("@/components/providers/StudentTtsProvider", () => ({
-  useStudentTts: () => ({ autoPlay: false, setAutoPlay: vi.fn(), hydrated: true }),
-}));
 vi.mock("@/lib/tts/engine", () => ({
   isTtsSupported: vi.fn(() => true),
   isEnglishVoiceAvailable: vi.fn(() => true),
   speakHebrew: vi.fn(),
   speakEnglish: vi.fn(),
   speakHebrewChunks: vi.fn(),
+  autoSpeakHebrew: vi.fn(),
+  autoSpeakHebrewChunks: vi.fn(),
+  unlockAudioPlayback: vi.fn(),
+  isAudioPlaybackUnlocked: vi.fn(() => false),
   stopSpeech: vi.fn(),
 }));
 

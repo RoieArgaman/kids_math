@@ -39,13 +39,17 @@ These run automatically via `.claude/settings.json`:
 
 ```bash
 npm run dev              # Dev server
-npm run lint             # ESLint
-npm run check:testids    # Test ID coverage
+npm run lint             # ESLint                       (fast — run locally)
+npm run check:testids    # Test ID coverage             (fast — run locally)
 npm run build            # Production build
-npm run test:unit        # Unit tests (Vitest)
-npm run test:e2e         # E2E tests (Playwright)
-npm run test:qa          # Full QA suite (lint + unit + build + E2E)
+npm run test:unit        # Unit tests (Vitest)          (fast — run locally)
+npm run test:e2e         # E2E tests (Playwright)        # CI ONLY — do not run locally
+npm run test:qa          # Full QA (lint+unit+build+E2E) # CI ONLY — do not run locally
 ```
+
+> **Tests run on CI, not locally.** Run only the fast gates locally (`tsc`, `lint`,
+> `check:testids`, `test:unit`); push and let the PR's CI run `test:e2e`/`test:qa`.
+> CI is faster and costs fewer tokens. See `AGENTS.md` → Testing Strategy → Where tests run.
 
 ## Key Rules
 
@@ -80,7 +84,7 @@ Run the Self-Review Protocol from `AGENTS.md` — catch your own mistakes before
 - Use severity: CRITICAL/HIGH = auto-BLOCK, MEDIUM = warn, LOW = optional
 - Include role participation table for reviews
 - **MCP Playwright**: visual smoke test on changed screens (ULTRA if UI changed, MAX always)
-- **CI Suite**: run `npm run test:qa` before declaring READY (ULTRA/MAX mandatory)
+- **CI Suite**: full `test:qa`/E2E runs on the **PR's CI, not locally** (faster, fewer tokens). Locally run only fast gates (tsc/lint/testids/unit); "READY" = fast gates pass + PR CI green. Report the CI Suite field as `DEFERRED TO CI`.
 
 ## Mode Quick Reference
 
@@ -88,10 +92,10 @@ Run the Self-Review Protocol from `AGENTS.md` — catch your own mistakes before
 Research → Implement → Self-review → Verify → Output
 
 ### ULTRA (3 blocking checkpoints)
-Plan → ⛔ USER CONFIRMS → Explore → ⛔ USER CONFIRMS → Implement → Self-review → Multi-role Review (5 roles) → Test → **MCP Playwright Visual Check** → **CI Suite (`test:qa`)** → Verify → ⛔ USER CONFIRMS → Output
+Plan → ⛔ USER CONFIRMS → Explore → ⛔ USER CONFIRMS → Implement → Self-review → Multi-role Review (5 roles) → Test → **MCP Playwright Visual Check** → **CI Suite (on PR's CI, not local)** → Verify → ⛔ USER CONFIRMS → Output
 
 ### MAX (6+ blocking checkpoints)
-Plan → ⛔ Plan Review R1 → Revise → ⛔ Plan Review R2 → ⛔ USER CONFIRMS → Explore → ⛔ USER CONFIRMS → Implement → Self-review → Review Cycle 1 → Fix → ⛔ USER CONFIRMS → Review Cycle 2 → QA Team → **MCP Playwright Visual Check** → **CI Suite (`test:qa`)** → Verify → ⛔ USER CONFIRMS → PR → Output
+Plan → ⛔ Plan Review R1 → Revise → ⛔ Plan Review R2 → ⛔ USER CONFIRMS → Explore → ⛔ USER CONFIRMS → Implement → Self-review → Review Cycle 1 → Fix → ⛔ USER CONFIRMS → Review Cycle 2 → QA Team → **MCP Playwright Visual Check** → **CI Suite (on PR's CI, not local)** → Verify → ⛔ USER CONFIRMS → PR → Output
 
 ## Escalation
 

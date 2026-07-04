@@ -141,9 +141,9 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 5. **Implement** — smallest correct change following conventions
 6. **Self-review** — run checklist
 7. **Multi-role Review** — 5 core roles (all must participate)
-8. **Test** — `lint` + `check:testids` + `build` + `test:unit` + targeted E2E (name exact specs)
+8. **Test** — local FAST gates only: `tsc` + `lint` + `check:testids` + `test:unit` (do NOT run E2E/`test:qa` locally — CI runs them)
 9. **Visual Verify** — MCP Playwright smoke test on changed screens
-10. **CI Final** — run `npm run test:qa` — all checks must pass
+10. **CI Final** — full `test:qa`/E2E runs on the **PR's CI, not locally** (faster, fewer tokens); push and confirm CI is green
 11. **Verify** — produce verification report
 12. ⛔ **CHECKPOINT: Verification** — present report, WAIT for user
 13. **Output** — handoff format + learning log entry
@@ -183,7 +183,7 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 14. **If Cycle 2 still has CRITICAL/HIGH** → BLOCK + escalate to user
 15. **Test (QA Multi-role Team)** — full automation + manual QA
 16. **Visual Verify** — MCP Playwright full smoke test (all changed screens + critical paths)
-17. **CI Final** — run `npm run test:qa` — MUST pass with zero failures
+17. **CI Final** — full `test:qa`/E2E runs on the **PR's CI, not locally**; the PR's CI MUST be green with zero failures (local: only fast gates tsc/lint/testids/unit)
 18. **Verify** — produce verification report
 19. ⛔ **CHECKPOINT: Final Verification** — present report, WAIT for user
 20. **PR preparation** — summary, test plan, risk notes, migration notes
@@ -256,15 +256,14 @@ npm run lint
 npm run check:testids
 npm run build
 npm run test:unit
-npm run test:e2e -- <exact-spec-files>  # Must name exact specs
-# Then: MCP Playwright visual check (if UI changed)
-# Then: npm run test:qa (full CI suite)
+# MCP Playwright visual check (if UI changed)
+# test:e2e / test:qa → PR's CI, NOT locally (faster, fewer tokens). Push & confirm CI green.
 ```
 
 ### MAX
 ```bash
-npm run test:qa   # = lint + check:testids + build + unit + E2E
-# No exceptions — all must pass
+npx tsc --noEmit && npm run lint && npm run check:testids && npm run test:unit
+# test:e2e / test:qa → PR's CI, NOT locally. PR CI must be green before READY.
 # Then: MCP Playwright full visual check (always)
 ```
 

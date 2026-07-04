@@ -152,8 +152,8 @@ Every agent must review its own work before responding. See [Self-Review Protoco
 7. **Multi-role Review** — 5 core roles review (1 cycle)
 8. **Test** — run quality gates + targeted automation + manual RTL checklist
 9. **Visual Verify** — MCP Playwright smoke test on changed screens (see MCP Playwright section)
-10. **CI Final** — run `npm run test:qa` to confirm all CI checks pass
-11. **Verify** — produce verification report (including Visual + CI Suite fields)
+10. **CI Final** — local fast gates (tsc/lint/testids/unit) must pass; the full `test:qa`/E2E suite runs on the **PR's CI, not locally** (see Testing Strategy → Where tests run)
+11. **Verify** — produce verification report (including Visual + CI Suite fields; CI Suite = `DEFERRED TO CI`)
 12. ⛔ **CHECKPOINT: Verification** — present report, WAIT for user to approve
 13. **Output** — handoff format + learning log entry
 
@@ -190,8 +190,8 @@ Every agent must review its own work before responding. See [Self-Review Protoco
 14. **If Cycle 2 still has CRITICAL/HIGH** → see [Escalation: Stuck Review Loop](#stuck-review-loop)
 15. **Test (QA Multi-role Team)** — full automation + manual QA
 16. **Visual Verify** — MCP Playwright full smoke test (all changed screens + critical paths)
-17. **CI Final** — run `npm run test:qa` — must pass with zero failures
-18. **Verify** — produce verification report (including Visual + CI Suite fields)
+17. **CI Final** — local fast gates (tsc/lint/testids/unit) must pass; the full `test:qa`/E2E suite runs on the **PR's CI, not locally** — the PR's CI must be green with zero failures (see Testing Strategy → Where tests run)
+18. **Verify** — produce verification report (including Visual + CI Suite fields; CI Suite = `DEFERRED TO CI` until the PR pipeline is green)
 19. ⛔ **CHECKPOINT: Final Verification** — present report, WAIT for user to approve
 20. **PR preparation** — summary, test plan, risk notes, migration notes
 21. **Output** — handoff format + learning log + rule updates
@@ -733,15 +733,25 @@ If a CRITICAL security finding is discovered at any point:
 
 ## Testing Strategy
 
+### Where tests run — CI ONLY for the long suite (authoritative)
+
+**Run the full/long suite (`npm run test:e2e`, `npm run test:qa`) ONLY on the PR's CI — never locally.** CI is faster and costs far fewer tokens. Locally, run only the fast, cheap gates:
+
+- `npx tsc --noEmit`, `npm run lint`, `npm run check:testids`, `npm run test:unit` — always OK locally.
+- `npm run test:e2e` / `npm run test:qa` — **do not run locally**; push and let CI run them.
+- The one local exception is the **Playwright MCP visual check** (ULTRA if UI changed, MAX always), which CI can't produce.
+
+This overrides any earlier "run `test:qa` before READY" phrasing in the mode workflows/checkpoints: for ULTRA/MAX, satisfy the "CI Suite" gate by **pushing and confirming CI is green**, not by running the full suite locally. In the verification report, mark the CI Suite field `DEFERRED TO CI` (with the run link once available) rather than running it locally.
+
 ### Unit Tests (Vitest)
 - Location: `tests/unit/`
 - Config: `vitest.config.ts` (jsdom environment)
-- Run: `npm run test:unit`
+- Run: `npm run test:unit` (fast — OK locally)
 
-### E2E Tests (Playwright)
+### E2E Tests (Playwright) — CI only
 - Location: `tests/e2e/`
 - Config: `playwright.config.ts` (Chromium, 4 workers, port 3005 local / 3000 CI)
-- Run: `npm run test:e2e`
+- Run on **CI only** via the PR pipeline; do not run `npm run test:e2e` locally.
 - Selectors: `getByTestId()` first, never brittle XPath or content-derived selectors
 - Retries: 2 in CI, 0 locally
 
@@ -1029,23 +1039,24 @@ Visual:      [PASS/FAIL/SKIPPED — reason] (screens checked: list)
 
 ## CI Final Verification (Pre-PR Gate)
 
-Before declaring a PR **READY**, the agent must run the full CI suite locally to ensure the PR will pass CI.
+Before declaring a PR **READY**, run the local fast gates, then push and let the **PR's CI** run the full suite. **Do not run `test:qa`/E2E locally** — CI is faster and costs far fewer tokens (see Testing Strategy → Where tests run). "READY" means local fast gates pass AND the PR's CI is green.
 
-### When to Run
+### When to Run (locally)
 
-| Mode | Requirement |
-|------|------------|
-| PRO | `npm run lint` + `npm run check:testids` + targeted tests |
-| ULTRA | `npm run test:qa` (full suite) |
-| MAX | `npm run test:qa` (full suite, no exceptions) |
+| Mode | Local fast gates | Full suite |
+|------|------------|-----------|
+| PRO | `npm run lint` + `npm run check:testids` + `npm run test:unit` | CI |
+| ULTRA | `tsc` + `lint` + `check:testids` + `test:unit` | CI (do not run `test:qa` locally) |
+| MAX | `tsc` + `lint` + `check:testids` + `test:unit` | CI (do not run `test:qa` locally) |
 
 ### CI Verification Steps
 
 ```
 CI FINAL VERIFICATION
 ======================
-1. Run full CI suite:
-   npm run test:qa 2>&1 | tail -50
+1. Run the local FAST gates only (NOT test:qa/e2e):
+   npx tsc --noEmit && npm run lint && npm run check:testids && npm run test:unit
+   Then push and let the PR's CI run the full suite (test:qa / e2e).
 
 2. Verify ALL pass:
    - [ ] Lint: PASS

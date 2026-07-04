@@ -6,6 +6,37 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-04 (Student TTS toggle removed — voice always on — AND auto-play actually plays)
+- **Trigger:** product decision — voice should just be on for every student, no per-child
+  control. But removing the toggle exposed a deeper bug: **auto-play produced NO sound in
+  either toggle state.** Root cause = browser autoplay policy: voice started on mount has no
+  user gesture, so `Audio.play()` (manifest neural-audio path) rejects with NotAllowedError
+  and `speechSynthesis.speak()` is throttled. There was zero gesture-unlock anywhere — only
+  the tap-to-play buttons worked (they're gesture-triggered).
+- **What changed / where:**
+  - Deleted `components/ui/StudentTtsToggle.tsx`, `components/providers/StudentTtsProvider.tsx`,
+    and `lib/tts/prefs.ts` (the `kids_math.tts_prefs.v1` stack) — a context returning only
+    `autoPlay: true` is dead weight. Removed the `component.topBar.studentTtsToggle` testid.
+  - **Autoplay-policy fix (the real bug):** `lib/tts/engine.ts` gained `unlockAudioPlayback()`
+    (primes both playback paths inside a gesture), `autoSpeakHebrew`/`autoSpeakHebrewChunks`
+    (defer a pending auto-play until unlock; last-wins), and `isAudioPlaybackUnlocked()`. New
+    `components/providers/AudioUnlockManager.tsx` (mounted in `AppProviders`) calls
+    `unlockAudioPlayback()` on the first `pointerdown`/`keydown`/`touchstart`, then detaches.
+    `ExerciseBox` and `DayTeachingPrimer` now call the `autoSpeak*` variants and gate solely
+    on the **admin** master switch (`useAdminTtsEnabled`, default on).
+  - Note: exercise/section pages are only reachable via clicks (direct section URLs redirect
+    to the subject picker), so a gesture always precedes the first `ExerciseBox` mount — the
+    defer/flush is belt-and-suspenders. **Verified in a real browser:** 0 utterances before
+    interaction; after the section-card click, `speechSynthesis.speak` fired with the real
+    Hebrew warmup prompts.
+- **Why it's safe:** `kids_math.tts_prefs.v1` was a UI preference, not learner progress — the
+  orphaned key on old devices is inert. The admin master switch (`kids_math.admin_prefs.v1`)
+  is untouched and remains the only way to silence voice.
+- **Tests:** rewrote `tests/e2e/tts-accessibility.spec.ts` to behavior assertions (toggle DOM
+  absent; prompt auto-plays after entering a section; silent when admin TTS off) via a
+  `speak`/`Audio`-recording mock that ignores the silent unlock prime. Added engine unit tests
+  for the defer→flush/last-wins/idempotent unlock, and an `AudioUnlockManager` test.
+
 ### 2026-07-01 (Component tests: extended to EVERY component — 88/88)
 - **Trigger:** after the shared UI library was covered, extended component tests to all
   remaining 64 components (leaf, exercises, providers, layout, auth, teaching-primer,

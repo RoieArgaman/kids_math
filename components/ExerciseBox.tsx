@@ -11,9 +11,8 @@ import type { GradeId } from "@/lib/grades";
 import type { Exercise } from "@/lib/types";
 import { TapToPlayTtsButton } from "@/components/ui/TapToPlayTtsButton";
 import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
-import { useStudentTts } from "@/components/providers/StudentTtsProvider";
 import { buildExercisePromptSpeakText } from "@/lib/utils/exercisePromptSpeakText";
-import { speakHebrew } from "@/lib/tts/engine";
+import { autoSpeakHebrew } from "@/lib/tts/engine";
 
 interface ExerciseBoxProps {
   exercise: Exercise;
@@ -71,21 +70,20 @@ export function ExerciseBox({
   const baseTestId = testIds.component.exerciseBox.root(exercise.id);
 
   const { ttsEnabled, hydrated: adminHydrated } = useAdminTtsEnabled();
-  const { autoPlay, hydrated: studentHydrated } = useStudentTts();
   const promptParts = resolvePromptParts(exercise);
   const ttsSpeakText = buildExercisePromptSpeakText(promptParts);
 
-  // Tap-to-play is always available (see SpeakerButton); the admin pref only
-  // gates auto-play on mount, combined with the student's auto-play toggle.
-  // Auto-play the prompt once on mount when the student has enabled auto-play
+  // Tap-to-play is always available (see SpeakerButton); voice auto-play is always
+  // on for students and only gated by the admin master TTS switch.
+  // Auto-play the prompt once on mount when admin TTS is enabled.
   const autoPlayedRef = useRef(false);
   useEffect(() => {
     if (autoPlayedRef.current) return;
-    if (!adminHydrated || !studentHydrated) return;
-    if (!ttsEnabled || !autoPlay) return;
+    if (!adminHydrated) return;
+    if (!ttsEnabled) return;
     autoPlayedRef.current = true;
-    speakHebrew(ttsSpeakText);
-  }, [adminHydrated, studentHydrated, ttsEnabled, autoPlay, ttsSpeakText]);
+    autoSpeakHebrew(ttsSpeakText);
+  }, [adminHydrated, ttsEnabled, ttsSpeakText]);
 
   const onEnter = () => {
     if (showCheckButton) {

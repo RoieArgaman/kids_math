@@ -129,7 +129,7 @@ Route: `routes.gradeDay(grade,dayId)`. Root: `screen.dayOverview.root(grade,dayI
 | REG-DAYOV-02 | Section card opens section | At day overview | 1. Click `screen.dayOverview.sectionCardCta(...)`. | URL `/grade/a/day/day-1/section/<id>`; section root visible. | + | Both | P0 | `tests/e2e/day-smoke.spec.ts` ✅ |
 | REG-DAYOV-03 | Teaching primer visible | At day overview | 1. Locate `screen.dayOverview.teachingPrimer(...)`. | Primer summary + steps rendered. | + | Both | P1 | `tests/unit/lib/content/teaching-primer-content.test.ts` ✅ |
 | REG-DAYOV-04 | Teaching primer expand | At day overview | 1. Click `teachingPrimerExpand(...)`. | Full primer content expands; no layout break. | + | Both | P2 | `tests/e2e/day-smoke.spec.ts` ✅ |
-| REG-DAYOV-05 | Primer TTS plays | Admin TTS on, student TTS on | 1. Click `teachingPrimerTts(...)`. | Speech invoked with normalized Hebrew text; no error. | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
+| REG-DAYOV-05 | Primer TTS plays | Admin TTS on | 1. Click `teachingPrimerTts(...)`. | Speech invoked with normalized Hebrew text; no error. | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
 | REG-DAYOV-06 | Day completion panel | All sections done | 1. Complete every section. 2. Return to overview. | `screen.dayOverview.completionPanel(...)` + `completeCta` visible. | + | Both | P0 | `tests/e2e/all-days-completion.spec.ts` ✅ |
 | REG-DAYOV-07 | Complete CTA blocked early | Sections incomplete | 1. Open overview with sections unfinished. 2. Attempt to complete the day. | Day cannot be marked complete (completion panel/CTA not actionable) until all sections done. | − | Both | P0 | `tests/e2e/all-days-completion.spec.ts` ✅ |
 | REG-DAYOV-08 | Weak-spot panel only when data | No first-attempt-wrong history | 1. Open a fresh day overview. | Weak-spot panel absent when no weak exercises exist; appears only when prior misses recorded. | − | Both | P2 | `tests/e2e/spiral-review.spec.ts` ✅ |
@@ -328,16 +328,16 @@ Routes: `routes.englishLevelPicker()`, `englishHome(level)`, `englishDay(...)`, 
 
 ### Area 16 — TTS / Voice (`REG-TTS-NN`)
 
-Student + admin TTS toggles, Hebrew normalization (`normalizeTextForHebrewTts`). Selectors: `component.topBar.studentTtsToggle`, `screen.adminProgress.ttsToggle`, `component.exerciseBox.tts`.
+Voice auto-play is always on for students (no student toggle); only the admin master switch gates it. Auto-play is unlocked on the child's first gesture (`AudioUnlockManager` → `unlockAudioPlayback`) to satisfy the browser autoplay policy — voice started on mount with no gesture is silently blocked. Hebrew normalization (`normalizeTextForHebrewTts`). Selectors: `screen.adminProgress.ttsToggle`, `component.exerciseBox.tts`.
 
 | ID | Title | Pre-conditions | Steps | Expected result | +/− | Type | Priority | Automated spec |
 |----|-------|----------------|-------|-----------------|-----|------|----------|----------------|
-| REG-TTS-01 | Student toggle visible when admin TTS on | Admin TTS enabled (default) | 1. Load page. | `component.topBar.studentTts.toggle` visible. | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
-| REG-TTS-02 | Toggle defaults OFF | Fresh state | 1. Inspect toggle. | Student TTS OFF by default. | − | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
-| REG-TTS-03 | Toggle switches ON | Toggle OFF | 1. Click toggle. | State becomes ON. | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
-| REG-TTS-04 | ON persists across navigation | Toggle ON | 1. Navigate to another page. | ON state persists within session. | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
-| REG-TTS-05 | Exercise prompt TTS speaks normalized text | TTS ON | 1. Click `exerciseBox.tts(exId)`. | Speech invoked with Hebrew-normalized text (symbols/comparisons voiced). | + | Both | P1 | `tests/unit/lib/utils/exercisePromptSpeakText.test.ts` ✅ |
-| REG-TTS-06 | Admin TTS toggle hides student toggle | Admin TTS disabled | 1. In admin, set `adminProgress.ttsToggle` off. | Student toggle not offered when admin TTS disabled. | − | Both | P1 | `tests/unit/lib/admin/prefs.test.ts` ✅ |
+| REG-TTS-01 | No student TTS toggle in TopBar | Admin TTS enabled (default) | 1. Load page. | No `studenttts` toggle button rendered. | − | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
+| REG-TTS-02 | Prompt auto-plays after entering a section | Admin TTS on (default) | 1. Open day. 2. Click a section card. | No speech before the click; exercise prompt speech invoked automatically after (the nav click unlocks audio). | + | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
+| REG-TTS-03 | Voice silent when admin TTS off | Admin TTS disabled | 1. Open day. 2. Click a section card. | No speech invoked even after interaction. | − | Both | P1 | `tests/e2e/tts-accessibility.spec.ts` ✅ |
+| REG-TTS-09 | Auto-play unlock: defer then flush | Fresh (no gesture) | 1. Request auto-play. 2. Fire first gesture. | Deferred until gesture; flushes once on unlock (last-wins, idempotent). | + | Auto | P1 | `tests/unit/lib/tts/engine.test.ts` ✅ |
+| REG-TTS-05 | Exercise prompt TTS speaks normalized text | Admin TTS on | 1. Click `exerciseBox.tts(exId)`. | Speech invoked with Hebrew-normalized text (symbols/comparisons voiced). | + | Both | P1 | `tests/unit/lib/utils/exercisePromptSpeakText.test.ts` ✅ |
+| REG-TTS-06 | Admin TTS toggle gates auto-play | Admin TTS disabled | 1. In admin, set `adminProgress.ttsToggle` off. | Voice auto-play suppressed when admin TTS disabled. | − | Both | P1 | `tests/unit/lib/admin/prefs.test.ts` ✅ |
 | REG-TTS-07 | Hebrew normalization of symbols | — | 1. Normalize `>`/`<`/`=`/`+`/`-`. | Symbols converted to spoken Hebrew correctly. | − | Auto | P1 | `tests/unit/lib/tts/engine.test.ts` ✅ |
 | REG-TTS-08 | Audio manifest integrity | — | 1. Validate manifest. | Manifest entries valid; no missing/dup refs. | + | Auto | P2 | `tests/unit/lib/tts/audioManifest.test.ts` ✅ |
 

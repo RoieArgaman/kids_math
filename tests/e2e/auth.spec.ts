@@ -128,8 +128,8 @@ test.describe("auth UI — avatar dropdown", () => {
     await expect(page.getByTestId(testIds.component.auth.adminUsersLink())).toBeVisible();
   });
 
-  // Regression: in RTL the avatar must stay on the visual LEFT (inline-end) — even when the
-  // StudentTtsToggle is hidden — and its dropdown must open fully within the viewport.
+  // Regression: in RTL the avatar must stay on the visual LEFT (inline-end) via ms-auto —
+  // and its dropdown must open fully within the viewport.
   test("avatar sits on the left (RTL) and dropdown stays within the viewport", async ({ page }) => {
     const viewport = page.viewportSize();
     expect(viewport).not.toBeNull();

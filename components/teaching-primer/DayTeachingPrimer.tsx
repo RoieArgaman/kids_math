@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TapToPlayTtsButton } from "@/components/ui/TapToPlayTtsButton";
 import { Surface } from "@/components/ui/Surface";
 import { useAdminTtsEnabled } from "@/components/providers/AdminTtsProvider";
-import { useStudentTts } from "@/components/providers/StudentTtsProvider";
 import { TeachingPrimerExpandToggle } from "@/components/teaching-primer/TeachingPrimerExpandToggle";
 import { TeachingPrimerExpandedContent } from "@/components/teaching-primer/TeachingPrimerExpandedContent";
 import {
@@ -13,7 +12,7 @@ import {
   DAY_PRIMER_COLLAPSE_CHAR_THRESHOLD,
   hasDayTeachingPrimer,
 } from "@/lib/content/buildDayPrimerSpeakText";
-import { speakHebrewChunks } from "@/lib/tts/engine";
+import { autoSpeakHebrewChunks } from "@/lib/tts/engine";
 import { childTid, testIds } from "@/lib/testIds";
 import type { DayId, WorkbookDay } from "@/lib/types";
 import type { GradeId } from "@/lib/grades";
@@ -33,7 +32,6 @@ type DayTeachingPrimerProps = {
 
 export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps) {
   const { ttsEnabled, hydrated: adminHydrated } = useAdminTtsEnabled();
-  const { autoPlay, hydrated: studentHydrated } = useStudentTts();
   const g = grade;
   const primerRoot = testIds.screen.dayOverview.teachingPrimer(g, dayId);
   const speakText = useMemo(() => buildDayPrimerSpeakText(day), [day]);
@@ -57,11 +55,11 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
 
   const [expanded, setExpanded] = useState(() => !needsCollapse);
 
-  // Auto-play primer on first visit in this browser session when autoPlay is enabled
+  // Auto-play primer on first visit in this browser session when admin TTS is enabled
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!adminHydrated || !studentHydrated) return;
-    if (!ttsEnabled || !autoPlay) return;
+    if (!adminHydrated) return;
+    if (!ttsEnabled) return;
     if (speakChunks.length === 0) return;
 
     try {
@@ -73,13 +71,13 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
     }
 
     autoPlayTimerRef.current = setTimeout(() => {
-      speakHebrewChunks(speakChunks);
+      autoSpeakHebrewChunks(speakChunks);
     }, AUTO_PLAY_DELAY_MS);
 
     return () => {
       if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
     };
-  }, [adminHydrated, studentHydrated, ttsEnabled, autoPlay, speakChunks, grade, dayId]);
+  }, [adminHydrated, ttsEnabled, speakChunks, grade, dayId]);
 
   if (!hasDayTeachingPrimer(day)) {
     return null;

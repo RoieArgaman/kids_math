@@ -238,6 +238,90 @@ export function speakEnglish(text: string, onEnd?: () => void, options?: SpeakOp
   speakHebrew(text, onEnd, { ...options, lang: "en" });
 }
 
+// ---------------------------------------------------------------------------
+// Auto-play unlock (browser autoplay policy)
+//
+// Browsers block audio started without a user gesture: `Audio.play()` (the
+// manifest neural-audio path) rejects with NotAllowedError, and
+// `speechSynthesis.speak()` is throttled until the document has sticky user
+// activation. So voice auto-play on mount is silent until the child's first
+// interaction. `unlockAudioPlayback()` is called once from the first gesture
+// (see AudioUnlockManager) to prime both paths; `autoSpeakHebrew*` defers a
+// pending auto-play so the first prompt is heard right after that first tap.
+// ---------------------------------------------------------------------------
+
+// Silent 0-sample WAV — playing it inside a gesture grants media autoplay permission.
+const SILENT_AUDIO_DATA_URI =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=";
+
+let audioPlaybackUnlocked = false;
+let pendingAutoPlay: (() => void) | null = null;
+
+/** True once the user has interacted and audio auto-play has been unlocked. */
+export function isAudioPlaybackUnlocked(): boolean {
+  return audioPlaybackUnlocked;
+}
+
+/**
+ * Unlock audio auto-play. MUST run inside a user-gesture handler (pointerdown /
+ * keydown / touchstart). Primes both playback paths, then flushes any deferred
+ * auto-play requested before the first gesture. Idempotent.
+ */
+export function unlockAudioPlayback(): void {
+  if (!isBrowser() || audioPlaybackUnlocked) return;
+  audioPlaybackUnlocked = true;
+
+  // Prime HTMLAudioElement (manifest neural-audio path) with a silent clip.
+  try {
+    if (typeof Audio !== "undefined") {
+      const primer = new Audio(SILENT_AUDIO_DATA_URI);
+      primer.volume = 0;
+      const played = primer.play();
+      if (played && typeof played.then === "function") {
+        played.then(() => primer.pause()).catch(() => undefined);
+      }
+    }
+  } catch {
+    // Some engines throw synchronously — ignore, sticky activation still applies.
+  }
+
+  // Prime the Web Speech engine so later speak() calls are not throttled.
+  try {
+    if (window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined") {
+      window.speechSynthesis.resume();
+    }
+  } catch {
+    // resume() throws on some engines when not needed — ignore.
+  }
+
+  const pending = pendingAutoPlay;
+  pendingAutoPlay = null;
+  if (pending) pending();
+}
+
+/**
+ * Request auto-play that respects the autoplay-policy unlock: play now when
+ * already unlocked, otherwise defer until the first user gesture. Only the most
+ * recent request is kept (last wins) so a stale prompt never fires late.
+ */
+function requestAutoPlay(run: () => void): void {
+  if (audioPlaybackUnlocked) {
+    run();
+    return;
+  }
+  pendingAutoPlay = run;
+}
+
+/** Auto-play a Hebrew prompt (deferred until unlock if the user hasn't interacted yet). */
+export function autoSpeakHebrew(text: string, options?: SpeakOptions): void {
+  requestAutoPlay(() => speakHebrew(text, undefined, options));
+}
+
+/** Auto-play chunked Hebrew (e.g. a teaching primer), deferred until unlock. */
+export function autoSpeakHebrewChunks(parts: string[], options?: SpeakOptions): void {
+  requestAutoPlay(() => speakHebrewChunks(parts, undefined, options));
+}
+
 export function speakHebrewChunks(
   parts: string[],
   onEnd?: () => void,

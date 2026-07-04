@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth/context";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
-import { StudentTtsToggle } from "@/components/ui/StudentTtsToggle";
 import { testIds } from "@/lib/testIds";
 
 export function TopBar() {
@@ -27,10 +26,8 @@ export function TopBar() {
         data-testid={testIds.component.auth.topBar()}
         className="flex h-10 w-full items-center justify-between border-b border-[#efe9f7] bg-[#fffefb] px-4"
       >
-        <StudentTtsToggle />
-        {/* ms-auto pins the auth section to the inline-end (visual left in RTL) even when
-            StudentTtsToggle renders null — without it, justify-between collapses the lone
-            child to the start (visual right in RTL). */}
+        {/* ms-auto pins the auth section to the inline-end (visual left in RTL) — without it,
+            justify-between collapses the lone child to the start (visual right in RTL). */}
         <div data-testid={testIds.component.topBar.authSection()} className="ms-auto flex items-center">
           {isLoggedIn ? (
             <UserAvatar />
