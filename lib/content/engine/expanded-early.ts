@@ -1,11 +1,12 @@
+import type { GradeId } from "@/lib/grades";
 import type { DifficultyLevel, Section, SkillTag } from "@/lib/types";
 
 import { countRangePrompt } from "../promptTemplates";
 import type { DayConcept } from "./exercise-factories";
 import {
+  generatedNumberLineJump,
   multipleChoice,
   numberInput,
-  numberLineJump,
   toSectionId,
   trueFalse,
 } from "./exercise-factories";
@@ -15,6 +16,7 @@ export const buildExpandedExercisesForEarlyDays = (
   concept: DayConcept,
   dayDifficulty: DifficultyLevel,
   priorConcepts: DayConcept[],
+  grade: GradeId,
 ): Section[] => {
   const d = concept.dayNumber;
   const addBase = d + 2;
@@ -22,7 +24,6 @@ export const buildExpandedExercisesForEarlyDays = (
   const maxForDay = d <= 2 ? d * 5 : 20;
   const focusTag: SkillTag = concept.mainTags[0] ?? "counting";
   const focusTitle = concept.title;
-  const countingCap = d === 1 ? 5 : d === 2 ? 10 : maxForDay;
   const spacedFocusOrder = [1, 3, 5, 2, 4, 6];
   const spacedDrillOrder = d <= 2 ? [1, 5, 2, 6, 3, 7, 4, 8] : [1, 3, 5, 7, 2, 4, 6, 8];
 
@@ -330,7 +331,7 @@ export const buildExpandedExercisesForEarlyDays = (
       type: "warmup",
       learningGoal: "לְהַתְחִיל בְּהַצְלָחָה עִם 3–4 תַּרְגּוּלִים מִיָּמִים קוֹדְמִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
-      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
+      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty, grade),
     },
     {
       id: toSectionId(d, 2),
@@ -499,23 +500,17 @@ export const buildExpandedExercisesForEarlyDays = (
           dayDifficulty,
           "abstract",
         ),
-        numberLineJump(
-          d,
-          3,
-          8,
-          d === 1
-            ? `עַל קַו מִסְפָּרִים: מִ-0 עַד ${countingCap} בְּקְפִיצָה שֶׁל 1. כַּמָּה קְפִיצוֹת?`
-            : d === 2
-              ? `הִתְקַדְּמוּ מִ-0 עַד ${countingCap}, צַעַד אֶחָד כָּל פַּעַם. כַּמָּה צְעָדִים?`
-              : "מִתְחִילִים בְּ-2 וְקוֹפְצִים בְּ-2 עַד 12. כַּמָּה קְפִיצוֹת?",
-          d <= 2 ? 0 : 2,
-          d <= 2 ? countingCap : 12,
-          d <= 2 ? 1 : 2,
-          d <= 2 ? countingCap : 5,
-          d <= 2 ? ["counting", "number-line"] : ["number-line", "patterns"],
-          dayDifficulty,
-          "pictorial",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 3,
+          exerciseNumber: 8,
+          seedSuffix: "early",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: d <= 2 ? ["counting", "number-line"] : ["number-line", "patterns"],
+          difficulty: dayDifficulty,
+          representation: "pictorial",
+        }),
       ],
     },
     {
@@ -697,23 +692,17 @@ export const buildExpandedExercisesForEarlyDays = (
           dayDifficulty,
           "pictorial",
         ),
-        numberLineJump(
-          d,
-          5,
-          7,
-          d === 1
-            ? "עַל קַו מִסְפָּרִים: מִ-1 עַד 5 בִּקְפִיצוֹת שֶׁל 1. כַּמָּה קְפִיצוֹת?"
-            : d === 2
-              ? "עַל קַו מִסְפָּרִים: מִ-0 עַד 10 בִּקְפִיצוֹת שֶׁל 2. כַּמָּה קְפִיצוֹת?"
-              : "עַל קַו מִסְפָּרִים: מִ-4 עַד 14 בִּקְפִיצוֹת שֶׁל 2. כַּמָּה קְפִיצוֹת?",
-          d === 1 ? 1 : d === 2 ? 0 : 4,
-          d === 1 ? 5 : d === 2 ? 10 : 14,
-          d === 1 ? 1 : 2,
-          d === 1 ? 4 : 5,
-          ["number-line", "patterns"],
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 5,
+          exerciseNumber: 7,
+          seedSuffix: "early",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: ["number-line", "patterns"],
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           d,
           5,

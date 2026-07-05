@@ -1,28 +1,9 @@
 import { getEnglishDays, type EnglishLevel } from "@/lib/content/english-workbook";
 import type { Exercise, ExerciseId } from "@/lib/types";
 import { ENGLISH_FINAL_EXAM_TARGET_COUNT } from "@/lib/english/final-exam/config";
+import { hashStringToUint32, mulberry32 } from "@/lib/utils/seededRandom";
 
 export type PickerVersion = 1;
-
-function hashStringToUint32(input: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6d2b79f5;
-    let x = t;
-    x = Math.imul(x ^ (x >>> 15), x | 1);
-    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 function shuffle<T>(items: T[], rnd: () => number): T[] {
   const arr = items.slice();
