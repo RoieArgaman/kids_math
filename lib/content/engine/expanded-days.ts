@@ -1,10 +1,11 @@
+import type { GradeId } from "@/lib/grades";
 import type { DifficultyLevel, Section } from "@/lib/types";
 
 import type { DayConcept } from "./exercise-factories";
 import {
+  generatedNumberLineJump,
   multipleChoice,
   numberInput,
-  numberLineJump,
   shapeChoice,
   toSectionId,
   trueFalse,
@@ -15,6 +16,7 @@ export const buildExpandedExercisesForDay = (
   concept: DayConcept,
   dayDifficulty: DifficultyLevel,
   priorConcepts: DayConcept[],
+  grade: GradeId,
 ): Section[] => {
   const d = concept.dayNumber;
   const base = 10 + d * 2;
@@ -26,7 +28,7 @@ export const buildExpandedExercisesForDay = (
       type: "warmup",
       learningGoal: "לְהַתְחִיל בְּהַצְלָחָה וּלְחַזֵּק נוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
-      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
+      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty, grade),
     },
     {
       id: toSectionId(d, 2),
@@ -152,19 +154,17 @@ export const buildExpandedExercisesForDay = (
           dayDifficulty,
           "abstract",
         ),
-        numberLineJump(
-          d,
-          2,
-          5,
-          `עַל קַו הַמִּסְפָּרִים: מֵ-5 עַד 30 בִּקְפִיצוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת נִדְרָשׁוֹת?`,
-          5,
-          30,
-          5,
-          5,
-          ["number-line", "patterns"],
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 2,
+          exerciseNumber: 5,
+          seedSuffix: "expanded",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: ["number-line", "patterns"],
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           d,
           2,
@@ -244,31 +244,17 @@ export const buildExpandedExercisesForDay = (
           dayDifficulty,
           "pictorial",
         ),
-        numberLineJump(
-          d,
-          2,
-          9,
-          d === 8
-            ? "מַתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-2 עַד 16. כַּמָּה קְפִיצוֹת?"
-            : d === 9
-              ? "מַתְחִילִים בְּ-2 וְקוֹפְצִים בְּ-2 עַד 20. כַּמָּה קְפִיצוֹת?"
-              : d === 10
-                ? "מַתְחִילִים בְּ-10 וְקוֹפְצִים בְּ-5 עַד 30. כַּמָּה קְפִיצוֹת?"
-                : d === 11
-                  ? "עַל קַו מִסְפָּרִים: מִ-0 לְ-40 בִּקְפִיצוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת?"
-                  : d === 12
-                    ? "צְעִידָה לְאָחוֹר עַל הַקַּו: מִ-80 עַד 60 בְּמִדְלַגּוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת?"
-                    : d === 13
-                      ? "קִפְצוּ בַּחֲמִישִּׁיּוֹת: מִ-5 עַד 25. כַּמָּה קְפִיצוֹת יֵשׁ?"
-                      : "סִפְרָה בִּקְפִיצוֹת: מִ-10 לְ-20, כָּל קְפִיצָה 2. כַּמָּה קְפִיצוֹת?",
-          d === 8 ? 0 : d === 9 ? 2 : d === 10 ? 10 : d === 11 ? 0 : d === 12 ? 60 : d === 13 ? 5 : 10,
-          d === 8 ? 16 : d === 9 ? 20 : d === 10 ? 30 : d === 11 ? 40 : d === 12 ? 80 : d === 13 ? 25 : 20,
-          d === 8 ? 2 : d === 9 || d === 14 ? 2 : 5,
-          d === 8 ? 8 : d === 9 ? 9 : d === 10 ? 4 : d === 11 ? 8 : d === 12 ? 4 : d === 13 ? 4 : 5,
-          concept.mainTags,
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 2,
+          exerciseNumber: 9,
+          seedSuffix: "expanded",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: concept.mainTags,
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           d,
           2,
@@ -786,19 +772,17 @@ export const buildExpandedExercisesForDay = (
           dayDifficulty,
           "abstract",
         ),
-        numberLineJump(
-          d,
-          5,
-          5,
-          `מִתְחִילִים בְּ-15 וְקוֹפְצִים בְּ-5 עַד 45. כַּמָּה קְפִיצוֹת?`,
-          15,
-          45,
-          5,
-          6,
-          ["number-line", "patterns", "addition"],
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 5,
+          exerciseNumber: 5,
+          seedSuffix: "expanded",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: ["number-line", "patterns", "addition"],
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           d,
           5,
@@ -831,31 +815,17 @@ export const buildExpandedExercisesForDay = (
           dayDifficulty,
           "abstract",
         ),
-        numberLineJump(
-          d,
-          5,
-          8,
-          d === 8
-            ? "מַתְחִילִים בְּ-0 וְקוֹפְצִים בְּ-2 עַד 12. כַּמָּה קְפִיצוֹת?"
-            : d === 9
-              ? "מַתְחִילִים בְּ-3 וְקוֹפְצִים בְּ-3 עַד 18. כַּמָּה קְפִיצוֹת?"
-              : d === 10
-                ? "מַתְחִילִים בְּ-20 וְקוֹפְצִים בְּ-5 עַד 40. כַּמָּה קְפִיצוֹת?"
-                : d === 11
-                  ? "מִ-10 עַד 35, קוֹפְצִים בִּקְפִיצוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת?"
-                  : d === 12
-                    ? "קִפְצוּ לְאָחוֹר בַּחֲמִישִּׁיּוֹת: מִ-90 עַד 70. כַּמָּה קְפִיצוֹת?"
-                    : d === 13
-                      ? "סִפְרָה בְּדִלּוּג שֶׁל 2 מִ-8 עַד 20: כַּמָּה קְפִיצוֹת?"
-                      : "מִסְפָּרִים בַּחֲמִישִּׁיּוֹת מִ-5 עַד 30. כַּמָּה קְפִיצוֹת?",
-          d === 12 ? 70 : d === 8 ? 0 : d === 9 ? 3 : d === 10 ? 20 : d === 11 ? 10 : d === 13 ? 8 : 5,
-          d === 12 ? 90 : d === 8 ? 12 : d === 9 ? 18 : d === 10 ? 40 : d === 11 ? 35 : d === 13 ? 20 : 30,
-          d === 9 ? 3 : d === 10 || d === 11 || d === 12 || d === 14 ? 5 : 2,
-          d === 8 ? 6 : d === 9 ? 5 : d === 10 ? 4 : d === 11 ? 5 : d === 12 ? 4 : d === 13 ? 6 : 5,
-          concept.mainTags,
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: d,
+          sectionNumber: 5,
+          exerciseNumber: 8,
+          seedSuffix: "expanded",
+          leadIn: "עַל קַו הַמִּסְפָּרִים: ",
+          tags: concept.mainTags,
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           d,
           5,

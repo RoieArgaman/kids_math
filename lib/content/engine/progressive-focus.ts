@@ -1,10 +1,11 @@
+import type { GradeId } from "@/lib/grades";
 import type { DifficultyLevel, Exercise, Section, SkillTag } from "@/lib/types";
 
 import type { DayConcept } from "./exercise-factories";
 import {
+  generatedNumberLineJump,
   multipleChoice,
   numberInput,
-  numberLineJump,
   toSectionId,
 } from "./exercise-factories";
 
@@ -12,6 +13,7 @@ import {
 export function buildProgressiveConceptFocusSection(
   concept: DayConcept,
   dayDifficulty: DifficultyLevel,
+  grade: GradeId,
 ): Section {
   const d = concept.dayNumber;
   const tags = concept.mainTags;
@@ -99,37 +101,19 @@ export function buildProgressiveConceptFocusSection(
     ),
   );
 
-  const roughSpan = Math.min(100, Math.max(20, a + 20));
-  const step: 1 | 2 | 3 | 5 = roughSpan > 55 ? 5 : roughSpan > 30 ? 3 : 2;
-  const start = Math.max(0, a - (d % 5));
-  let end = Math.min(100, start + step * (4 + (d % 4)));
-  if (end <= start + step) {
-    end = start + step * 5;
-  }
-  let jumpLen = end - start;
-  const rem = jumpLen % step;
-  if (rem !== 0) {
-    end -= rem;
-    jumpLen = end - start;
-  }
-  const numJumps = jumpLen / step;
-  if (numJumps >= 2 && numJumps <= 24) {
-    exercises.push(
-      numberLineJump(
-        d,
-        2,
-        exNum++,
-        `מֵאַחַר הַחִימּוּם — עַל קַו מִסְפָּרִים: מִ-${start} עַד ${end} בִּקְפִיצוֹת שֶׁל ${step}. כַּמָּה קְפִיצוֹת?`,
-        start,
-        end,
-        step,
-        numJumps,
-        ["number-line", ...tags],
-        dayDifficulty,
-        "abstract",
-      ),
-    );
-  }
+  exercises.push(
+    generatedNumberLineJump({
+      grade,
+      dayNumber: d,
+      sectionNumber: 2,
+      exerciseNumber: exNum++,
+      seedSuffix: "focus",
+      leadIn: "מֵאַחַר הַחִימּוּם — עַל קַו הַמִּסְפָּרִים: ",
+      tags: ["number-line", ...tags],
+      difficulty: dayDifficulty,
+      representation: "abstract",
+    }),
+  );
 
   return {
     id: toSectionId(d, 2),

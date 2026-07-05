@@ -1,3 +1,4 @@
+import type { GradeId } from "@/lib/grades";
 import type {
   DifficultyLevel,
   Exercise,
@@ -8,6 +9,8 @@ import type {
   SkillTag,
   WorkbookDay,
 } from "@/lib/types";
+
+import { buildNumberLineJumpParams, knownNumberCeiling, numberLineJumpTail } from "./number-range";
 
 export type DayConcept = {
   dayNumber: number;
@@ -141,6 +144,45 @@ export const numberLineJump = (
   answer,
   meta: meta(skillTags, difficulty, representation),
 });
+
+/**
+ * Grade-aware `number_line_jump` built from the seeded generator: picks a varied,
+ * modest, invariant-safe {start,end,step,jumps} bounded by the day's known-number
+ * ceiling, and formats the spoken prompt so its numbers always match the rendered
+ * line. `leadIn` is the Hebrew prefix incl. its trailing separator (e.g.
+ * "עַל קַו הַמִּסְפָּרִים: "); `seedSuffix` distinguishes call sites that share a
+ * (day, section, exercise) coordinate so their random streams differ.
+ */
+export const generatedNumberLineJump = (args: {
+  grade: GradeId;
+  dayNumber: number;
+  sectionNumber: number;
+  exerciseNumber: number;
+  seedSuffix: string;
+  leadIn: string;
+  tags: SkillTag[];
+  difficulty: DifficultyLevel;
+  representation: RepresentationType;
+}): ExerciseByKind<"number_line_jump"> => {
+  const ceiling = knownNumberCeiling(args.grade, args.dayNumber);
+  const p = buildNumberLineJumpParams(
+    `${args.grade}|${args.dayNumber}|${args.sectionNumber}|${args.exerciseNumber}|${args.seedSuffix}`,
+    ceiling,
+  );
+  return numberLineJump(
+    args.dayNumber,
+    args.sectionNumber,
+    args.exerciseNumber,
+    `${args.leadIn}${numberLineJumpTail(p.start, p.end, p.step)}`,
+    p.start,
+    p.end,
+    p.step,
+    p.jumps,
+    args.tags,
+    args.difficulty,
+    args.representation,
+  );
+};
 
 export const listenChoose = (
   dayNumber: number,

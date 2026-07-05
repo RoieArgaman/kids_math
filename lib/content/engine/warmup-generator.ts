@@ -1,10 +1,11 @@
+import type { GradeId } from "@/lib/grades";
 import type { DifficultyLevel, Exercise, SkillTag } from "@/lib/types";
 
 import type { DayConcept } from "./exercise-factories";
 import {
+  generatedNumberLineJump,
   multipleChoice,
   numberInput,
-  numberLineJump,
   shapeChoice,
   trueFalse,
 } from "./exercise-factories";
@@ -50,6 +51,7 @@ export const warmupExerciseForTag = (
   exerciseIndex: number,
   tag: SkillTag,
   difficulty: DifficultyLevel,
+  grade: GradeId,
 ): Exercise => {
   const seed = dayNumber * 17 + exerciseIndex * 3;
   switch (tag) {
@@ -80,28 +82,17 @@ export const warmupExerciseForTag = (
         20,
       );
     case "number-line":
-      return (() => {
-        const step = ((): 1 | 2 | 3 | 5 => {
-          const s = (seed % 4) as 0 | 1 | 2 | 3;
-          return s === 0 ? 1 : s === 1 ? 2 : s === 2 ? 3 : 5;
-        })();
-        const start = step === 5 ? 0 : seed % 2 === 0 ? 0 : step;
-        const jumps = 4 + (seed % 3); // 4–6 jumps
-        const end = start + step * jumps;
-        return numberLineJump(
-          dayNumber,
-          1,
-          exerciseIndex,
-          `חִימּוּם: עַל קַו מִסְפָּרִים מִ-${start} עַד ${end} בִּקְפִיצוֹת שֶׁל ${step}. כַּמָּה קְפִיצוֹת?`,
-          start,
-          end,
-          step,
-          jumps,
-          ["number-line"],
-          difficulty,
-          exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
-        );
-      })();
+      return generatedNumberLineJump({
+        grade,
+        dayNumber,
+        sectionNumber: 1,
+        exerciseNumber: exerciseIndex,
+        seedSuffix: "warmup",
+        leadIn: "חִימּוּם: עַל קַו הַמִּסְפָּרִים ",
+        tags: ["number-line"],
+        difficulty,
+        representation: exerciseIndex === 1 ? "concrete" : exerciseIndex === 2 ? "pictorial" : "abstract",
+      });
     case "addition": {
       const a = 3 + (seed % 7);
       const b = 2 + ((seed >> 2) % 7);
@@ -397,7 +388,10 @@ export const buildSpiralWarmupExercises = (
   concept: DayConcept,
   priorConcepts: DayConcept[],
   dayDifficulty: DifficultyLevel,
+  grade: GradeId,
 ): Exercise[] => {
   const tags = pickWarmupSkillTags(concept, priorConcepts);
-  return tags.map((tag, i) => warmupExerciseForTag(concept.dayNumber, i + 1, tag, dayDifficulty));
+  return tags.map((tag, i) =>
+    warmupExerciseForTag(concept.dayNumber, i + 1, tag, dayDifficulty, grade),
+  );
 };

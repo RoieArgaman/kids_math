@@ -4,9 +4,9 @@ import type { DifficultyLevel, Section, WorkbookDay } from "@/lib/types";
 
 import {
   type DayConcept,
+  generatedNumberLineJump,
   multipleChoice,
   numberInput,
-  numberLineJump,
   shapeChoice,
   toDayId,
   toSectionId,
@@ -45,7 +45,7 @@ export function buildDayFromConcepts(
       type: "warmup",
       learningGoal: "לְהִיזָּכֵר בְּנוֹשְׂאִים מִיָּמִים קוֹדְמִים בְּ-3–4 תַּרְגּוּלִים קְצָרִים.",
       prerequisiteSkillTags: concept.spiralReviewTags,
-      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty),
+      exercises: buildSpiralWarmupExercises(concept, priorConcepts, dayDifficulty, grade),
     },
     {
       id: toSectionId(concept.dayNumber, 2),
@@ -86,21 +86,17 @@ export function buildDayFromConcepts(
           dayDifficulty,
           "pictorial",
         ),
-        numberLineJump(
-          concept.dayNumber,
-          2,
-          3,
-          concept.dayNumber <= 8
-            ? "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים."
-            : "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
-          concept.dayNumber <= 5 ? 0 : concept.dayNumber <= 8 ? concept.dayNumber : 0,
-          concept.dayNumber <= 8 ? 10 : 20,
-          concept.dayNumber <= 8 ? 1 : 2,
-          concept.dayNumber <= 8 ? 10 - (concept.dayNumber <= 5 ? 0 : concept.dayNumber) : 10,
-          ["number-line", ...concept.mainTags],
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: concept.dayNumber,
+          sectionNumber: 2,
+          exerciseNumber: 3,
+          seedSuffix: "concept",
+          leadIn: "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: ",
+          tags: ["number-line", ...concept.mainTags],
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         trueFalse(
           concept.dayNumber,
           2,
@@ -304,19 +300,17 @@ export function buildDayFromConcepts(
           dayDifficulty,
           "abstract",
         ),
-        numberLineJump(
-          concept.dayNumber,
-          5,
-          4,
-          "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: מִ-0 עַד 20 בִּקְפִיצוֹת שֶׁל 2.",
-          0,
-          20,
-          2,
-          10,
-          ["number-line", ...concept.mainTags],
-          dayDifficulty,
-          "abstract",
-        ),
+        generatedNumberLineJump({
+          grade,
+          dayNumber: concept.dayNumber,
+          sectionNumber: 5,
+          exerciseNumber: 4,
+          seedSuffix: "review",
+          leadIn: "הַשְׁלִימוּ קְפִיצוֹת עַל קַו הַמִּסְפָּרִים: ",
+          tags: ["number-line", ...concept.mainTags],
+          difficulty: dayDifficulty,
+          representation: "abstract",
+        }),
         numberInput(
           concept.dayNumber,
           5,
@@ -366,15 +360,15 @@ export function buildDayFromConcepts(
   if (progressiveConceptFocus && concept.dayNumber < 29) {
     sections = [
       defaultSections[0],
-      buildProgressiveConceptFocusSection(concept, dayDifficulty),
+      buildProgressiveConceptFocusSection(concept, dayDifficulty, grade),
       ...defaultSections.slice(2),
     ];
   } else if (simpleSections) {
     sections = defaultSections;
   } else if (concept.dayNumber <= 7) {
-    sections = buildExpandedExercisesForEarlyDays(concept, dayDifficulty, priorConcepts);
+    sections = buildExpandedExercisesForEarlyDays(concept, dayDifficulty, priorConcepts, grade);
   } else if (concept.dayNumber <= 14) {
-    sections = buildExpandedExercisesForDay(concept, dayDifficulty, priorConcepts);
+    sections = buildExpandedExercisesForDay(concept, dayDifficulty, priorConcepts, grade);
   } else {
     sections = defaultSections;
   }
