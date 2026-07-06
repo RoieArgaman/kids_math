@@ -81,4 +81,44 @@ test.describe("science day smoke", () => {
     await expect(page.getByTestId(testIds.screen.science.day.completionPanel(DAY_ID))).toBeVisible();
     await page.getByTestId(testIds.screen.science.day.completeCta(DAY_ID)).click();
   });
+
+  /**
+   * Data-driven coverage for the expanded curriculum: a new Level א׳ lesson and a
+   * new Level ב׳ lesson, reached via `previewAll` (bypasses the day/level gates) and
+   * completed end-to-end. Proves the appended day modules render + grade correctly
+   * through the shared subject screens, not just the original day-1.
+   */
+  for (const { level, dayId, label } of [
+    { level: "a", dayId: "day-6", label: "Level א׳ new lesson (animal groups)" },
+    { level: "b", dayId: "day-12", label: "Level ב׳ new lesson (life cycles)" },
+  ] as const) {
+    test(`completes ${label} end-to-end via previewAll`, async ({ page }) => {
+      const dayUrl = `/science/${level}/day/${dayId}?previewAll=1`;
+      await page.goto(dayUrl);
+      await expect(page.getByTestId(testIds.screen.science.day.root(dayId))).toBeVisible();
+
+      const day = getAllScienceDaysById()[dayId]!;
+      expect(day, `${dayId} exists in the bank`).toBeTruthy();
+
+      for (const section of day.sections) {
+        await page.getByTestId(testIds.screen.science.day.sectionCardCta(dayId, section.id)).click();
+        await expect(page.getByTestId(testIds.screen.science.section.root(dayId, section.id))).toBeVisible();
+
+        for (const exercise of section.exercises) {
+          await answerExercise(page, exercise);
+        }
+
+        await expect(page.getByTestId(testIds.component.starReward.overlay())).toBeVisible({ timeout: 10_000 });
+        await page.getByTestId(testIds.component.starReward.confirm()).click();
+        await expect(page.getByTestId(testIds.component.starReward.overlay())).toHaveCount(0);
+
+        // Preserve the preview gate bypass when returning to the day hub.
+        await page.goto(dayUrl);
+        await expect(page.getByTestId(testIds.screen.science.day.root(dayId))).toBeVisible();
+      }
+
+      await expect(page.getByTestId(testIds.screen.science.day.completionPanel(dayId))).toBeVisible();
+      await page.getByTestId(testIds.screen.science.day.completeCta(dayId)).click();
+    });
+  }
 });
