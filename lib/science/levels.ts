@@ -17,8 +17,8 @@ export function scienceLevelShortLabel(level: ScienceLevel): string {
 
 export function scienceLevelSubtitle(level: ScienceLevel): string {
   return level === "b"
-    ? "מַחֲזוֹר הַחַיִּים, גּוּף הָאָדָם, חֹמֶר וְאֶנֶרְגְּיָה"
-    : "הַחוּשִׁים, בַּעֲלֵי חַיִּים, צְמָחִים וּמֶזֶג אֲוִיר";
+    ? "מַחְזוֹרֵי חַיִּים, גּוּף הָאָדָם, כַּדּוּר הָאָרֶץ, חֹמֶר וּמְכוֹנוֹת"
+    : "הַחוּשִׁים, בַּעֲלֵי חַיִּים, צְמָחִים, חֳמָרִים, כּוֹחוֹת וְהַסְּבִיבָה";
 }
 
 /**

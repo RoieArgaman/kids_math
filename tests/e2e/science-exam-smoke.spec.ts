@@ -3,8 +3,7 @@ import type { Exercise } from "@/lib/types";
 import { buildScienceExamBank } from "@/lib/science/final-exam/picker";
 import { childTid, testIds } from "@/lib/testIds";
 
-const LEVEL = "a";
-const EXAM_KEY = `kids_math.science.final_exam.v1.level.${LEVEL}`;
+const examKeyFor = (level: string) => `kids_math.science.final_exam.v1.level.${level}`;
 
 // Answer correctly WITHOUT pressing a per-question check (the exam grades in bulk on finish).
 async function answerOnly(page: Page, exercise: Exercise) {
@@ -42,32 +41,36 @@ test.describe("science final exam smoke", () => {
     await page.evaluate(() => window.localStorage.clear());
   });
 
-  test("preview-unlocked exam: answer all correctly → pass", async ({ page }) => {
-    await page.goto(`/science/${LEVEL}/exam?previewAll=1`);
-    await expect(page.getByTestId(testIds.screen.science.exam.root())).toBeVisible();
+  // Both levels now have real banks (א׳ = 10 days, ב׳ = 7 days) — the picker draws
+  // from each level's own exercises, so exercise the pass path for each.
+  for (const LEVEL of ["a", "b"] as const) {
+    test(`preview-unlocked exam (Level ${LEVEL}): answer all correctly → pass`, async ({ page }) => {
+      await page.goto(`/science/${LEVEL}/exam?previewAll=1`);
+      await expect(page.getByTestId(testIds.screen.science.exam.root())).toBeVisible();
 
-    const selectedIds: string[] = await page.evaluate((key) => {
-      const raw = window.localStorage.getItem(key);
-      return raw ? (JSON.parse(raw).selectedExerciseIds as string[]) : [];
-    }, EXAM_KEY);
-    expect(selectedIds.length).toBeGreaterThanOrEqual(6);
+      const selectedIds: string[] = await page.evaluate((key) => {
+        const raw = window.localStorage.getItem(key);
+        return raw ? (JSON.parse(raw).selectedExerciseIds as string[]) : [];
+      }, examKeyFor(LEVEL));
+      expect(selectedIds.length).toBeGreaterThanOrEqual(6);
 
-    const byId = new Map<string, Exercise>(buildScienceExamBank(LEVEL).map((ex) => [ex.id, ex]));
-    for (const id of selectedIds) {
-      const ex = byId.get(id);
-      expect(ex, `exercise ${id} in bank`).toBeTruthy();
-      await answerOnly(page, ex!);
-    }
+      const byId = new Map<string, Exercise>(buildScienceExamBank(LEVEL).map((ex) => [ex.id, ex]));
+      for (const id of selectedIds) {
+        const ex = byId.get(id);
+        expect(ex, `exercise ${id} in Level ${LEVEL} bank`).toBeTruthy();
+        await answerOnly(page, ex!);
+      }
 
-    await page.getByTestId(testIds.screen.science.exam.finishCta()).click();
-    await expect(page.getByTestId(testIds.screen.science.exam.finishPanel())).toBeVisible();
-    await expect(
-      page.getByTestId(childTid(testIds.screen.science.exam.finishPanel(), "score")),
-    ).toHaveText("100%");
-  });
+      await page.getByTestId(testIds.screen.science.exam.finishCta()).click();
+      await expect(page.getByTestId(testIds.screen.science.exam.finishPanel())).toBeVisible();
+      await expect(
+        page.getByTestId(childTid(testIds.screen.science.exam.finishPanel(), "score")),
+      ).toHaveText("100%");
+    });
+  }
 
   test("exam is locked from the Science home until all days are complete", async ({ page }) => {
-    await page.goto(`/science/${LEVEL}`);
+    await page.goto(`/science/a`);
     await expect(page.getByTestId(testIds.screen.science.home.examCard())).toBeVisible();
     // No CTA when locked (fresh state).
     await expect(page.getByTestId(testIds.screen.science.home.examCardCta())).toHaveCount(0);
