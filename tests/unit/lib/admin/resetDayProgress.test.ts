@@ -47,8 +47,16 @@ function cascadeResetWorkbook(state: WorkbookProgressState, startDayId: DayId, g
 }
 
 function withoutUpdatedAt(state: WorkbookProgressState): Omit<WorkbookProgressState, "updatedAt"> {
-  const { updatedAt: _ignored, ...rest } = state;
-  return rest;
+  // Strip both the workbook-level and per-day `updatedAt` (wall-clock timestamps
+  // that differ between two independent reset runs) so structural equality holds.
+  const { updatedAt: _ignored, days, ...rest } = state;
+  const daysWithoutTs = Object.fromEntries(
+    Object.entries(days).map(([dayId, dayState]) => {
+      const { updatedAt: _dayIgnored, ...dayRest } = dayState;
+      return [dayId, dayRest];
+    }),
+  );
+  return { ...rest, days: daysWithoutTs };
 }
 
 describe("resetAdminDayProgress", () => {

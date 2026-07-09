@@ -292,3 +292,35 @@ export async function pushUserProgress(bundle: UserProgressBundle): Promise<bool
     return false;
   }
 }
+
+/**
+ * Fire-and-forget push that survives page teardown (pagehide / tab close / device
+ * switch). Uses `navigator.sendBeacon` when available, otherwise falls back to a
+ * `keepalive` fetch. Returns whether the request was enqueued.
+ */
+export function beaconUserProgress(bundle: UserProgressBundle): boolean {
+  if (typeof navigator === "undefined") return false;
+  const url = "/api/user/progress";
+  const body = JSON.stringify(bundle);
+
+  if (typeof navigator.sendBeacon === "function") {
+    try {
+      const blob = new Blob([body], { type: "application/json" });
+      return navigator.sendBeacon(url, blob);
+    } catch {
+      // fall through to keepalive fetch
+    }
+  }
+
+  try {
+    void fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}

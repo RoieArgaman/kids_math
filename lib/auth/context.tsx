@@ -10,7 +10,12 @@ import {
 } from "react";
 import type { AuthUser } from "./types";
 import { apiLogin, apiLogout, apiMe } from "./api";
-import { registerSyncCallback, unregisterSyncCallback } from "./serverSync";
+import {
+  registerSyncCallback,
+  resumeSync,
+  suspendSync,
+  unregisterSyncCallback,
+} from "./serverSync";
 import {
   buildBundleFromLocalStorage,
   fetchUserProgress,
@@ -20,6 +25,7 @@ import {
   saveSnapshotToSession,
   snapshotLocalStorage,
 } from "@/lib/user-data/api";
+import { SyncGate } from "@/lib/hooks/useSyncGate";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -38,23 +44,44 @@ function makeSyncFn() {
   };
 }
 
+/**
+ * Push local state up (server merges per-domain/per-day), then pull the merged
+ * truth back down and hydrate. Safe to push before pulling because the server
+ * merges rather than overwrites.
+ */
+async function pushThenPull(): Promise<void> {
+  const bundle = buildBundleFromLocalStorage();
+  await pushUserProgress(bundle);
+  const merged = await fetchUserProgress();
+  if (merged) hydrateLocalStorageFromBundle(merged);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // On mount: restore session if cookie exists
   useEffect(() => {
-    apiMe().then((me) => {
-      if (me) {
-        // Session exists — fetch server progress and hydrate localStorage
-        fetchUserProgress().then((bundle) => {
-          if (bundle) hydrateLocalStorageFromBundle(bundle);
-        });
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await apiMe();
+        if (!me || cancelled) return;
+        // Session exists — push local (server merges), pull merged truth, hydrate,
+        // then arm the push callback. Suspend sync throughout so hydrate doesn't
+        // trigger a stale re-push mid-flight.
+        suspendSync();
+        await pushThenPull();
         registerSyncCallback(makeSyncFn());
-        setUser(me);
+        resumeSync();
+        if (!cancelled) setUser(me);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(
@@ -66,12 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const snapshot = snapshotLocalStorage();
       saveSnapshotToSession(snapshot);
 
+      // Suspend sync while we reconcile local <-> server so a hydrate can't
+      // trigger a stale re-push mid-flight.
+      suspendSync();
+
       // Fetch server progress
       const serverBundle = await fetchUserProgress();
 
       if (serverBundle) {
-        // Returning user — hydrate localStorage from server
-        hydrateLocalStorageFromBundle(serverBundle);
+        // Returning user — push local pre-snapshot work up (server merges it),
+        // then pull the merged truth and hydrate.
+        await pushThenPull();
       } else {
         // First login — push current localStorage to server
         const localBundle = buildBundleFromLocalStorage();
@@ -79,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       registerSyncCallback(makeSyncFn());
+      resumeSync();
       setUser(result.user);
 
       return { ok: true as const };
@@ -117,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{ user, isLoggedIn: user !== null, isLoading, login, logout }}
     >
+      <SyncGate />
       {children}
     </AuthContext.Provider>
   );

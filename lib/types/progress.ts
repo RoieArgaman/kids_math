@@ -21,6 +21,8 @@ export interface DayProgressState {
   bestTimeMs?: number;  // personal best completion time in ms; undefined until first completion
   percentDone: number;
   isComplete: boolean;
+  /** Per-day last-write timestamp (ISO). Optional so legacy persisted days still validate; used by cross-device merge to pick the newest per-day version. */
+  updatedAt?: string;
 }
 
 export interface WorkbookProgressState {

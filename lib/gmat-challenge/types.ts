@@ -31,4 +31,6 @@ export interface GmatChallengeStateV1 {
   poolBySection?: Record<GmatSectionKey, ExerciseId[]>;
   sectionQuestionIndex?: number;
   adaptiveDifficulty?: number;
+  /** Domain-level last-write timestamp (ISO). Optional for backward compat; stamped on save, used by cross-device merge. */
+  updatedAt?: string;
 }

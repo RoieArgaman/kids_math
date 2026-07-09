@@ -294,3 +294,32 @@ describe("saveProgressState", () => {
     });
   });
 });
+
+describe("per-day updatedAt backward compatibility", () => {
+  it("sanitizes legacy days that lack updatedAt without throwing, leaving updatedAt undefined", () => {
+    // makeDay() intentionally omits updatedAt to mimic legacy persisted data.
+    const legacy = {
+      version: 1,
+      days: { "day-1": makeDay("day-1") },
+      updatedAt: "2020-01-01T00:00:00.000Z",
+    };
+    window.localStorage.setItem(GRADE_A_KEY, JSON.stringify(legacy));
+
+    const loaded = loadProgressState({ grade: "a" });
+    expect(loaded.days["day-1"]?.dayId).toBe("day-1");
+    // Missing per-day updatedAt stays undefined (treated as "oldest/overwritable" downstream).
+    expect(loaded.days["day-1"]?.updatedAt).toBeUndefined();
+  });
+
+  it("preserves a per-day updatedAt when present in persisted data", () => {
+    const stored = {
+      version: 1,
+      days: { "day-1": { ...makeDay("day-1"), updatedAt: "2024-05-05T00:00:00.000Z" } },
+      updatedAt: "2024-05-05T00:00:00.000Z",
+    };
+    window.localStorage.setItem(GRADE_A_KEY, JSON.stringify(stored));
+
+    const loaded = loadProgressState({ grade: "a" });
+    expect(loaded.days["day-1"]?.updatedAt).toBe("2024-05-05T00:00:00.000Z");
+  });
+});

@@ -73,6 +73,7 @@ export function loadEnglishFinalExamState(level: GradeId = "a"): EnglishFinalExa
         ? parsed.scorePercent
         : undefined;
     const passed = typeof parsed.passed === "boolean" ? parsed.passed : undefined;
+    const updatedAt = typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined;
 
     return {
       version: 1,
@@ -84,6 +85,7 @@ export function loadEnglishFinalExamState(level: GradeId = "a"): EnglishFinalExa
       submittedAt,
       scorePercent,
       passed,
+      updatedAt,
     };
   } catch {
     return null;
@@ -93,7 +95,8 @@ export function loadEnglishFinalExamState(level: GradeId = "a"): EnglishFinalExa
 export function saveEnglishFinalExamState(state: EnglishFinalExamState, level: GradeId = "a"): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(englishFinalExamStorageKey(level), JSON.stringify(state));
+    const nextState: EnglishFinalExamState = { ...state, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(englishFinalExamStorageKey(level), JSON.stringify(nextState));
     scheduleSync();
   } catch {
     // private mode / quota — ignore
