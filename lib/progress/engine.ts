@@ -43,6 +43,7 @@ export function createInitialDayProgressState(dayId: DayId): DayProgressState {
     attempts: [],
     percentDone: 0,
     isComplete: false,
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -113,7 +114,7 @@ export function applyBestTimeMsIfImproved(
     ...state,
     days: {
       ...state.days,
-      [dayId]: { ...dayState, bestTimeMs: next },
+      [dayId]: { ...dayState, bestTimeMs: next, updatedAt: new Date().toISOString() },
     },
     updatedAt: new Date().toISOString(),
   };
@@ -163,6 +164,7 @@ export function setAnswerForDay(
     percentDone,
     isComplete: dayState.isComplete || canComplete,
     completedAt: dayState.completedAt ?? (canComplete ? new Date().toISOString() : undefined),
+    updatedAt: new Date().toISOString(),
   };
 
   return {
@@ -195,6 +197,7 @@ export function markDayComplete(
     isComplete: true,
     completedAt: dayState.completedAt ?? new Date().toISOString(),
     bestTimeMs: nextBestTimeMs,
+    updatedAt: new Date().toISOString(),
   };
 
   return {
@@ -244,6 +247,7 @@ export function forceMarkDayComplete(
     percentDone: 100,
     isComplete: true,
     completedAt,
+    updatedAt: now,
   };
 
   return {
@@ -318,6 +322,7 @@ export function forceMarkSectionComplete(
     percentDone,
     isComplete: dayState.isComplete || canComplete,
     completedAt: dayState.completedAt ?? (canComplete ? now : undefined),
+    updatedAt: now,
   };
 
   return {
@@ -406,6 +411,7 @@ export function resetSectionProgress(
     isComplete: nextIsComplete,
     completedAt: nextIsComplete ? dayState.completedAt : undefined,
     bestTimeMs: nextIsComplete ? dayState.bestTimeMs : undefined,
+    updatedAt: new Date().toISOString(),
   };
 
   return {

@@ -41,10 +41,15 @@ function withDefaultsForDayState(value: DayProgressState): DayProgressState {
     isObject(value.wrongBySection) && value.wrongBySection !== null
       ? (value.wrongBySection as Record<string, number>)
       : {};
+  // `updatedAt` is intentionally left undefined when absent (legacy days lack it).
+  // Downstream cross-device merge treats a missing per-day updatedAt as "oldest /
+  // overwritable", so back-filling a fresh timestamp here would wrongly make stale
+  // legacy data look newer than an incoming remote copy. Keep it as-is.
   return {
     ...value,
     wrongCount: typeof value.wrongCount === "number" ? value.wrongCount : 0,
     wrongBySection,
+    updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : undefined,
   };
 }
 

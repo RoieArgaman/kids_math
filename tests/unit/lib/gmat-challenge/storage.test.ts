@@ -26,6 +26,22 @@ describe("gmat-challenge storage", () => {
     expect(loaded?.phase).toBe("rules");
   });
 
+  it("stamps updatedAt on save and preserves it on load", () => {
+    const s = createInitialRulesState("a");
+    expect(s.updatedAt).toBeUndefined();
+    saveGmatChallengeState("a", s);
+    const loaded = loadGmatChallengeState("a");
+    expect(loaded?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("loads legacy state without updatedAt (backward compat)", () => {
+    const legacy = createInitialRulesState("a");
+    window.localStorage.setItem("kids_math.gmat_challenge.v1.grade.a", JSON.stringify(legacy));
+    const loaded = loadGmatChallengeState("a");
+    expect(loaded).not.toBeNull();
+    expect(loaded?.updatedAt).toBeUndefined();
+  });
+
   it("clearGmatChallengeState removes the grade key", () => {
     saveGmatChallengeState("a", createInitialRulesState("a"));
     expect(window.localStorage.getItem("kids_math.gmat_challenge.v1.grade.a")).toBeTruthy();

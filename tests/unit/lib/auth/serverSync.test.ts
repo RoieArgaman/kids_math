@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  flushSync,
   registerSyncCallback,
+  resumeSync,
   scheduleSync,
+  suspendSync,
   unregisterSyncCallback,
 } from "@/lib/auth/serverSync";
 
@@ -9,10 +12,12 @@ describe("serverSync", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     unregisterSyncCallback(); // start clean
+    resumeSync(); // ensure not suspended between tests
   });
 
   afterEach(() => {
     unregisterSyncCallback();
+    resumeSync();
     vi.useRealTimers();
   });
 
@@ -86,6 +91,52 @@ describe("serverSync", () => {
         unregisterSyncCallback();
         unregisterSyncCallback();
       }).not.toThrow();
+    });
+  });
+
+  describe("suspendSync / resumeSync", () => {
+    it("scheduleSync is a no-op while suspended (timer not armed)", () => {
+      const spy = vi.fn();
+      registerSyncCallback(spy);
+      suspendSync();
+      scheduleSync();
+      vi.runAllTimers();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("resumes debounced sync after resumeSync", () => {
+      const spy = vi.fn();
+      registerSyncCallback(spy);
+      suspendSync();
+      scheduleSync();
+      vi.runAllTimers();
+      expect(spy).not.toHaveBeenCalled();
+
+      resumeSync();
+      scheduleSync();
+      vi.advanceTimersByTime(2001);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("flushSync", () => {
+    it("fires the callback immediately and clears the pending timer", () => {
+      const spy = vi.fn();
+      registerSyncCallback(spy);
+      scheduleSync(); // arms 2000ms timer
+      flushSync(); // should fire now, synchronously
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      // Timer was cleared — advancing does not fire again.
+      vi.advanceTimersByTime(5000);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it("is a no-op when no timer is pending", () => {
+      const spy = vi.fn();
+      registerSyncCallback(spy);
+      flushSync();
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 

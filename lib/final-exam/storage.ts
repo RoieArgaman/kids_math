@@ -54,6 +54,7 @@ export function loadFinalExamState(grade: GradeId): FinalExamState | null {
     const scorePercent =
       typeof parsed.scorePercent === "number" && Number.isFinite(parsed.scorePercent) ? parsed.scorePercent : undefined;
     const passed = typeof parsed.passed === "boolean" ? parsed.passed : undefined;
+    const updatedAt = typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined;
 
     return {
       version: 1,
@@ -67,6 +68,7 @@ export function loadFinalExamState(grade: GradeId): FinalExamState | null {
       submittedAt,
       scorePercent,
       passed,
+      updatedAt,
     };
   } catch {
     return null;
@@ -76,7 +78,8 @@ export function loadFinalExamState(grade: GradeId): FinalExamState | null {
 export function saveFinalExamState(grade: GradeId, state: FinalExamState): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(keyForGrade(grade), JSON.stringify(state));
+    const nextState: FinalExamState = { ...state, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(keyForGrade(grade), JSON.stringify(nextState));
     scheduleSync();
   } catch {
     // Avoid crashes in private mode/quota errors.

@@ -12,6 +12,8 @@ export interface EnglishFinalExamStateV1 {
   submittedAt?: string;
   scorePercent?: number;
   passed?: boolean;
+  /** Domain-level last-write timestamp (ISO). Optional for backward compat; stamped on save, used by cross-device merge. */
+  updatedAt?: string;
 }
 
 export type EnglishFinalExamState = EnglishFinalExamStateV1;

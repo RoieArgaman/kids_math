@@ -235,6 +235,7 @@ export function loadGmatChallengeState(grade: GradeId): GmatChallengeStateV1 | n
         parsed.adaptiveDifficulty <= 5
           ? parsed.adaptiveDifficulty
           : 3,
+      updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined,
     };
   } catch {
     return null;
@@ -244,7 +245,8 @@ export function loadGmatChallengeState(grade: GradeId): GmatChallengeStateV1 | n
 export function saveGmatChallengeState(grade: GradeId, state: GmatChallengeStateV1): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(keyForGrade(grade), JSON.stringify(state));
+    const nextState: GmatChallengeStateV1 = { ...state, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(keyForGrade(grade), JSON.stringify(nextState));
     scheduleSync();
   } catch {
     // private mode / quota

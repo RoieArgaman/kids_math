@@ -55,6 +55,7 @@ export function loadScienceFinalExamState(level: GradeId = "a"): ScienceFinalExa
         ? parsed.scorePercent
         : undefined;
     const passed = typeof parsed.passed === "boolean" ? parsed.passed : undefined;
+    const updatedAt = typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined;
 
     return {
       version: 1,
@@ -66,6 +67,7 @@ export function loadScienceFinalExamState(level: GradeId = "a"): ScienceFinalExa
       submittedAt,
       scorePercent,
       passed,
+      updatedAt,
     };
   } catch {
     return null;
@@ -75,7 +77,8 @@ export function loadScienceFinalExamState(level: GradeId = "a"): ScienceFinalExa
 export function saveScienceFinalExamState(state: ScienceFinalExamState, level: GradeId = "a"): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(scienceFinalExamStorageKey(level), JSON.stringify(state));
+    const nextState: ScienceFinalExamState = { ...state, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(scienceFinalExamStorageKey(level), JSON.stringify(nextState));
     scheduleSync();
   } catch {
     // private mode / quota — ignore

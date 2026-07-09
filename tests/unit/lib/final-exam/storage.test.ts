@@ -107,6 +107,27 @@ describe("final-exam storage", () => {
     expect(window.localStorage.getItem("kids_math.final_exam.v1.grade.b")).toBeTruthy();
   });
 
+  it("stamps updatedAt on save and preserves it on load", () => {
+    const selectedExerciseIds = pickFinalExamExerciseIds({ grade: "a", seed: "ts", pickerVersion: 1 });
+    const initial = createInitialFinalExamState({ grade: "a", selectedExerciseIds });
+    expect(initial.updatedAt).toBeUndefined();
+
+    saveFinalExamState("a", initial);
+    const loaded = loadFinalExamState("a");
+    expect(loaded?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("loads legacy state without updatedAt (backward compat)", () => {
+    const selectedExerciseIds = pickFinalExamExerciseIds({ grade: "a", seed: "legacy", pickerVersion: 1 });
+    const legacy = createInitialFinalExamState({ grade: "a", selectedExerciseIds });
+    // Persist directly, bypassing the save-time stamp, to mimic pre-updatedAt data.
+    window.localStorage.setItem("kids_math.final_exam.v1.grade.a", JSON.stringify(legacy));
+
+    const loaded = loadFinalExamState("a");
+    expect(loaded).not.toBeNull();
+    expect(loaded?.updatedAt).toBeUndefined();
+  });
+
   it("does not throw when localStorage.setItem fails (quota/private mode)", () => {
     const selectedExerciseIds = pickFinalExamExerciseIds({
       grade: "a",

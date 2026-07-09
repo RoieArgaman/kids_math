@@ -125,7 +125,7 @@ describe("forceMarkDayComplete", () => {
     expect(twice.days["day-1"]?.percentDone).toBe(100);
     expect(twice.days["day-1"]?.completedAt).toBe(once.days["day-1"]?.completedAt);
     expect(Object.keys(twice.days["day-1"] ?? {}).sort()).toEqual(
-      ["answers", "attempts", "completedAt", "correctAnswers", "dayId", "isComplete", "percentDone", "wrongBySection", "wrongCount"].sort(),
+      ["answers", "attempts", "completedAt", "correctAnswers", "dayId", "isComplete", "percentDone", "updatedAt", "wrongBySection", "wrongCount"].sort(),
     );
   });
 

@@ -66,4 +66,19 @@ describe("science final-exam storage", () => {
     expect(loadScienceFinalExamState("a")).toBeNull();
     expect(loadScienceFinalExamState("b")).not.toBeNull();
   });
+
+  it("stamps updatedAt on save and preserves it on load", () => {
+    const state = createInitialScienceFinalExamState({ selectedExerciseIds: ids(3) });
+    expect(state.updatedAt).toBeUndefined();
+    saveScienceFinalExamState(state, "a");
+    expect(loadScienceFinalExamState("a")?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("loads legacy state without updatedAt (backward compat)", () => {
+    const legacy = createInitialScienceFinalExamState({ selectedExerciseIds: ids(3) });
+    window.localStorage.setItem(scienceFinalExamStorageKey("a"), JSON.stringify(legacy));
+    const loaded = loadScienceFinalExamState("a");
+    expect(loaded).not.toBeNull();
+    expect(loaded?.updatedAt).toBeUndefined();
+  });
 });
