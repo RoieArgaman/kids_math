@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import type { Exercise } from "@/lib/types";
 import { buildScienceExamBank } from "@/lib/science/final-exam/picker";
 import { childTid, testIds } from "@/lib/testIds";
+import { seedSubjectGradeBUnlockCookie } from "./testUtils";
 
 const examKeyFor = (level: string) => `kids_math.science.final_exam.v1.level.${level}`;
 
@@ -45,6 +46,9 @@ test.describe("science final exam smoke", () => {
   // from each level's own exercises, so exercise the pass path for each.
   for (const LEVEL of ["a", "b"] as const) {
     test(`preview-unlocked exam (Level ${LEVEL}): answer all correctly → pass`, async ({ page }) => {
+      // Level B is middleware-gated; previewAll bypasses only client gates, so seed the
+      // server unlock cookie to reach /science/b/* in the production E2E server.
+      if (LEVEL === "b") await seedSubjectGradeBUnlockCookie(page, "science");
       await page.goto(`/science/${LEVEL}/exam?previewAll=1`);
       await expect(page.getByTestId(testIds.screen.science.exam.root())).toBeVisible();
 
