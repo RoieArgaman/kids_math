@@ -5,7 +5,7 @@ import {
   MATH_B_LEGACY_COOKIE,
   subjectGradeBUnlockCookieName,
 } from "@/lib/gradeUnlock";
-import { parseSubjectId, type Subject } from "@/lib/subjects";
+import { parseSubjectId, SUBJECTS, type Subject } from "@/lib/subjects";
 
 /**
  * Server-only helpers that set/clear the per-subject grade-B unlock cookies.
@@ -72,6 +72,21 @@ export async function setSubjectGradeBUnlock(
     // Keep the legacy cookie in lock-step so returning users + cached clients agree.
     res.cookies.set(MATH_B_LEGACY_COOKIE, GRADE_B_UNLOCK_COOKIE_VALUE, cookieOpts(request, ONE_YEAR_SECONDS));
   }
+  return res;
+}
+
+/**
+ * Clear EVERY subject's grade-B unlock cookie (+ the legacy math cookie) onto an
+ * existing response. Used at logout so the next student on a shared device cannot
+ * inherit the prior student's unlocked Grade B; the client reconcile re-heals
+ * unlock for the legit user from their own hydrated completion.
+ */
+export function clearAllGradeBUnlockCookies(res: NextResponse, request: NextRequest): NextResponse {
+  const opts = cookieOpts(request, 0);
+  for (const subject of SUBJECTS) {
+    res.cookies.set(subjectGradeBUnlockCookieName(subject), "", opts);
+  }
+  res.cookies.set(MATH_B_LEGACY_COOKIE, "", opts);
   return res;
 }
 

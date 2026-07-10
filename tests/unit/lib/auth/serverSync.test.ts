@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  bumpAuthEpoch,
   flushSync,
+  getAuthEpoch,
+  isSyncActive,
+  isSyncPrimed,
   registerSyncCallback,
   resumeSync,
   scheduleSync,
+  setSyncPrimed,
   suspendSync,
   unregisterSyncCallback,
 } from "@/lib/auth/serverSync";
@@ -150,6 +155,46 @@ describe("serverSync", () => {
       vi.advanceTimersByTime(2001);
       expect(first).not.toHaveBeenCalled();
       expect(second).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("authEpoch — identity boundary guard", () => {
+    it("bumpAuthEpoch increases monotonically and is observable via getAuthEpoch", () => {
+      const before = getAuthEpoch();
+      const after = bumpAuthEpoch();
+      expect(after).toBe(before + 1);
+      expect(getAuthEpoch()).toBe(after);
+      bumpAuthEpoch();
+      expect(getAuthEpoch()).toBe(after + 1);
+    });
+
+    it("a captured epoch no longer matches after a bump (in-flight async can detect a switch)", () => {
+      const captured = getAuthEpoch();
+      expect(getAuthEpoch() === captured).toBe(true);
+      bumpAuthEpoch(); // simulate a logout / user switch mid-flight
+      expect(getAuthEpoch() === captured).toBe(false);
+    });
+  });
+
+  describe("syncPrimed — push gate", () => {
+    it("defaults / can be toggled and read back", () => {
+      setSyncPrimed(false);
+      expect(isSyncPrimed()).toBe(false);
+      setSyncPrimed(true);
+      expect(isSyncPrimed()).toBe(true);
+      setSyncPrimed(false);
+      expect(isSyncPrimed()).toBe(false);
+    });
+  });
+
+  describe("isSyncActive — live-sync guard", () => {
+    it("is false with no callback, true once registered, false again after unregister", () => {
+      unregisterSyncCallback();
+      expect(isSyncActive()).toBe(false);
+      registerSyncCallback(vi.fn());
+      expect(isSyncActive()).toBe(true);
+      unregisterSyncCallback(); // logout path
+      expect(isSyncActive()).toBe(false);
     });
   });
 });

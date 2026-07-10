@@ -1,80 +1,246 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-// Record call order across api + serverSync so we can assert push-then-pull.
+// Records the order of the important side effects so we can assert the
+// server-authoritative reconcile behaves per the plan.
 const calls: string[] = [];
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+const apiMe = vi.fn();
+const apiLogin = vi.fn();
+const apiLogout = vi.fn(async () => {
+  calls.push("apiLogout");
+});
+
 vi.mock("@/lib/auth/api", () => ({
-  apiMe: vi.fn(async () => ({ id: "u1", username: "kid" })),
-  apiLogin: vi.fn(),
-  apiLogout: vi.fn(),
+  apiMe: (...args: unknown[]) => apiMe(...args),
+  apiLogin: (...args: unknown[]) => apiLogin(...args),
+  apiLogout: (...args: unknown[]) => apiLogout(...args),
 }));
 
+// Stateful serverSync mock: real epoch + primed so the epoch guard is exercised.
+let epoch = 0;
+let primed = false;
 vi.mock("@/lib/auth/serverSync", () => ({
   suspendSync: vi.fn(() => calls.push("suspendSync")),
   resumeSync: vi.fn(() => calls.push("resumeSync")),
-  registerSyncCallback: vi.fn(() => calls.push("registerSyncCallback")),
-  unregisterSyncCallback: vi.fn(),
+  registerSyncCallback: vi.fn(() => calls.push("register")),
+  unregisterSyncCallback: vi.fn(() => calls.push("unregister")),
   flushSync: vi.fn(),
+  bumpAuthEpoch: vi.fn(() => {
+    epoch += 1;
+    calls.push("bump");
+    return epoch;
+  }),
+  getAuthEpoch: vi.fn(() => epoch),
+  isSyncActive: vi.fn(() => true),
+  isSyncPrimed: vi.fn(() => primed),
+  setSyncPrimed: vi.fn((v: boolean) => {
+    primed = v;
+    calls.push(`prime:${v}`);
+  }),
 }));
+
+const getLocalOwner = vi.fn<[], string | null>(() => null);
+const fetchUserProgress = vi.fn(async () => {
+  calls.push("pull");
+  return { bundleVersion: 4 };
+});
+const fetchUserProgressResult = vi.fn(async () => {
+  calls.push("pullResult");
+  return { status: "ok" as const, bundle: { bundleVersion: 4 } };
+});
 
 vi.mock("@/lib/user-data/api", () => ({
   buildBundleFromLocalStorage: vi.fn(() => ({ bundleVersion: 4 })),
-  fetchUserProgress: vi.fn(async () => {
-    calls.push("pull");
-    return { bundleVersion: 4 };
-  }),
   pushUserProgress: vi.fn(async () => {
     calls.push("push");
     return true;
   }),
+  fetchUserProgress: (...args: unknown[]) => fetchUserProgress(...(args as [])),
+  fetchUserProgressResult: (...args: unknown[]) => fetchUserProgressResult(...(args as [])),
   hydrateLocalStorageFromBundle: vi.fn(() => calls.push("hydrate")),
-  restoreSnapshotFromSession: vi.fn(),
-  saveSnapshotToSession: vi.fn(),
-  snapshotLocalStorage: vi.fn(() => ({})),
+  replaceLocalStorageFromBundle: vi.fn(() => calls.push("replace")),
+  clearLocalProgress: vi.fn(() => calls.push("clear")),
+  getLocalOwner: (...args: unknown[]) => getLocalOwner(...(args as [])),
+  setLocalOwner: vi.fn(() => calls.push("setOwner")),
+  clearLocalOwner: vi.fn(() => calls.push("clearOwner")),
   beaconUserProgress: vi.fn(),
 }));
 
-import { AuthProvider } from "@/lib/auth/context";
+vi.mock("@/lib/completion/reconcile", () => ({
+  clearReconcileGuards: vi.fn(() => calls.push("guards")),
+}));
+
+import { AuthProvider, useAuth } from "@/lib/auth/context";
+
+function Consumer() {
+  const { isLoggedIn, login, logout } = useAuth();
+  return (
+    <div>
+      <span data-testid="logged-in">{isLoggedIn ? "yes" : "no"}</span>
+      <button data-testid="do-login" onClick={() => void login("kid", "pw")}>
+        login
+      </button>
+      <button data-testid="do-logout" onClick={() => void logout()}>
+        logout
+      </button>
+    </div>
+  );
+}
+
+function renderProvider() {
+  return render(
+    <AuthProvider>
+      <Consumer />
+    </AuthProvider>,
+  );
+}
 
 beforeEach(() => {
   calls.length = 0;
+  epoch = 0;
+  primed = false;
+  apiMe.mockResolvedValue(null);
+  apiLogin.mockResolvedValue({ ok: false, error: "x" });
+  getLocalOwner.mockReturnValue(null);
+  fetchUserProgress.mockImplementation(async () => {
+    calls.push("pull");
+    return { bundleVersion: 4 };
+  });
+  fetchUserProgressResult.mockImplementation(async () => {
+    calls.push("pullResult");
+    return { status: "ok" as const, bundle: { bundleVersion: 4 } };
+  });
 });
 
 afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("AuthProvider mount ordering", () => {
-  it("suspends, pushes local, then pulls merged, hydrates, arms callback, resumes", async () => {
-    render(
-      <AuthProvider>
-        <span data-testid="child">ok</span>
-      </AuthProvider>,
-    );
+describe("AuthProvider — server-authoritative reconcile on mount", () => {
+  it("foreign/anon device with a server bundle: clears + hydrates (replace), never pushes, then primes", async () => {
+    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    getLocalOwner.mockReturnValue(null); // anonymous local
 
-    await waitFor(() => {
-      expect(calls).toContain("registerSyncCallback");
-    });
+    renderProvider();
+    await waitFor(() => expect(calls).toContain("register"));
+
+    expect(calls).toContain("replace");
+    expect(calls).not.toContain("push"); // never merge foreign local up
+    expect(calls).not.toContain("pull"); // used the discriminated fetch, not the merge pull
+    // prime AFTER the replace, register + resume after prime
+    expect(calls.indexOf("prime:true")).toBeGreaterThan(calls.indexOf("replace"));
+    expect(calls.indexOf("register")).toBeGreaterThan(calls.indexOf("prime:true"));
+    expect(calls.indexOf("resumeSync")).toBeGreaterThan(calls.indexOf("register"));
+    expect(calls).toContain("setOwner");
+  });
+
+  it("same-user device: pushes local (merge) then pulls, preserving offline work", async () => {
+    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    getLocalOwner.mockReturnValue("u1"); // same user returning
+
+    renderProvider();
+    await waitFor(() => expect(calls).toContain("register"));
 
     const pushIdx = calls.indexOf("push");
     const pullIdx = calls.indexOf("pull");
-    const registerIdx = calls.indexOf("registerSyncCallback");
-    const suspendIdx = calls.indexOf("suspendSync");
-    const resumeIdx = calls.indexOf("resumeSync");
-
-    expect(suspendIdx).toBeGreaterThanOrEqual(0);
-    // push before pull (the core fix — no stale re-push race)
     expect(pushIdx).toBeGreaterThanOrEqual(0);
-    expect(pullIdx).toBeGreaterThan(pushIdx);
-    // callback armed after the pull, and resume after that
-    expect(registerIdx).toBeGreaterThan(pullIdx);
-    expect(resumeIdx).toBeGreaterThan(registerIdx);
-    // suspend happened before the push
-    expect(suspendIdx).toBeLessThan(pushIdx);
+    expect(pullIdx).toBeGreaterThan(pushIdx); // push-then-pull
+    expect(calls).toContain("hydrate");
+    expect(calls).not.toContain("clear"); // same-user work is never wiped
+    expect(calls.indexOf("prime:true")).toBeGreaterThan(pullIdx);
+  });
+
+  it("foreign device, server confirmed empty: clears and primes, no hydrate", async () => {
+    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    getLocalOwner.mockReturnValue(null);
+    fetchUserProgressResult.mockImplementation(async () => {
+      calls.push("pullResult");
+      return { status: "empty" as const };
+    });
+
+    renderProvider();
+    await waitFor(() => expect(calls).toContain("register"));
+
+    expect(calls).toContain("clear");
+    expect(calls).not.toContain("hydrate");
+    expect(calls).not.toContain("replace");
+    expect(calls).toContain("prime:true");
+  });
+
+  it("foreign device, fetch ERROR: clears for confidentiality but stays UNPRIMED", async () => {
+    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    getLocalOwner.mockReturnValue(null);
+    fetchUserProgressResult.mockImplementation(async () => {
+      calls.push("pullResult");
+      return { status: "error" as const };
+    });
+
+    renderProvider();
+    await waitFor(() => expect(calls).toContain("register"));
+
+    expect(calls).toContain("clear");
+    expect(calls).toContain("prime:false");
+    expect(calls).not.toContain("prime:true"); // never claim primed on an error
+  });
+
+  it("does nothing when there is no session (anonymous)", async () => {
+    apiMe.mockResolvedValue(null);
+    renderProvider();
+    await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
+    expect(calls).not.toContain("register");
+    expect(calls).not.toContain("replace");
+    expect(calls).not.toContain("clear");
+  });
+});
+
+describe("AuthProvider — login", () => {
+  it("foreign login clears + hydrates the incoming user's server data, bumps epoch, sets user", async () => {
+    apiMe.mockResolvedValue(null); // start logged out
+    apiLogin.mockResolvedValue({ ok: true, user: { userId: "u2", username: "b", role: "user" } });
+    getLocalOwner.mockReturnValue("u1"); // a DIFFERENT prior student's local data
+
+    renderProvider();
+    await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
+    calls.length = 0;
+
+    await userEvent.click(screen.getByTestId("do-login"));
+    await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("yes"));
+
+    expect(calls[0]).toBe("bump"); // identity boundary bumped first
+    expect(calls).toContain("replace"); // foreign local replaced by u2's server truth
+    expect(calls).not.toContain("push");
+    expect(calls).toContain("setOwner");
+  });
+});
+
+describe("AuthProvider — logout", () => {
+  it("wipes to zero: bump, disarm, apiLogout, clear progress + guards + owner, user=null", async () => {
+    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    getLocalOwner.mockReturnValue("u1");
+
+    renderProvider();
+    await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("yes"));
+    calls.length = 0;
+
+    await userEvent.click(screen.getByTestId("do-logout"));
+    await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
+
+    expect(calls).toContain("bump");
+    expect(calls).toContain("prime:false");
+    expect(calls).toContain("unregister");
+    expect(calls).toContain("apiLogout");
+    expect(calls).toContain("clear");
+    expect(calls).toContain("guards");
+    expect(calls).toContain("clearOwner");
+    // Local must be wiped SYNCHRONOUSLY before the network logout, so no async
+    // pull can interleave a hydrate before the clear.
+    expect(calls.indexOf("clear")).toBeLessThan(calls.indexOf("apiLogout"));
+    expect(calls.indexOf("unregister")).toBeLessThan(calls.indexOf("clear"));
   });
 });

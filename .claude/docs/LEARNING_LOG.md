@@ -6,6 +6,23 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-10 (Per-student progress isolation: server-authoritative login, wipe-on-logout)
+- **Trigger:** Progress leaked across identities — logging in as a second user (or on a second device) showed the wrong student's progress, because the app always treated `localStorage` as the source of truth and **merged local up into whichever account was authenticated** at the login/restore boundary (`pushThenPull`), contaminating the server doc.
+- **What changed / where:**
+  - **Owner marker** `kids_math.auth.owner.v1` (`lib/user-data/api.ts`) records which userId owns local progress. Login/restore branches on it: **same-user** → push-then-pull (preserves offline work); **foreign/anon** → `clearLocalProgress()` then hydrate the incoming user's server truth (never push local up). `lib/auth/context.tsx` `reconcileForUser`.
+  - **`clearLocalProgress()`** is an explicit allow-list of progress keys — **including legacy/level-keyed variants** (`workbook_progress.v1*`, `english.final_exam.v1` base) because `loadProgressState` / `migrateLegacyExamToLevelA` RE-MIGRATE legacy keys into the current key when it's absent → a clear that skips them **resurrects** the prior student's data. Never a `kids_math.*` prefix wipe (device prefs/TTS/consent survive).
+  - **`syncPrimed` gate** (`lib/auth/serverSync.ts`): never push local until it's been reconciled with the server for this identity. Default domain state stamps `updatedAt: now` (`createInitialBadgeState`), so an empty push wins whole-domain LWW and would **clobber real server data**. `fetchUserProgressResult` distinguishes `ok`/`empty`/`error` so a network error clears-for-confidentiality but stays UNPRIMED (self-heals on next pull) instead of clobbering.
+  - **`authEpoch`** bumped on every login/logout; async reconciles/pulls capture it and skip their hydrate/setUser if it changed → an in-flight pull can't repaint the next student after a logout/switch.
+  - **`isSyncActive()`** (callback registered) gates `flushThenPull`/beacon, and logout now **clears local synchronously before** `await apiLogout()` — together they close a race where a stray focus/pageshow pull re-hydrated the just-cleared device during the logout network call (caught in code review).
+  - **Grade-B unlock reset on logout:** `clearAllGradeBUnlockCookies` (server, `lib/server/gradeUnlockCookies.ts`) on the logout route + `clearReconcileGuards()` (client) so the next student re-earns Grade B from their OWN hydrated completion (the never-revoke reconcile rule is untouched).
+  - Removed the pre-login `sessionStorage` snapshot mechanism (it never saved on the cookie-restore path → the original logout leak).
+  - Tests: `tests/unit/lib/user-data/isolation.test.ts`, rewritten `contextOrdering.test.tsx`, extended `serverSync`/`reconcile` units, `tests/unit/app/api/authLogout.test.ts`, and `tests/e2e/multi-user-isolation.spec.ts` (per-user mock server proves A→logout→zero→B-sees-only-B, follow-me, and no cross-contamination).
+- **What we learned / reuse next time:**
+  1. **A per-identity source-of-truth needs an identity stamp in local storage.** Without the owner marker you can't tell "this same user's offline work" from "a different student's leftovers" — merging is only safe within one identity.
+  2. **Clearing progress must cover legacy/migration keys**, or loaders silently re-hydrate the old data. Treat migration source keys as part of the clear contract.
+  3. **Never push default-initialized local state up** — defaults stamp `updatedAt: now` and win LWW. Gate pushes on a "primed" flag set only after a confirmed server read; distinguish `empty` (200+null) from `error` (500/throw).
+  4. **Guard cross-identity async with an epoch + an "active" flag**, and do destructive local writes synchronously before any `await`, so a logout can't be undone by an in-flight pull.
+
 ### 2026-07-01 (Component tests: extended to EVERY component — 88/88)
 - **Trigger:** after the shared UI library was covered, extended component tests to all
   remaining 64 components (leaf, exercises, providers, layout, auth, teaching-primer,

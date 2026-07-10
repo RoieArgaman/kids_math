@@ -50,6 +50,24 @@ async function ensureSubjectUnlocked(subject: Subject): Promise<void> {
   }
 }
 
+/**
+ * Clear the once-per-session unlock-reconcile guards. Called on logout so the
+ * NEXT student on this device (or this student's next login) re-evaluates unlock
+ * from their OWN hydrated completion instead of skipping the POST because a prior
+ * student already set the guard — otherwise a returning student who completed
+ * grade A could be left wrongly locked.
+ */
+export function clearReconcileGuards(): void {
+  if (typeof window === "undefined") return;
+  for (const subject of SUBJECTS) {
+    try {
+      window.sessionStorage.removeItem(`${RECONCILE_GUARD_PREFIX}${subject}`);
+    } catch {
+      // sessionStorage unavailable — nothing to clear.
+    }
+  }
+}
+
 export async function reconcileGradeUnlockCookies(opts?: { previewAll?: boolean }): Promise<void> {
   if (typeof window === "undefined") return;
   if (opts?.previewAll) return;
