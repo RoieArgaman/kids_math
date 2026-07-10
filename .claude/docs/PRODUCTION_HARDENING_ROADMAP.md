@@ -1,0 +1,508 @@
+# Production Hardening Roadmap — Scale & Sale
+
+> **Status:** APPROVED ROADMAP (planning artifact — no code in this document).
+> **Owner:** Engineering.
+> **Created:** 2026-07-10.
+> **Mode:** MAX (auto-escalated: touches auth/JWT, `middleware.ts`, `lib/*/storage.ts`
+> schema, grade-unlock chain, and CRITICAL security findings — see `AGENTS.md` →
+> Escalation Playbook).
+> **Goal:** Take kids_math from a working single-tenant app to a product that (a) scales
+> to many concurrent users and (b) survives the technical + legal due diligence of a
+> corporate buyer (school district, publisher, ed-tech company).
+
+This is the durable roadmap. Each **Phase** below is a self-contained future task that will
+get its own `/plan` (PRO/ULTRA/MAX per its risk) before implementation. Nothing here is
+implemented yet — this document is the plan of record.
+
+---
+
+## How to use this document
+
+1. Work **top-down**: Phase 0 → 4. The order encodes dependency and risk, not preference.
+2. Before starting any phase, open a fresh `/plan` for **that phase only**, using the
+   "Tasks", "Files to touch", and "Tests" sections here as the seed.
+3. Each phase has **go/no-go gates**. Phases 0–2 are continuously shippable hardening.
+   Phases 3–4 are the actual "sellable" unlock and each requires an explicit product
+   go/no-go before starting.
+4. Update the **Progress Tracker** table at the bottom as phases land.
+5. Append a `LEARNING_LOG.md` entry when each phase completes (per Learning Loop rule).
+
+---
+
+## Executive summary
+
+| Theme | Where we are today | Where a buyer needs us to be |
+|-------|--------------------|------------------------------|
+| **AuthN/AuthZ** | Custom JWT (HS256, 30-day), bcrypt(12), httpOnly cookie, role gate | Revocable sessions, lockout, password policy, secret rotation, audit trail |
+| **Abuse resistance** | None (no rate limiting, no body caps) | Shared-state rate limiting, body caps, constant-time login |
+| **Transport/headers** | None (no CSP/HSTS/frame headers) | Full security-header suite, CSP enforced |
+| **Observability** | `console.error` only | Error tracking, structured logs, metrics, alerting, dashboards |
+| **Disaster recovery** | None documented | Firestore PITR/backups, RPO/RTO, restore runbook |
+| **Compliance** | Privacy page exists | COPPA / GDPR-K / Israeli Privacy Law posture, consent, export/erasure, DPA |
+| **Multi-tenancy** | Flat `users` collection, 2 roles | Org model, org-scoped roles + queries, tenant isolation |
+| **Scale of data model** | 1 `user_progress` doc/user, whole-doc write | Pagination, contention-safe writes, doc-size guardrails |
+
+---
+
+## Current-state architecture (as researched 2026-07-10)
+
+- **Framework:** Next.js 14 App Router, React 18, TypeScript strict, Tailwind. Hebrew RTL.
+- **Hosting:** Firebase App Hosting (`firebase.json` → `apphosting:kids-math`,
+  `apphosting.yaml`). Deploy is CI-gated (`.github/workflows/deploy.yml` runs on successful
+  `CI` workflow_run on `main`). `minInstances` currently unset (→ 0, cold starts).
+- **Auth:** Custom JWT via `jose` (HS256), `lib/auth/jwt.server.ts`.
+  - `SESSION_COOKIE_NAME = "kids_math_session"`, `SESSION_DURATION_SECONDS = 30 days`.
+  - `signToken` embeds `{ userId, username, role }`. No `jti`, no version, no revocation.
+  - `JWT_SECRET` from env, min-32-char check. Single secret, no rotation path.
+  - Cookie: `httpOnly`, `sameSite: "lax"`, `secure` derived from proto/`x-forwarded-proto`.
+- **Data:** Firestore via **Admin SDK only** (`lib/firestore/admin.ts`). **No client Firebase
+  SDK anywhere** (grep-confirmed) → no client rules exposure, but **no `firestore.rules`
+  file exists** either (should be committed as defense-in-depth).
+  - `db.settings({ ignoreUndefinedProperties: true })`.
+  - Collections: `users` (with `usernameLower`, `passwordHash`, `role`, `createdAt`),
+    `user_progress/{userId}` (one merged bundle doc per user).
+- **API routes** (`app/api/`):
+  - `auth/login` (POST) — Firestore lookup by `usernameLower`, bcrypt compare, sets cookie.
+  - `auth/me` (GET) — JWT-only, no DB read.
+  - `auth/logout` (POST) — clears session + all grade-B unlock cookies.
+  - `user/progress` (GET/POST) — JWT-gated; POST clamps future timestamps, merges in a
+    Firestore transaction (`mergeBundles`), stamps `updatedAt`.
+  - `admin/users` (GET/POST/PATCH/DELETE) — `requireAdmin` gate; strips `passwordHash` on
+    list; unbounded `orderBy("createdAt","desc").get()`.
+  - `grade-b-unlock` / `grade-b-lock` / `unlock-grade-b` / `lock-grade-b` — **unauthenticated**;
+    set/clear the per-subject grade-B unlock cookie (content gate only, not data).
+- **Middleware** (`middleware.ts`, EDGE runtime): grade-B subtree gate via cookies;
+  `previewAll` QA bypass; matcher = `/grade/b/*`, `/english/b/*`, `/science/b/*`, `/subjects/b`.
+  **Skips `/api/*` entirely** — so any future API rate limiting/headers must live in the
+  route handlers or a separate mechanism, not this middleware.
+- **Sync model** (`lib/user-data/*`, `lib/auth/serverSync.ts`): per-identity source-of-truth
+  with owner marker, `authEpoch`, `syncPrimed` gate, debounced `scheduleSync`. Robust for
+  correctness; documented in `LEARNING_LOG.md` (2026-07-10 isolation entry).
+- **`UserProgressBundle`** (`lib/user-data/types.ts`): `bundleVersion 1|2|3|4`, additive/
+  backward-compatible. Merge is whole-domain LWW + per-day workbook merge (`merge.ts`).
+- **CI** (`.github/workflows/ci.yml`): `lint-and-unit` job + 3-shard `e2e`. **No `npm audit`,
+  no Dependabot, no secret scanning, no SAST.** `next.config.mjs` sets
+  `eslint.ignoreDuringBuilds: true` (lint runs in CI, not in the build itself).
+- **Tests:** strong. Unit API tests (`tests/unit/app/api/*`), unit merge/sync tests, and
+  e2e including the two regression anchors: `tests/e2e/multi-user-isolation.spec.ts` and
+  `tests/e2e/auth-backward-compat.spec.ts`.
+
+---
+
+## Findings register (severity-ranked)
+
+Each finding maps to a phase. IDs are stable — reference them in phase PRs and the tracker.
+
+### Security
+
+| ID | Finding | Severity | Evidence | Phase |
+|----|---------|----------|----------|-------|
+| **S1** | No rate limiting anywhere → login brute-force, credential stuffing, progress-push abuse | CRITICAL | no `rate-limit` refs; `middleware.ts` skips `/api/*` | 0 (shadow) → 2 (enforce) |
+| **S2** | Login user-enumeration via timing — 401 returned before any bcrypt work when username unknown | HIGH | `app/api/auth/login/route.ts:30-32` | 0 |
+| **S3** | No security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) | HIGH | `next.config.mjs` has no `headers()` | 0 |
+| **S4** | Sessions non-revocable — 30-day JWT, no `jti`/version; admin `PATCH` password reset does NOT invalidate existing tokens; leaked secret = valid until expiry | HIGH | `lib/auth/jwt.server.ts`; `app/api/admin/users/route.ts` PATCH | 1 |
+| **S5** | No request-body size limit on progress POST → cost/DoS via oversized bundle; Firestore 1 MB doc ceiling unguarded | HIGH | `app/api/user/progress/route.ts:33` | 0 |
+| **S6** | No dependency/secret scanning in CI (`npm audit`, Dependabot, secret scan, SAST all absent) | MEDIUM | `.github/workflows/ci.yml` | 0 |
+| **S7** | Grade-unlock routes unauthenticated (anyone can POST to set unlock cookie) | LOW | `app/api/grade-b-unlock/route.ts` etc. | 1 |
+| **S8** | No structured input validation (hand-rolled `typeof` guards) — fragile as surface grows | MEDIUM | all route handlers | 1 |
+| **S9** | No audit log for admin actions (create/delete/reset user) | MEDIUM | `app/api/admin/users/route.ts` | 2 |
+| **S10** | No `firestore.rules` committed (deny-all defense-in-depth even though Admin-SDK-only) | MEDIUM | repo root | 3 |
+| **S11** | `x-forwarded-proto` / client-IP trust unverified behind App Hosting proxy (affects `secure` flag + any IP-keyed limiter) | MEDIUM (spike) | `login/route.ts:48-50`, `gradeUnlockCookies.ts:18-21` | 0 (spike) |
+| **S12** | `JWT_SECRET` single value, no rotation runbook | MEDIUM | `apphosting.yaml`, `jwt.server.ts` | 1 |
+
+### Scale / sellability
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **C1** | No tenant/org model — flat `users`, no school/class grouping, no teacher/parent roles. Blocks selling to any organization. | CRITICAL (for sale) | 4 |
+| **C2** | Children's-data compliance not evidenced — COPPA / GDPR-K / Israeli Privacy Law. Consent, retention, DPA, export/erasure. | CRITICAL (for sale) | 3 |
+| **C3** | No observability — no error tracking, metrics, uptime, alerting. | HIGH | 2 |
+| **C4** | Admin users list unbounded (`orderBy().get()`, no pagination) → breaks past a few hundred users. | MEDIUM | 4 |
+| **C5** | Single `user_progress` doc grows unbounded; whole-doc read+write per push → contention + cost at scale; 1 MB ceiling. | MEDIUM | 4 |
+| **C6** | `minInstances: 0` (cold starts); no separated staging env; single region. | MEDIUM | 2 |
+| **C7** | No load/perf test or documented capacity targets. | MEDIUM | 2 |
+| **C8** | No Firestore backups / PITR; no RPO/RTO or restore runbook (buyer due-diligence item). | HIGH | 2 |
+
+---
+
+## Phase 0 — Security quick wins  ·  Mode: ULTRA
+
+**Objective:** Land the cheapest, highest-severity, fully-reversible security fixes first.
+**Estimated diff:** ~250–300 lines across small files + config. **Shippable in 1–2 PRs.**
+**Gate to start:** none (begin immediately).
+**Exit criteria:** S2, S3, S5, S6 fixed & tested; S1 shipped in **shadow (log-only) mode**;
+S11 spike answered and documented.
+
+### 0.0 — Trusted-proxy / client-IP spike (S11) — *do before 0.1*
+- **Why first:** the rate limiter (0.1) keys on client IP; if App Hosting lets clients spoof
+  the forwarded header, IP-keying is worthless and the `secure`-cookie logic is suspect.
+- **Task:** determine, on Firebase App Hosting, (a) which header carries the real client IP
+  (`X-Forwarded-For` position, or a platform-specific header) and (b) whether
+  `x-forwarded-proto` is set by the trusted front-end and non-spoofable.
+- **Deliverable:** a short note appended to this file (§ "Appendix A: proxy trust") + a shared
+  `lib/security/clientIp.ts` contract decision (which header, which index).
+- **Test:** unit test asserting the IP-extraction helper picks the trusted position and ignores
+  a spoofed prepended value.
+
+### 0.1 — Rate limiting, **shadow mode** (S1)
+- **Design:** shared-state limiter (Firestore counter doc with TTL, or Firebase-adjacent KV) —
+  **NOT in-memory** (App Hosting is multi-instance + `minInstances: 0`, so per-instance memory
+  is bypassable and lost on cold start).
+- **Scope:** `/api/auth/login` (key: IP + `usernameLower`), `/api/user/progress` POST (key:
+  userId), admin mutations (key: adminId).
+- **Shadow mode:** count and **record** would-be-throttled requests; **do not block yet**.
+  Promotion to enforcing happens in Phase 2 once dashboards (2.x) show the real 429 rate and
+  classroom thresholds are tuned (resolves the standing "shared-IP classroom" concern).
+- **New file:** `lib/security/rateLimit.ts` (+ `clientIp.ts` from 0.0).
+- **Test:** unit — limiter increments/expires correctly; over-threshold flagged (but allowed)
+  in shadow mode. Wire an e2e placeholder that will assert 429 once enforcing.
+
+### 0.2 — Constant-time login (S2)
+- **Task:** in `app/api/auth/login/route.ts`, when the username is not found, still perform a
+  bcrypt compare against a **dummy hash** before returning 401, so response timing does not
+  reveal whether a username exists.
+- **Test:** unit — behavior unchanged for valid/invalid credentials; add a timing-parity style
+  assertion (bucketed) or at least assert the dummy-compare code path runs on unknown user.
+
+### 0.3 — Security headers (S3)
+- **Task:** add `async headers()` to `next.config.mjs`:
+  - `Strict-Transport-Security` (long max-age + `includeSubDomains`; `preload` after soak).
+  - `Content-Security-Policy` — **ship as `Content-Security-Policy-Report-Only` first**
+    (audio/TTS + Tailwind/inline styles will otherwise break), then flip to enforcing after
+    a soak.
+  - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+    `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (lock down
+    camera/mic/geo etc.).
+- **Front-end watch (SeniorFrontEnd_TechLead):** verify the English/Science audio layer and any
+  inline styles survive CSP; keep RTL intact.
+- **Test:** e2e `tests/e2e/security-headers.spec.ts` asserts headers on `/` and one deep route.
+
+### 0.4 — Request body size cap (S5)
+- **Task:** reject `/api/user/progress` POST bodies over a sane cap (e.g. read
+  `content-length` / bounded read) **before** JSON parse; return 413. Pick the cap from the
+  realistic max bundle size (full curriculum × both grades × english × science) + headroom.
+- **Test:** unit — oversized body → 413; normal bundle → unaffected.
+
+### 0.5 — CI scanning + build lint tightening (S6, §Δ7)
+- **Task:** add to CI: `npm audit --audit-level=high` step (non-blocking first, then blocking),
+  a `.github/dependabot.yml`, and a secret-scan step (e.g. gitleaks/trufflehog action).
+  Consider failing the production build on lint too — **tighten, never weaken configs**
+  (rule 7): do NOT relax `next.config.mjs` `ignoreDuringBuilds` by loosening lint; instead
+  keep CI lint authoritative and optionally add a build-time lint gate.
+- **Test:** CI green on a clean PR; a deliberately-vulnerable/secret-bearing PR fails.
+
+### Phase 0 quality gates
+Self-Review → 5-role review → `npm run test:qa` on the **PR CI** (per saved preference; locally
+only tsc/lint/testids/unit) → MCP Playwright visual check (headers/CSP shouldn't regress UI) →
+verification report.
+
+### Phase 0 Definition of Done
+1. S2, S3, S5, S6 shipped with passing tests.
+2. S1 limiter live in shadow mode, recording would-be-throttles.
+3. S11 proxy-trust answered; `clientIp.ts` contract documented in Appendix A.
+4. No new `any`; no weakened configs; both regression-anchor e2e specs still green.
+
+---
+
+## Phase 1 — Session integrity & auth hardening  ·  Mode: MAX
+
+**Objective:** Make sessions revocable and the auth surface robust — the core of any buyer's
+security questionnaire. **Storage-schema-adjacent** (adds a field to `users` docs) → MAX.
+**Gate to start:** Phase 0 merged (S11 answered; limiter available to pair with lockout).
+
+### 1.1 — Revocable sessions via `tokenVersion` (S4)
+- **Design (backward-compatible / additive):**
+  - Add `tokenVersion: number` to each `users` doc (default/absent ⇒ treat as `0`).
+  - `signToken` embeds `tokenVersion`. `verifyToken` (currently JWT-only) must now either
+    (a) also carry `tokenVersion` in the token and reject on a lightweight check, or
+    (b) do a cheap Firestore read to compare. **Decision to make in the phase plan:**
+    pure-JWT (no DB read, but revocation only on next natural boundary) vs. DB-checked
+    (immediate revocation, one read per request). Recommended: embed in JWT for `/me`, and
+    do a version check on sensitive/mutating routes.
+  - **Absent `tokenVersion` in an existing 30-day token ⇒ still valid** (do not lock out live
+    users). This is the critical backward-compat rule.
+- **Bump points:** admin `PATCH` password reset, self password change (if added), and a new
+  **"log out everywhere"** action all `tokenVersion += 1`.
+- **Files:** `lib/auth/jwt.server.ts`, `app/api/admin/users/route.ts` (PATCH), `app/api/auth/*`,
+  possibly `middleware.ts` if version enforced at the edge (note: edge can't read Firestore →
+  keep version enforcement in Node route handlers).
+- **Tests:** unit — reset bumps version and invalidates the old token; pre-existing token with
+  no version stays valid; `auth-backward-compat.spec.ts` MUST stay green. New e2e: reset →
+  old session rejected on next mutating call.
+
+### 1.2 — Password policy + account lockout (pairs with S1)
+- **Task:** enforce a minimum password strength on create/reset (length + basic composition);
+  lock an account after N consecutive failures for a cooldown (backed by the Phase 0 limiter's
+  shared store, keyed by `usernameLower`).
+- **UX (SeniorProductDesigner):** child/parent-legible Hebrew lockout + reset messaging, RTL,
+  reuse shared UI library (rule 4).
+- **Tests:** unit — weak password rejected; N failures → locked; cooldown expiry unlocks.
+
+### 1.3 — Structured input validation (S8)
+- **Task:** introduce a schema validator (e.g. `zod`) and centralize request-body schemas in
+  `lib/security/schemas.ts`; replace hand-rolled `typeof` guards in every route handler.
+  Keeps behavior identical but makes the surface auditable and consistent as it grows.
+- **Tests:** existing API unit tests must stay green; add malformed-payload cases per route.
+
+### 1.4 — Authenticate / retire grade-unlock routes (S7)
+- **Task:** either require a valid session on `grade-b-unlock`/`lock` (+ legacy shims) or fold
+  the unlock into the authenticated progress/reconcile flow. Low severity (content gate only)
+  but tidy the unauthenticated write surface before sale.
+- **Tests:** `tests/e2e/grade-b-gate.spec.ts` + `gradeBUnlock.test.ts` stay green under new auth.
+
+### 1.5 — JWT-secret rotation runbook (S12)
+- **Task:** document a rotation procedure that leverages `tokenVersion` + a brief dual-verify
+  window (accept old+new secret during cutover). Design/runbook only in this phase; add
+  `apphosting.yaml` secret-versioning notes. Append to Appendix B here.
+
+### Phase 1 quality gates
+MAX: two review cycles + QA team → `npm run test:qa` on PR CI → Playwright visual → verification
+report. Storage-touching (adds `tokenVersion`) → follow `AGENTS.md` Data & Storage Rules; no
+backfill needed (absent ⇒ 0), but document the field.
+
+### Phase 1 Definition of Done
+1. Password reset (and "log out everywhere") revokes existing sessions immediately on mutating
+   routes; pre-existing tokens without a version still work.
+2. Lockout + password policy live and tested.
+3. All route bodies validated via a single schema module; no hand guards remain.
+4. Grade-unlock write surface authenticated or retired.
+5. JWT rotation runbook written. Regression anchors green.
+
+---
+
+## Phase 2 — Observability, DR & ops  ·  Mode: ULTRA
+
+**Objective:** You cannot operate at scale or pass due diligence without seeing failures,
+proving recoverability, and tuning the limiter with real data.
+**Gate to start:** Phase 0 merged (limiter in shadow mode to promote).
+
+### 2.1 — Error tracking + structured logging (C3)
+- **Task:** wire Sentry (or GCP Error Reporting) into route handlers + a client error boundary;
+  replace bare `console.error` (currently only in `user/progress/route.ts`). Emit structured
+  logs (request id, route, status, latency).
+- **PII (SeniorQA_Engineer):** scrub usernames/tokens/passwords at SDK init; deny-list fields —
+  this is children's data.
+- **Test:** unit — logger redacts denied fields; a thrown route error is captured.
+
+### 2.2 — Admin audit log (S9)
+- **Task:** write an `audit_log` collection row for every admin mutation (actor id, action,
+  target id, timestamp, before/after where safe). Buyers require this.
+- **Test:** unit — create/delete/reset user each writes an audit row.
+
+### 2.3 — Health check, uptime, alerting, dashboards (C3, C7)
+- **Task:** add a `/api/health` (or route) readiness check; configure an uptime monitor;
+  alerts on error-rate + p95 latency + 5xx; a basic metrics dashboard. Document capacity
+  targets (target concurrent users, req/s).
+- **Test:** health route returns 200 + dependency status; alert config reviewed.
+
+### 2.4 — Load / perf test (C7)
+- **Task:** add a k6/Artillery script simulating classroom-concurrency (login burst + progress
+  pushes) against a staging target; record baseline throughput + latency and the point where
+  the single `user_progress` doc contention (C5) shows up (feeds Phase 4).
+- **Deliverable:** baseline numbers appended to Appendix C.
+
+### 2.5 — Firestore backups / PITR + restore runbook (C8)
+- **Task:** enable Firestore scheduled backups / Point-In-Time Recovery; document **RPO/RTO**
+  and a tested **restore runbook**. Buyer due-diligence hard item.
+- **Test:** perform a restore drill to a scratch project; record results in Appendix D.
+
+### 2.6 — Staging env + non-zero minInstances (C6)
+- **Task:** separate a staging backend from production; set `minInstances >= 1` on prod in
+  `apphosting.yaml` to remove cold starts (cost trade-off noted).
+
+### 2.7 — Promote rate limiter to enforcing (S1)
+- **Task:** using 2.3 dashboards, tune thresholds (generous for shared classroom IPs;
+  allowlist; IP+username keying) and flip the limiter from shadow to **enforcing** (429).
+- **Test:** e2e — N+1 logins → 429; classroom-simulated shared IP within threshold not blocked.
+
+### Phase 2 Definition of Done
+1. Errors tracked with PII scrubbed; admin actions audited.
+2. Health check monitored; alerts on error-rate/latency live; dashboard exists.
+3. Backups/PITR enabled with a tested restore runbook and documented RPO/RTO.
+4. Load-test baseline recorded; limiter promoted to enforcing with tuned thresholds.
+5. Staging separated; prod cold starts removed.
+
+---
+
+## Phase 3 — Compliance & data governance  ·  Mode: MAX  ·  🚦 product go/no-go before start
+
+**Objective:** Make children's-data handling defensible — the single biggest *legal* blocker to
+a corporate sale. Cross-functional (Legal + Eng); this roadmap covers the engineering
+deliverables and flags the legal ones.
+**Gate to start:** explicit product/legal go/no-go. Phase 2 audit log + backups in place.
+
+### 3.1 — Compliance posture doc (C2) — *legal-led, eng-supported*
+- **Deliverable:** a `SECURITY.md` + `COMPLIANCE.md` covering COPPA (US), GDPR-K (EU),
+  Israeli Privacy Protection Law: lawful basis, **parental/guardian consent** capture,
+  **data minimization** audit (what we store vs. need — we store usernames + progress; confirm
+  no unnecessary PII), **retention policy**, sub-processor list, and a **DPA** template.
+
+### 3.2 — Data export + erasure endpoints (C2) — **design org-aware up front (Δ4)**
+- **Task:** authenticated **self-service export** (a user/guardian downloads their data) and
+  **erasure** (right to be forgotten) endpoints. Erasure must delete `users/{id}` +
+  `user_progress/{id}` + any audit/PII, and be **designed org-aware now** (Phase 4 introduces
+  orgs; "delete a student" changes meaning when a teacher/roster owns records — don't build a
+  contract Phase 4 has to rewrite). Coordinate with the existing admin `DELETE` (which already
+  removes `users` + `user_progress`).
+- **UX (SeniorProductDesigner):** export/erasure + consent screens — touch-first, a11y, RTL,
+  Hebrew, shared UI library.
+- **Test:** unit — export returns the full bundle; erasure removes every PII-bearing doc and is
+  idempotent. e2e — request → data gone; session invalidated.
+
+### 3.3 — Retention jobs (C2)
+- **Task:** scheduled deletion of inactive/expired accounts per the retention policy; log to
+  the audit trail.
+- **Test:** unit — job selects only past-retention records.
+
+### 3.4 — Commit `firestore.rules` deny-all (S10)
+- **Task:** commit an explicit `firestore.rules` denying all client access (defense-in-depth,
+  since only the Admin SDK is used) + a threat-model note. Add to `firebase.json`.
+- **Test:** rules deny a simulated client read/write.
+
+### Phase 3 Definition of Done
+1. Compliance posture documented; DPA template ready.
+2. Working, tested, **org-aware-designed** export + erasure endpoints.
+3. Retention jobs running and audited.
+4. `firestore.rules` deny-all committed.
+
+---
+
+## Phase 4 — Multi-tenancy & scale  ·  Mode: MAX  ·  🚦 product go/no-go + own MAX plan
+
+**Objective:** The actual "sell to a company" unlock: org isolation, org roles, and removal of
+the scale bottlenecks. **This is the largest and most irreversible phase — a storage-schema
+migration.** It gets its **own dedicated MAX plan** with a backfill + rollback runbook per
+`AGENTS.md` Data & Storage Rules (auto-escalate on `lib/*/storage.ts`).
+**Gate to start:** Phases 1–3 merged; explicit product go/no-go. **Do not start before Phase 1
+(session integrity) lands.**
+
+### 4.1 — Tenant/org data model (C1)
+- **Design (partition-key-first — Dev_Architect):**
+  - New `orgs` collection (org id, name, plan, created).
+  - Add `orgId` + richer `role` (`school-admin` | `teacher` | `parent` | `student`, superset of
+    today's `user|admin`) to `users` **and** to `user_progress`.
+  - **Every query scoped by `orgId` from day one** — retrofitting isolation later is how tenant
+    data leaks. Login, admin list, progress read/write all filter by `orgId`.
+  - Org-scoped admin: a school-admin manages only their org's users; a super-admin (us) spans
+    orgs.
+- **Backward-compat / migration:** existing single-tenant users backfilled into a **default
+  org**; dual-read compatibility window; `bundleVersion`-style additive change to the progress
+  doc. Full backfill + rollback runbook is the first deliverable of the Phase 4 plan.
+- **Regression anchors:** `multi-user-isolation.spec.ts` MUST stay green; add a new
+  `tests/e2e/tenant-isolation.spec.ts` proving a user in org A cannot read/write org B.
+
+### 4.2 — Admin pagination (C4)
+- **Task:** paginate `admin/users` GET (cursor/limit) instead of `orderBy().get()` all;
+  scope to the caller's org.
+- **Test:** unit — pagination returns bounded pages; e2e — large org list paginates.
+
+### 4.3 — Progress-doc contention / sizing (C5)
+- **Task:** using Phase 2.4 load-test data, decide whether to split `user_progress/{userId}`
+  into per-domain subcollections (workbook/exam/review) to cut whole-doc write contention and
+  stay clear of the 1 MB ceiling. Preserve the merge semantics + backward-compat.
+- **Test:** merge/sync unit suite stays green; load test shows reduced contention.
+
+### 4.4 — Migration + rollback runbook
+- **Deliverable:** step-by-step backfill (single-tenant → default org), verification queries,
+  and a rollback path. Dry-run on a scratch project first.
+
+### Phase 4 Definition of Done
+1. Org model live; every query org-scoped; tenant-isolation e2e green.
+2. Org-scoped roles (school-admin/teacher/parent/student) enforced.
+3. Admin list paginated; progress-doc contention addressed per load-test evidence.
+4. Existing users migrated into a default org with a tested rollback path.
+5. Both regression anchors + new tenant-isolation spec green.
+
+---
+
+## Cross-cutting rules (apply to every phase)
+
+- **Backward compatibility is sacred.** `multi-user-isolation.spec.ts` and
+  `auth-backward-compat.spec.ts` are the two regression anchors — they must stay green through
+  every phase. Learner data in `localStorage` and `user_progress` must survive deploys
+  (CLAUDE.md rule 5; `AGENTS.md` Data & Storage Rules).
+- **Additive, not destructive:** new fields default-absent ⇒ old behavior (the `bundleVersion`
+  and `tokenVersion` pattern).
+- **No weakened configs** (rule 7): every change tightens security posture; fix code, not
+  eslint/tsconfig.
+- **No `any`; `data-testid` via `lib/testIds.ts`; route builders via `lib/routes.ts`;
+  RTL-first.**
+- **Tests run on the PR's CI** (saved preference); locally only fast gates
+  (tsc/lint/testids/unit).
+- **Per-phase Learning Loop:** append a `LEARNING_LOG.md` entry on completion.
+
+## Consolidated risk register
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Auth change locks out live 30-day sessions | CRITICAL | Additive `tokenVersion` (absent ⇒ valid); `auth-backward-compat.spec.ts` green; staged rollout |
+| Multi-tenant migration orphans learner data | CRITICAL | Own MAX plan; default-org backfill; dual-read window; rollback runbook; dry-run |
+| Rate limiter is per-instance / bypassable | HIGH | Shared-state store from the start (never in-memory) |
+| Rate limiter false-positives on shared classroom IPs | HIGH | Shadow mode first; IP+username keying; generous thresholds; allowlist; tune on dashboards |
+| CSP breaks TTS/audio/inline styles | MEDIUM | `Report-Only` first, enforce after soak |
+| Spoofable forwarded headers defeat IP limiting / `secure` flag | MEDIUM | S11 spike verifies trusted proxy header before keying on IP |
+| Observability leaks children's PII | HIGH | Scrub usernames/tokens at SDK init; deny-list |
+| Erasure contract rewritten by Phase 4 tenancy | MEDIUM | Design export/erasure org-aware in Phase 3 |
+| Compliance scope creep blocks eng | MEDIUM | Split legal vs eng; eng ships export/erasure/retention primitives regardless |
+| No DR proof at due diligence | HIGH | Phase 2 PITR/backups + tested restore drill + RPO/RTO |
+
+## Sequencing rationale
+
+- **0 → 1 → 2** are pure hardening, continuously shippable, low regression risk.
+- **0.0 (proxy spike) precedes 0.1 (limiter)** because IP-keying depends on it.
+- **Limiter ships shadow (0.1) and enforces later (2.7)** so thresholds are tuned on real data
+  — this resolves the only open review concern (classroom false-positives).
+- **3 (compliance) and 4 (tenancy) each need a product go/no-go** and are the true "sellable"
+  unlocks; 4 is last because it's the largest and most irreversible, and its erasure semantics
+  depend on the org model designed-for in 3.
+
+---
+
+## Multi-role approval (recorded at plan time)
+
+Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). Key findings:
+- **SeniorDev_TechLead:** limiter must be shared-state; isolate irreversible Phase 4; additive
+  `tokenVersion`.
+- **Dev_Architect:** `orgId` partition-key from day one; revisit single progress doc; add secret
+  rotation.
+- **QA_Architect:** two regression anchors are sacred; add backups/PITR + RPO/RTO; tighten build
+  lint.
+- **SeniorFrontEnd_TechLead:** CSP Report-Only first; RTL on new screens.
+- **SeniorAutomation_Engineer:** concrete new unit/e2e files enumerated per phase.
+- **SeniorQA_Engineer:** shadow-mode limiter resolves classroom false-positive concern; PII
+  scrubbing.
+- **SeniorProductDesigner:** consent/export/erasure UX org-aware + "log out everywhere".
+- **SeniorProductManager:** go/no-go gates before Phases 3 & 4; backups/DR are due-diligence
+  items.
+- **MoE_PedagogyLead:** no educational-content change — N/A.
+
+---
+
+## Progress tracker
+
+| Phase | Title | Mode | Gate | Status |
+|-------|-------|------|------|--------|
+| 0 | Security quick wins | ULTRA | none | ⬜ Not started |
+| 1 | Session integrity & auth hardening | MAX | Phase 0 | ⬜ Not started |
+| 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
+| 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
+| 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
+
+---
+
+## Appendices (filled in as phases execute)
+
+- **Appendix A — Proxy trust / client-IP contract** (Phase 0.0): _TBD._
+- **Appendix B — JWT-secret rotation runbook** (Phase 1.5): _TBD._
+- **Appendix C — Load-test baseline** (Phase 2.4): _TBD._
+- **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._
+
+---
+
+## How to extend this roadmap
+
+- Add new findings to the **Findings register** with a stable `S#`/`C#` id and a target phase.
+- When a phase completes, flip its **Progress tracker** row to ✅, fill its appendix, and add a
+  `LEARNING_LOG.md` entry.
+- Keep this file the single source of truth for the hardening effort; per-phase `/plan` runs
+  reference it rather than duplicating it.
