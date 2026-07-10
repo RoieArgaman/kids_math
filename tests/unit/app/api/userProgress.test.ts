@@ -1,0 +1,150 @@
+// @vitest-environment node
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+
+import { FakeFirestore } from "./fakeFirestore";
+import type { UserProgressBundle } from "@/lib/user-data/types";
+
+const { holder } = vi.hoisted(() => ({ holder: { db: null as unknown } }));
+vi.mock("@/lib/firestore/admin", () => ({ getFirestore: () => holder.db }));
+
+import { GET as getProgress, POST as postProgress } from "@/app/api/user/progress/route";
+import { SESSION_COOKIE_NAME, signToken } from "@/lib/auth/jwt.server";
+import type { AuthUser } from "@/lib/auth/types";
+
+const USER: AuthUser = { userId: "u1", username: "Dana", role: "user" };
+let token: string;
+
+function makeBundle(overrides: Partial<UserProgressBundle> = {}): UserProgressBundle {
+  return {
+    bundleVersion: 4,
+    updatedAt: "2024-01-01T00:00:00.000Z",
+    streak: null,
+    grades: {
+      a: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+      b: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+    },
+    ...overrides,
+  } as UserProgressBundle;
+}
+
+function req(method: "GET" | "POST", opts: { token?: string; body?: unknown } = {}): NextRequest {
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (opts.token !== undefined) headers.cookie = `${SESSION_COOKIE_NAME}=${opts.token}`;
+  return new NextRequest("https://kids-math.test/api/user/progress", {
+    method,
+    headers,
+    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+  });
+}
+
+describe("/api/user/progress", () => {
+  beforeAll(async () => {
+    process.env.JWT_SECRET = "test-secret-value-at-least-32-chars-long!!";
+    token = await signToken(USER);
+  });
+
+  beforeEach(() => {
+    holder.db = new FakeFirestore();
+  });
+
+  describe("auth gating", () => {
+    it("GET → 401 without a token", async () => {
+      expect((await getProgress(req("GET"))).status).toBe(401);
+    });
+    it("GET → 401 with an invalid token", async () => {
+      expect((await getProgress(req("GET", { token: "garbage" }))).status).toBe(401);
+    });
+    it("POST → 401 without a token", async () => {
+      expect((await postProgress(req("POST", { body: makeBundle() }))).status).toBe(401);
+    });
+  });
+
+  describe("GET", () => {
+    it("returns null when the user has no stored progress doc", async () => {
+      const res = await getProgress(req("GET", { token }));
+      expect(res.status).toBe(200);
+      expect(await res.json()).toBeNull();
+    });
+
+    it("returns the stored bundle when present", async () => {
+      holder.db = new FakeFirestore({
+        seed: { user_progress: { u1: makeBundle({ updatedAt: "2024-05-05T00:00:00.000Z" }) } },
+      });
+      const res = await getProgress(req("GET", { token }));
+      const json = (await res.json()) as UserProgressBundle;
+      expect(json.updatedAt).toBe("2024-05-05T00:00:00.000Z");
+    });
+
+    it("returns 500 when Firestore throws", async () => {
+      holder.db = new FakeFirestore({ throwOnAccess: new Error("down") });
+      const res = await getProgress(req("GET", { token }));
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe("POST", () => {
+    it.each([1, 2, 3, 4])("accepts bundleVersion %i", async (v) => {
+      const res = await postProgress(
+        req("POST", { token, body: makeBundle({ bundleVersion: v as 1 | 2 | 3 | 4 }) }),
+      );
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ ok: true });
+    });
+
+    it("rejects an unknown bundleVersion with 400", async () => {
+      const res = await postProgress(req("POST", { token, body: { bundleVersion: 99 } }));
+      expect(res.status).toBe(400);
+    });
+
+    it("rejects a non-object body with 400", async () => {
+      const res = await postProgress(req("POST", { token, body: "nope" }));
+      expect(res.status).toBe(400);
+    });
+
+    it("persists the merged bundle and stamps a fresh updatedAt", async () => {
+      const db = new FakeFirestore();
+      holder.db = db;
+      await postProgress(req("POST", { token, body: makeBundle() }));
+      const stored = db.docs("user_progress").find((d) => d.id === "u1");
+      expect(stored).toBeDefined();
+      expect(typeof (stored!.data as UserProgressBundle).updatedAt).toBe("string");
+    });
+
+    it("merges with an existing doc rather than clobbering it (transaction path)", async () => {
+      // Existing has a newer streak; incoming has none. Merge must keep the newer streak.
+      const existing = makeBundle({
+        updatedAt: "2024-06-01T00:00:00.000Z",
+        streak: {
+          version: 1,
+          currentStreak: 7,
+          longestStreak: 7,
+          lastActiveDate: "2024-06-01",
+          updatedAt: "2024-06-01T00:00:00.000Z",
+        } as unknown as UserProgressBundle["streak"],
+      });
+      const db = new FakeFirestore({ seed: { user_progress: { u1: existing } } });
+      holder.db = db;
+      const res = await postProgress(req("POST", { token, body: makeBundle({ streak: null }) }));
+      expect(res.status).toBe(200);
+      const stored = db.docs("user_progress").find((d) => d.id === "u1")!.data as UserProgressBundle;
+      expect(stored.streak?.currentStreak).toBe(7);
+    });
+
+    it("clamps a future-dated incoming timestamp before storing", async () => {
+      const future = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString();
+      const db = new FakeFirestore();
+      holder.db = db;
+      await postProgress(req("POST", { token, body: makeBundle({ updatedAt: future }) }));
+      const stored = db.docs("user_progress").find((d) => d.id === "u1")!.data as UserProgressBundle;
+      // Route stamps its own updatedAt (now), never the far-future one.
+      expect(new Date(stored.updatedAt).getTime()).toBeLessThan(new Date(future).getTime());
+    });
+
+    it("returns 500 when the transaction fails", async () => {
+      holder.db = new FakeFirestore({ throwOnAccess: new Error("txn boom") });
+      const res = await postProgress(req("POST", { token, body: makeBundle() }));
+      expect(res.status).toBe(500);
+    });
+  });
+});
