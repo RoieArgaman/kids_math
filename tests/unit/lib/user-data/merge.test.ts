@@ -342,4 +342,17 @@ describe("clampFutureTimestamps", () => {
     expect(clamped.updatedAt).toBe(OLD);
     expect(clamped.grades.a.workbook?.days.day1.updatedAt).toBe("not-a-date");
   });
+
+  it("never introduces an explicit `updatedAt: undefined` for a day missing it", () => {
+    // Regression: a pre-#49 day (or any day serialized without `updatedAt`) must not
+    // gain an explicit `undefined`, which the Firestore Admin SDK rejects -> 500.
+    const dayNoTs = makeDay("day1", OLD);
+    delete (dayNoTs as { updatedAt?: string }).updatedAt;
+    const bundle = makeBundle({
+      grades: { a: makeGrade({ workbook: makeWorkbook(OLD, { day1: dayNoTs }) }), b: makeGrade() },
+    });
+    const day = clampFutureTimestamps(bundle, NOW).grades.a.workbook?.days.day1;
+    expect(day?.updatedAt).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(day, "updatedAt")).toBe(false);
+  });
 });

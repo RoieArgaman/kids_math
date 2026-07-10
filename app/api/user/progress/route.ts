@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     const doc = await db.collection("user_progress").doc(user.userId).get();
     if (!doc.exists) return NextResponse.json(null);
     return NextResponse.json(doc.data());
-  } catch {
+  } catch (err) {
+    console.error("GET /api/user/progress failed", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -55,7 +56,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("POST /api/user/progress failed", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -176,7 +176,10 @@ function clampWorkbook(
   const days: Record<DayId, DayProgressState> = {};
   for (const dayId of Object.keys(workbook.days) as DayId[]) {
     const day = workbook.days[dayId];
-    days[dayId] = { ...day, updatedAt: clampIso(day.updatedAt, nowMs, nowIso) };
+    const clamped = clampIso(day.updatedAt, nowMs, nowIso);
+    // `updatedAt` is optional per day; only override when we have a real string so we
+    // never write an explicit `updatedAt: undefined` (which the Admin SDK rejects).
+    days[dayId] = clamped === undefined ? day : { ...day, updatedAt: clamped };
   }
   return { ...workbook, days, updatedAt: clampIso(workbook.updatedAt, nowMs, nowIso) ?? workbook.updatedAt };
 }
