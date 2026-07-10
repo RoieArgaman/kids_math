@@ -56,11 +56,9 @@ test.describe("english day smoke", () => {
   });
 
   test("learner reaches English from home and completes Day 1 end-to-end", async ({ page }) => {
-    // Home → English entry → level picker → Level A home
-    await page.goto("/");
+    // Grade → Subject → Day: grade A subject picker → English → Level A home
+    await page.goto("/subjects/a");
     await page.getByTestId(testIds.screen.subjectPicker.englishCardCta()).click();
-    await expect(page.getByTestId(testIds.screen.english.levelPicker.root())).toBeVisible();
-    await page.getByTestId(testIds.screen.english.levelPicker.levelCardCta(LEVEL)).click();
     await expect(page.getByTestId(testIds.screen.english.home.root())).toBeVisible();
 
     // English home → Day 1 hub

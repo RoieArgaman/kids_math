@@ -28,6 +28,7 @@ import type { Exercise, ExerciseId } from "@/lib/types";
 import { routes } from "@/lib/routes";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
 import { gradeFinalExam } from "@/lib/final-exam/grading";
+import { isSubjectGradeComplete } from "@/lib/completion/subjectGrade";
 import { normalizeAnswerValue } from "@/lib/utils/exercise";
 import { childTid, testIds } from "@/lib/testIds";
 
@@ -192,10 +193,15 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
     };
     persist(next);
 
-    if (graded.passed && grade === "a") {
+    // Grade A "done" (all days + this exam passed) unlocks math in Grade B.
+    if (graded.passed && grade === "a" && isSubjectGradeComplete("math", "a")) {
       setIsUnlockingGradeB(true);
       try {
-        const response = await fetch("/api/unlock-grade-b", { method: "POST" });
+        const response = await fetch("/api/grade-b-unlock", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ subject: "math" }),
+        });
         if (!response.ok) {
           throw new Error(`unlock failed with status ${response.status}`);
         }

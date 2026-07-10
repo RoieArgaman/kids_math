@@ -97,7 +97,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
             className="flex flex-wrap items-center gap-4"
           >
             <AppNavLink href={routes.gradeHome(effectiveGrade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
-            <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+            <AppNavLink href={routes.subjectsForGrade(effectiveGrade, { previewAll })}>חזרה לבחירת נושא</AppNavLink>
           </nav>
         }
       />

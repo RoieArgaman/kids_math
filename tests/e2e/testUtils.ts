@@ -202,6 +202,55 @@ export async function seedFinalExamState(page: Page, grade: GradeId, state: Fina
   await seedLocalStorage(page, { [finalExamKeyForGrade(grade)]: state });
 }
 
+type UnlockSubject = "math" | "english" | "science";
+
+function subjectGradeBCookieName(subject: UnlockSubject): string {
+  return `kids_math.unlocked.b.${subject}`;
+}
+
+function cookieBaseUrl(): string {
+  return (
+    process.env.PLAYWRIGHT_COOKIE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005"
+  );
+}
+
+/**
+ * Seed a subject's grade-B unlock cookie directly (server-gate bypass for tests),
+ * mirroring what `/api/grade-b-unlock` sets. Also seeds the legacy math cookie so
+ * both the new per-subject gate and the back-compat path are exercised.
+ */
+export async function seedSubjectGradeBUnlockCookie(page: Page, subject: UnlockSubject): Promise<void> {
+  const url = cookieBaseUrl();
+  const cookies = [{ name: subjectGradeBCookieName(subject), value: "1", url }];
+  if (subject === "math") {
+    cookies.push({ name: "kids_math.unlocked_grade_b", value: "1", url });
+  }
+  await page.context().addCookies(cookies);
+}
+
+/**
+ * Convenience: make a subject "completed in Grade A" for the client gates —
+ * seed all Grade-A day progress complete + a passed Grade-A final exam, and set
+ * the server unlock cookie. Currently wired for math (workbook + final exam);
+ * English/Science seeding is handled by their own smoke helpers.
+ */
+export async function seedMathGradeAComplete(page: Page): Promise<void> {
+  const daysById = getWorkbookDaysById("a");
+  const days: Record<DayId, DayProgressState> = {};
+  for (const day of Object.values(daysById)) {
+    days[day.id] = createCompletedDayProgressState(day.id);
+  }
+  await seedProgressState(page, "a", createProgressState({ days }));
+  const exam = createFinalExamState({ grade: "a", seed: "e2e-grade-a-complete", answerMode: "pass" });
+  await seedFinalExamState(page, "a", {
+    ...exam,
+    submittedAt: new Date().toISOString(),
+    scorePercent: 100,
+    passed: true,
+  });
+  await seedSubjectGradeBUnlockCookie(page, "math");
+}
+
 export async function seedBadgeState(page: Page, grade: GradeId, state: BadgeState): Promise<void> {
   await seedLocalStorage(page, { [badgeKeyForGrade(grade)]: state });
 }

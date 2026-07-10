@@ -9,6 +9,6 @@ describe("ComingSoonScreen", () => {
     // After hydration (effect) the real panel renders.
     expect(screen.getByTestId(testIds.screen.comingSoon.root("b"))).toBeInTheDocument();
     expect(screen.getByTestId(testIds.screen.comingSoon.ctaStartGradeA())).toHaveAttribute("href", "/grade/a");
-    expect(screen.getByTestId(testIds.screen.comingSoon.ctaGradePicker())).toHaveAttribute("href", "/math");
+    expect(screen.getByTestId(testIds.screen.comingSoon.ctaGradePicker())).toHaveAttribute("href", "/");
   });
 });

@@ -11,6 +11,7 @@ import { StarReward } from "@/components/StarReward";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { childTid } from "@/lib/testIds";
+import { routes } from "@/lib/routes";
 import type { GradeId } from "@/lib/grades";
 import type { DayId, ExerciseId, Section } from "@/lib/types";
 import type { SubjectScreenConfig } from "@/lib/subjects/subjectScreenConfig";
@@ -105,7 +106,7 @@ export function SubjectDayScreen({
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
         <AppNavLink href={config.homeRoute(level)}>{config.backToSubjectLabel}</AppNavLink>
-        <AppNavLink href={config.levelPickerRoute()}>חֲזָרָה לִבְחִירַת שָׁלָב</AppNavLink>
+        <AppNavLink href={routes.subjectsForGrade(level)}>חֲזָרָה לִבְחִירַת נוֹשֵׂא</AppNavLink>
       </div>
 
       <div

@@ -1,38 +1,24 @@
-import Link from "next/link";
+import { LockedGradeScreen } from "@/components/screens/LockedGradeScreen";
 import { FINAL_EXAM_DAY_ID, FINAL_EXAM_GRADE } from "@/lib/final-exam/config";
 import { routes } from "@/lib/routes";
 import { testIds } from "@/lib/testIds";
 
 export default function GradeBLockedPage() {
   return (
-    <main data-testid={testIds.screen.gradeBLocked.root()} className="flex min-h-screen items-center justify-center px-4">
-      <div data-testid="km.autogen.page.node.idx.1" className="surface mx-auto w-full max-w-md rounded-3xl p-8 text-center shadow-lg">
-        <p data-testid="km.autogen.page.node.idx.2" className="mb-2 text-6xl" aria-hidden="true">
-          🔒
-        </p>
-        <h1 data-testid="km.autogen.page.node.idx.3" className="mb-2 text-2xl font-bold text-[#2c2348]">כיתה ב׳ נעולה</h1>
-        <p data-testid="km.autogen.page.node.idx.4" className="mb-6 text-sm text-[#8a8298]">
-          כדי לפתוח את כיתה ב׳ צריך לסיים את המבחן המסכם של כיתה א׳ ולקבל ציון של לפחות 85.
-        </p>
-
-        <div data-testid="km.autogen.page.node.idx.5" className="space-y-3">
-          <Link
-            href={routes.gradeHome("a")}
-            data-testid={testIds.screen.gradeBLocked.continueGradeA()}
-            className="touch-button btn-accent inline-block w-full rounded-2xl px-6 py-3 text-center font-semibold shadow-sm"
-          >
-            להמשיך בכיתה א׳
-          </Link>
-          <Link
-            href={routes.gradeDay(FINAL_EXAM_GRADE, FINAL_EXAM_DAY_ID)}
-            data-testid={testIds.screen.gradeBLocked.goFinalExam()}
-            className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
-          >
-            ללכת למבחן המסכם
-          </Link>
-        </div>
-      </div>
-    </main>
+    <LockedGradeScreen
+      rootTestId={testIds.screen.gradeBLocked.root()}
+      title="כיתה ב׳ נעולה"
+      reason="כדי לפתוח את כיתה ב׳ בחשבון צריך לסיים את כל ימי הלימוד של כיתה א׳ ולעבור את המבחן המסכם (ציון 85 לפחות)."
+      primary={{
+        href: routes.gradeHome("a"),
+        label: "להמשיך בכיתה א׳",
+        testId: testIds.screen.gradeBLocked.continueGradeA(),
+      }}
+      secondary={{
+        href: routes.gradeDay(FINAL_EXAM_GRADE, FINAL_EXAM_DAY_ID),
+        label: "ללכת למבחן המסכם",
+        testId: testIds.screen.gradeBLocked.goFinalExam(),
+      }}
+    />
   );
 }
-

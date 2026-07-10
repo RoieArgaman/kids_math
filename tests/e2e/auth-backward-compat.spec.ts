@@ -63,9 +63,9 @@ test.describe("Non-logged-in: /api/auth/me 401 handled silently", () => {
     expect(authErrors).toHaveLength(0);
   });
 
-  test("subject picker loads correctly with TopBar present", async ({ page }) => {
+  test("landing grade picker loads correctly with TopBar present", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByTestId(testIds.screen.subjectPicker.root())).toBeVisible();
+    await expect(page.getByTestId(testIds.screen.gradePicker.root())).toBeVisible();
     await expect(page.getByTestId(testIds.component.auth.topBar())).toBeVisible();
   });
 });

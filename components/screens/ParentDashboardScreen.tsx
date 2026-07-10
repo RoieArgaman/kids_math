@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import { isAdminUnlocked } from "@/lib/admin/session";
-import type { GradeId } from "@/lib/grades";
+import { gradeLabel, type GradeId } from "@/lib/grades";
 import type { Subject } from "@/lib/subjects";
 import { subjectLabel } from "@/lib/subjects";
 import { loadTrackProgress } from "@/lib/track";
@@ -192,7 +192,7 @@ export function ParentDashboardScreen() {
     );
   }
 
-  const { accuracy, streak, daysSections, timeOnTask, reviewBacklog } = vm;
+  const { accuracy, streak, daysSections, daysSectionsByGrade, timeOnTask, reviewBacklog } = vm;
   const topWeak = vm.weakSkills[0];
 
   const encourageSentence =
@@ -322,6 +322,30 @@ export function ParentDashboardScreen() {
         <h2 data-testid={childTid(progressTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
           התקדמות לאורך זמן
         </h2>
+        {/* Grade-first rollup: כיתה א׳ then כיתה ב׳ */}
+        <div data-testid={childTid(progressTid, "gradeRollup")} className="mb-3 space-y-2">
+          {(["a", "b"] as const).map((grade) => {
+            const rollup = daysSectionsByGrade[grade];
+            const rowTid = testIds.screen.parentDashboard.gradeRollupRow(grade);
+            return (
+              <div key={grade} data-testid={rowTid} className="flex items-center justify-between rounded-2xl border border-[#e7defb] bg-white/70 px-4 py-2 text-sm">
+                <span data-testid={childTid(rowTid, "label")} className="font-semibold text-[#2c2348]">
+                  כיתה {gradeLabel(grade)}
+                </span>
+                <span data-testid={childTid(rowTid, "value")} className="text-[#6b6577]">
+                  <Ltr>
+                    {rollup.daysComplete}/{rollup.totalDays}
+                  </Ltr>{" "}
+                  ימים ·{" "}
+                  <Ltr>
+                    {rollup.sectionsComplete}/{rollup.totalSections}
+                  </Ltr>{" "}
+                  מקטעים
+                </span>
+              </div>
+            );
+          })}
+        </div>
         <div data-testid={childTid(progressTid, "rows")} className="space-y-2">
           <div data-testid={childTid(progressTid, "sectionsRow")} className="flex items-center justify-between text-sm">
             <span data-testid={childTid(progressTid, "sectionsLabel")} className="text-[#6b6577]">

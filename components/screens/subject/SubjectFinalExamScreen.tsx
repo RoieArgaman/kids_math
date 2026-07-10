@@ -10,6 +10,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
 import type { GradeId } from "@/lib/grades";
 import type { FinalExamState, SubjectScreenConfig } from "@/lib/subjects/subjectScreenConfig";
+import { isSubjectGradeComplete } from "@/lib/completion/subjectGrade";
 import { useExerciseFocus } from "@/lib/hooks/useExerciseFocus";
 import { childTid } from "@/lib/testIds";
 import type { Exercise, ExerciseId } from "@/lib/types";
@@ -127,7 +128,19 @@ export function SubjectFinalExamScreen({
       passed: result.passed,
       submittedAt: new Date().toISOString(),
     });
-  }, [exam, persist, selectedExercises]);
+
+    // Level A "done" (all lessons + this exam passed) unlocks this subject in Grade B.
+    // The persist above wrote the passed state, so the completion check now sees it.
+    if (result.passed && level === "a" && isSubjectGradeComplete(config.subject, "a")) {
+      void fetch("/api/grade-b-unlock", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subject: config.subject }),
+      }).catch(() => {
+        /* best-effort; reconcileGradeUnlockCookies() heals a missed unlock later */
+      });
+    }
+  }, [config.subject, exam, level, persist, selectedExercises]);
 
   const onRetry = useCallback(() => {
     exam.clearState(level);

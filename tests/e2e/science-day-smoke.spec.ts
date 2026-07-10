@@ -45,11 +45,9 @@ test.describe("science day smoke", () => {
   });
 
   test("learner reaches Science from home and completes Day 1 end-to-end", async ({ page }) => {
-    // Home → Science entry → level picker → Level א׳ home
-    await page.goto("/");
+    // Grade → Subject → Day: grade A subject picker → Science → Level א׳ home
+    await page.goto("/subjects/a");
     await page.getByTestId(testIds.screen.subjectPicker.scienceCardCta()).click();
-    await expect(page.getByTestId(testIds.screen.science.levelPicker.root())).toBeVisible();
-    await page.getByTestId(testIds.screen.science.levelPicker.levelCardCta(LEVEL)).click();
     await expect(page.getByTestId(testIds.screen.science.home.root())).toBeVisible();
 
     // Science home → Day 1 hub

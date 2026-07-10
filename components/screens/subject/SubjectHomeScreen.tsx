@@ -8,6 +8,7 @@ import { HeroHeader } from "@/components/ui/HeroHeader";
 import type { GradeId } from "@/lib/grades";
 import { canUnlockNextDay } from "@/lib/progress/engine";
 import { childTid } from "@/lib/testIds";
+import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 import type { SubjectScreenConfig } from "@/lib/subjects/subjectScreenConfig";
 
@@ -27,9 +28,10 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
     const preview = getPreviewAllFromLocation();
     setPreviewAll(preview);
 
-    // Level B is gated behind Level A's final exam — bounce back to the picker if locked.
+    // Level B is gated behind Level A completion — bounce back to the grade's
+    // subject picker if locked (where this subject's card shows the locked hint).
     if (!config.isLevelUnlocked(level, { previewAll: preview })) {
-      router.replace(config.levelPickerRoute({ previewAll: preview }));
+      router.replace(routes.subjectsForGrade(level, { previewAll: preview }));
       return;
     }
 
@@ -53,7 +55,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
   return (
     <main data-testid={root} className="pb-10">
       <div data-testid={childTid(root, "nav")} className="mb-4">
-        <AppNavLink href={config.levelPickerRoute({ previewAll })}>חֲזָרָה לִבְחִירַת שָׁלָב</AppNavLink>
+        <AppNavLink href={routes.subjectsForGrade(level, { previewAll })}>חֲזָרָה לִבְחִירַת נוֹשֵׂא</AppNavLink>
       </div>
 
       <HeroHeader
