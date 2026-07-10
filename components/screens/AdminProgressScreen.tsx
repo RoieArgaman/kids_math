@@ -37,6 +37,22 @@ import { useAdminTtsEnabled } from "@/lib/hooks/useAdminTtsEnabled";
 
 type StatusState = { kind: "success" | "error"; message: string } | null;
 
+/** Set/clear a subject's grade-B unlock cookie (server enforcement). */
+function postGradeBUnlock(subject: Subject): Promise<Response> {
+  return fetch("/api/grade-b-unlock", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ subject }),
+  });
+}
+function postGradeBLock(subject: Subject): Promise<Response> {
+  return fetch("/api/grade-b-lock", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ subject }),
+  });
+}
+
 /** One selectable sub-track (level) within a subject. `value` is the GradeId axis ("a"/"b"). */
 type SubTrackOption = { value: GradeId; label: string };
 
@@ -232,7 +248,8 @@ export function AdminProgressScreen({
   }
 
   async function handleReset(dayId: string): Promise<void> {
-    // English / Science: isolated stores, no final-exam / GMAT / grade-B side effects.
+    // English / Science: isolated stores. When the cascade un-completes level A we
+    // also revoke that subject's grade-B unlock (server cookie), mirroring math.
     if (!isMath) {
       const isolatedResult =
         selectedSubject === "english"
@@ -243,9 +260,39 @@ export function AdminProgressScreen({
         setStatus({ kind: "error", message: `היום ${dayId} לא נמצא במחברת ${trackLabel}.` });
         return;
       }
+      saveTrackProgress(isolatedResult.nextState, track);
+      setProgress(isolatedResult.nextState);
       disarmDayReset();
       disarmSectionReset();
-      persistNext(isolatedResult.nextState, `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`);
+
+      const baseMessage = `התקדמות מיום ${dayId} ועד סוף המחברת אופסה.`;
+      if (!isolatedResult.shouldRevokeGradeBUnlock) {
+        setStatus({ kind: "success", message: baseMessage });
+        return;
+      }
+
+      setResetBusy(true);
+      try {
+        const response = await postGradeBLock(selectedSubject);
+        if (!response.ok) {
+          setStatus({
+            kind: "error",
+            message: `${baseMessage} האיפוס נשמר, אבל נעילת כיתה ב׳ ב${subjectLabel(selectedSubject)} נכשלה (קוד ${response.status}). נסו שוב.`,
+          });
+          return;
+        }
+        setStatus({
+          kind: "success",
+          message: `${baseMessage} כיתה ב׳ ב${subjectLabel(selectedSubject)} ננעלה מחדש.`,
+        });
+      } catch {
+        setStatus({
+          kind: "error",
+          message: `${baseMessage} האיפוס נשמר, אבל נעילת כיתה ב׳ ב${subjectLabel(selectedSubject)} נכשלה (בעיית רשת). נסו שוב.`,
+        });
+      } finally {
+        setResetBusy(false);
+      }
       return;
     }
 
@@ -271,7 +318,7 @@ export function AdminProgressScreen({
 
     setResetBusy(true);
     try {
-      const response = await fetch("/api/lock-grade-b", { method: "POST" });
+      const response = await postGradeBLock("math");
       if (!response.ok) {
         setStatus({
           kind: "error",
@@ -329,7 +376,7 @@ export function AdminProgressScreen({
     saveFinalExamState(selectedGrade, passedExam);
 
     if (selectedGrade === "a") {
-      await fetch("/api/unlock-grade-b", { method: "POST" });
+      await postGradeBUnlock(selectedSubject);
     }
 
     setProgress((prev) => {
@@ -403,7 +450,41 @@ export function AdminProgressScreen({
         </header>
 
         <div data-testid={childTid(rootTid, "body")} className="space-y-4">
+          {/* Grade-first IA: pick the grade/level, then the subject within it. */}
           <section data-testid={childTid(rootTid, "gradeSelector")} className="flex flex-wrap gap-4 px-4">
+            <div data-testid={childTid(rootTid, "subTrackField")} className="min-w-[12rem] flex-1 space-y-2">
+              <label
+                data-testid={childTid(rootTid, "gradeLabel")}
+                htmlFor="admin-grade"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                מסלול
+              </label>
+              <select
+                id="admin-grade"
+                data-testid={testIds.screen.adminProgress.gradeSelect()}
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                value={selectedGrade}
+                onChange={(event) => {
+                  disarmDayReset();
+                  disarmSectionReset();
+                  setExpandedDaySectionLists(new Set());
+                  setStatus(null);
+                  setSelectedGrade(event.target.value as GradeId);
+                }}
+              >
+                {subTrackOptions(selectedSubject).map((opt) => (
+                  <option
+                    key={opt.value}
+                    data-testid={childTid(rootTid, "gradeOption", opt.value)}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div data-testid={childTid(rootTid, "subjectField")} className="min-w-[12rem] flex-1 space-y-2">
               <label
                 data-testid={childTid(rootTid, "subjectLabel")}
@@ -436,39 +517,6 @@ export function AdminProgressScreen({
                 <option data-testid={childTid(rootTid, "subjectOption", "science")} value="science">
                   {subjectLabel("science")}
                 </option>
-              </select>
-            </div>
-
-            <div data-testid={childTid(rootTid, "subTrackField")} className="min-w-[12rem] flex-1 space-y-2">
-              <label
-                data-testid={childTid(rootTid, "gradeLabel")}
-                htmlFor="admin-grade"
-                className="block text-sm font-semibold text-slate-700"
-              >
-                מסלול
-              </label>
-              <select
-                id="admin-grade"
-                data-testid={testIds.screen.adminProgress.gradeSelect()}
-                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-                value={selectedGrade}
-                onChange={(event) => {
-                  disarmDayReset();
-                  disarmSectionReset();
-                  setExpandedDaySectionLists(new Set());
-                  setStatus(null);
-                  setSelectedGrade(event.target.value as GradeId);
-                }}
-              >
-                {subTrackOptions(selectedSubject).map((opt) => (
-                  <option
-                    key={opt.value}
-                    data-testid={childTid(rootTid, "gradeOption", opt.value)}
-                    value={opt.value}
-                  >
-                    {opt.label}
-                  </option>
-                ))}
               </select>
             </div>
           </section>

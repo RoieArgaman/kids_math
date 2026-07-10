@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { getWorkbookDays } from "@/lib/content/workbook";
-import { getAllEnglishDays } from "@/lib/content/english-workbook";
-import { getAllScienceDays } from "@/lib/content/science-workbook";
+import { getAllEnglishDays, getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllScienceDays, getScienceDays } from "@/lib/content/science-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import {
   resetAdminDayProgress,
@@ -10,6 +10,8 @@ import {
 } from "@/lib/admin/resetDayProgress";
 import * as gmatStorage from "@/lib/gmat-challenge/storage";
 import * as finalExamStorage from "@/lib/final-exam/storage";
+import * as englishFinalExamStorage from "@/lib/english/final-exam/storage";
+import * as scienceFinalExamStorage from "@/lib/science/final-exam/storage";
 import {
   createInitialWorkbookProgressState,
   createInitialDayProgressState,
@@ -175,6 +177,28 @@ describe("resetAdminEnglishDayProgress", () => {
     clearSpy.mockRestore();
     gmatSpy.mockRestore();
   });
+
+  it("revokes grade-B + clears the level-A exam when a level-A lesson is reset", () => {
+    const clearSpy = vi.spyOn(englishFinalExamStorage, "clearEnglishFinalExamState");
+    const levelADayId = getEnglishDays("a")[0].id as DayId;
+
+    const result = resetAdminEnglishDayProgress(createInitialWorkbookProgressState(), levelADayId);
+
+    expect(result?.shouldRevokeGradeBUnlock).toBe(true);
+    expect(clearSpy).toHaveBeenCalledWith("a");
+    clearSpy.mockRestore();
+  });
+
+  it("does NOT revoke grade-B when only a level-B lesson is reset", () => {
+    const clearSpy = vi.spyOn(englishFinalExamStorage, "clearEnglishFinalExamState");
+    const levelBDayId = getEnglishDays("b")[0].id as DayId;
+
+    const result = resetAdminEnglishDayProgress(createInitialWorkbookProgressState(), levelBDayId);
+
+    expect(result?.shouldRevokeGradeBUnlock).toBe(false);
+    expect(clearSpy).not.toHaveBeenCalled();
+    clearSpy.mockRestore();
+  });
 });
 
 describe("resetAdminScienceDayProgress", () => {
@@ -218,5 +242,27 @@ describe("resetAdminScienceDayProgress", () => {
     expect(gmatSpy).not.toHaveBeenCalled();
     clearSpy.mockRestore();
     gmatSpy.mockRestore();
+  });
+
+  it("revokes grade-B + clears the level-A exam when a level-A lesson is reset", () => {
+    const clearSpy = vi.spyOn(scienceFinalExamStorage, "clearScienceFinalExamState");
+    const levelADayId = getScienceDays("a")[0].id as DayId;
+
+    const result = resetAdminScienceDayProgress(createInitialWorkbookProgressState(), levelADayId);
+
+    expect(result?.shouldRevokeGradeBUnlock).toBe(true);
+    expect(clearSpy).toHaveBeenCalledWith("a");
+    clearSpy.mockRestore();
+  });
+
+  it("does NOT revoke grade-B when only a level-B lesson is reset", () => {
+    const clearSpy = vi.spyOn(scienceFinalExamStorage, "clearScienceFinalExamState");
+    const levelBDayId = getScienceDays("b")[0].id as DayId;
+
+    const result = resetAdminScienceDayProgress(createInitialWorkbookProgressState(), levelBDayId);
+
+    expect(result?.shouldRevokeGradeBUnlock).toBe(false);
+    expect(clearSpy).not.toHaveBeenCalled();
+    clearSpy.mockRestore();
   });
 });

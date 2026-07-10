@@ -50,6 +50,7 @@ export const testIds = {
     subjectPicker: {
       root: () => tid("screen", "subjectPicker"),
       hero: () => tid("screen", "subjectPicker", "hero"),
+      navBack: () => tid("screen", "subjectPicker", "nav", "back"),
       adminCta: () => tid("screen", "subjectPicker", "cta", "admin"),
       mathCard: () => tid("screen", "subjectPicker", "subjectCard", "math"),
       mathCardCta: () => tid("screen", "subjectPicker", "subjectCard", "math", "cta"),
@@ -57,6 +58,8 @@ export const testIds = {
       englishCardCta: () => tid("screen", "subjectPicker", "subjectCard", "english", "cta"),
       scienceCard: () => tid("screen", "subjectPicker", "subjectCard", "science"),
       scienceCardCta: () => tid("screen", "subjectPicker", "subjectCard", "science", "cta"),
+      /** Locked-state hint on a subject card (grade B, subject not completed in grade A). */
+      lockedHint: (subject: string) => tid("screen", "subjectPicker", "subjectCard", subject, "lockedHint"),
     },
     gradePicker: {
       root: () => tid("screen", "gradePicker"),
@@ -65,6 +68,8 @@ export const testIds = {
       adminCta: () => tid("screen", "gradePicker", "cta", "admin"),
       gradeCard: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade),
       gradeCardCta: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade, "cta"),
+      /** Locked-state hint on a grade card (grade B, no subject completed in grade A). */
+      gradeLockedHint: (grade: string) => tid("screen", "gradePicker", "gradeCard", "grade", grade, "lockedHint"),
     },
     english: {
       levelPicker: {
@@ -167,6 +172,17 @@ export const testIds = {
       continueGradeA: () => tid("screen", "grade-b-locked", "cta", "continue-grade-a"),
       goFinalExam: () => tid("screen", "grade-b-locked", "cta", "go-final-exam"),
     },
+    /**
+     * Shared locked-grade screen for the subject grade-B subtrees + the grade-level
+     * `/subjects/b` gate. `variant` ∈ "english" | "science" | "grade". (Math keeps the
+     * legacy `gradeBLocked` ids above for back-compat.)
+     */
+    lockedGrade: {
+      root: (variant: string) => tid("screen", "lockedGrade", "variant", variant),
+      primaryCta: (variant: string) => tid("screen", "lockedGrade", "variant", variant, "cta", "primary"),
+      secondaryCta: (variant: string) => tid("screen", "lockedGrade", "variant", variant, "cta", "secondary"),
+      reason: (variant: string) => tid("screen", "lockedGrade", "variant", variant, "reason"),
+    },
     home: {
       root: (grade: string) => tid("screen", "home", "grade", grade),
       hero: (grade: string) => tid("screen", "home", "hero", "grade", grade),
@@ -241,6 +257,8 @@ export const testIds = {
         tid("screen", "parentDashboard", "metric", "accuracy", "subject", subject),
       // ② Progress over time
       progressSection: () => tid("screen", "parentDashboard", "section", "progress"),
+      /** Per-grade days/sections rollup row (grade-first grouping). */
+      gradeRollupRow: (grade: string) => tid("screen", "parentDashboard", "gradeRollup", "grade", grade),
       // ③ Weak skills
       weakSkillsSection: () => tid("screen", "parentDashboard", "section", "weakSkills"),
       weakSkillRow: (subject: string, tag: string) =>

@@ -6,14 +6,16 @@ import { expect, test, type ConsoleMessage } from "@playwright/test";
  * locked screen which is always reachable.
  */
 const SCREENS: { name: string; path: string }[] = [
-  { name: "subject-picker", path: "/" },
-  { name: "math-home", path: "/math" },
+  { name: "grade-picker", path: "/" },
+  { name: "subjects-grade-a", path: "/subjects/a" },
   { name: "grade-a-home", path: "/grade/a" },
   { name: "grade-a-plan", path: "/grade/a/plan" },
   { name: "grade-a-badges", path: "/grade/a/badges" },
   { name: "grade-a-gmat-challenge", path: "/grade/a/gmat-challenge" },
-  { name: "english", path: "/english" },
   { name: "grade-b-locked", path: "/grade/b/locked" },
+  { name: "english-b-locked", path: "/english/b/locked" },
+  { name: "science-b-locked", path: "/science/b/locked" },
+  { name: "subjects-b-locked", path: "/subjects/b/locked" },
   { name: "privacy", path: "/privacy" },
   { name: "cookies", path: "/cookies" },
   { name: "admin-progress", path: "/admin/progress" },

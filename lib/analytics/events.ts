@@ -5,6 +5,8 @@ import type {
   ExerciseId,
   SectionId,
 } from "@/lib/types";
+import type { GradeId } from "@/lib/grades";
+import type { Subject } from "@/lib/subjects";
 import { isBrowser, isObject } from "@/lib/utils/guards";
 
 const ANALYTICS_STORAGE_KEY = "kids_math.analytics_events.v1";
@@ -14,6 +16,7 @@ const DEFAULT_EVENT_CAP = 1000;
 const VALID_EVENT_NAMES: ReadonlySet<AnalyticsEventName> = new Set<AnalyticsEventName>([
   "home_viewed",
   "grade_selected",
+  "subject_selected",
   "plan_viewed",
   "day_card_clicked",
   "day_viewed",
@@ -39,6 +42,8 @@ interface LogEventInput {
   dayId?: DayId;
   sectionId?: SectionId;
   exerciseId?: ExerciseId;
+  subject?: Subject;
+  gradeId?: GradeId;
   payload?: Record<string, string | number | boolean | null>;
 }
 
@@ -107,6 +112,8 @@ export function logEvent(name: AnalyticsEventName, input: LogEventInput = {}): A
     dayId: input.dayId,
     sectionId: input.sectionId,
     exerciseId: input.exerciseId,
+    subject: input.subject,
+    gradeId: input.gradeId,
     payload: input.payload,
     timestamp: new Date().toISOString(),
   };

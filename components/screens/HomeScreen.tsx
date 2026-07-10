@@ -107,7 +107,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   useEffect(() => {
     const bundle = loadGradeHomeResumeState(effectiveGrade);
     setPreviewAll(bundle.previewAll);
-    logEvent("home_viewed", { payload: { grade: effectiveGrade } });
+    logEvent("home_viewed", { subject: "math", gradeId: effectiveGrade, payload: { grade: effectiveGrade } });
     setProgress(bundle.progress);
     setFinalExam(bundle.finalExam);
     setEvents(bundle.events);
@@ -193,7 +193,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
     <main data-testid={testIds.screen.home.root(effectiveGrade)} className="pb-10">
       <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav")} className="mb-4">
         <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav", "actions")} className="flex items-center gap-4">
-          <AppNavLink href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+          <AppNavLink href={routes.subjectsForGrade(effectiveGrade, { previewAll })}>חזרה לבחירת נושא</AppNavLink>
           <AppNavLink
             href={routes.gradeBadges(effectiveGrade, { previewAll })}
             data-testid={testIds.screen.badges.badgesCta(effectiveGrade)}

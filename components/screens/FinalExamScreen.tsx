@@ -192,10 +192,15 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
     };
     persist(next);
 
+    // Passing the Grade A final exam (only reachable after all days) unlocks math in Grade B.
     if (graded.passed && grade === "a") {
       setIsUnlockingGradeB(true);
       try {
-        const response = await fetch("/api/unlock-grade-b", { method: "POST" });
+        const response = await fetch("/api/grade-b-unlock", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ subject: "math" }),
+        });
         if (!response.ok) {
           throw new Error(`unlock failed with status ${response.status}`);
         }

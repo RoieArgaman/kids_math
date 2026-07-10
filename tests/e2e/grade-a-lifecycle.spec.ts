@@ -143,7 +143,7 @@ test.describe("grade A lifecycle", () => {
     await page.reload();
 
     // Simulate a slow unlock API (but still hit the real server so it can set the httpOnly cookie).
-    await page.route("**/api/unlock-grade-b", async (route) => {
+    await page.route("**/api/grade-b-unlock", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1200));
       await route.continue();
     });

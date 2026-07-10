@@ -1,9 +1,11 @@
 import { getWorkbookDays } from "@/lib/content/workbook";
-import { getAllEnglishDays } from "@/lib/content/english-workbook";
-import { getAllScienceDays } from "@/lib/content/science-workbook";
+import { getAllEnglishDays, getEnglishDays } from "@/lib/content/english-workbook";
+import { getAllScienceDays, getScienceDays } from "@/lib/content/science-workbook";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
 import { clearGmatChallengeState } from "@/lib/gmat-challenge/storage";
 import { clearFinalExamState } from "@/lib/final-exam/storage";
+import { clearEnglishFinalExamState } from "@/lib/english/final-exam/storage";
+import { clearScienceFinalExamState } from "@/lib/science/final-exam/storage";
 import type { GradeId } from "@/lib/grades";
 import { resetDayProgress } from "@/lib/progress/engine";
 import type { DayId, WorkbookProgressState } from "@/lib/types";
@@ -54,14 +56,15 @@ export function resetAdminDayProgress(
 
 export type ResetAdminEnglishDayProgressResult = {
   nextState: WorkbookProgressState;
+  /** When true, the cascade un-completed English level A → revoke english grade-B. */
+  shouldRevokeGradeBUnlock: boolean;
 };
 
 /**
  * English admin "reset day" cascades from the chosen day through the end of the English
- * (Pre-A1) workbook, mirroring the math cascade shape. English has NO final exam, GMAT
- * challenge, or grade-B unlock chain, so this path deliberately has zero side effects —
- * it only resets day progress and returns the next state for the caller to persist via
- * the English store (`saveTrackProgress` / `saveEnglishProgressState`).
+ * workbook (both levels share a single isolated store), mirroring the math cascade shape.
+ * When the cascade resets a level-A lesson, level A can no longer be "complete", so we
+ * clear the level-A final exam and signal the caller to revoke english grade-B.
  */
 export function resetAdminEnglishDayProgress(
   state: WorkbookProgressState,
@@ -78,19 +81,26 @@ export function resetAdminEnglishDayProgress(
     next = resetDayProgress(next, ordered[i].id as DayId);
   }
 
-  return { nextState: next };
+  const levelADayIds = new Set(getEnglishDays("a").map((d) => d.id));
+  const cascadeTouchedLevelA = ordered.slice(startIndex).some((d) => levelADayIds.has(d.id));
+  if (cascadeTouchedLevelA) {
+    clearEnglishFinalExamState("a");
+  }
+
+  return { nextState: next, shouldRevokeGradeBUnlock: cascadeTouchedLevelA };
 }
 
 export type ResetAdminScienceDayProgressResult = {
   nextState: WorkbookProgressState;
+  /** When true, the cascade un-completed Science כיתה א׳ → revoke science grade-B. */
+  shouldRevokeGradeBUnlock: boolean;
 };
 
 /**
  * Science admin "reset day" cascades from the chosen day through the end of the Science
- * workbook (both grade levels share a single isolated store), mirroring the English
- * cascade shape. Science has NO final exam, GMAT challenge, or grade-B unlock chain in
- * its workbook, so this path has zero side effects — it only resets day progress and
- * returns the next state for the caller to persist via the Science store.
+ * workbook (both levels share a single isolated store), mirroring the English cascade.
+ * When the cascade resets a כיתה-א׳ lesson, that level can no longer be "complete", so we
+ * clear its final exam and signal the caller to revoke science grade-B.
  */
 export function resetAdminScienceDayProgress(
   state: WorkbookProgressState,
@@ -107,5 +117,11 @@ export function resetAdminScienceDayProgress(
     next = resetDayProgress(next, ordered[i].id as DayId);
   }
 
-  return { nextState: next };
+  const levelADayIds = new Set(getScienceDays("a").map((d) => d.id));
+  const cascadeTouchedLevelA = ordered.slice(startIndex).some((d) => levelADayIds.has(d.id));
+  if (cascadeTouchedLevelA) {
+    clearScienceFinalExamState("a");
+  }
+
+  return { nextState: next, shouldRevokeGradeBUnlock: cascadeTouchedLevelA };
 }

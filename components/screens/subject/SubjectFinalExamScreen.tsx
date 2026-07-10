@@ -127,7 +127,19 @@ export function SubjectFinalExamScreen({
       passed: result.passed,
       submittedAt: new Date().toISOString(),
     });
-  }, [exam, persist, selectedExercises]);
+
+    // Passing the level-A final exam (only reachable after all lessons) unlocks this
+    // subject in Grade B.
+    if (result.passed && level === "a") {
+      void fetch("/api/grade-b-unlock", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subject: config.subject }),
+      }).catch(() => {
+        /* best-effort; reconcileGradeUnlockCookies() heals a missed unlock later */
+      });
+    }
+  }, [config.subject, exam, level, persist, selectedExercises]);
 
   const onRetry = useCallback(() => {
     exam.clearState(level);

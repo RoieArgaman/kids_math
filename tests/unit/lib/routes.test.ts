@@ -11,8 +11,14 @@ describe("routes", () => {
     expect(routes.privacy({ searchParams: { previewAll: "1" } })).toBe("/privacy?previewAll=1");
   });
 
-  it("maps the subject-first IA to the expected paths", () => {
+  it("maps the Grade → Subject → Day IA to the expected paths", () => {
+    // `/` is now the landing GRADE picker; `subjectPicker` is a back-compat alias.
+    expect(routes.gradePicker()).toBe("/");
     expect(routes.subjectPicker()).toBe("/");
+    // Per-grade subject picker.
+    expect(routes.subjectsForGrade("a")).toBe("/subjects/a");
+    expect(routes.subjectsForGrade("b")).toBe("/subjects/b");
+    // Legacy per-subject picker builders unchanged (their pages redirect to `/`).
     expect(routes.mathHome()).toBe("/math");
     expect(routes.englishLevelPicker()).toBe("/english");
     // English levels mirror the grade structure: picker → per-level home/day/exam.
@@ -23,8 +29,10 @@ describe("routes", () => {
       "/english/b/day/day-15/section/day-15-section-0",
     );
     expect(routes.englishExam("a")).toBe("/english/a/exam");
-    // gradePicker() now resolves to the relocated Math grade picker.
-    expect(routes.gradePicker()).toBe("/math");
+  });
+
+  it("preserves preview query through the subject-picker hop", () => {
+    expect(routes.subjectsForGrade("b", { previewAll: true })).toBe("/subjects/b?previewAll=1");
   });
 
   it("preserves preview query through the new subject hops", () => {

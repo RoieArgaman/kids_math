@@ -1,8 +1,11 @@
 import type { DayId, ExerciseId, SectionId } from "./curriculum";
+import type { GradeId } from "@/lib/grades";
+import type { Subject } from "@/lib/subjects";
 
 export type AnalyticsEventName =
   | "home_viewed"
   | "grade_selected"
+  | "subject_selected"
   | "plan_viewed"
   | "day_card_clicked"
   | "day_viewed"
@@ -30,6 +33,10 @@ export interface AnalyticsEvent {
   dayId?: DayId;
   sectionId?: SectionId;
   exerciseId?: ExerciseId;
+  /** Optional subject dimension — lets analytics disambiguate colliding day ids across tracks. */
+  subject?: Subject;
+  /** Optional grade dimension (a=Grade A / level A, b=Grade B / level B). */
+  gradeId?: GradeId;
   payload?: Record<string, string | number | boolean | null>;
   timestamp: string;
 }

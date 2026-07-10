@@ -110,7 +110,7 @@ test("unlock once, then reach both screens via the cards without re-entering the
 
   // Leaving the admin area from the hub clears the unlock → re-entering re-prompts.
   await page.getByTestId(childTid(testIds.screen.adminHub.root(), "navBack")).click();
-  await expect(page).toHaveURL("/math");
+  await expect(page).toHaveURL("/");
   await page.goto("/admin");
   await expect(page.getByTestId(testIds.screen.adminHub.pinInput())).toBeVisible();
 });

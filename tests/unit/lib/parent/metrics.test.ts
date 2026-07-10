@@ -24,6 +24,8 @@ import {
   type TrackInput,
   deriveAllMetrics,
   deriveDaysAndSections,
+  deriveDaysAndSectionsByGrade,
+  deriveExamResults,
   deriveFirstAttemptAccuracy,
   deriveLastActiveIso,
   deriveReviewBacklog,
@@ -250,6 +252,55 @@ describe("deriveDaysAndSections", () => {
     });
     const full = deriveDaysAndSections([makeTrackInput("math", "a", fullProgress, [day])]);
     expect(full.sectionsComplete).toBe(1);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// deriveDaysAndSectionsByGrade (grade-first rollup)
+// ----------------------------------------------------------------------------
+
+describe("deriveDaysAndSectionsByGrade", () => {
+  it("splits days/sections by the grade axis", () => {
+    const dayA = makeDay("day-1", [makeSection("day-1-section-1", [makeExercise(EX1)])]);
+    const dayB = makeDay("day-2", [makeSection("day-2-section-1", [makeExercise(EX2)])]);
+    const progA = makeProgress({ "day-1": makeDayProgress("day-1", { isComplete: true }) });
+    const progB = makeProgress({ "day-2": makeDayProgress("day-2", { isComplete: false }) });
+    const tracks = [
+      makeTrackInput("math", "a", progA, [dayA]),
+      makeTrackInput("math", "b", progB, [dayB]),
+    ];
+
+    const byGrade = deriveDaysAndSectionsByGrade(tracks);
+    expect(byGrade.a.totalDays).toBe(1);
+    expect(byGrade.a.daysComplete).toBe(1);
+    expect(byGrade.b.totalDays).toBe(1);
+    expect(byGrade.b.daysComplete).toBe(0);
+  });
+
+  it("agrees with the global rollup when summed across grades", () => {
+    const dayA = makeDay("day-1", [makeSection("day-1-section-1", [makeExercise(EX1)])]);
+    const dayB = makeDay("day-2", [makeSection("day-2-section-1", [makeExercise(EX2)])]);
+    const tracks = [
+      makeTrackInput("math", "a", makeProgress({ "day-1": makeDayProgress("day-1", { isComplete: true }) }), [dayA]),
+      makeTrackInput("science", "b", makeProgress({ "day-2": makeDayProgress("day-2", { isComplete: true }) }), [dayB]),
+    ];
+    const global = deriveDaysAndSections(tracks);
+    const byGrade = deriveDaysAndSectionsByGrade(tracks);
+    expect(byGrade.a.totalDays + byGrade.b.totalDays).toBe(global.totalDays);
+    expect(byGrade.a.daysComplete + byGrade.b.daysComplete).toBe(global.daysComplete);
+  });
+});
+
+describe("deriveExamResults ordering", () => {
+  it("orders grade-first (A before B), then by subject", () => {
+    const exams: ExamInput[] = [
+      { key: { subject: "science", grade: "b" }, passed: true, scorePercent: 90, submittedAt: null },
+      { key: { subject: "math", grade: "b" }, passed: true, scorePercent: 88, submittedAt: null },
+      { key: { subject: "english", grade: "a" }, passed: true, scorePercent: 95, submittedAt: null },
+      { key: { subject: "math", grade: "a" }, passed: false, scorePercent: 50, submittedAt: null },
+    ];
+    const ordered = deriveExamResults(exams).map((e) => `${e.key.grade}:${e.key.subject}`);
+    expect(ordered).toEqual(["a:math", "a:english", "b:math", "b:science"]);
   });
 });
 

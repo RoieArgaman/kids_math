@@ -216,7 +216,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
         <AppNavLink tone="primary" href={routes.gradeHome(effectiveGrade, { previewAll })}>→ חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
-        <AppNavLink tone="muted" href={routes.gradePicker({ previewAll })}>חזרה לבחירת כיתה</AppNavLink>
+        <AppNavLink tone="muted" href={routes.subjectsForGrade(effectiveGrade, { previewAll })}>חזרה לבחירת נושא</AppNavLink>
       </div>
 
       <ProgressHeader

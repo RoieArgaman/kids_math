@@ -54,9 +54,16 @@ function withQuery(pathname: string, opts?: RouteOpts): string {
 }
 
 export const routes = {
-  /** Top-level "what do you want to learn" picker (Math / English). */
+  /**
+   * Landing grade picker (`/`) — pick כיתה א׳ / ב׳. Grade B is gated until a subject
+   * is completed in Grade A. This is the top of the Grade → Subject → Day flow.
+   */
+  gradePicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/", opts),
+  /** @deprecated Back-compat alias of {@link gradePicker} (`/`). Prefer `gradePicker`. */
   subjectPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/", opts),
-  /** Math subject home (grade picker). */
+  /** Subject picker for a grade (`/subjects/[grade]`) — Math / English / Science. */
+  subjectsForGrade: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/subjects/${grade}`, opts),
+  /** @deprecated Legacy math grade-picker route — the page now redirects to `/`. */
   mathHome: (opts?: Omit<RouteOpts, "grade">) => withQuery("/math", opts),
   /** Science level picker (כיתה א׳ / כיתה ב׳) — the Science analog of the grade picker. */
   scienceLevelPicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/science", opts),
@@ -76,11 +83,6 @@ export const routes = {
   englishSection: (level: GradeId, dayId: string, sectionId: string, opts?: Omit<RouteOpts, "grade">) =>
     withQuery(`/english/${level}/day/${dayId}/section/${sectionId}`, opts),
   englishExam: (level: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/english/${level}/exam`, opts),
-  /**
-   * Math grade picker. Now lives at /math (the home "/" is the subject picker).
-   * All existing "back to grade selection" links resolve here automatically.
-   */
-  gradePicker: (opts?: Omit<RouteOpts, "grade">) => withQuery("/math", opts),
   gradeHome: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/grade/${grade}`, opts),
   gradePlan: (grade: GradeId, opts?: Omit<RouteOpts, "grade">) => withQuery(`/grade/${grade}/plan`, opts),
   gradeDay: (grade: GradeId, dayId: string, opts?: Omit<RouteOpts, "grade">) =>

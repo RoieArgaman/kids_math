@@ -72,6 +72,9 @@ export type DaysSectionsVM = {
   totalSections: number;
 };
 
+/** Per-grade days/sections rollup — powers the grade-first dashboard grouping. */
+export type DaysSectionsByGradeVM = Record<GradeId, DaysSectionsVM>;
+
 export type TimeOnTaskVM = {
   /** Approximate active practice time over the trailing week, in ms (idle-clamped). */
   approxWeeklyMs: number;
@@ -113,6 +116,8 @@ export type ParentDashboardViewModels = {
   hasAnyData: boolean;
   accuracy: AccuracyVM;
   daysSections: DaysSectionsVM;
+  /** Per-grade days/sections rollup for the grade-first dashboard grouping. */
+  daysSectionsByGrade: DaysSectionsByGradeVM;
   timeOnTask: TimeOnTaskVM;
   streak: StreakVM;
   weakSkills: WeakSkillEntry[];
@@ -201,6 +206,11 @@ function isSectionComplete(
 
 /** Days & sections completed across all tracks. The final-exam pseudo-day is excluded. */
 export function deriveDaysAndSections(tracks: TrackInput[]): DaysSectionsVM {
+  return daysAndSectionsForTracks(tracks);
+}
+
+/** Days & sections completed for a single track (final-exam pseudo-day excluded). */
+function daysAndSectionsForTracks(tracks: TrackInput[]): DaysSectionsVM {
   let daysComplete = 0;
   let totalDays = 0;
   let sectionsComplete = 0;
@@ -220,6 +230,19 @@ export function deriveDaysAndSections(tracks: TrackInput[]): DaysSectionsVM {
   }
 
   return { daysComplete, totalDays, sectionsComplete, totalSections };
+}
+
+/**
+ * Per-grade days/sections rollup — the same counting as {@link deriveDaysAndSections}
+ * but split by the grade axis (Grade A vs Grade B), so the dashboard can show
+ * "כיתה א׳: X/Y ימים" then "כיתה ב׳: X/Y". Subjects that share a store (English/
+ * Science) are already disjoint per track via each track's own day-set.
+ */
+export function deriveDaysAndSectionsByGrade(tracks: TrackInput[]): DaysSectionsByGradeVM {
+  return {
+    a: daysAndSectionsForTracks(tracks.filter((t) => t.key.grade === "a")),
+    b: daysAndSectionsForTracks(tracks.filter((t) => t.key.grade === "b")),
+  };
 }
 
 /**
@@ -347,13 +370,21 @@ export function deriveReviewBacklog(
   return { due, practicing, mastered };
 }
 
+const SUBJECT_ORDER: Record<Subject, number> = { math: 0, english: 1, science: 2 };
+
+/** Exam results ordered grade-first (Grade A before B), then by subject, for the grade-first IA. */
 export function deriveExamResults(exams: ExamInput[]): ExamResultEntry[] {
-  return exams.map((exam) => ({
-    key: exam.key,
-    passed: exam.passed,
-    scorePercent: exam.scorePercent,
-    submittedAt: exam.submittedAt,
-  }));
+  return exams
+    .map((exam) => ({
+      key: exam.key,
+      passed: exam.passed,
+      scorePercent: exam.scorePercent,
+      submittedAt: exam.submittedAt,
+    }))
+    .sort((a, b) => {
+      if (a.key.grade !== b.key.grade) return a.key.grade < b.key.grade ? -1 : 1;
+      return SUBJECT_ORDER[a.key.subject] - SUBJECT_ORDER[b.key.subject];
+    });
 }
 
 /** Most recent attempt timestamp across all tracks, or null. */
@@ -397,6 +428,7 @@ export function deriveAllMetrics(params: {
     hasAnyData: tracksHaveAnyAttempt(tracks),
     accuracy: deriveFirstAttemptAccuracy(tracks),
     daysSections: deriveDaysAndSections(tracks),
+    daysSectionsByGrade: deriveDaysAndSectionsByGrade(tracks),
     timeOnTask: deriveTimeOnTask(tracks, now),
     streak: deriveStreak(streak),
     weakSkills: deriveWeakSkills(tracks),

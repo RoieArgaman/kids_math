@@ -1,7 +1,7 @@
 import type { GradeId } from "@/lib/grades";
 import { getScienceDays, type ScienceLevel } from "@/lib/content/science-workbook";
 import { loadScienceProgressState } from "@/lib/science/storage";
-import { loadScienceFinalExamState } from "@/lib/science/final-exam/storage";
+import { isSubjectUnlockedInGrade } from "@/lib/completion/subjectGrade";
 
 /** The two Science levels, in order — taught as Israeli grades (כיתה א׳/ב׳). */
 export const SCIENCE_LEVELS: GradeId[] = ["a", "b"];
@@ -22,14 +22,13 @@ export function scienceLevelSubtitle(level: ScienceLevel): string {
 }
 
 /**
- * Level ב׳ is gated behind Level א׳'s final exam — mirrors how כיתה ב׳ unlocks
- * after כיתה א׳ in Math, and שלב ב׳ after שלב א׳ in English. Level א׳ is always
- * open. `previewAll` bypasses the gate.
+ * Level ב׳ is gated behind Level א׳ being *completed* (all lessons + final exam) —
+ * the single cross-grade prerequisite shared by every subject. Delegates to
+ * {@link isSubjectUnlockedInGrade} so there is one definition. Level א׳ is always
+ * open; `previewAll` bypasses the gate.
  */
 export function isScienceLevelUnlocked(level: ScienceLevel, opts?: { previewAll?: boolean }): boolean {
-  if (level === "a") return true;
-  if (opts?.previewAll) return true;
-  return loadScienceFinalExamState("a")?.passed === true;
+  return isSubjectUnlockedInGrade("science", level, opts);
 }
 
 /** Whether a level's own final exam is unlocked (all its lessons complete). */

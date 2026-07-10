@@ -89,10 +89,12 @@ export function useProgress(
         dayId,
         sectionId: sid,
         exerciseId,
+        subject: subject ?? "math",
+        gradeId: grade,
         payload: { isCorrect, grade },
       });
     },
-    [dayId, grade],
+    [dayId, grade, subject],
   );
 
   const markComplete = useCallback((): boolean => {
@@ -111,9 +113,9 @@ export function useProgress(
 
     setState((current) => markDayComplete(current, dayId));
     logEvent("completion_gate_passed", { dayId, payload: { grade } });
-    logEvent("day_completed", { dayId, payload: { grade } });
+    logEvent("day_completed", { dayId, subject: subject ?? "math", gradeId: grade, payload: { grade } });
     return true;
-  }, [dayId, dayProgress.isComplete, dayProgress.percentDone, grade]);
+  }, [dayId, dayProgress.isComplete, dayProgress.percentDone, grade, subject]);
 
   const resetDay = useCallback(() => {
     setState((current) => resetDayProgress(current, dayId));

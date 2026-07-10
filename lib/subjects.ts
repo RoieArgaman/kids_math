@@ -8,6 +8,12 @@ export type Subject = "math" | "english" | "science";
 
 export const DEFAULT_SUBJECT: Subject = "math";
 
+/**
+ * All top-level subjects, in display order. Single source of truth for iterating
+ * subjects (grade-level unlock OR-gate, per-subject cookies, reconciliation).
+ */
+export const SUBJECTS: readonly Subject[] = ["math", "english", "science"] as const;
+
 export function parseSubjectId(input: string): Subject | null {
   const s = input.trim().toLowerCase();
   if (s === "math" || s === "english" || s === "science") {

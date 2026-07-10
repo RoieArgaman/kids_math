@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Exercise } from "@/lib/types";
 import { getAllScienceDaysById } from "@/lib/content/science-workbook";
 import { childTid, testIds } from "@/lib/testIds";
+import { seedSubjectGradeBUnlockCookie } from "./testUtils";
 
 const LEVEL = "a";
 const DAY_ID = "day-1";
@@ -45,11 +46,9 @@ test.describe("science day smoke", () => {
   });
 
   test("learner reaches Science from home and completes Day 1 end-to-end", async ({ page }) => {
-    // Home → Science entry → level picker → Level א׳ home
-    await page.goto("/");
+    // Grade → Subject → Day: grade A subject picker → Science → Level א׳ home
+    await page.goto("/subjects/a");
     await page.getByTestId(testIds.screen.subjectPicker.scienceCardCta()).click();
-    await expect(page.getByTestId(testIds.screen.science.levelPicker.root())).toBeVisible();
-    await page.getByTestId(testIds.screen.science.levelPicker.levelCardCta(LEVEL)).click();
     await expect(page.getByTestId(testIds.screen.science.home.root())).toBeVisible();
 
     // Science home → Day 1 hub
@@ -93,6 +92,9 @@ test.describe("science day smoke", () => {
     { level: "b", dayId: "day-12", label: "Level ב׳ new lesson (life cycles)" },
   ] as const) {
     test(`completes ${label} end-to-end via previewAll`, async ({ page }) => {
+      // Level B is now middleware-gated; previewAll only bypasses client gates, so
+      // seed the server unlock cookie to reach /science/b/* in the production E2E server.
+      if (level === "b") await seedSubjectGradeBUnlockCookie(page, "science");
       const dayUrl = `/science/${level}/day/${dayId}?previewAll=1`;
       await page.goto(dayUrl);
       await expect(page.getByTestId(testIds.screen.science.day.root(dayId))).toBeVisible();
