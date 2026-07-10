@@ -35,8 +35,8 @@ jobs:
       - name: Check data-testid coverage
         run: npm run check:testids
 
-      - name: Unit tests
-        run: npm run test:unit
+      - name: Unit tests (with coverage thresholds)
+        run: npm run test:coverage
 
   # E2E, split across 3 parallel shards. Each shard is self-contained (builds its own
   # production server) so the shards run fully in parallel — 3 parallel builds cost the

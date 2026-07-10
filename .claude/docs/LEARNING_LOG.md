@@ -6,6 +6,40 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-10 (Coverage thresholds: Vitest v8, ratcheted, scoped to lib/ risk areas)
+- **Trigger:** 183 unit + 29 E2E specs but **zero coverage visibility** — no way to know
+  which branches of the highest-risk code (`lib/*/storage.ts`, exam grading, grade-unlock)
+  the tests actually exercise. Wanted a gate that blocks new *uncovered* code in those areas
+  without adding an external service (explicitly **no Codecov**).
+- **What changed / where:**
+  - Added `@vitest/coverage-v8` (version-matched to vitest `^2.1.x`) + `test:coverage` script
+    (`vitest run --coverage`). CI `lint-and-unit` job now runs `test:coverage` instead of
+    `test:unit` (E2E job unchanged). `test:unit` stays bare for fast local runs.
+  - `vitest.config.ts` `coverage` block: provider `v8`, reporters `text/json-summary/html`,
+    `include: ['lib/**']`. **Excludes:** `lib/server/**`, `lib/firestore/**` (Node/Admin-SDK
+    surfaces jsdom can't exercise), types/barrels/`.d.ts` (no executable lines).
+  - **Thresholds = a ratchet**, pinned just below the 2026-07-10 baseline (global 90.95 lines /
+    84.44 branches / 70.52 funcs). Global functions floor is low on purpose: several `lib/hooks`
+    React hooks are E2E-only, out of scope here. **Per-directory globs give the teeth** on the
+    CLAUDE.md MAX areas: `lib/exam/**` and `lib/gradeUnlock.ts` pinned at **100** (fully covered
+    today — keep it); `progress`, `final-exam`, `gmat-challenge`, `completion`, `review`,
+    `badges`, `streak`, `user-data` pinned ~1–2 pts below their measured baseline.
+- **What we learned / reuse next time:**
+  1. **Vitest glob thresholds are AGGREGATE, not per-file** (verified in
+     `@vitest/coverage-v8` `resolveThresholds`): each glob key merges its matching files into
+     one coverage map and checks the summary; global applies to *all* included files. `perFile`
+     (default off) flips both to per-file. So `lib/progress/**` gates the directory as a whole —
+     a well-covered `engine.ts` can mask a weak `storage.ts` within the same glob. If you want
+     to protect a single file, glob it explicitly (matches one file → aggregate == that file).
+  2. **Measure baseline FIRST, pin below it.** Never hardcode aspirational numbers — a red build
+     on unrelated PRs erodes trust in the gate. Ratchet up as coverage improves; never lower to
+     make a build pass (add the test instead — same rule as "never weaken configs").
+  3. **An unenforced threshold is worse than none** (false green). Always sanity-fail: bump one
+     threshold above baseline, confirm `vitest run --coverage` exits **1**, then revert. Verified.
+  4. **Limitation:** this is *directory-level* gating, not true *per-PR diff* coverage. Adding
+     uncovered lines to a risk dir drops its % and fails CI, but a line-level "your changed lines
+     must be tested" gate would need Codecov or a diff-cover script (deliberately out of scope).
+
 ### 2026-07-10 (Per-student progress isolation: server-authoritative login, wipe-on-logout)
 - **Trigger:** Progress leaked across identities — logging in as a second user (or on a second device) showed the wrong student's progress, because the app always treated `localStorage` as the source of truth and **merged local up into whichever account was authenticated** at the login/restore boundary (`pushThenPull`), contaminating the server doc.
 - **What changed / where:**
