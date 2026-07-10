@@ -66,12 +66,17 @@ Map findings to severity per `AGENTS.md` → Security Finding Severity.
 
 Each role reviews and produces findings with severity:
 
-### ULTRA (5 core roles):
+### ULTRA (10 core roles):
 - `SeniorDev_TechLead` — architecture, boundaries
 - `SeniorFrontEnd_TechLead` — UI patterns, RTL, a11y
 - `Dev_Architect` — data flow, storage, server/client split
 - `QA_Architect` — test coverage sufficiency
 - `SeniorAutomation_Engineer` — test quality, selectors
+- `Security_Specialist` — authn/authz, secrets, input validation, session/cookie safety
+- `SeniorBackend_Engineer` — API routes, server actions, Firestore, sync, idempotency
+- `Cloud_Architect` — deploy, env config, Firestore rules, scaling, observability
+- `SeniorTypeScript_Developer` — type safety, no `any`, generics, guards
+- `Algorithmic_Developer` — correctness, complexity, generation/grading logic, edge cases
 
 ### MAX (add):
 - `SeniorQA_Engineer` — edge cases, manual test plan
@@ -90,6 +95,11 @@ Each role reviews and produces findings with severity:
 | Dev_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 | QA_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 | SeniorAutomation_Engineer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Security_Specialist | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorBackend_Engineer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Cloud_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorTypeScript_Developer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Algorithmic_Developer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 ```
 
 ## Step 9: Produce Review Output
