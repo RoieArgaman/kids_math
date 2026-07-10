@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
@@ -12,6 +12,7 @@ import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { childTid } from "@/lib/testIds";
 import { routes } from "@/lib/routes";
+import { getPreviewAllFromLocation } from "@/lib/utils/preview";
 import type { GradeId } from "@/lib/grades";
 import type { DayId, ExerciseId, Section } from "@/lib/types";
 import type { SubjectScreenConfig } from "@/lib/subjects/subjectScreenConfig";
@@ -58,6 +59,12 @@ export function SubjectDayScreen({
   });
   const day = useMemo(() => config.getAllDays().find((d) => d.id === dayId), [config, dayId]);
   const [showReward, setShowReward] = useState(false);
+  // QA bypass — read on the client only (SSR default false) to keep back-links
+  // carrying previewAll into the now middleware-gated grade-B subtrees.
+  const [previewAll, setPreviewAll] = useState(false);
+  useEffect(() => {
+    setPreviewAll(getPreviewAllFromLocation());
+  }, []);
 
   const sectionStates = useMemo(() => {
     if (!day) return {} as Record<string, SectionCardState>;
@@ -83,7 +90,7 @@ export function SubjectDayScreen({
           emoji="🔍"
           title="הַשִּׁעוּר לֹא נִמְצָא."
           actions={
-            <ButtonLink href={config.homeRoute(level)} className="w-full text-center">
+            <ButtonLink href={config.homeRoute(level, { previewAll })} className="w-full text-center">
               {config.backToSubjectLabel}
             </ButtonLink>
           }
@@ -105,8 +112,8 @@ export function SubjectDayScreen({
         data-testid={ids.nav(dayId)}
         className="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
-        <AppNavLink href={config.homeRoute(level)}>{config.backToSubjectLabel}</AppNavLink>
-        <AppNavLink href={routes.subjectsForGrade(level)}>חֲזָרָה לִבְחִירַת נוֹשֵׂא</AppNavLink>
+        <AppNavLink href={config.homeRoute(level, { previewAll })}>{config.backToSubjectLabel}</AppNavLink>
+        <AppNavLink href={routes.subjectsForGrade(level, { previewAll })}>חֲזָרָה לִבְחִירַת נוֹשֵׂא</AppNavLink>
       </div>
 
       <div

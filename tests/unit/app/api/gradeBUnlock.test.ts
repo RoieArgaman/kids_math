@@ -43,9 +43,13 @@ describe("POST /api/grade-b-unlock", () => {
     expect((await cookieOf(res, MATH_B_LEGACY_COOKIE))?.value).toBe("1");
   });
 
-  it("defaults to math when the body has no/invalid subject (legacy callers)", async () => {
-    const res = await unlockPost(makeReq());
-    expect((await cookieOf(res, subjectGradeBUnlockCookieName("math")))?.value).toBe("1");
+  it("rejects with 400 (no silent math default) when the body has no/invalid subject", async () => {
+    const noBody = await unlockPost(makeReq());
+    expect(noBody.status).toBe(400);
+    expect(await cookieOf(noBody, subjectGradeBUnlockCookieName("math"))).toBeUndefined();
+
+    const badSubject = await unlockPost(makeReq({ subject: "history" }));
+    expect(badSubject.status).toBe(400);
   });
 
   it("marks the cookie secure only over https", async () => {

@@ -23,20 +23,30 @@ function isSecureRequest(request: NextRequest): boolean {
   );
 }
 
-async function readSubject(request: NextRequest, fallback: Subject): Promise<Subject> {
+/**
+ * Parse `{ subject }` from the request body. Returns `null` when the body is
+ * absent/unparseable or the subject is invalid — the caller then rejects with a
+ * 400 rather than silently acting on a default subject (which would let a
+ * corrupted `{subject:"science"}` POST mis-grant math). Legacy no-body callers
+ * hit the shim routes, which pass an explicit `subject` and never reach here.
+ */
+async function readSubject(request: NextRequest): Promise<Subject | null> {
   try {
     const body: unknown = await request.json();
     if (body && typeof body === "object" && "subject" in body) {
       const raw = (body as { subject?: unknown }).subject;
       if (typeof raw === "string") {
-        const parsed = parseSubjectId(raw);
-        if (parsed) return parsed;
+        return parseSubjectId(raw);
       }
     }
   } catch {
-    // No/invalid JSON body — legacy no-body callers default to math.
+    // No/invalid JSON body.
   }
-  return fallback;
+  return null;
+}
+
+function invalidSubjectResponse(): NextResponse {
+  return NextResponse.json({ ok: false, error: "invalid or missing subject" }, { status: 400 });
 }
 
 function cookieOpts(request: NextRequest, maxAge: number) {
@@ -49,12 +59,13 @@ function cookieOpts(request: NextRequest, maxAge: number) {
   };
 }
 
-/** Set the grade-B unlock cookie for a subject (defaults to math for legacy callers). */
+/** Set the grade-B unlock cookie for a subject. Body `{subject}`; legacy shims pass it explicitly. */
 export async function setSubjectGradeBUnlock(
   request: NextRequest,
   opts: { subject?: Subject } = {},
 ): Promise<NextResponse> {
-  const subject = opts.subject ?? (await readSubject(request, "math"));
+  const subject = opts.subject ?? (await readSubject(request));
+  if (!subject) return invalidSubjectResponse();
   const res = NextResponse.json({ ok: true, subject });
   res.cookies.set(subjectGradeBUnlockCookieName(subject), GRADE_B_UNLOCK_COOKIE_VALUE, cookieOpts(request, ONE_YEAR_SECONDS));
   if (subject === "math") {
@@ -64,12 +75,13 @@ export async function setSubjectGradeBUnlock(
   return res;
 }
 
-/** Clear the grade-B unlock cookie for a subject (defaults to math for legacy callers). */
+/** Clear the grade-B unlock cookie for a subject. Body `{subject}`; legacy shims pass it explicitly. */
 export async function clearSubjectGradeBUnlock(
   request: NextRequest,
   opts: { subject?: Subject } = {},
 ): Promise<NextResponse> {
-  const subject = opts.subject ?? (await readSubject(request, "math"));
+  const subject = opts.subject ?? (await readSubject(request));
+  if (!subject) return invalidSubjectResponse();
   const res = NextResponse.json({ ok: true, subject });
   res.cookies.set(subjectGradeBUnlockCookieName(subject), "", cookieOpts(request, 0));
   if (subject === "math") {
