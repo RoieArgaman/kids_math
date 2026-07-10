@@ -140,7 +140,7 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 4. ⛔ **CHECKPOINT: Explore Findings** — present findings, WAIT for user
 5. **Implement** — smallest correct change following conventions
 6. **Self-review** — run checklist
-7. **Multi-role Review** — 5 core roles (all must participate)
+7. **Multi-role Review** — 10 core roles (all must participate)
 8. **Test** — `lint` + `check:testids` + `build` + `test:unit` + targeted E2E (name exact specs)
 9. **Visual Verify** — MCP Playwright smoke test on changed screens
 10. **CI Final** — run `npm run test:qa` — all checks must pass
@@ -148,12 +148,17 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 12. ⛔ **CHECKPOINT: Verification** — present report, WAIT for user
 13. **Output** — handoff format + learning log entry
 
-**Core review team** (ALL 5 must participate):
+**Core review team** (ALL 10 must participate):
 - `SeniorDev_TechLead` — architecture, simplicity, maintainability
 - `SeniorFrontEnd_TechLead` — UI patterns, RTL, accessibility
 - `Dev_Architect` — data flow, server/client boundaries, storage
 - `QA_Architect` — test strategy, coverage sufficiency
 - `SeniorAutomation_Engineer` — which tests to add/update
+- `Security_Specialist` — threat model, authn/authz, secrets, input validation
+- `SeniorBackend_Engineer` — API routes, server actions, Firestore, sync
+- `Cloud_Architect` — cloud/infra, deploy, env config, scaling, observability
+- `SeniorTypeScript_Developer` — type safety, no `any`, generics, strict mode
+- `Algorithmic_Developer` — algorithmic correctness, complexity, edge cases
 
 **Manual RTL checklist**:
 - [ ] Home → plan → day navigation works
@@ -176,7 +181,7 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 7. ⛔ **CHECKPOINT: Explore Findings** — present findings, WAIT for user
 8. **Implement** — changes with explicit rationale for every decision
 9. **Self-review** — run checklist
-10. **Review Cycle 1** — full team (8+ roles), produce punch-list with severity
+10. **Review Cycle 1** — full team (13+ roles), produce punch-list with severity
 11. **Fix** — address all CRITICAL and HIGH issues
 12. ⛔ **CHECKPOINT: Fixes Ready** — list fixes, WAIT for user
 13. **Review Cycle 2** — re-review, all roles must approve
@@ -192,6 +197,8 @@ scripts/              # Codemods (testid checks, auto-add, dedupe)
 **Full review team** (ALL must participate):
 - `SeniorDev_TechLead`, `SeniorFrontEnd_TechLead`, `Dev_Architect`
 - `QA_Architect`, `SeniorAutomation_Engineer`, `SeniorQA_Engineer`
+- `Security_Specialist`, `SeniorBackend_Engineer`, `Cloud_Architect`
+- `SeniorTypeScript_Developer`, `Algorithmic_Developer`
 - `SeniorProductDesigner`, `SeniorProductManager`
 - (+ `MoE_PedagogyLead` when educational content changes)
 

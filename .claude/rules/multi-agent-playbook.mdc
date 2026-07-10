@@ -12,8 +12,8 @@ alwaysApply: true
 | Mode | Roles | Checkpoints | Review Cycles | Final Gates |
 |------|-------|------------|---------------|-------------|
 | **PRO** | Implementer + self-review | 0 | Self-review | lint + testids |
-| **ULTRA** | Planner + Explorer + Implementer + 5 core Reviewers + Tester | 3 blocking | 1 cycle | MCP Playwright (if UI) + CI test:qa |
-| **MAX** | All roles (8-12) | 6+ blocking | 2 cycles | MCP Playwright (always) + CI test:qa |
+| **ULTRA** | Planner + Explorer + Implementer + 10 core Reviewers + Tester | 3 blocking | 1 cycle | MCP Playwright (if UI) + CI test:qa |
+| **MAX** | All roles (13-18) | 6+ blocking | 2 cycles | MCP Playwright (always) + CI test:qa |
 
 ## Blocking Checkpoints (⛔)
 
@@ -51,8 +51,10 @@ Ready for next phase? (proceed / revise / different approach / escalate)
 ### Reviewer
 - Review with severity levels (CRITICAL/HIGH/MEDIUM/LOW) per `AGENTS.md`
 - Check: schema breakage, **`AGENTS.md` → Data & Storage Rules** (backward compat: old data loads; content-ID changes), `"use client"` spread, RTL, a11y, security, console.log, config weakening
-- **ULTRA**: 5 core roles, 1 cycle, all must participate
+- **ULTRA**: 10 core roles, 1 cycle, all must participate
 - **MAX**: full team, 2 cycles, all must approve
+
+Core reviewer roster (ULTRA + MAX): `SeniorDev_TechLead`, `SeniorFrontEnd_TechLead`, `Dev_Architect`, `QA_Architect`, `SeniorAutomation_Engineer`, `Security_Specialist`, `SeniorBackend_Engineer`, `Cloud_Architect`, `SeniorTypeScript_Developer`, `Algorithmic_Developer`. See `AGENTS.md` → Specialist Roles for each role's focus.
 - **Output**: punch-list with severity + role participation table + verdict
 
 ### Tester (QA)
@@ -72,10 +74,15 @@ Every review must include:
 | Dev_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 | QA_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 | SeniorAutomation_Engineer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Security_Specialist | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorBackend_Engineer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Cloud_Architect | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| SeniorTypeScript_Developer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
+| Algorithmic_Developer | ✅ | [1-line] | APPROVE / BLOCK(severity) |
 ```
 
 **Rules:**
-- ULTRA: ALL 5 core roles must participate
+- ULTRA: ALL 10 core roles must participate
 - MAX: ALL roles in full team must participate
 - One BLOCK(CRITICAL) → entire review BLOCKED
 - One BLOCK(HIGH) → entire review BLOCKED
@@ -99,6 +106,21 @@ Each role contributes 1-3 bullets with attribution:
 
 **SeniorAutomation_Engineer:**
 "Automation: [specific test additions, selectors, coverage gaps]"
+
+**Security_Specialist:**
+"Security: [authn/authz, secrets, input validation, session/cookie safety]"
+
+**SeniorBackend_Engineer:**
+"Backend: [API routes, server actions, Firestore model, sync, idempotency]"
+
+**Cloud_Architect:**
+"Cloud/infra: [deploy, env config, Firestore rules, scaling, observability]"
+
+**SeniorTypeScript_Developer:**
+"Types: [type safety, no any, generics, guards, discriminated unions]"
+
+**Algorithmic_Developer:**
+"Algorithms: [correctness, complexity, generation/grading logic, edge cases]"
 ```
 
 ## Review & Fix Loop (MAX only)

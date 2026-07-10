@@ -45,7 +45,7 @@ Numbered, ordered. Each step must be:
 
 ## Step 4: Multi-Role Plan Review
 
-### ULTRA (5 core roles, each contributes 1-3 bullets with role attribution):
+### ULTRA (10 core roles, each contributes 1-3 bullets with role attribution):
 
 **SeniorDev_TechLead:** [architecture direction, top risks]
 
@@ -56,6 +56,16 @@ Numbered, ordered. Each step must be:
 **QA_Architect:** [test strategy, which tests to add/update]
 
 **SeniorAutomation_Engineer:** [specific test files, selectors, coverage gaps]
+
+**Security_Specialist:** [authn/authz, secrets, input validation, session/cookie safety]
+
+**SeniorBackend_Engineer:** [API routes, server actions, Firestore model, sync, idempotency]
+
+**Cloud_Architect:** [deploy, env config, Firestore rules, scaling, observability]
+
+**SeniorTypeScript_Developer:** [type safety, no `any`, generics, guards, discriminated unions]
+
+**Algorithmic_Developer:** [correctness, complexity, generation/grading logic, edge cases]
 
 ### MAX (add these roles):
 
@@ -73,7 +83,16 @@ Numbered, ordered. Each step must be:
 | Role | Participated | Key Finding | Verdict |
 |------|-------------|-------------|---------|
 | SeniorDev_TechLead | ✅ | [summary] | APPROVE/CONCERN |
-| ... | ... | ... | ... |
+| SeniorFrontEnd_TechLead | ✅ | [summary] | APPROVE/CONCERN |
+| Dev_Architect | ✅ | [summary] | APPROVE/CONCERN |
+| QA_Architect | ✅ | [summary] | APPROVE/CONCERN |
+| SeniorAutomation_Engineer | ✅ | [summary] | APPROVE/CONCERN |
+| Security_Specialist | ✅ | [summary] | APPROVE/CONCERN |
+| SeniorBackend_Engineer | ✅ | [summary] | APPROVE/CONCERN |
+| Cloud_Architect | ✅ | [summary] | APPROVE/CONCERN |
+| SeniorTypeScript_Developer | ✅ | [summary] | APPROVE/CONCERN |
+| Algorithmic_Developer | ✅ | [summary] | APPROVE/CONCERN |
+| ... (MAX adds specialist roles) | ... | ... | ... |
 ```
 
 ## Step 6: Quality Gates

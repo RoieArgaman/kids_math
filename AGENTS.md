@@ -149,7 +149,7 @@ Every agent must review its own work before responding. See [Self-Review Protoco
 4. ⛔ **CHECKPOINT: Explore Findings** — present findings, WAIT for user to confirm approach
 5. **Implement** — make changes following conventions, keep diffs minimal
 6. **Self-review** — run Self-Review Protocol
-7. **Multi-role Review** — 5 core roles review (1 cycle)
+7. **Multi-role Review** — 10 core roles review (1 cycle)
 8. **Test** — run quality gates + targeted automation + manual RTL checklist
 9. **Visual Verify** — MCP Playwright smoke test on changed screens (see MCP Playwright section)
 10. **CI Final** — run `npm run test:qa` to confirm all CI checks pass
@@ -157,15 +157,20 @@ Every agent must review its own work before responding. See [Self-Review Protoco
 12. ⛔ **CHECKPOINT: Verification** — present report, WAIT for user to approve
 13. **Output** — handoff format + learning log entry
 
-**Review**: One cycle with 5 core roles (all must participate)
-**Roles active**: Planner, Explorer, Implementer, Reviewer (5 core), Tester
+**Review**: One cycle with 10 core roles (all must participate)
+**Roles active**: Planner, Explorer, Implementer, Reviewer (10 core), Tester
 
-**Core review team (ULTRA)** — ALL 5 must participate:
+**Core review team (ULTRA)** — ALL 10 must participate:
 - `SeniorDev_TechLead` — architecture, simplicity, maintainability
 - `SeniorFrontEnd_TechLead` — UI patterns, RTL, accessibility
 - `Dev_Architect` — data flow, server/client boundaries, storage
 - `QA_Architect` — test strategy, coverage sufficiency
 - `SeniorAutomation_Engineer` — which tests to add/update
+- `Security_Specialist` — threat model, authn/authz, secrets, input validation
+- `SeniorBackend_Engineer` — API routes, server actions, Firestore, sync
+- `Cloud_Architect` — cloud/infra, deploy, env config, scaling, observability
+- `SeniorTypeScript_Developer` — type safety, no `any`, generics, strict mode
+- `Algorithmic_Developer` — algorithmic correctness, complexity, edge cases
 
 ---
 
@@ -205,6 +210,11 @@ Every agent must review its own work before responding. See [Self-Review Protoco
 - `Dev_Architect`
 - `QA_Architect`
 - `SeniorAutomation_Engineer`
+- `Security_Specialist`
+- `SeniorBackend_Engineer`
+- `Cloud_Architect`
+- `SeniorTypeScript_Developer`
+- `Algorithmic_Developer`
 - `SeniorQA_Engineer`
 - `SeniorProductDesigner`
 - `SeniorProductManager`
@@ -512,6 +522,11 @@ Issues found during self-review:
 | `Dev_Architect` | `app/` vs `components/` vs `lib/` boundaries, data flow, side effects | ULTRA Plan+Review, MAX all |
 | `QA_Architect` | Test strategy for risky changes (state, progress, analytics) | ULTRA Plan+Review, MAX all |
 | `SeniorAutomation_Engineer` | Most valuable automated coverage, stable selectors | ULTRA Plan+Review, MAX all |
+| `Security_Specialist` | Threat model, authn/authz, secrets, input validation, cookie/JWT/session safety, dependency risk | ULTRA Plan+Review, MAX all |
+| `SeniorBackend_Engineer` | API route handlers, server actions, Firestore data model, sync/consistency, idempotency, error handling | ULTRA Plan+Review, MAX all |
+| `Cloud_Architect` | Cloud/infra (Vercel, Firestore), deployment, env/secrets config, scaling, cost, observability | ULTRA Plan+Review, MAX all |
+| `SeniorTypeScript_Developer` | Type safety, no `any`, generics, type guards, discriminated unions, strict-mode correctness | ULTRA Plan+Review, MAX all |
+| `Algorithmic_Developer` | Algorithmic correctness, complexity, data structures, question-generation & grading/scoring logic, edge cases | ULTRA Plan+Review, MAX all |
 | `SeniorAutomation_TechLead` | Test maintainability, flakiness mitigation, shared helpers | MAX only |
 | `SeniorManualQA_Engineer` | Step-by-step RTL manual test script, edge cases | MAX only |
 | `UX_QA_Engineer` | Focus order, keyboard nav, touch ergonomics, error clarity | MAX only |
@@ -537,10 +552,15 @@ Every review output must include a role participation table:
 | Dev_Architect | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
 | QA_Architect | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
 | SeniorAutomation_Engineer | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
+| Security_Specialist | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
+| SeniorBackend_Engineer | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
+| Cloud_Architect | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
+| SeniorTypeScript_Developer | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
+| Algorithmic_Developer | ✅ | [1-line summary] | APPROVE / BLOCK(severity) |
 ```
 
 **Rules:**
-- ULTRA: ALL 5 core roles must participate. If any is "not applicable" for this change, mark as `N/A — [reason]` but still list it.
+- ULTRA: ALL 10 core roles must participate. If any is "not applicable" for this change, mark as `N/A — [reason]` but still list it.
 - MAX: ALL roles in the full team must participate.
 - A single role with BLOCK(CRITICAL) → entire review is BLOCKED.
 - A single role with BLOCK(HIGH) → entire review is BLOCKED.
@@ -568,6 +588,26 @@ Each role contributes 1-3 bullets with role attribution:
 **SeniorAutomation_Engineer:**
 "Add tests: tests/unit/lib/final-exam/picker.test.ts, extend grade-a-lifecycle.spec.ts
  with exam completion scenario. Use data-testid selectors only."
+
+**Security_Specialist:**
+"Auth: exam-pass writes must be server-authoritative and student-scoped. Risk: client
+ could POST unlock-grade-b directly — validate session + student ownership on the route."
+
+**SeniorBackend_Engineer:**
+"API: unlock-grade-b handler must validate payload, be idempotent, and avoid undefined
+ Firestore fields. Wrap write in try/catch and return typed error, not 500."
+
+**Cloud_Architect:**
+"Infra: no new env vars needed; confirm Firestore rules cover the new doc path. Watch
+ read/write amplification on sync — batch where possible."
+
+**SeniorTypeScript_Developer:**
+"Types: model exam state as a discriminated union (in-progress | passed | failed); no
+ `any` on the storage payload — add a type guard at the localStorage boundary."
+
+**Algorithmic_Developer:**
+"Logic: picker sampling must be uniform and de-duplicated; grading edge case — 10-wrong
+ reset mid-exam must not double-count. Verify O(n) over question set, not O(n²)."
 ```
 
 ### Review & Fix Loop (MAX only)
