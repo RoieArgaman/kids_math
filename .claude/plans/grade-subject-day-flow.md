@@ -132,6 +132,8 @@ reset un-completes that subject's grade A.
 **Locked pages** — generalize the single `app/grade/b/locked/page.tsx` into a shared
 `LockedGradeScreen` parameterized by `{subject?, grade}`. Add pages: `/english/b/locked`,
 `/science/b/locked`, and `/subjects/b/locked` (grade-level). Keep `/grade/b/locked`.
+Each locked page must state **why** it's locked and **how** to unlock it (which subject/exam to
+finish) with a CTA back to the relevant picker — resolves UX_QA note on error clarity.
 
 ### Phase 3 — New screens & routing
 
@@ -155,6 +157,12 @@ Math/English/Science. Each card links to that subject's home for the grade; disa
 (`app/page.tsx`) and the locked-card pattern from `app/math/page.tsx`. **Reuse the shared UI library**
 (Surface/Card/HeroHeader/Chip per `.claude/docs/UI_COMPONENTS.md`); run `npm run check:cards`. RTL
 preserved (`dir` inherited from root layout). Fire `subject_selected`.
+- **A11y / focus (UX_QA):** locked cards render as inert non-links (not focus-trapped) — mirror the
+  disabled `<div>` pattern already used for the locked Grade B card in `app/math/page.tsx:101`, with
+  `aria-label` conveying the locked state and a visible reason/hint (`lockedHint(subject)` testId).
+- **Visual consistency (SeniorProductDesigner):** the grade picker (`/`) and subject picker
+  (`/subjects/[grade]`) must share one visual language — same Card tokens, medallion/emoji treatment,
+  Chip tones, and spacing as the existing pickers; no bespoke card markup.
 
 **Back-links** — repoint the ~8 `routes.gradePicker()` / `routes.mathHome()` back targets to
 `routes.subjectsForGrade(grade)` (callers already have `grade`): `HomeScreen.tsx:196`,
@@ -278,6 +286,13 @@ Mode: **MAX** (routing + middleware + grade-unlock chain + `lib/*/storage.ts` ad
 
 **Blocking findings resolved:** HIGH-1 (cookie/localStorage reconcile) and MEDIUM-1 (route naming),
 MEDIUM-2 (testId reuse) are folded into Phases 1, 3, 7 above. No CRITICAL findings. Review passes.
+
+**Approve-with-note items also folded into the phases** (not left in the table only): UI-library reuse +
+`check:cards` (Phase 3), locked-card focus/inert + `aria-label` (Phase 3, UX_QA), locked-page why/how
+messaging (Phase 2, UX_QA), shared visual language across pickers (Phase 3, SeniorProductDesigner),
+per-subject cookie seeders + shared E2E helper (Testing Plan §B, SeniorAutomation_TechLead), and the
+Security httpOnly/accepted-limitation note (Edge cases). Every role's comment now maps to a concrete
+phase or test, not just a table row.
 
 ### Cross-file impact confirmed
 Route builders, middleware matcher, 3 API routes, 6 back-link call sites, `subjectScreenConfig`,
