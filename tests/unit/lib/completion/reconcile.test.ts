@@ -5,7 +5,7 @@ vi.mock("@/lib/completion/subjectGrade", () => ({
 }));
 
 import { isSubjectGradeComplete } from "@/lib/completion/subjectGrade";
-import { reconcileGradeUnlockCookies } from "@/lib/completion/reconcile";
+import { clearReconcileGuards, reconcileGradeUnlockCookies } from "@/lib/completion/reconcile";
 
 function postedSubjects(fetchMock: ReturnType<typeof vi.fn>): string[] {
   return fetchMock.mock.calls.map((call) => {
@@ -77,5 +77,30 @@ describe("reconcileGradeUnlockCookies (unlock-only self-heal)", () => {
     await reconcileGradeUnlockCookies();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     getItem.mockRestore();
+  });
+});
+
+describe("clearReconcileGuards", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  it("removes the per-subject session guards so the next student re-evaluates unlock", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true } as Response));
+    vi.mocked(isSubjectGradeComplete).mockReturnValue(true);
+
+    await reconcileGradeUnlockCookies(); // sets guards for math/english/science
+    expect(window.sessionStorage.getItem("kids_math.reconciled.b.math")).toBe("1");
+
+    clearReconcileGuards();
+
+    expect(window.sessionStorage.getItem("kids_math.reconciled.b.math")).toBeNull();
+    expect(window.sessionStorage.getItem("kids_math.reconciled.b.english")).toBeNull();
+    expect(window.sessionStorage.getItem("kids_math.reconciled.b.science")).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("is a safe no-op when there are no guards", () => {
+    expect(() => clearReconcileGuards()).not.toThrow();
   });
 });
