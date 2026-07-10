@@ -64,3 +64,36 @@ test.describe("Grade → Subject → Day: grade-level gate (/subjects/b)", () =>
     await expect(page.getByTestId(testIds.screen.subjectPicker.root())).toBeVisible();
   });
 });
+
+test.describe("Grade → Subject → Day: edge cases & self-heal", () => {
+  test.beforeEach(async ({ page, context }) => {
+    await context.clearCookies();
+    await page.goto("/");
+    await page.evaluate(() => window.localStorage.clear());
+  });
+
+  test("reconcile self-heals a lost cookie for an earned subject (unlock-only)", async ({ page, context }) => {
+    await seedMathGradeAComplete(page); // progress + passed exam + cookie
+    await context.clearCookies(); // simulate cookie loss; localStorage completion remains
+
+    // Visiting the grade picker runs reconcileGradeUnlockCookies() → re-POSTs the unlock.
+    await page.goto("/");
+    await expect(page.getByTestId(testIds.screen.gradePicker.gradeCardCta("b"))).toBeVisible();
+
+    // Cookie restored → the math grade-B subtree is reachable again.
+    await page.goto("/grade/b");
+    await expect(page).toHaveURL(/\/grade\/b\/?$/);
+  });
+
+  test("direct deep link into a locked subtree redirects to its locked page preserving next=", async ({ page }) => {
+    await page.goto("/science/b/day/day-12");
+    await expect(page).toHaveURL(/\/science\/b\/locked/);
+    await expect(page).toHaveURL(/next=/);
+    await expect(page.getByTestId(testIds.screen.lockedGrade.root("science"))).toBeVisible();
+  });
+
+  test("invalid grade in /subjects/[grade] returns 404", async ({ page }) => {
+    const res = await page.goto("/subjects/zzz");
+    expect(res?.status()).toBe(404);
+  });
+});

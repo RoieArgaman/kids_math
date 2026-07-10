@@ -56,4 +56,26 @@ describe("reconcileGradeUnlockCookies (unlock-only self-heal)", () => {
     await reconcileGradeUnlockCookies({ previewAll: true });
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("a FAILED unlock POST does not set the session guard (retries next mount)", async () => {
+    vi.mocked(isSubjectGradeComplete).mockImplementation((s) => s === "math");
+    fetchMock.mockResolvedValue({ ok: false } as Response);
+    await reconcileGradeUnlockCookies();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // guard NOT set → second mount retries
+    await reconcileGradeUnlockCookies();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("still POSTs when sessionStorage is unavailable (private mode)", async () => {
+    vi.mocked(isSubjectGradeComplete).mockImplementation((s) => s === "science");
+    const getItem = vi
+      .spyOn(window.sessionStorage.__proto__, "getItem")
+      .mockImplementation(() => {
+        throw new Error("blocked");
+      });
+    await reconcileGradeUnlockCookies();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    getItem.mockRestore();
+  });
 });

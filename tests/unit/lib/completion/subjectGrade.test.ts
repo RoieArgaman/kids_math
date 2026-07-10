@@ -39,6 +39,9 @@ import { loadFinalExamState } from "@/lib/final-exam/storage";
 import { getEnglishDays } from "@/lib/content/english-workbook";
 import { loadEnglishProgressState } from "@/lib/english/storage";
 import { loadEnglishFinalExamState } from "@/lib/english/final-exam/storage";
+import { getScienceDays } from "@/lib/content/science-workbook";
+import { loadScienceProgressState } from "@/lib/science/storage";
+import { loadScienceFinalExamState } from "@/lib/science/final-exam/storage";
 import {
   isGradeUnlocked,
   isSubjectGradeComplete,
@@ -118,5 +121,37 @@ describe("isGradeUnlocked (OR across subjects)", () => {
     vi.mocked(loadEnglishProgressState).mockReturnValue(progress(["e1"]) as never);
     vi.mocked(loadEnglishFinalExamState).mockReturnValue({ passed: true } as never);
     expect(isGradeUnlocked("b")).toBe(true);
+  });
+
+  it("grade B stays LOCKED when EVERY subject is incomplete (whole-grade lock)", () => {
+    const incomplete = () => {
+      vi.mocked(getWorkbookDays).mockReturnValue(days(["m1", "day-29"]) as never);
+      vi.mocked(loadProgressState).mockReturnValue(progress([]) as never);
+      vi.mocked(loadFinalExamState).mockReturnValue(null as never);
+      vi.mocked(getEnglishDays).mockReturnValue(days(["e1"]) as never);
+      vi.mocked(loadEnglishProgressState).mockReturnValue(progress([]) as never);
+      vi.mocked(loadEnglishFinalExamState).mockReturnValue(null as never);
+      vi.mocked(getScienceDays).mockReturnValue(days(["s1"]) as never);
+      vi.mocked(loadScienceProgressState).mockReturnValue(progress([]) as never);
+      vi.mocked(loadScienceFinalExamState).mockReturnValue(null as never);
+    };
+    incomplete();
+    expect(isGradeUnlocked("b")).toBe(false);
+  });
+});
+
+describe("edge cases", () => {
+  it("empty day list → not complete (guards days.length > 0)", () => {
+    vi.mocked(getWorkbookDays).mockReturnValue([] as never);
+    vi.mocked(loadProgressState).mockReturnValue(progress([]) as never);
+    vi.mocked(loadFinalExamState).mockReturnValue({ passed: true } as never);
+    expect(isSubjectGradeComplete("math", "a")).toBe(false);
+  });
+
+  it("math grade B (no final exam) → not complete, does not crash on null exam", () => {
+    vi.mocked(getWorkbookDays).mockReturnValue(days(["b1"]) as never);
+    vi.mocked(loadProgressState).mockReturnValue(progress(["b1"]) as never);
+    vi.mocked(loadFinalExamState).mockReturnValue(null as never); // grade B has no exam
+    expect(isSubjectGradeComplete("math", "b")).toBe(false);
   });
 });
