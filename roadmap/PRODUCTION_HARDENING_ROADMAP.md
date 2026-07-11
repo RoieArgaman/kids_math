@@ -18,12 +18,13 @@ implemented yet — this document is the plan of record.
 
 ## How to use this document
 
-1. Work **top-down**: Phase 0 → 4. The order encodes dependency and risk, not preference.
+1. Work **top-down**: Phase 0 → 5. The order encodes dependency and risk, not preference.
 2. Before starting any phase, open a fresh `/plan` for **that phase only**, using the
    "Tasks", "Files to touch", and "Tests" sections here as the seed.
 3. Each phase has **go/no-go gates**. Phases 0–2 are continuously shippable hardening.
    Phases 3–4 are the actual "sellable" unlock and each requires an explicit product
-   go/no-go before starting.
+   go/no-go before starting. Phase 5 is the parallel **monetization** track (freemium
+   gate) and likewise gates on a product go/no-go.
 4. Update the **Progress Tracker** table at the bottom as phases land.
 5. Append a `LEARNING_LOG.md` entry when each phase completes (per Learning Loop rule).
 
@@ -41,6 +42,7 @@ implemented yet — this document is the plan of record.
 | **Compliance** | Privacy page exists | COPPA / GDPR-K / Israeli Privacy Law posture, consent, export/erasure, DPA |
 | **Multi-tenancy** | Flat `users` collection, 2 roles | Org model, org-scoped roles + queries, tenant isolation |
 | **Scale of data model** | 1 `user_progress` doc/user, whole-doc write | Pagination, contention-safe writes, doc-size guardrails |
+| **Monetization / free tier** | Logged-out users get everything free (no cap) | Metered free tier — logged-out daily cap that nudges account creation |
 
 ---
 
@@ -122,6 +124,12 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | **C6** | `minInstances: 0` (cold starts); no separated staging env; single region. | MEDIUM | 2 |
 | **C7** | No load/perf test or documented capacity targets. | MEDIUM | 2 |
 | **C8** | No Firestore backups / PITR; no RPO/RTO or restore runbook (buyer due-diligence item). | HIGH | 2 |
+
+### Monetization / access gating
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **M1** | Logged-out (unregistered) visitors get the full app unrestricted — no free-tier cap, so nothing nudges them to create an account. | MEDIUM (monetization) | 5 |
 
 ---
 
@@ -368,6 +376,70 @@ migration.** It gets its **own dedicated MAX plan** with a backfill + rollback r
 
 ---
 
+## Phase 5 — Freemium access gating (logged-out daily limit)  ·  Mode: ULTRA  ·  🚦 product go/no-go before start
+
+**Objective:** Cap free usage for logged-out (unregistered) visitors to create pressure toward
+account creation — an anonymous visitor may work **one workbook day, in one subject, per calendar
+day**. Today a logged-out visitor gets the whole app unrestricted (finding **M1**); this phase adds
+a metered free tier.
+**Gate to start:** product go/no-go. No server-schema change, so it is **independent of Phases 1–4**
+— but **non-bypassable** enforcement depends on real accounts (Phase 1 sessions) plus a future
+self-registration flow (see 5.4).
+
+### 5.1 — Anonymous daily-usage store (client, localStorage) (M1)
+- **Design (additive, MAX-free):** new module `lib/access/anonDailyLimit.ts` backed by a **brand-new**
+  key `kids_math.anon.dailyUsage.v1` holding the single claimed slot for today:
+  `{ date: "YYYY-MM-DD", subject, dayId }`. **Reuse `getTodayDate()`** from `lib/streak/engine.ts`
+  for the local-day stamp.
+- **Semantics:** the first workbook day an anonymous visitor opens *claims* today's slot. Re-opening
+  the **same** day is always allowed (so they can finish it). Opening any **other** `dayId` or any
+  **other subject** while `!isLoggedIn` and `date === today` is **blocked**. Resets at local midnight
+  (date change) or on login.
+- **Storage rule:** new key only — do **not** touch any `lib/*/storage.ts` progress schema (keeps
+  this out of the storage-schema MAX rule). Anon-only, never synced to the server.
+
+### 5.2 — Gate at day entry
+- **Task:** gate the day hub / section entry on `!isLoggedIn && isBlockedByAnonDailyLimit(track, dayId)`
+  (read `isLoggedIn` from `lib/auth/context.tsx`). Hook points: the day-hub screens rendered under
+  `app/{grade,english,science}/**/day/[id]`.
+- **UX:** reuse the `components/screens/LockedGradeScreen.tsx` lock-screen pattern + the shared UI
+  library (rule 4). RTL Hebrew. CTA = "log in to keep learning" opening the existing
+  `components/auth/LoginModal.tsx`; friendly "come back tomorrow, or log in" copy.
+
+### 5.3 — Copy, testIds, voice review
+- **Task:** `data-testid` via `lib/testIds.ts`; Hebrew niqqud + read-aloud review of the new
+  lock-screen copy per CLAUDE.md rules 11–12 (numbers/taps only; spoken-content review).
+
+### 5.4 — Companion / prerequisite (flag — not built in this phase)
+- Self-registration does **not** exist yet (accounts are admin-created). This phase's gate uses the
+  existing login; a self-service **signup** flow is the natural companion so blocked visitors can
+  self-serve an account. Track as a separate follow-up before this cap ships to real traffic.
+
+### Known limitation (state explicitly)
+The cap is **client-side only** → bypassable by clearing `localStorage`, incognito, or another
+browser. It is a **soft conversion nudge, not DRM**. Non-bypassable metering needs a **server-side
+per-account entitlement** layer (depends on accounts / Phase 1) — out of scope for this phase.
+
+### Phase 5 quality gates
+ULTRA: multi-role review → `npm run test:qa` on PR CI → Playwright visual on the new lock screen →
+verification report. No `lib/*/storage.ts` change (new anon key only), so no storage-schema MAX
+escalation.
+
+### Phase 5 Definition of Done
+1. Anonymous visitor can do exactly one day, one subject, per calendar day; the same day stays
+   re-openable; resets next local day.
+2. Logged-in users entirely unaffected.
+3. Lock screen with login CTA — RTL, a11y, TTS-reviewed, shared UI.
+4. Client-only limitation documented; server-entitlement follow-up + self-registration companion
+   captured.
+5. No `lib/*/storage.ts` schema change; `multi-user-isolation` + `auth-backward-compat` anchors green.
+
+**Tests:** unit — claim / allow-same-day / block-other-day / block-other-subject / reset-on-date-change
+/ never-block-when-logged-in. e2e — anon opens day 1 (allowed) → opens day 2 (locked screen) → logs
+in (unlocked).
+
+---
+
 ## Cross-cutting rules (apply to every phase)
 
 - **Backward compatibility is sacred.** `multi-user-isolation.spec.ts` and
@@ -398,6 +470,8 @@ migration.** It gets its **own dedicated MAX plan** with a backfill + rollback r
 | Erasure contract rewritten by Phase 4 tenancy | MEDIUM | Design export/erasure org-aware in Phase 3 |
 | Compliance scope creep blocks eng | MEDIUM | Split legal vs eng; eng ships export/erasure/retention primitives regardless |
 | No DR proof at due diligence | HIGH | Phase 2 PITR/backups + tested restore drill + RPO/RTO |
+| Client-side daily cap trivially bypassed (clear storage / incognito) | MEDIUM | Frame as soft nudge; real metering needs server entitlement (accounts) — revisit post-Phase 1 |
+| Freemium cap frustrates a legit shared/family device (multiple children) | MEDIUM | Generous "one day" scope; clear login CTA; a logged-in account removes the cap entirely |
 
 ## Sequencing rationale
 
@@ -440,6 +514,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
+| 5 | Freemium access gating (logged-out daily limit) | ULTRA | 🚦 go/no-go | ⬜ Not started |
 
 ---
 
