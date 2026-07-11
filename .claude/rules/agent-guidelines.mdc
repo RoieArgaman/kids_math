@@ -52,6 +52,7 @@ Mode: [PRO/ULTRA/MAX] — [one-line reason]
 - If you FIND a secret: **STOP, flag as CRITICAL, do not proceed**
 
 ### 6. Preserve Backward Compatibility
+- **Every change, not just storage.** A deploy must never break users still on an old client, session, or cached assets — this covers API request/response shapes, auth/session cookies & tokens, HTTP response headers (HSTS/CSP), and request limits, as much as localStorage. Prefer **additive, reversible** changes; if a change could reject or lock out an existing user, **stage it (shadow / report-only first) or flag-gate it** and confirm real traffic is safe before enforcing.
 - **User outcome:** Deploys must not wipe stored learner progress. Completed days/sections and **all** persisted domains (workbook, final exam, GMAT, badges, streak) must still load after new code unless a migration replaces an old shape. Full policy: **`AGENTS.md` → Data & Storage Rules** (authoritative).
 - localStorage schemas are versioned — additive changes only
 - If schema must change: version bump + migration + MAX mode

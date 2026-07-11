@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-11 (Phase 0 security quick wins — shipped as one PR, everything staged)
+- **Trigger:** Production Hardening Roadmap Phase 0 (S1/S2/S3/S5/S6/S11) — cheapest, highest-severity,
+  reversible security fixes. Done together on `claude/roadmap-quick-wins-vdg7z7`.
+- **What changed / where:**
+  - New `lib/security/`: `clientIp.ts` (trusted right-most XFF read, S11), `rateLimit.ts`
+    (Firestore-backed fixed-window limiter, **shadow/record-only + fail-open**, S1), `bodyLimit.ts`
+    (413 caps, S5). Wired into `app/api/auth/login`, `app/api/user/progress`, `app/api/admin/users`.
+  - `app/api/auth/login/route.ts`: constant-time — always `bcrypt.compare` (dummy **cost-12** hash on
+    unknown user) so timing can't enumerate accounts (S2).
+  - `next.config.mjs`: `headers()` — **staged HSTS**, **CSP Report-Only**, X-Frame-Options, nosniff,
+    Referrer-Policy, Permissions-Policy (S3).
+  - CI: `.github/dependabot.yml` + `security-scan` job (`npm audit` non-blocking first, `gitleaks`
+    blocking) (S6). No configs weakened.
+- **What we learned / reuse next time:**
+  1. **Backward compatibility is not just storage.** A deploy can strand old-client/old-session users
+     via HTTP contracts too. Patterns that made Phase 0 safe: **shadow mode** (limiter records, never
+     blocks; fail-open), **CSP Report-Only** (can't break cached clients/TTS/RTL), **staged HSTS**
+     (short max-age, no preload — self-heals), and a **flag-gated body cap** (`PROGRESS_BODY_CAP_ENFORCE`)
+     set just under Firestore's ~1 MiB ceiling so no accumulated bundle is ever 413'd. Generalized this
+     into mandatory rule **§6** (`AGENTS.md` + `agent-guidelines.mdc`).
+  2. **Firestore doc caps double as a safe body-cap bound:** since Firestore rejects >~1 MiB docs, any
+     bundle that ever synced is already under it — pick the HTTP cap from that, not a guess.
+  3. **Read the enforce flag per-request, not at module load,** so it's unit-testable and ops-togglable
+     without a redeploy.
+  4. **Client-IP trust is a verify-before-enforce contract** — see roadmap Appendix A; confirm the XFF
+     hop count on App Hosting before the limiter goes enforcing (Phase 2.7).
+
 ### 2026-07-10 (Coverage thresholds: Vitest v8, ratcheted, scoped to lib/ risk areas)
 - **Trigger:** 183 unit + 29 E2E specs but **zero coverage visibility** — no way to know
   which branches of the highest-risk code (`lib/*/storage.ts`, exam grading, grade-unlock)

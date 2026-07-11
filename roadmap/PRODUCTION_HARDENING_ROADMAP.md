@@ -125,82 +125,35 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 
 ---
 
-## Phase 0 — Security quick wins  ·  Mode: ULTRA
+## Phase 0 — Security quick wins  ·  Mode: ULTRA  ·  ✅ COMPLETED
 
-**Objective:** Land the cheapest, highest-severity, fully-reversible security fixes first.
-**Estimated diff:** ~250–300 lines across small files + config. **Shippable in 1–2 PRs.**
-**Gate to start:** none (begin immediately).
-**Exit criteria:** S2, S3, S5, S6 fixed & tested; S1 shipped in **shadow (log-only) mode**;
-S11 spike answered and documented.
+> **Status: DONE** (branch `claude/roadmap-quick-wins-vdg7z7`). All six quick wins (0.0–0.5)
+> shipped together in one PR. Findings **S2, S3, S5, S6** are fixed & tested; **S1** is live in
+> shadow (record-only) mode; **S11** is answered and documented in Appendix A. Kept here as a
+> short record so the later phases' "Gate to start: Phase 0 merged" references still resolve.
 
-### 0.0 — Trusted-proxy / client-IP spike (S11) — *do before 0.1*
-- **Why first:** the rate limiter (0.1) keys on client IP; if App Hosting lets clients spoof
-  the forwarded header, IP-keying is worthless and the `secure`-cookie logic is suspect.
-- **Task:** determine, on Firebase App Hosting, (a) which header carries the real client IP
-  (`X-Forwarded-For` position, or a platform-specific header) and (b) whether
-  `x-forwarded-proto` is set by the trusted front-end and non-spoofable.
-- **Deliverable:** a short note appended to this file (§ "Appendix A: proxy trust") + a shared
-  `lib/security/clientIp.ts` contract decision (which header, which index).
-- **Test:** unit test asserting the IP-extraction helper picks the trusted position and ignores
-  a spoofed prepended value.
+**What shipped:**
+- **0.0 (S11):** `lib/security/clientIp.ts` — trusted client-IP reader (right-most XFF position,
+  ignores client-prepended spoof). Proxy-trust contract + verify-before-enforce caveat in Appendix A.
+- **0.1 (S1):** `lib/security/rateLimit.ts` — Firestore-backed shared-state fixed-window limiter in
+  **shadow mode** (records over-threshold via `console.warn("[rate-limit:shadow]")`, **never blocks**,
+  **fail-open**). Wired on `/api/auth/login` (IP+username), `/api/user/progress` POST (userId), and
+  admin mutations (adminId). Promotion to enforcing 429 stays in Phase 2.7.
+- **0.2 (S2):** constant-time login — always runs a bcrypt compare (dummy cost-12 hash on the
+  unknown-user path) so timing no longer reveals whether an account exists.
+- **0.3 (S3):** `next.config.mjs` `headers()` — HSTS (**staged** short max-age), **CSP Report-Only**,
+  `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
+- **0.4 (S5):** `lib/security/bodyLimit.ts` — 413 body caps. Login enforces immediately; the progress
+  cap is **shadow-first** (`PROGRESS_BODY_CAP_ENFORCE` flag, default off) and sits just under
+  Firestore's ~1 MiB doc ceiling, so no existing heavy bundle is ever rejected.
+- **0.5 (S6):** `.github/dependabot.yml` (npm + actions) and a CI `security-scan` job
+  (`npm audit --audit-level=high` non-blocking first, blocking `gitleaks` secret scan). No configs
+  weakened (`ignoreDuringBuilds` untouched, CI lint authoritative).
 
-### 0.1 — Rate limiting, **shadow mode** (S1)
-- **Design:** shared-state limiter (Firestore counter doc with TTL, or Firebase-adjacent KV) —
-  **NOT in-memory** (App Hosting is multi-instance + `minInstances: 0`, so per-instance memory
-  is bypassable and lost on cold start).
-- **Scope:** `/api/auth/login` (key: IP + `usernameLower`), `/api/user/progress` POST (key:
-  userId), admin mutations (key: adminId).
-- **Shadow mode:** count and **record** would-be-throttled requests; **do not block yet**.
-  Promotion to enforcing happens in Phase 2 once dashboards (2.x) show the real 429 rate and
-  classroom thresholds are tuned (resolves the standing "shared-IP classroom" concern).
-- **New file:** `lib/security/rateLimit.ts` (+ `clientIp.ts` from 0.0).
-- **Test:** unit — limiter increments/expires correctly; over-threshold flagged (but allowed)
-  in shadow mode. Wire an e2e placeholder that will assert 429 once enforcing.
-
-### 0.2 — Constant-time login (S2)
-- **Task:** in `app/api/auth/login/route.ts`, when the username is not found, still perform a
-  bcrypt compare against a **dummy hash** before returning 401, so response timing does not
-  reveal whether a username exists.
-- **Test:** unit — behavior unchanged for valid/invalid credentials; add a timing-parity style
-  assertion (bucketed) or at least assert the dummy-compare code path runs on unknown user.
-
-### 0.3 — Security headers (S3)
-- **Task:** add `async headers()` to `next.config.mjs`:
-  - `Strict-Transport-Security` (long max-age + `includeSubDomains`; `preload` after soak).
-  - `Content-Security-Policy` — **ship as `Content-Security-Policy-Report-Only` first**
-    (audio/TTS + Tailwind/inline styles will otherwise break), then flip to enforcing after
-    a soak.
-  - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
-    `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (lock down
-    camera/mic/geo etc.).
-- **Front-end watch (SeniorFrontEnd_TechLead):** verify the English/Science audio layer and any
-  inline styles survive CSP; keep RTL intact.
-- **Test:** e2e `tests/e2e/security-headers.spec.ts` asserts headers on `/` and one deep route.
-
-### 0.4 — Request body size cap (S5)
-- **Task:** reject `/api/user/progress` POST bodies over a sane cap (e.g. read
-  `content-length` / bounded read) **before** JSON parse; return 413. Pick the cap from the
-  realistic max bundle size (full curriculum × both grades × english × science) + headroom.
-- **Test:** unit — oversized body → 413; normal bundle → unaffected.
-
-### 0.5 — CI scanning + build lint tightening (S6, §Δ7)
-- **Task:** add to CI: `npm audit --audit-level=high` step (non-blocking first, then blocking),
-  a `.github/dependabot.yml`, and a secret-scan step (e.g. gitleaks/trufflehog action).
-  Consider failing the production build on lint too — **tighten, never weaken configs**
-  (rule 7): do NOT relax `next.config.mjs` `ignoreDuringBuilds` by loosening lint; instead
-  keep CI lint authoritative and optionally add a build-time lint gate.
-- **Test:** CI green on a clean PR; a deliberately-vulnerable/secret-bearing PR fails.
-
-### Phase 0 quality gates
-Self-Review → 5-role review → `npm run test:qa` on the **PR CI** (per saved preference; locally
-only tsc/lint/testids/unit) → MCP Playwright visual check (headers/CSP shouldn't regress UI) →
-verification report.
-
-### Phase 0 Definition of Done
-1. S2, S3, S5, S6 shipped with passing tests.
-2. S1 limiter live in shadow mode, recording would-be-throttles.
-3. S11 proxy-trust answered; `clientIp.ts` contract documented in Appendix A.
-4. No new `any`; no weakened configs; both regression-anchor e2e specs still green.
+**Tests:** `tests/unit/lib/security/{clientIp,rateLimit}.test.ts`, extended
+`authLogin`/`userProgress` unit tests (constant-time, 413, shadow-vs-enforce body cap), and
+`tests/e2e/security-headers.spec.ts`. Backward-compat: existing 30-day sessions untouched, CSP
+Report-Only can't break cached clients, both regression anchors green.
 
 ---
 
@@ -482,7 +435,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 
 | Phase | Title | Mode | Gate | Status |
 |-------|-------|------|------|--------|
-| 0 | Security quick wins | ULTRA | none | ⬜ Not started |
+| 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
 | 1 | Session integrity & auth hardening | MAX | Phase 0 | ⬜ Not started |
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
@@ -492,7 +445,23 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 
 ## Appendices (filled in as phases execute)
 
-- **Appendix A — Proxy trust / client-IP contract** (Phase 0.0): _TBD._
+- **Appendix A — Proxy trust / client-IP contract** (Phase 0.0):
+  - **Contract (implemented in `lib/security/clientIp.ts`):** the client IP is read from
+    `X-Forwarded-For` counting from the **right**, because on Firebase App Hosting (Google Front
+    End / Cloud Run) the trusted proxy *appends* the IP it observed to the right of the chain, while
+    a malicious client can only *prepend*. `getClientIp` therefore takes the entry at
+    `TRUSTED_PROXY_HOPS` (currently `0` ⇒ right-most), ignoring any client-prepended spoof, and falls
+    back to `x-real-ip` then the sentinel `"unknown"`.
+  - **`x-forwarded-proto`:** used only to set the cookie `secure` flag (login + grade-unlock). Trusted
+    as set by the front end; unchanged in Phase 0.
+  - **⚠️ Verify-before-enforce:** `TRUSTED_PROXY_HOPS` is a best-effort default. Because the limiter
+    runs shadow-only in Phase 0, an off-by-one cannot lock anyone out. **Before promoting the limiter
+    to enforcing (Phase 2.7), confirm empirically** — inspect real `X-Forwarded-For` values from App
+    Hosting logs — how many hops the platform appends, and bump `TRUSTED_PROXY_HOPS` if there is an
+    extra internal hop.
+  - **Refresh / rollback:** the whole phase is additive & reversible — revert the PR or toggle
+    `PROGRESS_BODY_CAP_ENFORCE`; the shadow limiter's `rate_limits` docs are inert and safe to drop.
+    No schema/storage migration, so existing sessions and progress are never at risk.
 - **Appendix B — JWT-secret rotation runbook** (Phase 1.5): _TBD._
 - **Appendix C — Load-test baseline** (Phase 2.4): _TBD._
 - **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._

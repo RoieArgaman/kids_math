@@ -104,6 +104,7 @@ Every response that involves code changes must begin with:
 - If you FIND a secret in existing code: **STOP, flag it as CRITICAL, do not proceed**
 
 ### 6. Preserve Backward Compatibility (mandatory)
+- **Consider backward compatibility for _every_ change, not only storage.** A deploy must never break users still on an old client, an old session, or old cached assets. This covers API request/response shapes, auth/session cookies & tokens, HTTP response headers (HSTS/CSP), and request limits — as much as localStorage. Prefer **additive, reversible** changes; when a change could reject or lock out an existing user, **stage it (shadow / report-only first) or guard it behind a flag** and confirm real traffic is safe before enforcing. The storage rules below are the strictest instance of this rule. (Phase 0 of the Production Hardening Roadmap is the worked example: shadow-mode limiter, CSP Report-Only, staged HSTS, shadow-first body cap.)
 - **User outcome:** Deploys must not wipe or silently discard stored learner progress. Completed days, sections, and all other persisted state (workbook, final exam, GMAT challenge, badges, streak — see [Data & Storage Rules](#data--storage-rules)) must still load after new code unless a deliberate migration replaces an old shape.
 - localStorage schemas are versioned — additive changes only
 - If schema must change: version bump + migration + MAX mode

@@ -18,11 +18,12 @@ let passwordHash: string;
 
 function req(
   body?: unknown,
-  opts: { proto?: "http" | "https"; forwarded?: string } = {},
+  opts: { proto?: "http" | "https"; forwarded?: string; contentLength?: number } = {},
 ): NextRequest {
   const proto = opts.proto ?? "https";
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (opts.forwarded) headers["x-forwarded-proto"] = opts.forwarded;
+  if (opts.contentLength !== undefined) headers["content-length"] = String(opts.contentLength);
   return new NextRequest(`${proto}://kids-math.test/api/auth/login`, {
     method: "POST",
     headers,
@@ -123,5 +124,27 @@ describe("POST /api/auth/login", () => {
     holder.db = new FakeFirestore({ throwOnAccess: new Error("firestore down") });
     const res = await login(req({ username: "dana", password: PASSWORD }));
     expect(res.status).toBe(500);
+  });
+
+  // Roadmap S2: login must run bcrypt work even for an unknown user, so response
+  // timing does not reveal whether an account exists. We assert the compare RUNS on
+  // the unknown-user path (timing assertions are too flaky to be meaningful here).
+  it("runs a bcrypt compare even for an unknown user (constant-time / S2)", async () => {
+    const spy = vi.spyOn(bcrypt, "compare");
+    const res = await login(req({ username: "ghost", password: PASSWORD }));
+    expect(res.status).toBe(401);
+    expect(spy).toHaveBeenCalledTimes(1); // dummy-hash compare on the unknown path
+    spy.mockRestore();
+  });
+
+  // Roadmap S5: reject oversized bodies before parsing.
+  it("returns 413 for an over-cap login body", async () => {
+    const res = await login(req({ username: "dana", password: PASSWORD }, { contentLength: 5000 }));
+    expect(res.status).toBe(413);
+  });
+
+  it("does not 413 a normal-sized body", async () => {
+    const res = await login(req({ username: "dana", password: PASSWORD }, { contentLength: 100 }));
+    expect(res.status).toBe(200);
   });
 });

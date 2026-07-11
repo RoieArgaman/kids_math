@@ -28,9 +28,13 @@ function makeBundle(overrides: Partial<UserProgressBundle> = {}): UserProgressBu
   } as UserProgressBundle;
 }
 
-function req(method: "GET" | "POST", opts: { token?: string; body?: unknown } = {}): NextRequest {
+function req(
+  method: "GET" | "POST",
+  opts: { token?: string; body?: unknown; contentLength?: number } = {},
+): NextRequest {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (opts.token !== undefined) headers.cookie = `${SESSION_COOKIE_NAME}=${opts.token}`;
+  if (opts.contentLength !== undefined) headers["content-length"] = String(opts.contentLength);
   return new NextRequest("https://kids-math.test/api/user/progress", {
     method,
     headers,
@@ -145,6 +149,51 @@ describe("/api/user/progress", () => {
       holder.db = new FakeFirestore({ throwOnAccess: new Error("txn boom") });
       const res = await postProgress(req("POST", { token, body: makeBundle() }));
       expect(res.status).toBe(500);
+    });
+  });
+
+  // Roadmap S5 body cap, staged. Backward compat: while enforcement is OFF (default) a
+  // large but legitimate accumulated bundle must still merge — never 413'd — so no
+  // long-time student is stranded. Enforcement only rejects once explicitly enabled.
+  describe("body size cap (staged)", () => {
+    const OVER_CAP = 2_000_000; // > PROGRESS_MAX_BODY_BYTES (1_000_000)
+
+    it("shadow default: over-cap body still returns 200 and merges (no 413)", async () => {
+      const db = new FakeFirestore();
+      holder.db = db;
+      const res = await postProgress(
+        req("POST", { token, body: makeBundle(), contentLength: OVER_CAP }),
+      );
+      expect(res.status).toBe(200);
+      expect(db.docs("user_progress").find((d) => d.id === "u1")).toBeDefined();
+    });
+
+    it("enforce on: over-cap body returns 413 before parsing", async () => {
+      const prev = process.env.PROGRESS_BODY_CAP_ENFORCE;
+      process.env.PROGRESS_BODY_CAP_ENFORCE = "1";
+      try {
+        const res = await postProgress(
+          req("POST", { token, body: makeBundle(), contentLength: OVER_CAP }),
+        );
+        expect(res.status).toBe(413);
+      } finally {
+        if (prev === undefined) delete process.env.PROGRESS_BODY_CAP_ENFORCE;
+        else process.env.PROGRESS_BODY_CAP_ENFORCE = prev;
+      }
+    });
+
+    it("enforce on: a normal (< cap) bundle is unaffected", async () => {
+      const prev = process.env.PROGRESS_BODY_CAP_ENFORCE;
+      process.env.PROGRESS_BODY_CAP_ENFORCE = "1";
+      try {
+        const res = await postProgress(
+          req("POST", { token, body: makeBundle(), contentLength: 500 }),
+        );
+        expect(res.status).toBe(200);
+      } finally {
+        if (prev === undefined) delete process.env.PROGRESS_BODY_CAP_ENFORCE;
+        else process.env.PROGRESS_BODY_CAP_ENFORCE = prev;
+      }
     });
   });
 });
