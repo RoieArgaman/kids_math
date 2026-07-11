@@ -2,8 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { verifyToken, SESSION_COOKIE_NAME } from "@/lib/auth/jwt.server";
 import { getFirestore } from "@/lib/firestore/admin";
+import { recordRateLimit } from "@/lib/security/rateLimit";
 
 const BCRYPT_ROUNDS = 12;
+
+// Admin mutations are actor-keyed. Shadow-mode record only — never blocks in Phase 0.
+const ADMIN_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 
 async function requireAdmin(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
@@ -35,6 +39,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
 
   try {
     const body = (await request.json()) as unknown;
@@ -89,6 +94,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
 
   try {
     const body = (await request.json()) as unknown;
@@ -124,6 +130,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
 
   try {
     const body = (await request.json()) as unknown;

@@ -38,6 +38,40 @@ jobs:
       - name: Unit tests (with coverage thresholds)
         run: npm run test:coverage
 
+  # Supply-chain / secret scanning (roadmap S6 / Phase 0.5). Runs in parallel with the
+  # other jobs. `npm audit` starts non-blocking (continue-on-error) so a newly-disclosed
+  # advisory doesn't wedge unrelated PRs; flip to blocking once the tree is clean. The
+  # secret scan is blocking — a committed credential must fail the build.
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the secret scan can inspect all commits on the branch/PR.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Dependency audit (high+)
+        # Non-blocking first; remove continue-on-error to enforce once the tree is clean.
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # gitleaks-action is free for personal repos. If this repo ever moves under a
+          # GitHub ORG, set GITLEAKS_LICENSE (repo secret) or the step fails closed and,
+          # because deploy.yml gates on full CI success, would block all deploys.
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
   # E2E, split across 3 parallel shards. Each shard is self-contained (builds its own
   # production server) so the shards run fully in parallel — 3 parallel builds cost the
   # same wall-clock as one, and the shared .next/cache keeps them incremental. This is
