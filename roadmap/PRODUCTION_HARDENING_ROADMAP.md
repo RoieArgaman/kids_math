@@ -308,6 +308,11 @@ proving recoverability, and tuning the limiter with real data.
 - **Task:** enable Firestore scheduled backups / Point-In-Time Recovery; document **RPO/RTO**
   and a tested **restore runbook**. Buyer due-diligence hard item.
 - **Test:** perform a restore drill to a scratch project; record results in Appendix D.
+- **Status:** runbook shipped in **sub-PR 2D** —
+  [`DISASTER_RECOVERY_RUNBOOK.md`](../.claude/docs/DISASTER_RECOVERY_RUNBOOK.md) (PITR + daily
+  backups enable steps, RPO ≤ 1h / RTO ≤ 4h targets, restore-to-new-DB procedure, and the
+  required drill). **Enabling PITR/backups + running the drill are owner actions** (gcloud/
+  console) → Appendix D.
 
 ### 2.6 — Staging env + non-zero minInstances (C6)
 - **Task:** separate a staging backend from production; set `minInstances >= 1` on prod in
@@ -604,7 +609,10 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
   ([`scripts/load/progress-load.js`](../scripts/load/progress-load.js), sub-PR 2C). _Baseline
   numbers TBD — paste throughput / login p95 / push p95 / error rate / the `PUSH_VUS`
   contention knee here after a run, with date + target + commit SHA._
-- **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._
+- **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): runbook ready
+  ([`DISASTER_RECOVERY_RUNBOOK.md`](../.claude/docs/DISASTER_RECOVERY_RUNBOOK.md), sub-PR 2D).
+  Targets: **RPO ≤ 1h** (PITR, 7-day window) / **RTO ≤ 4h**. _Drill results TBD — paste date,
+  snapshot time, measured RTO, and validation outcome here after the first restore drill._
 
 ---
 

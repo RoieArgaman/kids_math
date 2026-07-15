@@ -145,4 +145,5 @@ These mirror the `alwaysApply: true` rules Cursor always loads — imported so t
 - `ENGLISH_CURRICULUM.md`, `TEACHING_PRIMER_GUIDELINES.md` — subject/content guides
 - `NAVIGATION_IA.md`, `DEPLOYMENT.md`, `REGRESSION_TEST_PLAN.md` — IA, deploy, regression
 - `OBSERVABILITY_RUNBOOK.md` — Phase 2.3 ops runbook: Error Reporting, uptime check on `/api/health`, alerting, dashboard, capacity targets
+- `DISASTER_RECOVERY_RUNBOOK.md` — Phase 2.5 DR runbook: Firestore PITR + backups, RPO/RTO, tested restore procedure
 - Full list: `ls .claude/docs/`
