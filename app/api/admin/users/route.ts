@@ -148,9 +148,13 @@ export async function PATCH(request: NextRequest) {
     // concurrent resets can't lose an increment (roadmap S4). Also stamp the new hash.
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
-      const current = snap.data()?.tokenVersion;
+      // Guard the race where the user is deleted between the existence check above and here:
+      // spreading `undefined` would resurrect a zombie doc with only these two fields.
+      if (!snap.exists) throw new Error("user no longer exists");
+      const data = snap.data() ?? {};
+      const current = data.tokenVersion;
       const nextVersion = (typeof current === "number" ? current : 0) + 1;
-      tx.set(userRef, { ...snap.data(), passwordHash, tokenVersion: nextVersion });
+      tx.set(userRef, { ...data, passwordHash, tokenVersion: nextVersion });
     });
     // Resetting the password also means "let them back in" — clear any active lockout.
     if (usernameLower) await clearLockout(usernameLower);

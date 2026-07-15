@@ -33,6 +33,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
   const [attemptsRemaining, setAttemptsRemaining] = useState<number | undefined>(undefined);
   const [lockSecondsLeft, setLockSecondsLeft] = useState<number | null>(null);
+  const [justUnlocked, setJustUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const usernameRef = useRef<HTMLInputElement>(null);
 
@@ -51,11 +52,13 @@ export function LoginModal({ onClose }: LoginModalProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Live countdown while locked; clears itself when it reaches zero so the child can retry.
+  // Live countdown while locked; when it reaches zero, show a positive "try again" cue so a
+  // young child sees the wait is over rather than the message silently disappearing.
   useEffect(() => {
     if (lockSecondsLeft === null) return;
     if (lockSecondsLeft <= 0) {
       setLockSecondsLeft(null);
+      setJustUnlocked(true);
       return;
     }
     const t = setTimeout(() => setLockSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
@@ -65,6 +68,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
   const clearErrors = useCallback(() => {
     setErrorKind(null);
     setAttemptsRemaining(undefined);
+    setJustUnlocked(false);
   }, []);
 
   const handleSubmit = useCallback(
@@ -174,7 +178,8 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "הסתרת הסיסמה" : "הצגת הסיסמה"}
                 aria-pressed={showPassword}
-                className="absolute inset-y-0 left-0 flex items-center justify-center px-3 text-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#cdbff2]"
+                // ≥44px touch target (kids a11y rule): full input height + a 44px-min hit area.
+                className="absolute inset-y-0 left-0 flex min-w-[44px] items-center justify-center rounded-l-xl text-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#cdbff2]"
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -189,6 +194,17 @@ export function LoginModal({ onClose }: LoginModalProps) {
               aria-live="polite"
             >
               רגע קטן! אפשר לנסות שוב בעוד {lockSecondsLeft} שניות 😊
+            </p>
+          )}
+
+          {justUnlocked && !isLocked && !errorKind && (
+            <p
+              data-testid="km.autogen.loginmodal.node.unlocked"
+              className="mb-4 rounded-xl bg-[#ecfdf5] px-4 py-2.5 text-center text-sm font-medium text-[#047857]"
+              role="status"
+              aria-live="polite"
+            >
+              אפשר לנסות שוב! 😊
             </p>
           )}
 

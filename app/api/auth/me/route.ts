@@ -9,8 +9,11 @@ export async function GET(request: NextRequest) {
     if (!claims) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Never leak the internal tokenVersion to the client — return the public AuthUser only.
-    const { tokenVersion: _tokenVersion, ...user } = claims;
-    return NextResponse.json(user);
+    return NextResponse.json({
+      userId: claims.userId,
+      username: claims.username,
+      role: claims.role,
+    });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

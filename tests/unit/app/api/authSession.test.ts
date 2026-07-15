@@ -65,4 +65,11 @@ describe("GET /api/auth/me", () => {
     expect((await me(reqWithCookie(token))).status).toBe(401);
     process.env.JWT_SECRET = "test-secret-value-at-least-32-chars-long!!";
   });
+
+  // A Firestore blip during the version-check must 500 (retryable), NOT spuriously log the
+  // user out with a 401 — verifySession propagates the error to the route's try/catch.
+  it("returns 500 (not 401) when Firestore errors during the version check", async () => {
+    holder.db = new FakeFirestore({ throwOnAccess: new Error("firestore down") });
+    expect((await me(reqWithCookie(await signToken(USER)))).status).toBe(500);
+  });
 });
