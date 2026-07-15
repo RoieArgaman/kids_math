@@ -50,6 +50,14 @@ describe("redactFields", () => {
     expect(serialized).toContain("[Object]");
   });
 
+  it("collapses an array past the depth cap to an [Array] marker", () => {
+    // The array sits at exactly the depth cap (6): a→b→c→d→e→f(array).
+    const deep = { a: { b: { c: { d: { e: { f: [{ password: "leak" }] } } } } } };
+    const serialized = JSON.stringify(redactFields(deep));
+    expect(serialized).not.toContain("leak");
+    expect(serialized).toContain("[Array]");
+  });
+
   it("is cycle-safe", () => {
     const a: Record<string, unknown> = { name: "a" };
     a.self = a;
@@ -82,6 +90,47 @@ describe("logger.error", () => {
       const payload = JSON.parse(spy.mock.calls[0][0] as string) as Record<string, unknown>;
       expect(payload.severity).toBe("ERROR");
       expect(payload.message).toBe("real message");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe("logger.info / logger.warn", () => {
+  it("logger.info writes an INFO line via console.log", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      logger.info("started", { userId: "u1" });
+      expect(spy).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse(spy.mock.calls[0][0] as string) as Record<string, unknown>;
+      expect(payload.severity).toBe("INFO");
+      expect(payload.message).toBe("started");
+      expect(payload.userId).toBe("u1");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("logger.warn writes a WARNING line via console.warn and still redacts PII", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      logger.warn("heads up", { token: "abc" });
+      expect(spy).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse(spy.mock.calls[0][0] as string) as Record<string, unknown>;
+      expect(payload.severity).toBe("WARNING");
+      expect(payload.token).toBe("[REDACTED]");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("works with no fields argument", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      logger.info("bare");
+      const payload = JSON.parse(spy.mock.calls[0][0] as string) as Record<string, unknown>;
+      expect(payload.message).toBe("bare");
+      expect(payload.severity).toBe("INFO");
     } finally {
       spy.mockRestore();
     }
