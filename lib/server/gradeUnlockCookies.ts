@@ -5,13 +5,21 @@ import {
   MATH_B_LEGACY_COOKIE,
   subjectGradeBUnlockCookieName,
 } from "@/lib/gradeUnlock";
-import { parseSubjectId, SUBJECTS, type Subject } from "@/lib/subjects";
+import { SUBJECTS, type Subject } from "@/lib/subjects";
+import { subjectSchema } from "@/lib/security/schemas";
 
 /**
  * Server-only helpers that set/clear the per-subject grade-B unlock cookies.
  * Shared by the subject-aware routes (`/api/grade-b-unlock|lock`) and the legacy
  * math shims (`/api/unlock-grade-b|lock-grade-b`). Not edge-safe — route handlers
  * (Node runtime) only.
+ *
+ * INTENTIONALLY UNAUTHENTICATED (roadmap S7, Phase 1 decision): these set a content-gate
+ * cookie only (never data), and anonymous learners legitimately reach them — `lib/completion/
+ * reconcile.ts` posts here to heal the Grade-B unlock from local Grade-A completion for users
+ * who are not logged in. Requiring a session would break the anonymous Grade-A→B flow. Phase 1
+ * hardens the input (zod `subjectSchema`) but keeps the routes open; any real gating waits for
+ * the account model in Phase 5.
  */
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
@@ -32,13 +40,8 @@ function isSecureRequest(request: NextRequest): boolean {
  */
 async function readSubject(request: NextRequest): Promise<Subject | null> {
   try {
-    const body: unknown = await request.json();
-    if (body && typeof body === "object" && "subject" in body) {
-      const raw = (body as { subject?: unknown }).subject;
-      if (typeof raw === "string") {
-        return parseSubjectId(raw);
-      }
-    }
+    const parsed = subjectSchema.safeParse(await request.json());
+    if (parsed.success) return parsed.data.subject as Subject;
   } catch {
     // No/invalid JSON body.
   }

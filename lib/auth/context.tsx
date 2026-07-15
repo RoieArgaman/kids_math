@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthUser } from "./types";
-import { apiLogin, apiLogout, apiMe } from "./api";
+import { apiLogin, apiLogout, apiLogoutAll, apiMe, type LoginResult } from "./api";
 import {
   bumpAuthEpoch,
   getAuthEpoch,
@@ -39,8 +39,10 @@ interface AuthContextValue {
   user: AuthUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  login: (username: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
+  /** "Log out everywhere" — revokes every session for this user, then signs out locally. */
+  logoutAll: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -128,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (username: string, password: string): Promise<LoginResult> => {
       const result = await apiLogin(username, password);
       if (!result.ok) return result;
 
@@ -137,35 +139,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const proceed = await reconcileForUser(result.user.userId);
       if (proceed) setUser(result.user);
 
-      return { ok: true as const };
+      return result;
     },
     [],
   );
 
-  const logout = useCallback(async () => {
-    // Identity boundary first: bump the epoch so any in-flight reconcile/sync
-    // aborts its hydrate, and disarm pushes immediately. unregisterSyncCallback
-    // flips isSyncActive() false so a stray focus/pageshow pull can't re-hydrate.
+  // Shared local teardown for both logout and logout-everywhere: identity boundary first
+  // (bump epoch so any in-flight reconcile/sync aborts its hydrate), disarm pushes, then wipe
+  // this device to zero SYNCHRONOUSLY so no async pull interleaves a hydrate before the clear.
+  const teardownLocalSession = useCallback(() => {
     bumpAuthEpoch();
     setSyncPrimed(false);
     unregisterSyncCallback();
-
-    // Wipe this device to zero SYNCHRONOUSLY (before any await) so the next
-    // (anonymous or different) student sees nothing of the prior student and no
-    // async pull can interleave a hydrate before the clear. clearLocalProgress
-    // dispatches storage events so mirrored screens refresh to empty.
     clearLocalProgress();
     clearReconcileGuards();
     clearLocalOwner();
     setUser(null);
+  }, []);
 
+  const logout = useCallback(async () => {
+    teardownLocalSession();
     // Server clears the session + all Grade-B unlock cookies (network last).
     await apiLogout();
-  }, []);
+  }, [teardownLocalSession]);
+
+  const logoutAll = useCallback(async () => {
+    teardownLocalSession();
+    // Server bumps tokenVersion (revoking every other device) + clears cookies here.
+    await apiLogoutAll();
+  }, [teardownLocalSession]);
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoggedIn: user !== null, isLoading, login, logout }}
+      value={{ user, isLoggedIn: user !== null, isLoading, login, logout, logoutAll }}
     >
       <SyncGate />
       {children}

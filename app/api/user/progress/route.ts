@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyToken, SESSION_COOKIE_NAME } from "@/lib/auth/jwt.server";
+import { verifySession } from "@/lib/auth/session.server";
 import { getFirestore } from "@/lib/firestore/admin";
 import type { UserProgressBundle } from "@/lib/user-data/types";
 import { mergeBundles, clampFutureTimestamps } from "@/lib/user-data/merge";
 import { recordRateLimit } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, PROGRESS_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
+import { progressEnvelopeSchema } from "@/lib/security/schemas";
 
 // Progress pushes are userId-keyed. Generous window — a busy session pushes often.
 const PROGRESS_RATE_LIMIT = { limit: 60, windowMs: 60 * 1000 };
@@ -18,13 +19,12 @@ function enforceBodyCap(): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await verifyToken(token);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
+    // Data access ⇒ version-check so a revoked session (password reset / "log out
+    // everywhere") is refused immediately (roadmap S4).
+    const user = await verifySession(request, { requireVersionCheck: true });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const db = getFirestore();
     const doc = await db.collection("user_progress").doc(user.userId).get();
     if (!doc.exists) return NextResponse.json(null);
@@ -36,40 +36,35 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await verifyToken(token);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  // Shadow-mode record only — never blocks in Phase 0 (roadmap S1).
-  await recordRateLimit(`progress:${user.userId}`, PROGRESS_RATE_LIMIT);
-
-  if (isBodyTooLarge(request, PROGRESS_MAX_BODY_BYTES)) {
-    if (enforceBodyCap()) {
-      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-    }
-    // eslint-disable-next-line no-console -- shadow-mode recording until enforcement is enabled.
-    console.warn(
-      `[body-cap:shadow] userId=${user.userId} bytes=${request.headers.get("content-length")}`,
-    );
-  }
-
   try {
-    const body = (await request.json()) as unknown;
-    const bundleVersion =
-      typeof body === "object" && body !== null
-        ? (body as Record<string, unknown>).bundleVersion
-        : undefined;
-    // Accept v1 (math only), v2 (adds English), v3 (adds per-track review), and
-    // v4 (adds Science) — backward + forward compatible. Rejecting v4 here was a
-    // pre-existing bug: the client emits bundleVersion 4, so every push 400'd.
-    if (bundleVersion !== 1 && bundleVersion !== 2 && bundleVersion !== 3 && bundleVersion !== 4) {
+    // Data mutation ⇒ version-check so a revoked session is refused immediately (S4).
+    const user = await verifySession(request, { requireVersionCheck: true });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Shadow-mode record only — never blocks in Phase 0 (roadmap S1).
+    await recordRateLimit(`progress:${user.userId}`, PROGRESS_RATE_LIMIT);
+
+    if (isBodyTooLarge(request, PROGRESS_MAX_BODY_BYTES)) {
+      if (enforceBodyCap()) {
+        return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+      }
+      // eslint-disable-next-line no-console -- shadow-mode recording until enforcement is enabled.
+      console.warn(
+        `[body-cap:shadow] userId=${user.userId} bytes=${request.headers.get("content-length")}`,
+      );
+    }
+
+    // Envelope-only validation (S8): confirm it's an object with a known bundleVersion
+    // (v1 math, v2 +English, v3 +review, v4 +Science) — backward + forward compatible.
+    // We deliberately do NOT deep-validate the bundle; the merge layer is the tolerant
+    // reader, and a strict schema would risk rejecting real accumulated learner data.
+    const parsed = progressEnvelopeSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json({ error: "Invalid bundle" }, { status: 400 });
     }
 
     // Guard LWW/per-day merges against a device with a fast clock before merging.
-    const incoming = clampFutureTimestamps(body as UserProgressBundle, new Date());
+    const incoming = clampFutureTimestamps(parsed.data as unknown as UserProgressBundle, new Date());
 
     const db = getFirestore();
     const ref = db.collection("user_progress").doc(user.userId);

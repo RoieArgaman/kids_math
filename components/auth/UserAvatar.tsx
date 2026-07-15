@@ -7,7 +7,7 @@ import { testIds } from "@/lib/testIds";
 import { routes } from "@/lib/routes";
 
 export function UserAvatar() {
-  const { user, logout } = useAuth();
+  const { user, logout, logoutAll } = useAuth();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -19,6 +19,11 @@ export function UserAvatar() {
     setOpen(false);
     await logout();
   }, [logout]);
+
+  const handleLogoutEverywhere = useCallback(async () => {
+    setOpen(false);
+    await logoutAll();
+  }, [logoutAll]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -83,6 +88,19 @@ export function UserAvatar() {
           >
             🚪 התנתק
           </button>
+
+          {/* "Log out everywhere" is an adult security concept — admin-only, kept out of a
+              child's menu so a young student can't accidentally revoke all their sessions. */}
+          {user.role === "admin" && (
+            <button
+              data-testid={testIds.component.auth.logoutEverywhereButton()}
+              onClick={handleLogoutEverywhere}
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#4f4860] hover:bg-[#f7f4fd]"
+              role="menuitem"
+            >
+              🔒 התנתקות מכל המכשירים
+            </button>
+          )}
         </div>
       )}
     </div>

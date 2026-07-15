@@ -12,6 +12,8 @@ interface UserRecord {
   username: string;
   role: "user" | "admin";
   createdAt: string;
+  /** True when the account is currently in a login lockout (server-computed). */
+  isLocked?: boolean;
 }
 
 export function AdminUsersScreen() {
@@ -27,6 +29,7 @@ export function AdminUsersScreen() {
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newIsAdmin, setNewIsAdmin] = useState(false);
+  const [newOverridePolicy, setNewOverridePolicy] = useState(false);
   const [addError, setAddError] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -34,6 +37,7 @@ export function AdminUsersScreen() {
 
   const [changePwUserId, setChangePwUserId] = useState<string | null>(null);
   const [changePwValue, setChangePwValue] = useState("");
+  const [changePwOverride, setChangePwOverride] = useState(false);
   const [changePwBusy, setChangePwBusy] = useState(false);
   const [changePwError, setChangePwError] = useState("");
 
@@ -77,10 +81,15 @@ export function AdminUsersScreen() {
             username: newUsername.trim(),
             password: newPassword,
             role: newIsAdmin ? "admin" : "user",
+            overridePolicy: newOverridePolicy,
           }),
         });
         if (res.status === 409) {
           setAddError("שם המשתמש כבר קיים");
+          return;
+        }
+        if (res.status === 400) {
+          setAddError("הסיסמה קצרה מדי (לפחות 6 תווים). לסיסמה פשוטה סמנו 'אפשר סיסמה פשוטה'.");
           return;
         }
         if (!res.ok) {
@@ -90,6 +99,7 @@ export function AdminUsersScreen() {
         setNewUsername("");
         setNewPassword("");
         setNewIsAdmin(false);
+        setNewOverridePolicy(false);
         setStatusMsg("המשתמש נוסף בהצלחה ✓");
         await fetchUsers();
       } catch {
@@ -98,7 +108,28 @@ export function AdminUsersScreen() {
         setAdding(false);
       }
     },
-    [newUsername, newPassword, newIsAdmin, fetchUsers, setStatusMsg],
+    [newUsername, newPassword, newIsAdmin, newOverridePolicy, fetchUsers, setStatusMsg],
+  );
+
+  const handleUnlock = useCallback(
+    async (userId: string) => {
+      try {
+        const res = await fetch("/api/admin/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, action: "unlock" }),
+        });
+        if (!res.ok) {
+          setError("שגיאה בשחרור החשבון");
+          return;
+        }
+        setStatusMsg("החשבון שוחרר ✓");
+        await fetchUsers();
+      } catch {
+        setError("שגיאה בשחרור החשבון");
+      }
+    },
+    [fetchUsers, setStatusMsg],
   );
 
   const handleDelete = useCallback(
@@ -126,6 +157,7 @@ export function AdminUsersScreen() {
   const openChangePw = useCallback((userId: string) => {
     setChangePwUserId(userId);
     setChangePwValue("");
+    setChangePwOverride(false);
     setChangePwError("");
     setConfirmDeleteId(null);
   }, []);
@@ -133,6 +165,7 @@ export function AdminUsersScreen() {
   const cancelChangePw = useCallback(() => {
     setChangePwUserId(null);
     setChangePwValue("");
+    setChangePwOverride(false);
     setChangePwError("");
   }, []);
 
@@ -145,14 +178,19 @@ export function AdminUsersScreen() {
         const res = await fetch("/api/admin/users", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, password: changePwValue }),
+          body: JSON.stringify({ userId, password: changePwValue, overridePolicy: changePwOverride }),
         });
+        if (res.status === 400) {
+          setChangePwError("הסיסמה קצרה מדי (לפחות 6 תווים). לסיסמה פשוטה סמנו 'אפשר סיסמה פשוטה'.");
+          return;
+        }
         if (!res.ok) {
           setChangePwError("שגיאה בשינוי הסיסמה");
           return;
         }
         setChangePwUserId(null);
         setChangePwValue("");
+        setChangePwOverride(false);
         setStatusMsg("הסיסמה עודכנה ✓");
       } catch {
         setChangePwError("שגיאה בשינוי הסיסמה");
@@ -160,7 +198,7 @@ export function AdminUsersScreen() {
         setChangePwBusy(false);
       }
     },
-    [changePwValue, setStatusMsg],
+    [changePwValue, changePwOverride, setStatusMsg],
   );
 
   if (!isAdminUser) {
@@ -234,6 +272,21 @@ export function AdminUsersScreen() {
             </label>
           </div>
 
+          <div data-testid="km.autogen.adminusersscreen.node.overridewrap" className="mb-4 flex items-center gap-2">
+            <input
+              data-testid={testIds.component.adminUsers.overridePolicyToggle()}
+              id="km-new-user-override"
+              type="checkbox"
+              checked={newOverridePolicy}
+              onChange={(e) => { setNewOverridePolicy(e.target.checked); setAddError(""); }}
+              className="h-4 w-4 rounded accent-[#8b75cc]"
+              disabled={adding}
+            />
+            <label data-testid="km.autogen.adminusersscreen.node.overridelabel" htmlFor="km-new-user-override" className="text-sm font-medium text-slate-700">
+              אפשר סיסמה פשוטה (למשל קוד ספרתי לילד)
+            </label>
+          </div>
+
           {addError && (
             <p data-testid="km.autogen.adminusersscreen.node.idx.11" className="mb-3 text-sm font-medium text-red-600">{addError}</p>
           )}
@@ -271,7 +324,18 @@ export function AdminUsersScreen() {
               >
                 <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="flex items-center justify-between gap-3">
                   <div data-testid="km.autogen.adminusersscreen.node.idx.19" className="min-w-0">
-                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="truncate font-semibold text-slate-800" dir="ltr">{u.username}</p>
+                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="flex items-center gap-2 truncate font-semibold text-slate-800" dir="ltr">
+                      <span data-testid="km.autogen.adminusersscreen.node.uname" className="truncate">{u.username}</span>
+                      {u.isLocked && (
+                        <span
+                          data-testid={testIds.component.adminUsers.lockedBadge(u.userId)}
+                          className="shrink-0 rounded-full bg-[#fef3c7] px-2 py-0.5 text-[11px] font-semibold text-[#92400e]"
+                          dir="rtl"
+                        >
+                          🔒 נעול
+                        </span>
+                      )}
+                    </p>
                     <p data-testid="km.autogen.adminusersscreen.node.idx.21" className="text-xs text-slate-500">
                       {u.role === "admin" ? "מנהל" : "משתמש"} · {new Date(u.createdAt).toLocaleDateString("he-IL")}
                     </p>
@@ -296,6 +360,15 @@ export function AdminUsersScreen() {
                     </div>
                   ) : changePwUserId !== u.userId ? (
                     <div data-testid="km.autogen.adminusersscreen.node.idx.23" className="flex shrink-0 gap-2">
+                      {u.isLocked && (
+                        <button
+                          data-testid={testIds.component.adminUsers.unlockButton(u.userId)}
+                          onClick={() => handleUnlock(u.userId)}
+                          className="rounded-lg border border-[#fcd34d] bg-[#fffbeb] px-3 py-1.5 text-xs font-semibold text-[#92400e] hover:bg-[#fef3c7]"
+                        >
+                          שחרר חשבון
+                        </button>
+                      )}
                       <button
                         data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
                         onClick={() => openChangePw(u.userId)}
@@ -344,6 +417,17 @@ export function AdminUsersScreen() {
                     >
                       ביטול
                     </button>
+                    <label data-testid={`km.autogen.adminusersscreen.node.pwoverride.${u.userId}`} className="flex w-full items-center gap-2 text-xs font-medium text-slate-600">
+                      <input
+                        data-testid={testIds.component.adminUsers.changePasswordOverride(u.userId)}
+                        type="checkbox"
+                        checked={changePwOverride}
+                        onChange={(e) => { setChangePwOverride(e.target.checked); setChangePwError(""); }}
+                        className="h-4 w-4 rounded accent-[#8b75cc]"
+                        disabled={changePwBusy}
+                      />
+                      אפשר סיסמה פשוטה
+                    </label>
                     {changePwError && (
                       <p data-testid="km.autogen.adminusersscreen.node.idx.25" className="text-xs font-medium text-red-600">{changePwError}</p>
                     )}

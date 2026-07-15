@@ -60,13 +60,14 @@ test.describe("auth UI — Login modal", () => {
     await expect(page.getByTestId(testIds.component.auth.submitButton())).toBeEnabled();
   });
 
-  test("wrong credentials shows Hebrew error message", async ({ page }) => {
+  test("wrong credentials shows warm, blame-free Hebrew copy", async ({ page }) => {
     await page.getByTestId(testIds.component.auth.usernameInput()).fill("testuser");
     await page.getByTestId(testIds.component.auth.passwordInput()).fill("wrongpassword");
     await page.getByTestId(testIds.component.auth.submitButton()).click();
     const errorEl = page.getByTestId(testIds.component.auth.errorMessage());
     await expect(errorEl).toBeVisible();
-    await expect(errorEl).toContainText("שגויים");
+    // Phase 1 kids-gaming copy: encouraging, not "wrong username/password".
+    await expect(errorEl).toContainText("ננסה שוב");
   });
 });
 

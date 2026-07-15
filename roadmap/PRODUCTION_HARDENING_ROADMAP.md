@@ -131,6 +131,18 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 |----|---------|----------|-------|
 | **M1** | Logged-out (unregistered) visitors get the full app unrestricted — no free-tier cap, so nothing nudges them to create an account. | MEDIUM (monetization) | 5 |
 
+### Kids-gaming UX (deferred; surfaced in the Phase 1 PM review, 2026-07-15)
+
+These improve the child-facing auth experience but are larger than Phase 1 hardening. The
+cheap, lockout-softening items (show-password toggle, non-punitive voiced lockout, warm copy,
+numeric keypad, admin-only "log out everywhere", admin "locked" badge/unlock) shipped **inside
+Phase 1**; the two below are their own tasks.
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **UX1** | Login asks pre-literate 6–8-year-olds to type a username string + masked password. The kids-native pattern is **pick-your-avatar + a numeric PIN pad** (aligns with the app's numbers/taps-only ethos and the Phase 1 `overridePolicy` simple-password path). Reduces failed logins → fewer lockouts. | MEDIUM (UX) | Backlog (own ULTRA task) |
+| **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. | LOW (UX/engagement) | Backlog (own task) |
+
 ---
 
 ## Phase 0 — Security quick wins  ·  Mode: ULTRA  ·  ✅ COMPLETED
@@ -510,7 +522,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | Phase | Title | Mode | Gate | Status |
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
-| 1 | Session integrity & auth hardening | MAX | Phase 0 | ⬜ Not started |
+| 1 | Session integrity & auth hardening | MAX | Phase 0 | 🚧 In PR (`claude/roadmap-review-9a2c34`) — code + tests done, awaiting CI `test:qa` |
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
@@ -537,7 +549,27 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
   - **Refresh / rollback:** the whole phase is additive & reversible — revert the PR or toggle
     `PROGRESS_BODY_CAP_ENFORCE`; the shadow limiter's `rate_limits` docs are inert and safe to drop.
     No schema/storage migration, so existing sessions and progress are never at risk.
-- **Appendix B — JWT-secret rotation runbook** (Phase 1.5): _TBD._
+- **Appendix B — JWT-secret rotation runbook** (Phase 1.5):
+  - **Goal:** replace `JWT_SECRET` without stranding users or leaving a leaked secret valid for
+    its full 30-day window.
+  - **Precondition (shipped in Phase 1):** sessions are revocable via `tokenVersion`
+    (`lib/auth/jwt.server.ts` signs it; `lib/auth/session.server.ts` `verifySession` enforces it on
+    data/admin routes and `/api/auth/me`). Tokens carry `HS256` signed with the single active secret.
+  - **Rotation procedure (planned dual-verify window — not yet coded; design of record):**
+    1. Generate a new ≥32-char secret; add it as a **new version** of the `kids-math-jwt-secret`
+       Secret Manager secret. Do **not** remove the old version yet.
+    2. Introduce a brief **dual-verify** window: `verifyToken` tries the new secret, then falls back
+       to the old (accept either) while **signing only with the new**. (Implementation note: extend
+       `getSecretKey` to read `JWT_SECRET` + optional `JWT_SECRET_PREVIOUS`.)
+    3. Deploy. New logins/refreshes now mint tokens under the new secret; existing tokens still verify
+       under the old.
+    4. After the max session age (or sooner, if you also bump `tokenVersion` fleet-wide to force
+       re-auth), **remove** `JWT_SECRET_PREVIOUS` and the old Secret Manager version. Single-secret
+       state restored.
+  - **Emergency (secret leaked):** rotate as above but immediately force re-auth by bumping every
+    user's `tokenVersion` (a maintenance job) — this invalidates all outstanding tokens on the
+    version-checked routes without waiting out the window.
+  - **Rollback:** keep the old secret version until step 4; reverting the deploy re-accepts old tokens.
 - **Appendix C — Load-test baseline** (Phase 2.4): _TBD._
 - **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._
 
