@@ -11,9 +11,9 @@
 > corporate buyer (school district, publisher, ed-tech company).
 
 This is the durable roadmap. Each **Phase** below is a self-contained task that gets its own
-`/plan` (PRO/ULTRA/MAX per its risk) before implementation. **Progress so far: Phase 0 ✅
-merged; Phase 1 🚧 in PR [#70](https://github.com/RoieArgaman/kids_math/pull/70) (CI green);
-Phases 2–5 not started.** See the Progress tracker at the bottom for the live status.
+`/plan` (PRO/ULTRA/MAX per its risk) before implementation. **Progress so far: Phases 0 & 1 ✅
+merged (Phase 1 via [#70](https://github.com/RoieArgaman/kids_math/pull/70)); Phases 2–5 not
+started.** See the Progress tracker at the bottom for the live status.
 
 ---
 
@@ -178,11 +178,11 @@ Report-Only can't break cached clients, both regression anchors green.
 
 ---
 
-## Phase 1 — Session integrity & auth hardening  ·  Mode: MAX  ·  🚧 IN PR (#70)
+## Phase 1 — Session integrity & auth hardening  ·  Mode: MAX  ·  ✅ COMPLETED (#70)
 
-> **Status: IN PR** ([#70](https://github.com/RoieArgaman/kids_math/pull/70), branch
-> `claude/roadmap-review-9a2c34`) — code + tests done, **all CI checks green** (lint-and-unit,
-> 3× e2e, security-scan). Awaiting review/merge. Approved plan: [`PHASE_1_PLAN.md`](PHASE_1_PLAN.md).
+> **Status: DONE** (merged via [#70](https://github.com/RoieArgaman/kids_math/pull/70), branch
+> `claude/roadmap-review-9a2c34`) — code + tests shipped, **all CI checks green** (lint-and-unit,
+> 3× e2e, security-scan). Approved plan: [`PHASE_1_PLAN.md`](PHASE_1_PLAN.md).
 >
 > **Done (all 5 sub-tasks):** 1.1 revocable sessions via additive `tokenVersion` (**S4** ✅);
 > 1.2 password policy + account lockout (N=5, 60s, fail-open, uniform 429); 1.3 central zod
@@ -542,7 +542,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | Phase | Title | Mode | Gate | Status |
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
-| 1 | Session integrity & auth hardening | MAX | Phase 0 | 🚧 In PR [#70](https://github.com/RoieArgaman/kids_math/pull/70) — S4/S7/S8/S12 done, **all CI green**, awaiting review/merge |
+| 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
