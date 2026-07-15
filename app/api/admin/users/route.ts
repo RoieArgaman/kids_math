@@ -6,6 +6,7 @@ import { recordRateLimit } from "@/lib/security/rateLimit";
 import { adminCreateSchema, adminDeleteSchema, adminPatchSchema } from "@/lib/security/schemas";
 import { validatePasswordStrength } from "@/lib/security/passwordPolicy";
 import { checkLockout, clearLockout } from "@/lib/security/accountLockout";
+import { writeAuditLog } from "@/lib/observability/auditLog";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -101,6 +102,14 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     });
 
+    // Audit trail (S9): who created whom, with the policy-override flag when used.
+    await writeAuditLog({
+      actorId: admin.userId,
+      action: "user.create",
+      targetId: docRef.id,
+      meta: { role: userRole, ...(overridePolicy ? { overridePolicy: true } : {}) },
+    });
+
     return NextResponse.json({ userId: docRef.id, username: trimmedUsername, role: userRole }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -131,6 +140,7 @@ export async function PATCH(request: NextRequest) {
     // discriminated union to the password-reset shape below.)
     if ("action" in parsed.data) {
       if (usernameLower) await clearLockout(usernameLower);
+      await writeAuditLog({ actorId: admin.userId, action: "user.unlock", targetId: parsed.data.userId });
       return NextResponse.json({ ok: true, unlocked: true });
     }
 
@@ -159,6 +169,14 @@ export async function PATCH(request: NextRequest) {
     // Resetting the password also means "let them back in" — clear any active lockout.
     if (usernameLower) await clearLockout(usernameLower);
 
+    // Audit trail (S9). Never store the new password — only that a reset happened.
+    await writeAuditLog({
+      actorId: admin.userId,
+      action: "user.reset",
+      targetId: parsed.data.userId,
+      meta: overridePolicy ? { overridePolicy: true } : {},
+    });
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -184,6 +202,8 @@ export async function DELETE(request: NextRequest) {
     const db = getFirestore();
     await db.collection("users").doc(userId).delete();
     await db.collection("user_progress").doc(userId).delete().catch(() => {/* no progress doc is fine */});
+
+    await writeAuditLog({ actorId: admin.userId, action: "user.delete", targetId: userId });
 
     return NextResponse.json({ ok: true });
   } catch {

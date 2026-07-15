@@ -6,6 +6,35 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-15 (Phase 2 sub-PR 2A — observability foundation: logger + audit log + health)
+- **Trigger:** Production Hardening Roadmap Phase 2 (C3/S9/C7). First sub-PR of the phase; ULTRA.
+- **What changed / where:** new `lib/observability/{logger,errorReporting,auditLog}.ts`; new
+  `app/api/health/route.ts`; swapped the two `console.error` in `app/api/user/progress/route.ts`
+  for `captureError`; audit rows on the 3 admin mutations in `app/api/admin/users/route.ts`;
+  `captureError` in `components/ui/StorageErrorBoundary.componentDidCatch`. Tests alongside.
+- **What we learned:**
+  - **Log-based GCP Error Reporting needs no SDK/dependency.** On Cloud Run, an ERROR-severity
+    structured log line carrying a `stack` is auto-ingested by Error Reporting — so 2.1 shipped
+    with zero new deps and no `instrumentation.ts`/`next.config` change. `errorReporting.captureError`
+    is the single swap seam to Sentry later.
+  - **PII redaction is a hard gate for children's data.** `logger.redactFields` deny-lists
+    `password/passwordhash/token/jwt/secret/cookie/authorization/username` (case-insensitive,
+    bounded-depth recursion) before anything reaches the sink.
+  - **Audit log is best-effort/fail-safe** (mirrors `accountLockout.ts`): `writeAuditLog` swallows
+    all errors so an audit-write failure can never break the primary admin mutation. `audit_log`
+    is a Firestore collection, NOT a `lib/*/storage.ts` domain — so no MAX-on-storage escalation.
+- **Worktree gotchas (cost real time — check first next time):**
+  - A fresh `.claude/worktrees/*` checkout can have a near-empty `node_modules`; `tsc`/build resolve
+    `zod` etc. against the *incomplete local* folder and fail, while `vitest` accidentally works by
+    walking up to the parent repo's `node_modules`. Fix: run `npm ci` in the worktree first.
+  - `npm run lint` fails in a nested worktree with `Plugin "@next/next" was conflicted … ../../../.eslintrc.json`
+    because the worktree `.eslintrc.json` has no `"root": true`, so ESLint walks up into the parent
+    repo's config. It's environmental (CI checks out standalone). To lint locally, temporarily add
+    `"root": true`, run `npx eslint <files>`, then `git checkout -- .eslintrc.json`.
+- **How to reuse next time:** route all server logging through `lib/observability/logger`; never
+  `console.*` directly (add the sanctioned `eslint-disable` only inside the logger). Add an audit row
+  for every new admin mutation. First command in any worktree: `npm ci`.
+
 ### 2026-07-11 (Phase 0 security quick wins — shipped as one PR, everything staged)
 - **Trigger:** Production Hardening Roadmap Phase 0 (S1/S2/S3/S5/S6/S11) — cheapest, highest-severity,
   reversible security fixes. Done together on `claude/roadmap-quick-wins-vdg7z7`.
