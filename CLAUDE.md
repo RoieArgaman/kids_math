@@ -144,4 +144,5 @@ These mirror the `alwaysApply: true` rules Cursor always loads — imported so t
 - `PEDAGOGY_BENCHMARK_G1_G2.md`, `MOE_GRADE_A_B_SKILLTAG_MAP.md`, `VALIDATION_PLAN_G1_G2_PEDAGOGY.md` — pedagogy / MoE alignment
 - `ENGLISH_CURRICULUM.md`, `TEACHING_PRIMER_GUIDELINES.md` — subject/content guides
 - `NAVIGATION_IA.md`, `DEPLOYMENT.md`, `REGRESSION_TEST_PLAN.md` — IA, deploy, regression
+- `OBSERVABILITY_RUNBOOK.md` — Phase 2.3 ops runbook: Error Reporting, uptime check on `/api/health`, alerting, dashboard, capacity targets
 - Full list: `ls .claude/docs/`

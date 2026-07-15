@@ -287,6 +287,11 @@ proving recoverability, and tuning the limiter with real data.
   alerts on error-rate + p95 latency + 5xx; a basic metrics dashboard. Document capacity
   targets (target concurrent users, req/s).
 - **Test:** health route returns 200 + dependency status; alert config reviewed.
+- **Status:** `/api/health` + structured logging + error seam + `audit_log` shipped in
+  **sub-PR 2A** ([#71](https://github.com/RoieArgaman/kids_math/pull/71)). The console
+  setup (Error Reporting view, uptime check, alert policies, dashboard) + documented
+  capacity/threshold targets are the **owner runbook**:
+  [`OBSERVABILITY_RUNBOOK.md`](../.claude/docs/OBSERVABILITY_RUNBOOK.md).
 
 ### 2.4 — Load / perf test (C7)
 - **Task:** add a k6/Artillery script simulating classroom-concurrency (login burst + progress
