@@ -582,15 +582,17 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
     `X-Forwarded-For` counting from the **right**, because on Firebase App Hosting (Google Front
     End / Cloud Run) the trusted proxy *appends* the IP it observed to the right of the chain, while
     a malicious client can only *prepend*. `getClientIp` therefore takes the entry at
-    `TRUSTED_PROXY_HOPS` (currently `0` ⇒ right-most), ignoring any client-prepended spoof, and falls
-    back to `x-real-ip` then the sentinel `"unknown"`.
+    `TRUSTED_PROXY_HOPS`, ignoring any client-prepended spoof, and falls back to `x-real-ip` then
+    the sentinel `"unknown"`.
+  - **✅ VERIFIED (2026-07-15):** a live request via a temporary `/api/diag/ip` probe returned
+    `X-Forwarded-For: 85.64.144.21, 35.219.200.210, 192.178.13.101` — i.e.
+    `<client>, <google-internal>, <google-front-end>`. Google appends **2** hops, so the real
+    client is **2 from the right**; the right-most entry is a *shared Google Front End IP*. The
+    original default `TRUSTED_PROXY_HOPS = 0` would have keyed the limiter on that shared GFE IP —
+    rate-limiting the whole user base collectively. Corrected to **`TRUSTED_PROXY_HOPS = 2`** (the
+    verify-before-enforce gate did its job). The probe route was removed after recording this.
   - **`x-forwarded-proto`:** used only to set the cookie `secure` flag (login + grade-unlock). Trusted
-    as set by the front end; unchanged in Phase 0.
-  - **⚠️ Verify-before-enforce:** `TRUSTED_PROXY_HOPS` is a best-effort default. Because the limiter
-    runs shadow-only in Phase 0, an off-by-one cannot lock anyone out. **Before promoting the limiter
-    to enforcing (Phase 2.7), confirm empirically** — inspect real `X-Forwarded-For` values from App
-    Hosting logs — how many hops the platform appends, and bump `TRUSTED_PROXY_HOPS` if there is an
-    extra internal hop.
+    as set by the front end; unchanged.
   - **Refresh / rollback:** the whole phase is additive & reversible — revert the PR or toggle
     `PROGRESS_BODY_CAP_ENFORCE`; the shadow limiter's `rate_limits` docs are inert and safe to drop.
     No schema/storage migration, so existing sessions and progress are never at risk.
