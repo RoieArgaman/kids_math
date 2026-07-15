@@ -298,6 +298,11 @@ proving recoverability, and tuning the limiter with real data.
   pushes) against a staging target; record baseline throughput + latency and the point where
   the single `user_progress` doc contention (C5) shows up (feeds Phase 4).
 - **Deliverable:** baseline numbers appended to Appendix C.
+- **Status:** the k6 harness shipped in **sub-PR 2C** — [`scripts/load/progress-load.js`](../scripts/load/progress-load.js)
+  + [`scripts/load/README.md`](../scripts/load/README.md) (login-burst + steady progress-push
+  scenarios, per-workload latency trends, C5-contention sweep instructions). **Running it +
+  recording the baseline is an owner action** (needs k6 + a scratch target with test users;
+  staging is deferred) → Appendix C.
 
 ### 2.5 — Firestore backups / PITR + restore runbook (C8)
 - **Task:** enable Firestore scheduled backups / Point-In-Time Recovery; document **RPO/RTO**
@@ -595,7 +600,10 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
     user's `tokenVersion` (a maintenance job) — this invalidates all outstanding tokens on the
     version-checked routes without waiting out the window.
   - **Rollback:** keep the old secret version until step 4; reverting the deploy re-accepts old tokens.
-- **Appendix C — Load-test baseline** (Phase 2.4): _TBD._
+- **Appendix C — Load-test baseline** (Phase 2.4): harness ready
+  ([`scripts/load/progress-load.js`](../scripts/load/progress-load.js), sub-PR 2C). _Baseline
+  numbers TBD — paste throughput / login p95 / push p95 / error rate / the `PUSH_VUS`
+  contention knee here after a run, with date + target + commit SHA._
 - **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._
 
 ---
