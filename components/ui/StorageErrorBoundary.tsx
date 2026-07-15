@@ -1,8 +1,9 @@
 "use client";
 
-import { Component, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { testIds } from "@/lib/testIds";
+import { captureError } from "@/lib/observability/errorReporting";
 
 interface Props {
   children: ReactNode;
@@ -36,6 +37,15 @@ export class StorageErrorBoundary extends Component<Props, State> {
       throw error;
     }
     return { hasError: true, errorMessage: error.message };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Report genuine hydration errors (Next control-flow errors already re-throw in
+    // getDerivedStateFromError, so they never reach here) via the swappable seam.
+    captureError(error, {
+      source: "StorageErrorBoundary",
+      componentStack: errorInfo.componentStack ?? undefined,
+    });
   }
 
   componentDidMount() {

@@ -6,6 +6,7 @@ import { mergeBundles, clampFutureTimestamps } from "@/lib/user-data/merge";
 import { recordRateLimit } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, PROGRESS_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
 import { progressEnvelopeSchema } from "@/lib/security/schemas";
+import { captureError } from "@/lib/observability/errorReporting";
 
 // Progress pushes are userId-keyed. Generous window — a busy session pushes often.
 const PROGRESS_RATE_LIMIT = { limit: 60, windowMs: 60 * 1000 };
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (!doc.exists) return NextResponse.json(null);
     return NextResponse.json(doc.data());
   } catch (err) {
-    console.error("GET /api/user/progress failed", err);
+    captureError(err, { route: "GET /api/user/progress" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("POST /api/user/progress failed", err);
+    captureError(err, { route: "POST /api/user/progress" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

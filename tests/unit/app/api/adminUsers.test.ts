@@ -232,4 +232,55 @@ describe("/api/admin/users", () => {
       expect((await deleteUser(req("DELETE", { token: adminToken, body: {} }))).status).toBe(400);
     });
   });
+
+  describe("audit log (S9)", () => {
+    it("records a user.create row with the actor and role", async () => {
+      const db = seed();
+      holder.db = db;
+      await createUser(req("POST", { token: adminToken, body: { username: "Amit", password: "pw123456" } }));
+      const rows = db.docs("audit_log");
+      expect(rows).toHaveLength(1);
+      const created = db.docs("users").find((d) => d.data.usernameLower === "amit")!;
+      expect(rows[0].data).toMatchObject({
+        actorId: ADMIN.userId,
+        action: "user.create",
+        targetId: created.id,
+        meta: { role: "user" },
+      });
+      expect(typeof rows[0].data.at).toBe("string");
+    });
+
+    it("flags overridePolicy on create in meta", async () => {
+      const db = seed();
+      holder.db = db;
+      await createUser(
+        req("POST", { token: adminToken, body: { username: "Pin", password: "1234", overridePolicy: true } }),
+      );
+      expect(db.docs("audit_log")[0].data.meta).toMatchObject({ overridePolicy: true });
+    });
+
+    it("records a user.reset row (never the password)", async () => {
+      const db = seed();
+      holder.db = db;
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", password: "newpass123" } }));
+      const rows = db.docs("audit_log");
+      expect(rows).toHaveLength(1);
+      expect(rows[0].data).toMatchObject({ actorId: ADMIN.userId, action: "user.reset", targetId: "u2" });
+      expect(JSON.stringify(rows[0].data)).not.toContain("newpass123");
+    });
+
+    it("records a user.unlock row for the unlock action", async () => {
+      const db = seed();
+      holder.db = db;
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", action: "unlock" } }));
+      expect(db.docs("audit_log")[0].data).toMatchObject({ action: "user.unlock", targetId: "u2" });
+    });
+
+    it("records a user.delete row", async () => {
+      const db = seed();
+      holder.db = db;
+      await deleteUser(req("DELETE", { token: adminToken, body: { userId: "u2" } }));
+      expect(db.docs("audit_log")[0].data).toMatchObject({ actorId: ADMIN.userId, action: "user.delete", targetId: "u2" });
+    });
+  });
 });
