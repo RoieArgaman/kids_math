@@ -14,6 +14,7 @@ import {
   DELETE as deleteUser,
 } from "@/app/api/admin/users/route";
 import { SESSION_COOKIE_NAME, signToken } from "@/lib/auth/jwt.server";
+import { checkLockout, recordFailedAttempt, LOCKOUT_MAX_FAILURES } from "@/lib/security/accountLockout";
 import type { AuthUser } from "@/lib/auth/types";
 
 const ADMIN: AuthUser = { userId: "admin1", username: "Root", role: "admin" };
@@ -144,6 +145,59 @@ describe("/api/admin/users", () => {
 
     it("returns 400 for a malformed body", async () => {
       expect((await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2" } }))).status).toBe(400);
+    });
+
+    it("rejects a weak password with 400 (policy)", async () => {
+      const res = await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", password: "123" } }));
+      expect(res.status).toBe(400);
+    });
+
+    it("allows a simple/PIN password when overridePolicy is set", async () => {
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", password: "1234", overridePolicy: true } }),
+      );
+      expect(res.status).toBe(200);
+    });
+
+    it("bumps tokenVersion and revokes the reset user's existing sessions", async () => {
+      const db = seed();
+      holder.db = db;
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", password: "newpass123" } }));
+      expect(db.docs("users").find((d) => d.id === "u2")!.data.tokenVersion).toBe(1);
+    });
+
+    it("clears an active lockout on password reset", async () => {
+      // Lock 'kid' (u2), then reset their password → lockout cleared.
+      for (let i = 0; i < LOCKOUT_MAX_FAILURES; i++) await recordFailedAttempt("kid");
+      expect((await checkLockout("kid")).locked).toBe(true);
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", password: "newpass123" } }));
+      expect((await checkLockout("kid")).locked).toBe(false);
+    });
+
+    it("unlock action clears the lockout without touching the password", async () => {
+      const db = seed();
+      holder.db = db;
+      for (let i = 0; i < LOCKOUT_MAX_FAILURES; i++) await recordFailedAttempt("kid");
+      expect((await checkLockout("kid")).locked).toBe(true);
+      const res = await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", action: "unlock" } }));
+      expect(res.status).toBe(200);
+      expect((await checkLockout("kid")).locked).toBe(false);
+      // Password hash unchanged by an unlock.
+      expect(db.docs("users").find((d) => d.id === "u2")!.data.passwordHash).toBe("secret-hash");
+    });
+  });
+
+  describe("session revocation on the admin surface (S4)", () => {
+    it("rejects the old admin token after that admin resets their own password", async () => {
+      const db = seed();
+      holder.db = db;
+      // Reset own password → admin1.tokenVersion 0 → 1.
+      const reset = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "admin1", password: "newadmin123" } }),
+      );
+      expect(reset.status).toBe(200);
+      // The old adminToken (v0) is now stale → subsequent admin calls are forbidden.
+      expect((await listUsers(req("GET", { token: adminToken }))).status).toBe(403);
     });
   });
 

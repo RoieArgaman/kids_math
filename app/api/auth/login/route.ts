@@ -5,6 +5,13 @@ import { signToken, SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS } from "@/lib/
 import { getClientIp } from "@/lib/security/clientIp";
 import { recordRateLimit } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, LOGIN_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
+import { loginSchema } from "@/lib/security/schemas";
+import {
+  checkLockout,
+  clearLockout,
+  recordFailedAttempt,
+  LOCKOUT_COOLDOWN_MS,
+} from "@/lib/security/accountLockout";
 
 // A valid cost-12 bcrypt hash of a value no user can have. Compared against on the
 // unknown-username path so login runs the same bcrypt work whether or not the account
@@ -16,23 +23,27 @@ const DUMMY_PASSWORD_HASH = "$2b$12$3oGqdeaKdLf9j5.LdEUe/uK/aevB9qgwFQ2z.YAeQFgK
 // repeated hits on one account are the brute-force signal. Generous window (shadow only).
 const LOGIN_RATE_LIMIT = { limit: 10, windowMs: 5 * 60 * 1000 };
 
+/** Uniform "locked" response — identical for known and unknown usernames (no enumeration). */
+function lockedResponse(retryAfterMs: number): NextResponse {
+  const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
+  return NextResponse.json(
+    { error: "locked", retryAfterSeconds },
+    { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (isBodyTooLarge(request, LOGIN_MAX_BODY_BYTES)) {
       return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     }
 
-    const body = (await request.json()) as unknown;
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      typeof (body as Record<string, unknown>).username !== "string" ||
-      typeof (body as Record<string, unknown>).password !== "string"
-    ) {
+    const parsed = loginSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { username, password } = body as { username: string; password: string };
+    const { username, password } = parsed.data;
     if (!username.trim() || !password) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
@@ -40,6 +51,12 @@ export async function POST(request: NextRequest) {
     const usernameLower = username.trim().toLowerCase();
     // Shadow-mode record only — never blocks in Phase 0 (roadmap S1).
     await recordRateLimit(`login:${getClientIp(request)}:${usernameLower}`, LOGIN_RATE_LIMIT);
+
+    // Account lockout (1.2). Checked BEFORE any password work; short-circuit is safe because
+    // unknown usernames are locked too, so a fast "locked" path reveals lock state, not
+    // account existence. Fail-open inside checkLockout.
+    const lock = await checkLockout(usernameLower);
+    if (lock.locked) return lockedResponse(lock.retryAfterMs ?? 0);
 
     const db = getFirestore();
     const snapshot = await db
@@ -56,16 +73,27 @@ export async function POST(request: NextRequest) {
     const passwordMatch = await bcrypt.compare(password, passwordHash);
 
     if (!userDoc || !userData || !passwordMatch) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      // Count the failure (unknown usernames too — anti-enumeration). If this tips the
+      // account into a lock, return the uniform locked response; else a generic 401.
+      const status = await recordFailedAttempt(usernameLower);
+      if (status.locked) return lockedResponse(status.retryAfterMs ?? LOCKOUT_COOLDOWN_MS);
+      return NextResponse.json(
+        { error: "Invalid credentials", attemptsRemaining: status.attemptsRemaining },
+        { status: 401 },
+      );
     }
 
+    // Success — clear any accumulated failures for this username.
+    await clearLockout(usernameLower);
+
+    const tokenVersion = typeof userData.tokenVersion === "number" ? userData.tokenVersion : 0;
     const user = {
       userId: userDoc.id,
       username: userData.username as string,
       role: (userData.role as "user" | "admin") ?? "user",
     };
 
-    const token = await signToken(user);
+    const token = await signToken(user, tokenVersion);
     const isSecure =
       request.nextUrl.protocol === "https:" ||
       request.headers.get("x-forwarded-proto") === "https";

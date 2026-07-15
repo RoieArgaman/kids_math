@@ -1,12 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyToken, SESSION_COOKIE_NAME } from "@/lib/auth/jwt.server";
+import { verifySession } from "@/lib/auth/session.server";
 
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    // Version-checked (R2-B): a revoked session logs out cleanly on the next app-load
+    // instead of lingering in a broken "looks logged in but can't sync" half-state.
+    const claims = await verifySession(request, { requireVersionCheck: true });
+    if (!claims) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await verifyToken(token);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  return NextResponse.json(user);
+    // Never leak the internal tokenVersion to the client — return the public AuthUser only.
+    return NextResponse.json({
+      userId: claims.userId,
+      username: claims.username,
+      role: claims.role,
+    });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

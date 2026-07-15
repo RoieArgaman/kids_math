@@ -10,9 +10,10 @@
 > to many concurrent users and (b) survives the technical + legal due diligence of a
 > corporate buyer (school district, publisher, ed-tech company).
 
-This is the durable roadmap. Each **Phase** below is a self-contained future task that will
-get its own `/plan` (PRO/ULTRA/MAX per its risk) before implementation. Nothing here is
-implemented yet — this document is the plan of record.
+This is the durable roadmap. Each **Phase** below is a self-contained task that gets its own
+`/plan` (PRO/ULTRA/MAX per its risk) before implementation. **Progress so far: Phases 0 & 1 ✅
+merged (Phase 1 via [#70](https://github.com/RoieArgaman/kids_math/pull/70)); Phases 2–5 not
+started.** See the Progress tracker at the bottom for the live status.
 
 ---
 
@@ -102,15 +103,15 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | **S1** | No rate limiting anywhere → login brute-force, credential stuffing, progress-push abuse | CRITICAL | no `rate-limit` refs; `middleware.ts` skips `/api/*` | 0 (shadow) → 2 (enforce) |
 | **S2** | Login user-enumeration via timing — 401 returned before any bcrypt work when username unknown | HIGH | `app/api/auth/login/route.ts:30-32` | 0 |
 | **S3** | No security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) | HIGH | `next.config.mjs` has no `headers()` | 0 |
-| **S4** | Sessions non-revocable — 30-day JWT, no `jti`/version; admin `PATCH` password reset does NOT invalidate existing tokens; leaked secret = valid until expiry | HIGH | `lib/auth/jwt.server.ts`; `app/api/admin/users/route.ts` PATCH | 1 |
+| **S4** | Sessions non-revocable — 30-day JWT, no `jti`/version; admin `PATCH` password reset does NOT invalidate existing tokens; leaked secret = valid until expiry | HIGH | `lib/auth/jwt.server.ts`; `app/api/admin/users/route.ts` PATCH | 1 ✅ #70 |
 | **S5** | No request-body size limit on progress POST → cost/DoS via oversized bundle; Firestore 1 MB doc ceiling unguarded | HIGH | `app/api/user/progress/route.ts:33` | 0 |
 | **S6** | No dependency/secret scanning in CI (`npm audit`, Dependabot, secret scan, SAST all absent) | MEDIUM | `.github/workflows/ci.yml` | 0 |
-| **S7** | Grade-unlock routes unauthenticated (anyone can POST to set unlock cookie) | LOW | `app/api/grade-b-unlock/route.ts` etc. | 1 |
-| **S8** | No structured input validation (hand-rolled `typeof` guards) — fragile as surface grows | MEDIUM | all route handlers | 1 |
+| **S7** | Grade-unlock routes unauthenticated (anyone can POST to set unlock cookie) | LOW | `app/api/grade-b-unlock/route.ts` etc. | 1 ✅ #70 |
+| **S8** | No structured input validation (hand-rolled `typeof` guards) — fragile as surface grows | MEDIUM | all route handlers | 1 ✅ #70 |
 | **S9** | No audit log for admin actions (create/delete/reset user) | MEDIUM | `app/api/admin/users/route.ts` | 2 |
 | **S10** | No `firestore.rules` committed (deny-all defense-in-depth even though Admin-SDK-only) | MEDIUM | repo root | 3 |
 | **S11** | `x-forwarded-proto` / client-IP trust unverified behind App Hosting proxy (affects `secure` flag + any IP-keyed limiter) | MEDIUM (spike) | `login/route.ts:48-50`, `gradeUnlockCookies.ts:18-21` | 0 (spike) |
-| **S12** | `JWT_SECRET` single value, no rotation runbook | MEDIUM | `apphosting.yaml`, `jwt.server.ts` | 1 |
+| **S12** | `JWT_SECRET` single value, no rotation runbook | MEDIUM | `apphosting.yaml`, `jwt.server.ts` | 1 ✅ #70 |
 
 ### Scale / sellability
 
@@ -130,6 +131,18 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | ID | Finding | Severity | Phase |
 |----|---------|----------|-------|
 | **M1** | Logged-out (unregistered) visitors get the full app unrestricted — no free-tier cap, so nothing nudges them to create an account. | MEDIUM (monetization) | 5 |
+
+### Kids-gaming UX (deferred; surfaced in the Phase 1 PM review, 2026-07-15)
+
+These improve the child-facing auth experience but are larger than Phase 1 hardening. The
+cheap, lockout-softening items (show-password toggle, non-punitive voiced lockout, warm copy,
+numeric keypad, admin-only "log out everywhere", admin "locked" badge/unlock) shipped **inside
+Phase 1**; the two below are their own tasks.
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **UX1** | Login asks pre-literate 6–8-year-olds to type a username string + masked password. The kids-native pattern is **pick-your-avatar + a numeric PIN pad** (aligns with the app's numbers/taps-only ethos and the Phase 1 `overridePolicy` simple-password path). Reduces failed logins → fewer lockouts. | MEDIUM (UX) | Backlog (own ULTRA task) |
+| **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. | LOW (UX/engagement) | Backlog (own task) |
 
 ---
 
@@ -165,7 +178,26 @@ Report-Only can't break cached clients, both regression anchors green.
 
 ---
 
-## Phase 1 — Session integrity & auth hardening  ·  Mode: MAX
+## Phase 1 — Session integrity & auth hardening  ·  Mode: MAX  ·  ✅ COMPLETED (#70)
+
+> **Status: DONE** (merged via [#70](https://github.com/RoieArgaman/kids_math/pull/70), branch
+> `claude/roadmap-review-9a2c34`) — code + tests shipped, **all CI checks green** (lint-and-unit,
+> 3× e2e, security-scan). Approved plan: [`PHASE_1_PLAN.md`](PHASE_1_PLAN.md).
+>
+> **Done (all 5 sub-tasks):** 1.1 revocable sessions via additive `tokenVersion` (**S4** ✅);
+> 1.2 password policy + account lockout (N=5, 60s, fail-open, uniform 429); 1.3 central zod
+> validation, progress envelope-only (**S8** ✅); 1.4 grade-unlock zod-hardened but kept
+> intentionally anonymous (**S7** ✅); 1.5 JWT-rotation runbook — Appendix B + apphosting note
+> (**S12** ✅). Both regression anchors green.
+>
+> **Added beyond the original plan (post-approval, per user):** admin instant-unlock + password
+> reset also clears the lock; `overridePolicy` escape hatch for simple/PIN kid passwords;
+> kids-gaming login UX (show-password toggle, non-punitive TTS-voiced lockout countdown +
+> "try again" cue, warm copy); "log out everywhere" made **admin-only**; admin locked-badge.
+>
+> **Deferred (tracked):** avatar+PIN login (**UX1**) and playful avatars (**UX2**) → backlog;
+> `inputMode="numeric"` dropped (would break alphanumeric passwords — belongs with UX1);
+> audit-logging the `overridePolicy` use → **Phase 2** (S9).
 
 **Objective:** Make sessions revocable and the auth surface robust — the core of any buyer's
 security questionnaire. **Storage-schema-adjacent** (adds a field to `users` docs) → MAX.
@@ -510,7 +542,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | Phase | Title | Mode | Gate | Status |
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
-| 1 | Session integrity & auth hardening | MAX | Phase 0 | ⬜ Not started |
+| 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
@@ -537,7 +569,27 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
   - **Refresh / rollback:** the whole phase is additive & reversible — revert the PR or toggle
     `PROGRESS_BODY_CAP_ENFORCE`; the shadow limiter's `rate_limits` docs are inert and safe to drop.
     No schema/storage migration, so existing sessions and progress are never at risk.
-- **Appendix B — JWT-secret rotation runbook** (Phase 1.5): _TBD._
+- **Appendix B — JWT-secret rotation runbook** (Phase 1.5):
+  - **Goal:** replace `JWT_SECRET` without stranding users or leaving a leaked secret valid for
+    its full 30-day window.
+  - **Precondition (shipped in Phase 1):** sessions are revocable via `tokenVersion`
+    (`lib/auth/jwt.server.ts` signs it; `lib/auth/session.server.ts` `verifySession` enforces it on
+    data/admin routes and `/api/auth/me`). Tokens carry `HS256` signed with the single active secret.
+  - **Rotation procedure (planned dual-verify window — not yet coded; design of record):**
+    1. Generate a new ≥32-char secret; add it as a **new version** of the `kids-math-jwt-secret`
+       Secret Manager secret. Do **not** remove the old version yet.
+    2. Introduce a brief **dual-verify** window: `verifyToken` tries the new secret, then falls back
+       to the old (accept either) while **signing only with the new**. (Implementation note: extend
+       `getSecretKey` to read `JWT_SECRET` + optional `JWT_SECRET_PREVIOUS`.)
+    3. Deploy. New logins/refreshes now mint tokens under the new secret; existing tokens still verify
+       under the old.
+    4. After the max session age (or sooner, if you also bump `tokenVersion` fleet-wide to force
+       re-auth), **remove** `JWT_SECRET_PREVIOUS` and the old Secret Manager version. Single-secret
+       state restored.
+  - **Emergency (secret leaked):** rotate as above but immediately force re-auth by bumping every
+    user's `tokenVersion` (a maintenance job) — this invalidates all outstanding tokens on the
+    version-checked routes without waiting out the window.
+  - **Rollback:** keep the old secret version until step 4; reverting the deploy re-accepts old tokens.
 - **Appendix C — Load-test baseline** (Phase 2.4): _TBD._
 - **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): _TBD._
 

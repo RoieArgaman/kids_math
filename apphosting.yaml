@@ -9,6 +9,10 @@ runConfig:
 env:
   - variable: NODE_ENV
     value: production
+  # JWT signing secret. Rotation runbook: roadmap/PRODUCTION_HARDENING_ROADMAP.md → Appendix B.
+  # To rotate, add a new version to the `kids-math-jwt-secret` Secret Manager secret and pin it
+  # here (e.g. `secret: kids-math-jwt-secret@latest` or a specific version). Because sessions
+  # are now revocable via `tokenVersion`, a rotation can force re-auth without stranding users.
   - variable: JWT_SECRET
     secret: kids-math-jwt-secret
 

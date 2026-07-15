@@ -1,35 +1,55 @@
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { verifyToken, SESSION_COOKIE_NAME } from "@/lib/auth/jwt.server";
+import { verifySession } from "@/lib/auth/session.server";
 import { getFirestore } from "@/lib/firestore/admin";
 import { recordRateLimit } from "@/lib/security/rateLimit";
+import { adminCreateSchema, adminDeleteSchema, adminPatchSchema } from "@/lib/security/schemas";
+import { validatePasswordStrength } from "@/lib/security/passwordPolicy";
+import { checkLockout, clearLockout } from "@/lib/security/accountLockout";
 
 const BCRYPT_ROUNDS = 12;
 
 // Admin mutations are actor-keyed. Shadow-mode record only — never blocks in Phase 0.
 const ADMIN_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 
-async function requireAdmin(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
-  const user = await verifyToken(token);
+/**
+ * Admin gate. Mutations pass `requireVersionCheck` so a revoked admin session (password reset
+ * or "log out everywhere") is rejected immediately (roadmap S4). The read-only GET can stay
+ * pure-JWT, but we version-check it too for a consistent admin surface — one cheap read.
+ */
+async function requireAdmin(request: NextRequest, requireVersionCheck = true) {
+  const user = await verifySession(request, { requireVersionCheck });
   if (!user || user.role !== "admin") return null;
   return user;
 }
 
-export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+/** 400 message shared by the create/reset password-policy rejections. */
+function weakPasswordResponse(): NextResponse {
+  return NextResponse.json(
+    { error: "Password does not meet the minimum policy" },
+    { status: 400 },
+  );
+}
 
+export async function GET(request: NextRequest) {
   try {
+    const admin = await requireAdmin(request);
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const db = getFirestore();
     const snapshot = await db.collection("users").orderBy("createdAt", "desc").get();
-    const users = snapshot.docs.map((doc) => {
-      const safe = Object.fromEntries(
-      Object.entries(doc.data()).filter(([k]) => k !== "passwordHash"),
+    // Enrich each row with its lockout state so the admin can see (and clear) a locked
+    // account. One lockout read per user — fine at the current admin scale; when the list
+    // grows past a few hundred it paginates (roadmap C4/Phase 4) and this rides that cursor.
+    const users = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        const safe = Object.fromEntries(Object.entries(data).filter(([k]) => k !== "passwordHash"));
+        const usernameLower = typeof data.usernameLower === "string" ? data.usernameLower : "";
+        const isLocked = usernameLower ? (await checkLockout(usernameLower)).locked : false;
+        return { userId: doc.id, ...safe, isLocked };
+      }),
     );
-      return { userId: doc.id, ...safe };
-    });
     return NextResponse.json(users);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -37,30 +57,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
-
   try {
-    const body = (await request.json()) as unknown;
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      typeof (body as Record<string, unknown>).username !== "string" ||
-      typeof (body as Record<string, unknown>).password !== "string"
-    ) {
+    const admin = await requireAdmin(request);
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+
+    const parsed = adminCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json({ error: "username and password required" }, { status: 400 });
     }
-
-    const { username, password, role } = body as {
-      username: string;
-      password: string;
-      role?: string;
-    };
+    const { username, password, role, overridePolicy } = parsed.data;
 
     const trimmedUsername = username.trim();
     if (!trimmedUsername || !password) {
       return NextResponse.json({ error: "username and password required" }, { status: 400 });
+    }
+
+    // Password policy (admin can override for simple/PIN passwords).
+    if (!validatePasswordStrength(password, overridePolicy).ok) {
+      return weakPasswordResponse();
     }
 
     const db = getFirestore();
@@ -82,6 +97,7 @@ export async function POST(request: NextRequest) {
       usernameLower: trimmedUsername.toLowerCase(),
       passwordHash,
       role: userRole,
+      tokenVersion: 0,
       createdAt: new Date().toISOString(),
     });
 
@@ -92,34 +108,56 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
-
   try {
-    const body = (await request.json()) as unknown;
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      typeof (body as Record<string, unknown>).userId !== "string" ||
-      typeof (body as Record<string, unknown>).password !== "string"
-    ) {
-      return NextResponse.json({ error: "userId and password required" }, { status: 400 });
-    }
+    const admin = await requireAdmin(request);
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
 
-    const { userId, password } = body as { userId: string; password: string };
-    if (!userId || !password) {
+    const parsed = adminPatchSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json({ error: "userId and password required" }, { status: 400 });
     }
 
     const db = getFirestore();
-    const userDoc = await db.collection("users").doc(userId).get();
+    const userRef = db.collection("users").doc(parsed.data.userId);
+    const userDoc = await userRef.get();
     if (!userDoc.exists) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    const usernameLower = userDoc.data()?.usernameLower as string | undefined;
+
+    // Unlock action: clear the account lockout so a stuck student can log in right now.
+    // (`action` exists only on the unlock variant of the schema, so this also narrows the
+    // discriminated union to the password-reset shape below.)
+    if ("action" in parsed.data) {
+      if (usernameLower) await clearLockout(usernameLower);
+      return NextResponse.json({ ok: true, unlocked: true });
+    }
+
+    // Password reset.
+    const { password, overridePolicy } = parsed.data;
+    if (!password) {
+      return NextResponse.json({ error: "userId and password required" }, { status: 400 });
+    }
+    if (!validatePasswordStrength(password, overridePolicy).ok) {
+      return weakPasswordResponse();
+    }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    await db.collection("users").doc(userId).update({ passwordHash });
+    // Revoke every existing session for this user by bumping tokenVersion. Transactional so
+    // concurrent resets can't lose an increment (roadmap S4). Also stamp the new hash.
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
+      // Guard the race where the user is deleted between the existence check above and here:
+      // spreading `undefined` would resurrect a zombie doc with only these two fields.
+      if (!snap.exists) throw new Error("user no longer exists");
+      const data = snap.data() ?? {};
+      const current = data.tokenVersion;
+      const nextVersion = (typeof current === "number" ? current : 0) + 1;
+      tx.set(userRef, { ...data, passwordHash, tokenVersion: nextVersion });
+    });
+    // Resetting the password also means "let them back in" — clear any active lockout.
+    if (usernameLower) await clearLockout(usernameLower);
 
     return NextResponse.json({ ok: true });
   } catch {
@@ -128,21 +166,17 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const admin = await requireAdmin(request);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
-
   try {
-    const body = (await request.json()) as unknown;
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      typeof (body as Record<string, unknown>).userId !== "string"
-    ) {
+    const admin = await requireAdmin(request);
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+
+    const parsed = adminDeleteSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
-    const { userId } = body as { userId: string };
+    const { userId } = parsed.data;
     if (userId === admin.userId) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }

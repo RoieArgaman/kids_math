@@ -1,6 +1,16 @@
 import type { AuthUser } from "./types";
 
-export type LoginResult = { ok: true; user: AuthUser } | { ok: false; error: string };
+/**
+ * Structured login outcome. The kinds let the UI speak to a child appropriately (roadmap
+ * Phase 1 PM review): `locked` drives a calm countdown, `invalid` a warm "let's try again"
+ * (with a "one more try" nudge when only one attempt remains), and network/error stay generic.
+ */
+export type LoginResult =
+  | { ok: true; user: AuthUser }
+  | { ok: false; kind: "invalid"; attemptsRemaining?: number }
+  | { ok: false; kind: "locked"; retryAfterSeconds: number }
+  | { ok: false; kind: "network" }
+  | { ok: false; kind: "error" };
 
 export async function apiLogin(username: string, password: string): Promise<LoginResult> {
   try {
@@ -13,18 +23,37 @@ export async function apiLogin(username: string, password: string): Promise<Logi
       const data = (await res.json()) as { user: AuthUser };
       return { ok: true, user: data.user };
     }
-    if (res.status === 401) {
-      return { ok: false, error: "שם המשתמש או הסיסמה שגויים" };
+    if (res.status === 429) {
+      const data = (await res.json().catch(() => ({}))) as { retryAfterSeconds?: number };
+      return { ok: false, kind: "locked", retryAfterSeconds: Number(data?.retryAfterSeconds) || 60 };
     }
-    return { ok: false, error: "שגיאה בהתחברות, נסו שוב" };
+    if (res.status === 401) {
+      const data = (await res.json().catch(() => ({}))) as { attemptsRemaining?: number };
+      return {
+        ok: false,
+        kind: "invalid",
+        attemptsRemaining:
+          typeof data?.attemptsRemaining === "number" ? data.attemptsRemaining : undefined,
+      };
+    }
+    return { ok: false, kind: "error" };
   } catch {
-    return { ok: false, error: "אין חיבור לאינטרנט, נסו שוב" };
+    return { ok: false, kind: "network" };
   }
 }
 
 export async function apiLogout(): Promise<void> {
   try {
     await fetch("/api/auth/logout", { method: "POST" });
+  } catch {
+    // ignore — cookie will expire naturally
+  }
+}
+
+/** "Log out everywhere": revokes every session for this user (bumps tokenVersion) + signs out here. */
+export async function apiLogoutAll(): Promise<void> {
+  try {
+    await fetch("/api/auth/logout-all", { method: "POST" });
   } catch {
     // ignore — cookie will expire naturally
   }

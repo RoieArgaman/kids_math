@@ -67,7 +67,8 @@ describe("POST /api/auth/login", () => {
     expect(cookie?.httpOnly).toBe(true);
     // The cookie carries a real, verifiable JWT for this user.
     const verified = await verifyToken(cookie!.value);
-    expect(verified).toEqual({ userId: "u1", username: "Dana", role: "user" });
+    // Phase 1: the token now carries a revocation tokenVersion (0 for an untouched user).
+    expect(verified).toEqual({ userId: "u1", username: "Dana", role: "user", tokenVersion: 0 });
   });
 
   it("is case-insensitive on username (queries usernameLower)", async () => {
@@ -146,5 +147,45 @@ describe("POST /api/auth/login", () => {
   it("does not 413 a normal-sized body", async () => {
     const res = await login(req({ username: "dana", password: PASSWORD }, { contentLength: 100 }));
     expect(res.status).toBe(200);
+  });
+
+  // Roadmap 1.2: account lockout after N failed attempts, with anti-enumeration.
+  describe("account lockout", () => {
+    it("locks the account with 429 after 5 consecutive failures, then blocks even a correct password", async () => {
+      for (let i = 0; i < 4; i++) {
+        expect((await login(req({ username: "dana", password: "wrong" }))).status).toBe(401);
+      }
+      // 5th failure tips into a lock (429).
+      const fifth = await login(req({ username: "dana", password: "wrong" }));
+      expect(fifth.status).toBe(429);
+      expect(fifth.headers.get("Retry-After")).toBeTruthy();
+
+      // Even the CORRECT password is now refused while locked.
+      const locked = await login(req({ username: "dana", password: PASSWORD }));
+      expect(locked.status).toBe(429);
+    });
+
+    it("locks an UNKNOWN username too, with an identical response (no enumeration)", async () => {
+      let knownStatus = 0;
+      let unknownStatus = 0;
+      for (let i = 0; i < 5; i++) {
+        knownStatus = (await login(req({ username: "dana", password: "wrong" }))).status;
+      }
+      holder.db = seedWithUser();
+      for (let i = 0; i < 5; i++) {
+        unknownStatus = (await login(req({ username: "ghost", password: "wrong" }))).status;
+      }
+      expect(knownStatus).toBe(429);
+      expect(unknownStatus).toBe(429); // unknown user gets the same locked response
+    });
+
+    it("a successful login clears the failure counter", async () => {
+      for (let i = 0; i < 4; i++) await login(req({ username: "dana", password: "wrong" }));
+      expect((await login(req({ username: "dana", password: PASSWORD }))).status).toBe(200);
+      // Counter reset: four more failures do NOT lock (would need five again).
+      for (let i = 0; i < 4; i++) {
+        expect((await login(req({ username: "dana", password: "wrong" }))).status).toBe(401);
+      }
+    });
   });
 });

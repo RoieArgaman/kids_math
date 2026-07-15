@@ -42,6 +42,14 @@ function req(
   });
 }
 
+// The route version-checks the session (S4), which reads users/{userId}. So every valid-session
+// test needs a users/u1 doc; helper seeds it (tokenVersion absent ⇒ 0, matches a v0 token).
+function makeDb(
+  seed: Record<string, Record<string, Record<string, unknown>>> = {},
+): FakeFirestore {
+  return new FakeFirestore({ seed: { users: { u1: { username: "Dana", role: "user" } }, ...seed } });
+}
+
 describe("/api/user/progress", () => {
   beforeAll(async () => {
     process.env.JWT_SECRET = "test-secret-value-at-least-32-chars-long!!";
@@ -49,7 +57,7 @@ describe("/api/user/progress", () => {
   });
 
   beforeEach(() => {
-    holder.db = new FakeFirestore();
+    holder.db = makeDb();
   });
 
   describe("auth gating", () => {
@@ -62,6 +70,23 @@ describe("/api/user/progress", () => {
     it("POST → 401 without a token", async () => {
       expect((await postProgress(req("POST", { body: makeBundle() }))).status).toBe(401);
     });
+
+    // Roadmap S4: a revoked session (stored tokenVersion bumped past the token) is refused
+    // on both read and write — this is what makes a password reset / "log out everywhere" bite.
+    it("GET → 401 for a REVOKED token", async () => {
+      // Stored version bumped to 1; the v0 token no longer matches.
+      holder.db = new FakeFirestore({
+        seed: { users: { u1: { username: "Dana", role: "user", tokenVersion: 1 } } },
+      });
+      expect((await getProgress(req("GET", { token }))).status).toBe(401);
+    });
+
+    it("POST → 401 for a REVOKED token", async () => {
+      holder.db = new FakeFirestore({
+        seed: { users: { u1: { username: "Dana", role: "user", tokenVersion: 1 } } },
+      });
+      expect((await postProgress(req("POST", { token, body: makeBundle() }))).status).toBe(401);
+    });
   });
 
   describe("GET", () => {
@@ -72,9 +97,7 @@ describe("/api/user/progress", () => {
     });
 
     it("returns the stored bundle when present", async () => {
-      holder.db = new FakeFirestore({
-        seed: { user_progress: { u1: makeBundle({ updatedAt: "2024-05-05T00:00:00.000Z" }) } },
-      });
+      holder.db = makeDb({ user_progress: { u1: makeBundle({ updatedAt: "2024-05-05T00:00:00.000Z" }) } });
       const res = await getProgress(req("GET", { token }));
       const json = (await res.json()) as UserProgressBundle;
       expect(json.updatedAt).toBe("2024-05-05T00:00:00.000Z");
@@ -107,7 +130,7 @@ describe("/api/user/progress", () => {
     });
 
     it("persists the merged bundle and stamps a fresh updatedAt", async () => {
-      const db = new FakeFirestore();
+      const db = makeDb();
       holder.db = db;
       await postProgress(req("POST", { token, body: makeBundle() }));
       const stored = db.docs("user_progress").find((d) => d.id === "u1");
@@ -127,7 +150,7 @@ describe("/api/user/progress", () => {
           updatedAt: "2024-06-01T00:00:00.000Z",
         } as unknown as UserProgressBundle["streak"],
       });
-      const db = new FakeFirestore({ seed: { user_progress: { u1: existing } } });
+      const db = makeDb({ user_progress: { u1: existing } });
       holder.db = db;
       const res = await postProgress(req("POST", { token, body: makeBundle({ streak: null }) }));
       expect(res.status).toBe(200);
@@ -137,7 +160,7 @@ describe("/api/user/progress", () => {
 
     it("clamps a future-dated incoming timestamp before storing", async () => {
       const future = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString();
-      const db = new FakeFirestore();
+      const db = makeDb();
       holder.db = db;
       await postProgress(req("POST", { token, body: makeBundle({ updatedAt: future }) }));
       const stored = db.docs("user_progress").find((d) => d.id === "u1")!.data as UserProgressBundle;
@@ -159,7 +182,7 @@ describe("/api/user/progress", () => {
     const OVER_CAP = 2_000_000; // > PROGRESS_MAX_BODY_BYTES (1_000_000)
 
     it("shadow default: over-cap body still returns 200 and merges (no 413)", async () => {
-      const db = new FakeFirestore();
+      const db = makeDb();
       holder.db = db;
       const res = await postProgress(
         req("POST", { token, body: makeBundle(), contentLength: OVER_CAP }),
