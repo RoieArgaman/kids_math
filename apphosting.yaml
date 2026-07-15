@@ -9,6 +9,13 @@ runConfig:
 env:
   - variable: NODE_ENV
     value: production
+  # Rate limiter enforcement (roadmap 2.7). Ships OFF: the limiter records over-threshold hits
+  # (shadow) but never blocks. Flip to "1" ONLY AFTER (a) the observability dashboards confirm
+  # thresholds don't false-positive shared classroom IPs and (b) TRUSTED_PROXY_HOPS is verified
+  # against real X-Forwarded-For logs (roadmap Appendix A). Reversible: set back to "0" to revert
+  # to shadow instantly. See OBSERVABILITY_RUNBOOK.md.
+  # - variable: RATE_LIMIT_ENFORCE
+  #   value: "1"
   # JWT signing secret. Rotation runbook: roadmap/PRODUCTION_HARDENING_ROADMAP.md → Appendix B.
   # To rotate, add a new version to the `kids-math-jwt-secret` Secret Manager secret and pin it
   # here (e.g. `secret: kids-math-jwt-secret@latest` or a specific version). Because sessions

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { getFirestore } from "@/lib/firestore/admin";
 import { signToken, SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS } from "@/lib/auth/jwt.server";
 import { getClientIp } from "@/lib/security/clientIp";
-import { recordRateLimit } from "@/lib/security/rateLimit";
+import { enforceRateLimit, rateLimitedResponse } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, LOGIN_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
 import { loginSchema } from "@/lib/security/schemas";
 import {
@@ -20,7 +20,7 @@ import {
 const DUMMY_PASSWORD_HASH = "$2b$12$3oGqdeaKdLf9j5.LdEUe/uK/aevB9qgwFQ2z.YAeQFgKW7FIzuM/2";
 
 // Login is IP + username keyed: a shared classroom IP shouldn't lock out the room, but
-// repeated hits on one account are the brute-force signal. Generous window (shadow only).
+// repeated hits on one account are the brute-force signal. Generous window; staged enforce.
 const LOGIN_RATE_LIMIT = { limit: 10, windowMs: 5 * 60 * 1000 };
 
 /** Uniform "locked" response — identical for known and unknown usernames (no enumeration). */
@@ -49,8 +49,9 @@ export async function POST(request: NextRequest) {
     }
 
     const usernameLower = username.trim().toLowerCase();
-    // Shadow-mode record only — never blocks in Phase 0 (roadmap S1).
-    await recordRateLimit(`login:${getClientIp(request)}:${usernameLower}`, LOGIN_RATE_LIMIT);
+    // Staged limiter (S1): records always, blocks only when RATE_LIMIT_ENFORCE=1 (roadmap 2.7).
+    const rl = await enforceRateLimit(`login:${getClientIp(request)}:${usernameLower}`, LOGIN_RATE_LIMIT);
+    if (rl.blocked) return rateLimitedResponse(rl.retryAfterMs);
 
     // Account lockout (1.2). Checked BEFORE any password work; short-circuit is safe because
     // unknown usernames are locked too, so a fast "locked" path reveals lock state, not

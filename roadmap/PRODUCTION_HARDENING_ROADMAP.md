@@ -322,6 +322,16 @@ proving recoverability, and tuning the limiter with real data.
 - **Task:** using 2.3 dashboards, tune thresholds (generous for shared classroom IPs;
   allowlist; IP+username keying) and flip the limiter from shadow to **enforcing** (429).
 - **Test:** e2e — N+1 logins → 429; classroom-simulated shared IP within threshold not blocked.
+- **Status:** enforcing **code** shipped in **sub-PR 2E** (staged, flag-gated **OFF**):
+  `enforceRateLimit` + `rateLimitedResponse` + `rate_limits` `expiresAt` TTL field, wired on
+  login (IP+username), progress POST (userId), and admin mutations (adminId). Fail-open
+  preserved. Ships behaviourally identical to shadow until `RATE_LIMIT_ENFORCE=1` is set in
+  `apphosting.yaml`. **The flip is the final owner action**, gated on: (1) dashboards confirm
+  thresholds don't false-positive shared classroom IPs; (2) `TRUSTED_PROXY_HOPS` verified vs.
+  real `X-Forwarded-For` logs (Appendix A); also add a **Firestore TTL policy on
+  `rate_limits.expiresAt`** (console). Unit-tested at 100% incl. login/progress 429 integration;
+  the e2e 429 case isn't feasible in CI (e2e mocks Firestore at the network layer + enforcement
+  is flag-off there), so it's covered by the integration tests instead.
 
 ### Phase 2 Definition of Done
 1. Errors tracked with PII scrubbed; admin actions audited.

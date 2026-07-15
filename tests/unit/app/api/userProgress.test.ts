@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 
 import { FakeFirestore } from "./fakeFirestore";
 import type { UserProgressBundle } from "@/lib/user-data/types";
@@ -217,6 +218,33 @@ describe("/api/user/progress", () => {
         if (prev === undefined) delete process.env.PROGRESS_BODY_CAP_ENFORCE;
         else process.env.PROGRESS_BODY_CAP_ENFORCE = prev;
       }
+    });
+  });
+
+  describe("rate limiting (staged enforce, S1 / Phase 2.7)", () => {
+    const rlDoc = (key: string) => createHash("sha256").update(key).digest("hex");
+    const PROGRESS_KEY = "progress:u1"; // userId-keyed
+
+    afterEach(() => {
+      delete process.env.RATE_LIMIT_ENFORCE;
+    });
+
+    it("returns 429 when over threshold and RATE_LIMIT_ENFORCE=1", async () => {
+      process.env.RATE_LIMIT_ENFORCE = "1";
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      // Seed the limiter doc at the threshold (60) so the next push goes over.
+      holder.db = makeDb({ rate_limits: { [rlDoc(PROGRESS_KEY)]: { count: 60, windowStart: Date.now() } } });
+      const res = await postProgress(req("POST", { token, body: makeBundle() }));
+      expect(res.status).toBe(429);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBe("rate_limited");
+    });
+
+    it("does NOT block a normal push when under threshold", async () => {
+      process.env.RATE_LIMIT_ENFORCE = "1";
+      holder.db = makeDb();
+      const res = await postProgress(req("POST", { token, body: makeBundle() }));
+      expect(res.status).toBe(200);
     });
   });
 });
