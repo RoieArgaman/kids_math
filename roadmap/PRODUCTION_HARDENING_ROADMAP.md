@@ -568,7 +568,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
 | 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
-| 2 | Observability, DR & ops | ULTRA | Phase 0 | ⬜ Not started |
+| 2 | Observability, DR & ops | ULTRA | Phase 0 | 🟨 Code/docs shipped (#71–#76): 2A logging+audit+health, 2B/2D runbooks, 2C load harness, 2E staged limiter (flag-off). **Ops pending (owner):** dashboards/alerts (2.3), run load test → Appendix C (2.4), enable PITR+drill → Appendix D (2.5), then flip `RATE_LIMIT_ENFORCE`+TTL (2.7). 2.6 (staging/minInstances) deferred. |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | 🚦 go/no-go | ⬜ Not started |
