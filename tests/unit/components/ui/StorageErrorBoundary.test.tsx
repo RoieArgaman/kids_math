@@ -1,9 +1,16 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { StorageErrorBoundary } from "@/components/ui/StorageErrorBoundary";
+import { captureError } from "@/lib/observability/errorReporting";
 import { testIds } from "@/lib/testIds";
 
+vi.mock("@/lib/observability/errorReporting", () => ({ captureError: vi.fn() }));
+
 const t = testIds.component.ui.storageErrorBoundary;
+
+beforeEach(() => {
+  vi.mocked(captureError).mockClear();
+});
 
 function Boom({ message = "load failed", digest }: { message?: string; digest?: string }): never {
   const err = new Error(message) as Error & { digest?: string };
@@ -37,6 +44,31 @@ describe("StorageErrorBoundary", () => {
     expect(screen.getByTestId(t.title())).toHaveTextContent("שגיאה בטעינת ההתקדמות");
     expect(screen.getByTestId(t.detail())).toHaveTextContent("quota exceeded");
     expect(screen.getByTestId(t.resetCta())).toBeInTheDocument();
+  });
+
+  it("reports caught errors through the captureError observability seam", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <StorageErrorBoundary>
+        <Boom message="hydrate blew up" />
+      </StorageErrorBoundary>,
+    );
+    expect(captureError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "hydrate blew up" }),
+      expect.objectContaining({ source: "StorageErrorBoundary" }),
+    );
+  });
+
+  it("does NOT report Next.js control-flow errors (they re-throw before componentDidCatch)", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() =>
+      render(
+        <StorageErrorBoundary>
+          <Boom digest="NEXT_REDIRECT;replace;/login;307" />
+        </StorageErrorBoundary>,
+      ),
+    ).toThrow();
+    expect(captureError).not.toHaveBeenCalled();
   });
 
   it("re-throws Next.js control-flow errors (notFound/redirect) instead of swallowing them", () => {
