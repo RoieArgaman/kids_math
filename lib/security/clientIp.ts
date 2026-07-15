@@ -13,16 +13,18 @@ import { type NextRequest } from "next/server";
  * A malicious client can only *prepend* values; it cannot control what the trusted
  * proxy appends. So the trustworthy entry is counted from the RIGHT, not the left.
  * `TRUSTED_PROXY_HOPS` = how many proxy-appended hops sit to the right of the real
- * client IP. With a single trusted front end the client IP is the right-most entry
- * (0 hops). If App Hosting turns out to append an extra internal hop, bump this.
+ * client IP.
  *
- * IMPORTANT: this is a *best-effort, verify-before-enforce* contract. The limiter it
- * feeds runs in shadow mode only (records, never blocks) in Phase 0, so an off-by-one
- * here cannot lock anyone out. Before the limiter is promoted to enforcing (roadmap
- * Phase 2.7) this offset MUST be confirmed empirically against App Hosting. See
- * Appendix A of the Production Hardening Roadmap.
+ * VERIFIED (2026-07-15, roadmap 2.7 / Appendix A): a live request to App Hosting
+ * showed `X-Forwarded-For: <client>, <google-internal>, <google-front-end>` — e.g.
+ * `85.64.144.21, 35.219.200.210, 192.178.13.101`. Google appends **two** hops, so the
+ * real client is the entry **2 from the right**, NOT the right-most (which is a shared
+ * Google Front End IP). `TRUSTED_PROXY_HOPS = 2`. Counting from the right stays
+ * spoof-proof: a client can only prepend fakes on the left, and the two right-most
+ * entries are always Google-appended. Re-verify with the `/api/diag/ip` probe if the
+ * platform's proxy topology ever changes.
  */
-const TRUSTED_PROXY_HOPS = 0;
+const TRUSTED_PROXY_HOPS = 2;
 
 /** Stable sentinel when no forwarded IP is present (e.g. local dev, direct calls). */
 export const UNKNOWN_CLIENT_IP = "unknown";
