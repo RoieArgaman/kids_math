@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { verifySession } from "@/lib/auth/session.server";
 import { getFirestore } from "@/lib/firestore/admin";
-import { recordRateLimit } from "@/lib/security/rateLimit";
+import { enforceRateLimit, rateLimitedResponse } from "@/lib/security/rateLimit";
 import { adminCreateSchema, adminDeleteSchema, adminPatchSchema } from "@/lib/security/schemas";
 import { validatePasswordStrength } from "@/lib/security/passwordPolicy";
 import { checkLockout, clearLockout } from "@/lib/security/accountLockout";
@@ -10,7 +10,7 @@ import { writeAuditLog } from "@/lib/observability/auditLog";
 
 const BCRYPT_ROUNDS = 12;
 
-// Admin mutations are actor-keyed. Shadow-mode record only — never blocks in Phase 0.
+// Admin mutations are actor-keyed. Staged limiter: blocks only when RATE_LIMIT_ENFORCE=1.
 const ADMIN_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 
 /**
@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin(request);
     if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    const rl = await enforceRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    if (rl.blocked) return rateLimitedResponse(rl.retryAfterMs);
 
     const parsed = adminCreateSchema.safeParse(await request.json());
     if (!parsed.success) {
@@ -120,7 +121,8 @@ export async function PATCH(request: NextRequest) {
   try {
     const admin = await requireAdmin(request);
     if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    const rl = await enforceRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    if (rl.blocked) return rateLimitedResponse(rl.retryAfterMs);
 
     const parsed = adminPatchSchema.safeParse(await request.json());
     if (!parsed.success) {
@@ -187,7 +189,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const admin = await requireAdmin(request);
     if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    await recordRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    const rl = await enforceRateLimit(`admin:${admin.userId}`, ADMIN_RATE_LIMIT);
+    if (rl.blocked) return rateLimitedResponse(rl.retryAfterMs);
 
     const parsed = adminDeleteSchema.safeParse(await request.json());
     if (!parsed.success) {

@@ -3,7 +3,7 @@ import { verifySession } from "@/lib/auth/session.server";
 import { getFirestore } from "@/lib/firestore/admin";
 import type { UserProgressBundle } from "@/lib/user-data/types";
 import { mergeBundles, clampFutureTimestamps } from "@/lib/user-data/merge";
-import { recordRateLimit } from "@/lib/security/rateLimit";
+import { enforceRateLimit, rateLimitedResponse } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, PROGRESS_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
 import { progressEnvelopeSchema } from "@/lib/security/schemas";
 import { captureError } from "@/lib/observability/errorReporting";
@@ -42,8 +42,9 @@ export async function POST(request: NextRequest) {
     const user = await verifySession(request, { requireVersionCheck: true });
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Shadow-mode record only — never blocks in Phase 0 (roadmap S1).
-    await recordRateLimit(`progress:${user.userId}`, PROGRESS_RATE_LIMIT);
+    // Staged limiter (S1): records always, blocks only when RATE_LIMIT_ENFORCE=1 (roadmap 2.7).
+    const rl = await enforceRateLimit(`progress:${user.userId}`, PROGRESS_RATE_LIMIT);
+    if (rl.blocked) return rateLimitedResponse(rl.retryAfterMs);
 
     if (isBodyTooLarge(request, PROGRESS_MAX_BODY_BYTES)) {
       if (enforceBodyCap()) {

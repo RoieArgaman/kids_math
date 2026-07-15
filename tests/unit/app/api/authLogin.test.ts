@@ -1,7 +1,8 @@
 // @vitest-environment node
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 
 import { FakeFirestore } from "./fakeFirestore";
 
@@ -186,6 +187,46 @@ describe("POST /api/auth/login", () => {
       for (let i = 0; i < 4; i++) {
         expect((await login(req({ username: "dana", password: "wrong" }))).status).toBe(401);
       }
+    });
+  });
+
+  describe("rate limiting (staged enforce, S1 / Phase 2.7)", () => {
+    const rlDoc = (key: string) => createHash("sha256").update(key).digest("hex");
+    // No x-forwarded-for on the test request ⇒ clientIp is "unknown".
+    const LOGIN_KEY = "login:unknown:dana";
+
+    // Seed the limiter doc already at the threshold (10) so the next attempt goes over.
+    function seedAtThreshold(): FakeFirestore {
+      return new FakeFirestore({
+        seed: {
+          users: { u1: { username: "Dana", usernameLower: "dana", passwordHash, role: "user" } },
+          rate_limits: { [rlDoc(LOGIN_KEY)]: { count: 10, windowStart: Date.now() } },
+        },
+      });
+    }
+
+    afterEach(() => {
+      delete process.env.RATE_LIMIT_ENFORCE;
+    });
+
+    it("records but does NOT block when the flag is off (shadow) — login still succeeds", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      holder.db = seedAtThreshold();
+      const res = await login(req({ username: "dana", password: PASSWORD }));
+      expect(res.status).toBe(200);
+      expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("[rate-limit:shadow]");
+      warn.mockRestore();
+    });
+
+    it("returns 429 with Retry-After when over threshold and RATE_LIMIT_ENFORCE=1", async () => {
+      process.env.RATE_LIMIT_ENFORCE = "1";
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      holder.db = seedAtThreshold();
+      const res = await login(req({ username: "dana", password: PASSWORD }));
+      expect(res.status).toBe(429);
+      expect(res.headers.get("Retry-After")).toBeTruthy();
+      const body = (await res.json()) as { error: string; retryAfterSeconds: number };
+      expect(body.error).toBe("rate_limited");
     });
   });
 });

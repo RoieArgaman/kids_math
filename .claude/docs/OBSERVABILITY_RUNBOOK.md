@@ -95,6 +95,12 @@ never stored. A future admin-facing viewer is out of scope here.
   enforcing thresholds without false-positiving shared classroom IPs. **Also verify
   `TRUSTED_PROXY_HOPS`** here: inspect real `X-Forwarded-For` values in Cloud Logging (Appendix
   A of the roadmap) before flipping the limiter to enforcing.
+  - **The flip itself (2E code already shipped, flag-off):** once the two checks above pass,
+    (1) create a **Firestore TTL policy on `rate_limits.expiresAt`** so the collection self-prunes,
+    then (2) set `RATE_LIMIT_ENFORCE=1` in `apphosting.yaml` and deploy. The limiter then returns
+    **429** (`{error:"rate_limited", retryAfterSeconds}` + `Retry-After`) over threshold. It stays
+    **fail-open** (a Firestore outage never blocks). Revert instantly by setting the flag back to
+    `0`. Watch the 5xx / error-spike alerts through the first class-start after the flip.
 
 ---
 

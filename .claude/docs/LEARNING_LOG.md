@@ -6,6 +6,31 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-15 (Phase 2 sub-PR 2E — rate limiter shadow → staged enforce, MAX)
+- **Trigger:** Roadmap Phase 2.7 / S1. Promote the shadow limiter to enforcing without risking a
+  self-inflicted lockout of a shared classroom NAT.
+- **What changed / where:** `lib/security/rateLimit.ts` — added `enforceRateLimit` (records always,
+  blocks only when enforcing), `isRateLimitEnforced` (`RATE_LIMIT_ENFORCE` flag), `rateLimitedResponse`
+  (shared 429 + `Retry-After`), `retryAfterMs`, and an `expiresAt` TTL field on the `rate_limits` doc.
+  Wired on `app/api/auth/login`, `app/api/user/progress`, `app/api/admin/users` (×3). `apphosting.yaml`
+  documents the flag (off).
+- **What we learned:**
+  - **Staged behind an env flag = safe MAX change.** Same pattern as `PROGRESS_BODY_CAP_ENFORCE` /
+    CSP report-only / staged HSTS: the enforcing code ships **behaviourally identical to shadow**
+    until an owner flips `RATE_LIMIT_ENFORCE=1` after verifying thresholds + `TRUSTED_PROXY_HOPS`.
+    This let a blocked, verification-gated task land safely with zero production behavior change.
+  - **Keep shadow↔enforce parity exact:** the block decision is `!allowed` (i.e. `count > limit`),
+    identical to the shadow `allowed = count <= limit`, so flipping the flag can't shift the boundary.
+  - **Fail-open must survive enforcement:** a Firestore outage still resolves to `allowed`/not-blocked
+    even with the flag on — unit-tested — so the limiter can never take the site down.
+  - **Testing enforce at the route level:** seed the `rate_limits/{sha256(key)}` doc at the threshold
+    in `FakeFirestore`, set `RATE_LIMIT_ENFORCE=1`, and assert 429 (the e2e 429 case isn't feasible —
+    e2e mocks Firestore at the network layer and enforcement is flag-off in CI). See the health-test
+    learning: real Firestore-touching behavior belongs in unit/integration, not CI e2e.
+- **How to reuse next time:** for any "turn on a guard that could reject live traffic," ship it
+  flag-off + shadow-logged first, prove safety on dashboards, then flip via env — never enable
+  inline in the same change.
+
 ### 2026-07-15 (Phase 2 sub-PR 2A — observability foundation: logger + audit log + health)
 - **Trigger:** Production Hardening Roadmap Phase 2 (C3/S9/C7). First sub-PR of the phase; ULTRA.
 - **What changed / where:** new `lib/observability/{logger,errorReporting,auditLog}.ts`; new
