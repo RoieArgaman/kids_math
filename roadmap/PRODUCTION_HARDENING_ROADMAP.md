@@ -125,7 +125,7 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | **C6** | `minInstances: 0` (cold starts); no separated staging env; single region. | MEDIUM | 2 |
 | **C7** | No load/perf test or documented capacity targets. | MEDIUM | 2 |
 | **C8** | No Firestore backups / PITR; no RPO/RTO or restore runbook (buyer due-diligence item). | HIGH | 2 |
-| **C9** | **Cross-region + far-from-users topology:** app runs in `us-east4` (Virginia) while Firestore is in `europe-west1` (Belgium) and users are in Israel — every DB call crosses the Atlantic (~4 sequential per login). Measured login p95 ≈ 16s under a burst load test (cold starts compounding). Fix: co-locate the app in `europe-west1` (closer to both the DB and users) via a new App Hosting backend + domain cutover. `minInstances:1` (shipped) only removes the cold-start tail. | HIGH | Follow-up (own plan) |
+| **C9** | **Cross-region + far-from-users topology:** app runs in `us-east4` (Virginia) while Firestore is in `europe-west1` (Belgium) and users are in Israel — every DB call crosses the Atlantic (~4 sequential per login). Measured login p95 ≈ 16s under a burst load test (cold starts compounding). Fix: co-locate the app in `europe-west1` (closer to both the DB and users) via a new App Hosting backend + domain cutover. `minInstances:1` (shipped) only removes the cold-start tail. **After the relocation, ALSO: enable the weekly load-test `schedule` in `.github/workflows/load-test.yml` (kept manual-only until then because the current cross-region latency exceeds the k6 thresholds) and tighten the login threshold in `progress-load.js` to the new latency.** | HIGH | Follow-up (own plan) |
 
 ### Monetization / access gating
 
