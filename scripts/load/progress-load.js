@@ -106,8 +106,16 @@ export function progressPush() {
       return;
     }
   }
-  // Envelope-only validation on the server — a known bundleVersion is all that's required.
-  const body = JSON.stringify({ bundleVersion: 4, updatedAt: new Date().toISOString() });
+  // A full, valid bundle shape so the server-side mergeBundles path actually runs (a bare
+  // `{bundleVersion}` envelope passes validation but 500s in the merge — and those 500s would
+  // trip the error-spike alert). This mirrors UserProgressBundle's per-grade domains.
+  const emptyGrade = { workbook: null, badges: null, finalExam: null, gmat: null, review: null };
+  const body = JSON.stringify({
+    bundleVersion: 4,
+    updatedAt: new Date().toISOString(),
+    streak: null,
+    grades: { a: emptyGrade, b: emptyGrade },
+  });
   const res = http.post(`${BASE_URL}/api/user/progress`, body, {
     headers: { "Content-Type": "application/json" },
     tags: { name: "progress_push" },

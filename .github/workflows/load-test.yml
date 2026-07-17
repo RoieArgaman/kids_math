@@ -1,0 +1,82 @@
+name: Load Test
+
+# Classroom-concurrency load test (roadmap 2.4). Seeds throwaway users, runs k6, then ALWAYS
+# cleans them up. Runs against a real Firestore-backed target (prod by default) — CI has no
+# Firestore, so this can't run inside the normal per-push CI.
+#
+# Manual by default (workflow_dispatch). The weekly schedule is intentionally COMMENTED.
+# DO NOT enable it until the app is relocated to europe-west1 (roadmap finding C9): until then the
+# cross-region login latency (~16s p95 under burst) exceeds the k6 thresholds, so every scheduled
+# run would fail and email a red build. After the relocation, uncomment the `schedule` block (and
+# tighten the login threshold in progress-load.js to the new, lower latency).
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Target base URL (must NOT be a URL serving real users unless intended)"
+        default: "https://kids-math--kids-learing-hub.us-east4.hosted.app"
+        required: true
+      push_vus:
+        description: "Steady progress-push VUs (~one classroom)"
+        default: "20"
+      burst_rate:
+        description: "Logins/sec in the 30s burst"
+        default: "3"
+      duration:
+        description: "Steady-phase duration"
+        default: "60s"
+  # schedule:                # ENABLE ONLY AFTER the C9 europe-west1 relocation (see header note).
+  #   - cron: "0 2 * * 6"   # Saturdays 02:00 UTC — low-traffic.
+
+concurrency:
+  group: load-test
+  cancel-in-progress: false
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GCLOUD_PROJECT: kids-learing-hub
+      COUNT: "20"
+      PREFIX: kmci
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://kids-math--kids-learing-hub.us-east4.hosted.app' }}
+      PUSH_VUS: ${{ github.event.inputs.push_vus || '20' }}
+      BURST_RATE: ${{ github.event.inputs.burst_rate || '3' }}
+      DURATION: ${{ github.event.inputs.duration || '60s' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps (bcryptjs for the seeder)
+        run: npm ci
+
+      # Same service account the deploy uses — it has Firestore access for seed/cleanup.
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - uses: grafana/setup-k6-action@v1
+
+      - name: Seed test users
+        run: |
+          ACCESS_TOKEN="$(gcloud auth print-access-token)" \
+            node scripts/load/seed-load-users.mjs > /tmp/users.json
+          echo "seeded $(node -e "console.log(require('/tmp/users.json').length)") users"
+
+      - name: Run k6 load test
+        run: |
+          USERS="$(cat /tmp/users.json)" k6 run scripts/load/progress-load.js
+
+      # Guaranteed cleanup even if k6 fails the thresholds.
+      - name: Cleanup test users
+        if: always()
+        run: |
+          ACCESS_TOKEN="$(gcloud auth print-access-token)" \
+            node scripts/load/cleanup-load-users.mjs
