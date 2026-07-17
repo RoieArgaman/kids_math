@@ -67,3 +67,25 @@ subcollections.
 Paste the summary (throughput, login p95, push p95, error rate, and the `PUSH_VUS` knee) into
 **Appendix C** of `roadmap/PRODUCTION_HARDENING_ROADMAP.md`, with the date, target, and commit
 SHA. That closes the Phase 2.4 deliverable.
+
+## Seeded runs & CI automation
+
+Login/progress need real accounts. `seed-load-users.mjs` creates throwaway users via the
+Firestore REST API using a gcloud access token (no ADC needed); `cleanup-load-users.mjs` removes
+them (+ their `user_progress`). Always run the cleanup — the CI job does it in `if: always()`.
+
+```bash
+# manual, against a scratch/off-hours target
+ACCESS_TOKEN=$(gcloud auth print-access-token) COUNT=20 PREFIX=kmload \
+  node scripts/load/seed-load-users.mjs > /tmp/users.json
+USERS="$(cat /tmp/users.json)" BASE_URL="https://<target>" k6 run scripts/load/progress-load.js
+ACCESS_TOKEN=$(gcloud auth print-access-token) COUNT=20 PREFIX=kmload \
+  node scripts/load/cleanup-load-users.mjs
+```
+
+**CI:** `.github/workflows/load-test.yml` runs the whole seed → k6 → cleanup cycle. It is
+**manual (`workflow_dispatch`) by default**; the weekly `schedule` is commented out because it
+hits a real Firestore-backed target (prod) — enable it only when you want light automated
+off-hours load. Auth uses the existing `FIREBASE_SERVICE_ACCOUNT` secret. This can't be a
+per-push gate: the normal CI has no Firestore backend (the e2e suite mocks Firestore), so the
+API routes a load test exercises would fail there.
