@@ -332,6 +332,23 @@ npm run test:e2e -- <spec-files>
 npm run test:qa   # = lint + check:testids + build + unit + E2E (full suite, no exceptions)
 ```
 
+### Docs-Only Exemption
+
+A change whose diff touches **only** documentation is exempt from the test gates above
+(no `build` / `test:unit` / `test:e2e` / `test:qa`). Run a doc sanity check instead
+(links resolve, Markdown renders, no broken references).
+
+- **Qualifies:** every changed file matches `**/*.md`, `docs/**`, `roadmap/**`, `LICENSE`,
+  or lives anywhere under `.claude/**`. The whole `.claude/` tree (rules, docs, commands,
+  plans, `settings.json`, `launch.json`) is agent/tooling config that nothing CI runs reads —
+  it is never compiled, imported, or exercised by the tests — so the suite can't validate it.
+- **Does NOT qualify (full gates apply):** anything else — `.ts/.tsx`, `*.json` (outside
+  `.claude/`), `*.mjs`, `scripts/**`, `.github/**`. A **mixed** diff (any code + docs/config)
+  runs the full suite.
+- **CI mirrors this:** `.github/workflows/ci.yml` uses a `changes` job so `lint-and-unit`
+  and `e2e` skip on docs-only diffs. The **secret scan always runs** (even docs-only), so
+  never treat a doc change as a reason to skip credential hygiene.
+
 ### Mandatory Test Targeting (not "targeted" — specific)
 
 | Changed Area | Must Run These Tests |
