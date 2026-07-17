@@ -125,6 +125,7 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | **C6** | `minInstances: 0` (cold starts); no separated staging env; single region. | MEDIUM | 2 |
 | **C7** | No load/perf test or documented capacity targets. | MEDIUM | 2 |
 | **C8** | No Firestore backups / PITR; no RPO/RTO or restore runbook (buyer due-diligence item). | HIGH | 2 |
+| **C9** | **Cross-region + far-from-users topology:** app runs in `us-east4` (Virginia) while Firestore is in `europe-west1` (Belgium) and users are in Israel — every DB call crosses the Atlantic (~4 sequential per login). Measured login p95 ≈ 16s under a burst load test (cold starts compounding). Fix: co-locate the app in `europe-west1` (closer to both the DB and users) via a new App Hosting backend + domain cutover. `minInstances:1` (shipped) only removes the cold-start tail. | HIGH | Follow-up (own plan) |
 
 ### Monetization / access gating
 
@@ -568,7 +569,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
 | 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
-| 2 | Observability, DR & ops | ULTRA | Phase 0 | 🟨 Code/docs shipped (#71–#76): 2A logging+audit+health, 2B/2D runbooks, 2C load harness, 2E staged limiter (flag-off). **Ops pending (owner):** dashboards/alerts (2.3), run load test → Appendix C (2.4), enable PITR+drill → Appendix D (2.5), then flip `RATE_LIMIT_ENFORCE`+TTL (2.7). 2.6 (staging/minInstances) deferred. |
+| 2 | Observability, DR & ops | ULTRA | Phase 0 | 🟩 Nearly done. Code (#71–#76) + ops (2026-07-17): 2.3 uptime check + alerts + error/shadow log-metrics **live**; 2.4 load-test baseline recorded (Appendix C); 2.5 **PITR + daily backups + TTL policies enabled** (restore drill pending, Appendix D); 2.7 **limiter enforcing** (`RATE_LIMIT_ENFORCE=1`, verified) after `TRUSTED_PROXY_HOPS` fix (#80). minInstances=1 set. **Remaining:** restore drill; staging (2.6, deferred); app-region relocation (finding **C9**). |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | 🚦 go/no-go | ⬜ Not started |
@@ -617,10 +618,20 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
     user's `tokenVersion` (a maintenance job) — this invalidates all outstanding tokens on the
     version-checked routes without waiting out the window.
   - **Rollback:** keep the old secret version until step 4; reverting the deploy re-accepts old tokens.
-- **Appendix C — Load-test baseline** (Phase 2.4): harness ready
-  ([`scripts/load/progress-load.js`](../scripts/load/progress-load.js), sub-PR 2C). _Baseline
-  numbers TBD — paste throughput / login p95 / push p95 / error rate / the `PUSH_VUS`
-  contention knee here after a run, with date + target + commit SHA._
+- **Appendix C — Load-test baseline** (Phase 2.4):
+  - **Run:** 2026-07-17, against **production** (`kids-math--kids-learing-hub.us-east4.hosted.app`),
+    controlled: 20 distinct seeded users (one classroom), `PUSH_VUS=20 BURST_RATE=3 DURATION=60s`,
+    from an Israeli client. Test users cleaned up after.
+  - **Login:** 98% success (71/72), latency **p95 ≈ 16.4s / median ≈ 12s under burst**, ~1.5s
+    single/warm. Dominated by cold starts + cross-region Firestore (see finding **C9**).
+  - **Rate limiter (the flip gate):** only **2** over-threshold events, both on a *single* key
+    (`login:85.64.144.21:kmload7`, count 11–12 / limit 10) — the load's random picker hammered one
+    user. **No cross-user false-positives**: 20 users behind one NAT (`85.64.144.21`) did not
+    collectively trip the limiter. Confirmed correct keying (real client IP, not the shared GFE IP)
+    and validated thresholds ⇒ enforcement flipped on (`RATE_LIMIT_ENFORCE=1`, 2026-07-17).
+  - **Progress push:** N/A this run — the k6 payload sent a minimal `{bundleVersion}` bundle that
+    `mergeBundles` 500s on (test artifact, not an app bug); the push still exercised the `progress`
+    limiter before the merge. Use a fuller bundle to measure push latency / the C5 contention knee.
 - **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): runbook ready
   ([`DISASTER_RECOVERY_RUNBOOK.md`](../.claude/docs/DISASTER_RECOVERY_RUNBOOK.md), sub-PR 2D).
   Targets: **RPO ≤ 1h** (PITR, 7-day window) / **RTO ≤ 4h**. _Drill results TBD — paste date,

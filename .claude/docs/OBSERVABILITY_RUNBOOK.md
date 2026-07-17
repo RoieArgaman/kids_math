@@ -104,6 +104,20 @@ never stored. A future admin-facing viewer is out of scope here.
 
 ---
 
+## Provisioned resources (2026-07-17, project `kids-learing-hub`)
+
+Created via gcloud (all in Cloud Monitoring / Logging):
+- **Uptime check** `kids-math-health-check` → `https://…/api/health`, 60s, multi-region (a `503`
+  Firestore-degraded reads as down).
+- **Notification channel** (email) → `roiearg89@gmail.com` (`enabled: true`).
+- **Alert policies**: `kids-math /api/health uptime failure` and `kids-math error spike`
+  (>10 ERROR logs / 5 min), both → the email channel.
+- **Log-based metrics**: `rate_limit_shadow_hits` (the enforce-safety signal — over-threshold
+  limiter events) and `app_error_events` (ERROR-severity app logs).
+
+To modify/remove: `gcloud monitoring uptime …`, `gcloud beta monitoring channels …`,
+`gcloud alpha monitoring policies …`, `gcloud logging metrics …`.
+
 ## Capacity targets (documented — validate in 2.4)
 
 Starting targets for a small-district / multi-classroom launch. These are **assumptions to be
