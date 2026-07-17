@@ -1,6 +1,9 @@
 runConfig:
-  # Defaults are usually fine; tune only if needed.
-  # minInstances: 0
+  # Keep one warm instance to remove cold starts. A 2026-07-17 load test showed cold starts
+  # (minScale 0) were the dominant driver of the login p95 (~16s under burst). Small always-on
+  # cost; revert to 0 if that cost isn't justified. The deeper latency fix is co-locating the app
+  # with Firestore (finding C9) — this only removes the cold-start tail, not the cross-region hop.
+  minInstances: 1
   # maxInstances: 100
   # concurrency: 80
   # cpu: 1
