@@ -14,40 +14,53 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
-  # Change detection (~5s). Sets docs_only=true when the diff touches ONLY non-code files,
+  # Change detection (~3s). Sets docs_only=true when the diff touches ONLY non-code files,
   # which skips the expensive lint/unit/e2e jobs below. The secret scan deliberately does
   # NOT depend on this — it always runs (see security-scan).
   #
-  # IMPORTANT — dorny matches each changed file against the pattern list with OR semantics
-  # (a file matches the filter if it matches ANY pattern; it is NOT gitignore last-match-wins).
-  # So a `code` filter like ['**', '!**/*.md'] does NOT work — the bare `**` matches every
-  # file and the negations subtract nothing, making it always true. (Verified in CI: that
-  # form reported code=true for a docs-only diff.) Instead we use a POSITIVE `docs` filter
-  # plus `predicate-quantifier: every`, which is true only when EVERY changed file matches a
-  # doc pattern — i.e. the diff is docs-only. A mixed diff (any code file) fails `every`, so
-  # docs_only=false and the full suite runs.
+  # Implemented as a plain GitHub-API + regex check rather than a glob-filter action: we
+  # need "EVERY changed file is a doc" (docs-only), and path-filter actions answer the
+  # different question "did ANY file match?" — the composition is easy to get subtly wrong.
+  # Here the logic is explicit and fails SAFE: any file that is NOT recognized as a doc
+  # (including a brand-new top-level path) makes docs_only=false and runs the full suite.
   #
-  # Non-code = Markdown anywhere, docs/, roadmap/, LICENSE, and the entire `.claude/` tree
-  # (rules, docs, commands, plans, settings.json, launch.json) — agent/tooling config that
-  # nothing CI runs compiles, imports, or exercises, so the suite can't validate it.
+  # Non-code = Markdown anywhere (`*.md`), or under `docs/`, `roadmap/`, `.claude/` (the whole
+  # agent/tooling tree: rules, docs, commands, plans, settings.json, launch.json), or the
+  # top-level `LICENSE`. Nothing CI runs compiles, imports, or exercises these, so the suite
+  # can't validate them.
   changes:
     runs-on: ubuntu-latest
     outputs:
-      docs_only: ${{ steps.filter.outputs.docs }}
+      docs_only: ${{ steps.detect.outputs.docs_only }}
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          predicate-quantifier: 'every'
-          filters: |
-            docs:
-              - '**/*.md'
-              - 'docs/**'
-              - 'roadmap/**'
-              - 'LICENSE'
-              - '.claude/**'
+      - name: Detect docs-only diff
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then
+            files="$(gh api --paginate "repos/$REPO/pulls/$PR/files" -q '.[].filename')"
+          else
+            files="$(gh api "repos/$REPO/compare/$BEFORE...$AFTER" -q '.files[].filename')"
+          fi
+          echo "Changed files:"; printf '%s\n' "$files"
+          # A path is "non-code" if it is Markdown anywhere, under docs/ roadmap/ .claude/,
+          # or the top-level LICENSE. Anything else counts as code → run the full suite.
+          non_doc="$(printf '%s\n' "$files" | grep -vE '(\.md$|^docs/|^roadmap/|^\.claude/|^LICENSE$)' || true)"
+          if [ -n "$files" ] && [ -z "$non_doc" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+            echo "→ docs-only diff: lint-and-unit and e2e will be skipped (secret scan still runs)."
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            echo "→ code present (or empty diff): full suite runs."
+            [ -n "$non_doc" ] && { echo "Non-doc files:"; printf '%s\n' "$non_doc"; } || true
+          fi
 
   # Fast gate: lint + testid coverage + unit tests (~45s). Runs in parallel with the
   # e2e shards below, so a lint/unit failure surfaces without waiting on the browser suite.
