@@ -14,9 +14,47 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
+  # Change detection (~5s). Decides whether the diff touches anything that can affect
+  # the built app or its tests. Docs-only changes (Markdown, docs/, roadmap/, LICENSE)
+  # set code=false, which skips the expensive lint/unit/e2e jobs below. The secret scan
+  # deliberately does NOT depend on this — it always runs (see security-scan).
+  #
+  # The `code` filter uses the DEFAULT `some` quantifier: it is true when AT LEAST ONE
+  # changed file matches `**` and is not excluded by the `!` doc patterns — i.e. at least
+  # one non-doc file changed. So a mixed diff (code + docs) still sets code=true and runs
+  # the full suite; only an all-docs diff yields code=false. (Do NOT switch to
+  # `predicate-quantifier: every` — that would require EVERY file to be non-doc and would
+  # wrongly skip tests on any code change that also touches a Markdown file.)
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!roadmap/**'
+              - '!LICENSE'
+              # All of `.claude/` is agent/tooling config (rules, docs, commands, plans,
+              # settings.json, launch.json). Nothing CI runs reads it — it is not compiled,
+              # imported, or exercised by Vitest/Playwright — so a change here can't be
+              # validated by the suite. Exclude the whole tree regardless of extension.
+              # (The secret scan still runs unconditionally, so credentials are still caught.)
+              - '!.claude/**'
+
   # Fast gate: lint + testid coverage + unit tests (~45s). Runs in parallel with the
   # e2e shards below, so a lint/unit failure surfaces without waiting on the browser suite.
+  # Skipped on docs-only changes.
   lint-and-unit:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -42,6 +80,9 @@ jobs:
   # other jobs. `npm audit` starts non-blocking (continue-on-error) so a newly-disclosed
   # advisory doesn't wedge unrelated PRs; flip to blocking once the tree is clean. The
   # secret scan is blocking — a committed credential must fail the build.
+  # NOTE: intentionally has no `needs: changes` / `if:` gate — it ALWAYS runs, even on
+  # docs-only diffs, so a secret can never slip in through a Markdown-only change. Keeping
+  # it inside the CI workflow is also what lets it keep gating deploy.yml (workflow_run).
   security-scan:
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +117,10 @@ jobs:
   # production server) so the shards run fully in parallel — 3 parallel builds cost the
   # same wall-clock as one, and the shared .next/cache keeps them incremental. This is
   # faster end-to-end than a single shared build that would serialize build -> e2e.
+  # Skipped on docs-only changes.
   e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     strategy:
       # One failing shard should not cancel the others — we want the full failure picture.
