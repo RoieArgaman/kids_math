@@ -6,6 +6,42 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3 — account lifecycle, export & governance, MAX) — PR #104
+- **Trigger:** Roadmap Phase 3. Re-scoped at plan time from "ship erasure" to "ship a reversible
+  soft delete"; erasure moved to Phase 4 as a super-admin, org-scoped privilege.
+- **What we learned:**
+  - **One field beats two booleans.** `isActive` + `isDeleted` encodes 9 states for 3 real ones and
+    lets `isActive:true, isDeleted:true` be written. A single `status` union makes the illegal state
+    unrepresentable and cuts the test matrix to 3 rows. Prefer a status enum over paired flags.
+  - **`absent ⇒ default` is this repo's migration strategy.** Same pattern as `tokenVersion`: no
+    backfill, absent reads as active. But it CANNOT be expressed as a Firestore query — equality
+    **and** inequality filters both exclude docs missing the field, so `where("status","==","active")`
+    matches **zero** legacy users. Filter in application code, always.
+  - **`orderBy(f)` excludes docs missing `f`.** A user doc without `createdAt` is invisible to the
+    admin list — unmanageable, unexportable. Pinned by a test; `FakeFirestore` was made to match.
+  - **`tx.set(ref, {...snapshot})` is a latent lost-update.** Safe only while one mutable field
+    exists. The moment a second lands, a concurrent writer resurrects stale state. Always
+    field-mask with `tx.update`.
+  - **"The caller can't act on themselves" is not a concurrency guard.** Two admins deactivating
+    each other both passed pre-flight, touched disjoint docs, never conflicted, and both committed →
+    zero active admins. Re-read the *actor* inside the transaction to put it in the read set.
+  - **A three-way result type prevents data loss.** `apiMe` returned `null` for anonymous, revoked
+    AND offline. "Clear local data on null" would have wiped every anonymous visitor and every
+    offline learner. Mirror the existing `fetchUserProgressResult` shape: `ok | unauthorized | error`.
+  - **Coverage globs can be worse than no gate.** `lib/auth/**` at 95 measured 78 (a client fetch
+    wrapper at 0% by design drags the average), so the honest pin would have been below the global
+    floor — i.e. gating nothing. Gate **per-file** on the modules that make the decision.
+  - **Committed ≠ deployed.** `firestore.rules` sat in the repo while `SECURITY.md` cited it as a
+    live control and both deploy paths pinned `--only apphosting:*`. Wire config into the deploy
+    pipeline or it drifts silently.
+  - **Subagent fan-out found what three self-review rounds missed** (the concurrency break, a
+    path-traversal `userId`, an unenforced limiter on the PII-egress endpoint). But two reviewers
+    reported findings against a **stale snapshot** of a tree other agents were still editing —
+    re-verify a subagent's finding against current HEAD before acting on it.
+- **How to reuse next time:** for any reversible-state feature on existing data — status enum, no
+  backfill, absent ⇒ safe default, one shared reader, enforcement at a single choke point, and pair
+  the state change with `tokenVersion` so revocation is free.
+
 ### 2026-07-15 (Phase 2 sub-PR 2E — rate limiter shadow → staged enforce, MAX)
 - **Trigger:** Roadmap Phase 2.7 / S1. Promote the shadow limiter to enforcing without risking a
   self-inflicted lockout of a shared classroom NAT.
