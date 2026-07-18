@@ -14,7 +14,8 @@ This is the durable roadmap. Each **Phase** below is a self-contained task that 
 `/plan` (PRO/ULTRA/MAX per its risk) before implementation. **Progress so far: Phases 0, 1 & 2 ✅
 done** (Phase 1 via [#70](https://github.com/RoieArgaman/kids_math/pull/70); Phase 2 ops completed
 2026-07-17/18, incl. the C9 relocation); **Phase 3 planned** (scope revised 2026-07-18 — soft
-delete, not erasure); **Phases 4–5 not started.** See the Progress tracker at the bottom for live
+delete, not erasure); **Phase 3.5 planned and NEXT UP** (design system & desktop, added
+2026-07-18); **Phases 4–5 not started.** See the Progress tracker at the bottom for live
 status.
 
 ---
@@ -156,6 +157,23 @@ Phase 1**; the two below are their own tasks.
 | **UX1** | Login asks pre-literate 6–8-year-olds to type a username string + masked password. The kids-native pattern is **pick-your-avatar + a numeric PIN pad** (aligns with the app's numbers/taps-only ethos and the Phase 1 `overridePolicy` simple-password path). Reduces failed logins → fewer lockouts. | MEDIUM (UX) | Backlog (own ULTRA task) |
 | **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. | LOW (UX/engagement) | Backlog (own task) |
 | **UX3** | **Guardian-consent capture** has no flow. Split out of Phase 3.5 (2026-07-18): consent is a product/UX problem — who consents, how it is evidenced, what happens when it is withheld or withdrawn — not a document, and designing it for guardians of 6–8-year-olds is a task in its own right. `COMPLIANCE.md` documents the *posture*; capturing consent is separate. | MEDIUM (compliance/UX) | Backlog (own ULTRA task) |
+
+### Design system & responsive (surfaced 2026-07-18 by the FE-framework design QA)
+
+Sourced from the `Full App QA Report` design-QA pass (20 screens, mobile + desktop, ~60
+findings). Every claim below was re-verified against current source before being recorded here.
+Where the report and the code disagreed, the **code** is recorded.
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **D1** | **No desktop layout exists.** `main { width: min(100%, 720px) }` caps every screen, and the tree contains **43 `sm:` utilities, 1 `md:`, 1 `lg:`, 0 `xl:`** — on any wide screen the whole product is a mobile column in empty gutters. Worst on the dense screens (Home's day cards, 35+ badge gallery, 3-subject picker, Parent Dashboard, Admin Users). | HIGH (UX) | 3.5 |
+| **D2** | **Token drift from the repo's own documented standard.** `.claude/docs/UI_COMPONENTS.md` fixes card radius at `20px`, yet **10 distinct radii** ship (`2xl`×50, `xl`×28, `3xl`×24, `[22px]`, `[18px]`, `[24px]`, `[20px]`, `[26px]`, `[14px]`, `[13px]`); "interactive purple" has 5+ values (`#6d28d9`×32, `#a78bfa`×16, `#8b75cc`×15, `violet-700`, `violet-900`); card titles use both `--title` and `text-violet-900`; the accent rail is 4px/5px/6px. **Note: the source report said "at least four radii" — it is ten.** | HIGH (UX) | 3.5 |
+| **D3** | **Touch targets fall under the project's own 44px rule in clusters.** TopBar login is `px-3 py-1.5` inside an `h-10` bar (physically capped at 40px); Plan day-chips are `min-h-10 min-w-10` (40px) and a child taps them to open a day; Admin Users rows carry up to 7 actions at `px-3 py-1.5 text-xs` (~30px); login + admin inputs ~36–40px. | HIGH (a11y) | 3.5 |
+| **D4** | ~~**Tailwind v4 migration (#101) needs a sweep**~~ — **audited 2026-07-18 (3.5.1): no regressions, no code change.** All three suspected v4 hazards came back clean. **(a) Default border color** (`gray-200`→`currentColor`): a precise audit — border *width* utility with no border *colour* utility on the same element — found **2** candidates, both **false positives** (`DayCard.tsx:72` colours via inline `style.borderInlineStartColor`; `BadgeGalleryScreen.tsx:217` colours via `TIER_BORDER` in both branches). The "56 sites" figure in the original plan was a **crude grep artifact** (`border` matched inside `border-slate-200` etc.), not a real count. **(b) Focus rings** (default 3px→1px): **no bare `ring` utility exists** — all 16 uses are explicit `ring-1`/`ring-2`, and all 11 `outline-hidden` sites pair with a visible ring. **(c) Shadow scale** (`shadow-sm`→`shadow-xs`): 29 `shadow-xs`, **zero** stale `shadow-sm` — #101 renamed them all; elevation did not flatten. | ~~HIGH~~ | ✅ **Resolved (no-op)** |
+| **D5** | **Duplicated components.** Two different day-card designs (Math `<DayCard>` vs English/Science hand-rolled); two "centered panel" shells (`LockedGradeScreen` vs `CenteredPanel`); three loading treatments; Grade Picker hand-rolls cards instead of the exported `<ActionCard>`; Privacy resizes `HeroHeader` with `!important`. | MEDIUM | 3.5 |
+| **D6** | **"Locked" is opacity on the whole card in 16 places**, at three different values (`opacity-60`, `opacity-50 grayscale`). **Measured 2026-07-18 (3.5.1):** muted hint text at `opacity-60` sits at **2.03:1** on white / **2.00:1** on cream — AA needs **4.5**. This is a hard failure, not a borderline one. Even `--muted` at *full* opacity on the locked surface only reaches **3.39:1**, so the fix needs its own darker token: `--locked-muted: #6f6880` measures **4.89:1** ✅. Tokens + `.is-locked` landed in 3.5.1; **adoption at the 16 call sites is 3.5.2**. | MEDIUM (a11y) | 3.5 |
+| **D7** | **Admin area is off-palette** — `slate-*` text/borders/inputs make it look like a different product than the warm learner UI. | MEDIUM | 3.5 |
+| **D8** | Smaller UX defects: next-badge banner `truncate`s its own description to nothing; badge tooltip clips off-screen on the first row; inline retry button wraps mid-line; DayCard shows its emoji twice; exam results nest a bordered card inside a bordered panel; PlanScreen uses brittle `km.autogen.*` testids. | LOW–MEDIUM | 3.5 |
 
 ---
 
@@ -596,6 +614,113 @@ rather than an oversight.
 
 ---
 
+## Phase 3.5 — Design system consolidation & desktop layout  ·  Mode: MAX  ·  ✅ desktop intent decided 2026-07-18
+
+**Objective:** Close the ~60 design-QA findings (D1–D8): collapse the token drift, meet the
+44px rule everywhere, finish the Tailwind v4 migration, de-duplicate components, and give the
+five density screens a real desktop layout.
+
+**Why this is next, ahead of Phases 4–5:** it is the only remaining phase with **no product
+go/no-go outstanding** (Phases 4 and 5 both gate on one; Phase 3.5's single open question —
+desktop intent — was answered 2026-07-18, see below). It touches **zero** auth, API, routing,
+or `lib/*/storage.ts` surface, so it carries none of Phase 4's migration risk and can ship
+continuously. It is also a prerequisite in practice: Phase 4's org-admin screens and Phase 5's
+freemium gate both add UI, and adding it to a drifted design system multiplies the drift.
+
+**Mode rationale:** MAX. Not for storage or security risk — there is none — but for blast
+radius: `app/globals.css` is imported by the root layout, so the token pass touches ~40 `.tsx`
+files across every screen, exercised by 33 E2E specs. Total diff far exceeds ULTRA's 300-line cap.
+
+**Product decision on record (2026-07-18):** *"Use the wide space on busy screens only."*
+Practice screens (Section, Day Overview, Final Exam, GMAT, legal) **keep** the narrow column —
+a narrow measure is genuinely better for reading a prompt and typing an answer. The five
+**density** screens get real desktop layouts. Rejected alternatives: keep everything narrow and
+merely decorate the gutters (leaves D1's HIGH findings unfixed); make every screen responsive
+(largest scope, spent mostly on screens the QA itself marked "fine at 720").
+
+### Sequencing (five stacked PRs — each its own `/plan`, `/review`, `/verify`)
+
+Ordered so that each PR is verifiable on a trustworthy baseline. **3.5.1 must land before
+3.5.2** — restyling on top of an unswept v4 regression means tuning against a broken baseline.
+
+### 3.5.1 — v4 safety sweep + token foundation (D4, D2 groundwork) — ✅ **COMPLETE** — *zero visual change*
+- **v4 sweep → no-op.** All three hazards audited and clean; see the D4 row for the evidence.
+  **No code changed for D4.** The audit was the deliverable; inventing edits to justify the PR
+  would have been worse than reporting a clean result.
+- **Tokens landed** in `:root` (not `@theme` — see the deviation note below): `--accent-strong` /
+  `--accent-soft` / `--accent-hover` / `--accent-subtle`; `--radius-card: 20px` /
+  `--radius-panel: 24px`; `--rail-width: 4px`; `--locked-surface` / `--locked-border` /
+  `--locked-muted`. Every value is the **current shipping value, only named**, so 3.5.2's
+  adoption is a rename with zero pixel change.
+- **`.is-locked`** added: tints the surface and dims **decoration only** (`.locked-dim`), keeping
+  text at full opacity — the opposite of today's whole-card `opacity-60`.
+- **`tailwind.config.ts`**: `rounded-card` / `rounded-panel` / `border-s-rail` utilities, verified
+  to actually generate via a standalone Tailwind CLI probe (a config key that silently fails to
+  emit would have blocked all of 3.5.2).
+- **⚠️ Deviation from plan — `:root`, not `@theme`.** The plan said "add `@theme` tokens", but
+  `globals.css:3-6` records a deliberate decision to keep `tailwind.config.ts` authoritative via
+  `@config` and treat the CSS-first `@theme` migration as its own follow-up. Honouring that
+  decision beat following the plan; the `@theme` migration stays a separate task.
+- **Verification:** `tsc` clean · lint clean · `check:testids` OK · **1472 unit tests pass** ·
+  production build succeeds · tokens + `.is-locked` confirmed present in the compiled CSS.
+
+### 3.5.2 — Token adoption sweep (D2, D6, D7) — *mechanical; pre-split 2a/2b*
+- Replace the purple literals and `violet-900` titles with tokens; 10 radii → the 2-step scale;
+  3 rail widths → 1; 16 `opacity-50/60` sites → the shared locked treatment; ParentDashboard
+  `CorrectnessBar` → `--track`/`--accent`; admin `slate-*` → app tokens.
+- **Split:** 2a = chrome + learner screens, 2b = admin + legal/system. Each stays under the cap.
+- **Guard (from LEARNING_LOG:698):** locked cards must remain **inert `<div>`s, never `<Link>`s**.
+  This PR restyles locked states and must not touch gating semantics — assert inertness in E2E.
+- **Tests:** `npm run check:cards` clean; contrast ratios for the new locked treatment
+  **computed**, not eyeballed; every screenshot baseline update individually reviewed.
+
+### 3.5.3 — Touch targets (D3)
+- TopBar `h-10`→`h-12` + login `min-h-[44px]`; Plan day-chips → 44px; Admin Users row actions →
+  wrapped block or overflow menu at ≥44px each; login + admin inputs `min-h-[44px]`; GMAT
+  bookmark button `min-h-[44px]`.
+- **Tests:** one systemic `tests/e2e/touch-targets.spec.ts` sweeping every interactive element,
+  rather than per-screen assertions — it prevents regression for free.
+
+### 3.5.4 — Component consolidation (D5, D8)
+- Grade Picker → the exported `<ActionCard>`; one shared day-card across Math/English/Science;
+  `LockedGradeScreen` → `CenteredPanel`; one `LoadingPanel`; a `HeroHeader` size variant (retires
+  Privacy's `!important`); flatten the exam-results nesting; collision-aware badge tooltip;
+  next-badge `line-clamp-2`; retry button to its own row; drop DayCard's duplicate inline emoji.
+- **Types:** new variant props are discriminated unions, not optional-everything. No `any`.
+- **Testids stay frozen through 3.5.4.** The PlanScreen `km.autogen.*` → stable-id change (D8) is
+  its own follow-up with matching spec updates.
+
+### 3.5.5 — Desktop layout (D1) — *per the decision on record*
+- **Widen:** Home weeks + DayOverview + SubjectHome → `lg:grid-cols-2`; Subject Picker →
+  `lg:grid-cols-3` (kills the 2+1 orphan); Badge Gallery → `lg:grid-cols-3 xl:grid-cols-4`;
+  Parent Dashboard → 2-column card grid; Admin Users → a real table at `lg`, stacked cards on mobile.
+- **Keep narrow:** the practice column (cap ~560px for answering comfort), exams, legal.
+- Align the TopBar inner row to the content column (it is currently full-bleed while content is
+  centered; SiteFooter already does this correctly and is the reference).
+- Raise/remove the 720 cap **per screen**, not globally.
+
+### Phase 3.5 quality gates
+Local: `tsc`, `npm run lint`, `check:testids`, `check:cards`, `test:unit`. **E2E and `test:qa`
+run on the PR's CI, not locally** (standing preference). Plus MCP Playwright visual check on
+every changed screen (MAX: always), a manual **RTL pass** after 3.5.2 and 3.5.4 (rail-width and
+radius changes read differently under `border-s` in RTL), and a **320px** check on the Grade
+Picker CTA wrap.
+
+### Phase 3.5 Definition of Done
+1. All ~60 findings fixed or explicitly closed as won't-fix **with a reason recorded here**.
+2. `check:cards` reports zero drift: one accent ramp, one title token, two radii, one rail width,
+   one locked treatment.
+3. Every interactive element ≥44px, enforced by a systemic E2E spec (not spot checks).
+4. No `data-testid` regressions; all 33 E2E specs green on CI.
+5. Locked cards remain inert (no `<Link>`), test-enforced — the LEARNING_LOG:690 bug class does
+   not regress while restyling locked states.
+6. The five density screens use the available width at `lg`; practice screens stay narrow.
+7. Contrast of the new locked/muted treatment computed and passing WCAG AA.
+8. `UI_COMPONENTS.md` and `LEARNING_LOG.md` updated with the final token scale, so the standard
+   this phase restores is the one future work is checked against.
+
+---
+
 ## Phase 4 — Multi-tenancy & scale  ·  Mode: MAX  ·  🚦 product go/no-go + own MAX plan
 
 **Objective:** The actual "sell to a company" unlock: org isolation, org roles, and removal of
@@ -794,6 +919,17 @@ in (unlocked).
   docs must say so.
 - **S13 ships first inside Phase 3** because the soft-delete flags are only trustworthy once no
   writer performs a full-document overwrite.
+- **3.5 (design system) inserted after 3, ahead of 4–5 (2026-07-18).** It is the only remaining
+  phase with no product go/no-go outstanding, and it touches zero auth/API/routing/storage
+  surface — so it ships continuously while Phases 4 and 5 wait on product decisions. It is also
+  a practical prerequisite: both later phases *add UI* (org-admin screens, the freemium gate),
+  and adding screens to a drifted design system multiplies the drift rather than inheriting a
+  standard. The numbering is deliberate — this is design-quality work, not a step in the
+  security/scale arc that Phases 0→4 encode, and renumbering 4→5 would break every existing
+  reference.
+- **Inside 3.5, the v4 sweep (3.5.1) precedes the token adoption (3.5.2)** for the same reason
+  the limiter shipped shadow before enforcing: you tune against a baseline you trust. Restyling
+  on top of an unswept `border`→`currentColor` regression would bake the regression in.
 
 ---
 
@@ -825,6 +961,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
 | 2 | Observability, DR & ops | ULTRA | Phase 0 | ✅ Done (ops 2026-07-17/18). 2.3 uptime check + alerts + error/shadow log-metrics **live**; 2.4 load-test baseline (Appendix C); 2.5 **PITR + daily backups + TTL policies enabled, restore drill passed** (RTO ≈ 11.5 min, Appendix D); 2.7 **limiter enforcing** (`RATE_LIMIT_ENFORCE=1`, verified) after `TRUSTED_PROXY_HOPS` fix (#80); minInstances=3 (raised from 1 during the C9 relocation). **Deferred/follow-up:** staging (2.6); app-region relocation (finding **C9**). |
 | 3 | **Account lifecycle, data export & governance** | MAX | ✅ go/no-go given 2026-07-18 | 📋 **Planned** — scope revised (soft delete, not erasure). Will close **🟡 partial**: C2a only; **C2b → Phase 4** |
+| **3.5** | **Design system consolidation & desktop layout** | MAX | ✅ desktop intent decided 2026-07-18 | 📋 **Planned — NEXT UP.** D1–D8; 5 stacked PRs. No product gate outstanding; zero auth/storage/routing surface |
 | 4 | Multi-tenancy & scale **+ permanent erasure** | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started — now also owns **C2b** (erasure, super-admin privilege) + **C10** |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | 🚦 go/no-go | ⬜ Not started |
 

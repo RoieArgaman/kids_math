@@ -6,6 +6,42 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.1 — design-token foundation + Tailwind v4 audit, MAX)
+- **Trigger:** Roadmap Phase 3.5, PR 1 of 5. Seeded by the `Full App QA Report` design-QA pass.
+- **What we learned:**
+  1. **`grep -c 'border'` is not an audit.** The plan recorded "56 bare `border`/`divide` call
+     sites at risk from v4's `currentColor` default". The real number is **0**. The 56 came from a
+     crude pattern that matched `border` *inside* `border-slate-200`. A correct audit asks a
+     structural question — *border **width** utility present, border **colour** utility absent on
+     the same element* — which needs a script, not a grep. It returned 2 candidates, both false
+     positives (colour supplied via inline `style` and via a `TIER_BORDER` lookup). **Write the
+     audit as a script whenever the question is "X present but Y absent".**
+  2. **A clean audit is a valid deliverable.** All three suspected v4 regressions (border colour,
+     focus-ring width, shadow rename) were clean — #101 did the migration properly. The temptation
+     is to manufacture changes so the PR looks substantial. Reporting the clean result and
+     shipping only the token foundation is the honest outcome; the roadmap now records D4 as
+     resolved-no-op **with the evidence**, so nobody re-audits it in six months.
+  3. **Name tokens at their current values first, retune later.** Every token added here equals
+     what already ships (`--radius-card: 20px` *is* `.surface`'s radius). That makes 3.5.2 a pure
+     rename with a provably empty visual diff — and any *real* visual change lands in a later,
+     separately-reviewable commit. Retuning while renaming would have made both unreviewable.
+  4. **Verify a config key actually emits CSS.** `borderRadius: { card: "var(--radius-card)" }`
+     looks obviously correct and could still silently emit nothing. Unused utilities aren't in the
+     app build (JIT), so a standalone `@tailwindcss/cli` probe against a scratch HTML file was the
+     only way to prove `rounded-card` / `rounded-panel` / `border-s-rail` generate — before 3.5.2
+     depends on all three.
+  5. **Compute contrast, don't eyeball it.** The existing locked pattern (`opacity-60` on the
+     whole card) puts muted hint text at **2.03:1** — AA needs 4.5. Worth noting the fix isn't
+     just "stop dimming": `--muted` at *full* opacity on the locked surface still only reaches
+     **3.39:1**, so a dedicated `--locked-muted: #6f6880` (**4.89:1**) was required. Dimming the
+     whole card also dims the very text that explains *why* it's locked — dim decoration, not text.
+- **How to reuse next time:** `.is-locked` + `.locked-dim` is the shared treatment; adopt it at
+  the 16 `opacity-50/60` sites in 3.5.2. When restyling a locked card, keep it an **inert
+  `<div>`, never a `<Link>`** (see the 2026-07 grade-B gate bug in this log).
+- **Deviation on record:** the plan said `@theme`; `globals.css:3-6` had already deferred the
+  CSS-first migration deliberately, so tokens went into `:root` with `tailwind.config.ts` staying
+  authoritative. Follow the repo's recorded decision over the plan's default.
+
 ### 2026-07-18 (Phase 3 — account lifecycle, export & governance, MAX) — PR #104
 - **Trigger:** Roadmap Phase 3. Re-scoped at plan time from "ship erasure" to "ship a reversible
   soft delete"; erasure moved to Phase 4 as a super-admin, org-scoped privilege.
