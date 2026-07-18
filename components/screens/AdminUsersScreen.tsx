@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/Alert";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Field } from "@/components/ui/Field";
 import { useStatusMessage } from "@/lib/hooks/useStatusMessage";
 import { useAuth } from "@/lib/auth/context";
@@ -14,6 +15,12 @@ interface UserRecord {
   createdAt: string;
   /** True when the account is currently in a login lockout (server-computed). */
   isLocked?: boolean;
+  /** Absent on every pre-Phase-3 doc, which must read as active. */
+  status?: "active" | "deactivated" | "deleted";
+}
+
+function isDeleted(u: UserRecord): boolean {
+  return u.status === "deleted";
 }
 
 export function AdminUsersScreen() {
@@ -34,6 +41,8 @@ export function AdminUsersScreen() {
   const [adding, setAdding] = useState(false);
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const [changePwUserId, setChangePwUserId] = useState<string | null>(null);
   const [changePwValue, setChangePwValue] = useState("");
@@ -42,6 +51,11 @@ export function AdminUsersScreen() {
   const [changePwError, setChangePwError] = useState("");
 
   const isAdminUser = !authLoading && user?.role === "admin";
+
+  // Deleted accounts are hidden by default so the everyday list stays small — they accumulate
+  // forever until Phase 4 adds real erasure.
+  const deletedCount = users.filter(isDeleted).length;
+  const visibleUsers = showDeleted ? users : users.filter((u) => !isDeleted(u));
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -132,8 +146,30 @@ export function AdminUsersScreen() {
     [fetchUsers, setStatusMsg],
   );
 
+  const handleLifecycle = useCallback(
+    async (userId: string, action: "deactivate" | "restore") => {
+      try {
+        const res = await fetch("/api/admin/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, action }),
+        });
+        if (!res.ok) {
+          setError(action === "restore" ? "שגיאה בשחזור המשתמש" : "שגיאה בהשבתת המשתמש");
+          return;
+        }
+        setStatusMsg(action === "restore" ? "המשתמש שוחזר ✓" : "המשתמש הושבת ✓");
+        await fetchUsers();
+      } catch {
+        setError(action === "restore" ? "שגיאה בשחזור המשתמש" : "שגיאה בהשבתת המשתמש");
+      }
+    },
+    [fetchUsers, setStatusMsg],
+  );
+
   const handleDelete = useCallback(
     async (userId: string) => {
+      setDeleteBusy(true);
       try {
         const res = await fetch("/api/admin/users", {
           method: "DELETE",
@@ -149,6 +185,8 @@ export function AdminUsersScreen() {
         await fetchUsers();
       } catch {
         setError("שגיאה במחיקת המשתמש");
+      } finally {
+        setDeleteBusy(false);
       }
     },
     [fetchUsers, setStatusMsg],
@@ -302,30 +340,86 @@ export function AdminUsersScreen() {
         </form>
       </section>
 
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        busy={deleteBusy}
+        title="למחוק את המשתמש?"
+        destructive
+        confirmLabel="מחק"
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        testIds={{
+          root: testIds.component.adminUsers.deleteDialog(),
+          title: testIds.component.adminUsers.deleteDialogTitle(),
+          confirm: confirmDeleteId
+            ? testIds.component.adminUsers.deleteConfirm(confirmDeleteId)
+            : undefined,
+          cancel: confirmDeleteId
+            ? testIds.component.adminUsers.deleteCancel(confirmDeleteId)
+            : undefined,
+        }}
+      >
+        <p data-testid="km.autogen.adminusersscreen.node.dlgName">
+          <strong data-testid="km.autogen.adminusersscreen.node.dlgUname" dir="ltr">{users.find((u) => u.userId === confirmDeleteId)?.username}</strong>
+        </p>
+        <p data-testid="km.autogen.adminusersscreen.node.dlgBody">
+          הכניסה והסנכרון ייחסמו מיד, וההתקדמות תישמר. אם המכשיר מחובר לרשת, המידע המקומי יימחק ממנו בטעינה הבאה. ניתן לשחזר את החשבון בהמשך.
+        </p>
+      </ConfirmDialog>
+
       {/* User list */}
       <section data-testid="km.autogen.adminusersscreen.node.idx.12" className="surface rounded-2xl p-5">
-        <h2 data-testid="km.autogen.adminusersscreen.node.idx.13" className="mb-4 text-lg font-bold text-slate-700">
-          משתמשים רשומים {!loading && `(${users.length})`}
-        </h2>
+        <div data-testid="km.autogen.adminusersscreen.node.listHeader" className="mb-4 flex items-center justify-between gap-3">
+          <h2 data-testid="km.autogen.adminusersscreen.node.idx.13" className="text-lg font-bold text-slate-700">
+            משתמשים רשומים {!loading && `(${visibleUsers.length})`}
+          </h2>
+          {deletedCount > 0 && (
+            <label
+              data-testid="km.autogen.adminusersscreen.node.showDeletedLabel"
+              className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-500"
+            >
+              <input
+                data-testid={testIds.component.adminUsers.showDeletedToggle()}
+                type="checkbox"
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+              />
+              הצג מחוקים ({deletedCount})
+            </label>
+          )}
+        </div>
 
         {error && <p data-testid="km.autogen.adminusersscreen.node.idx.14" className="mb-3 text-sm font-medium text-red-600">{error}</p>}
 
         {loading ? (
           <p data-testid="km.autogen.adminusersscreen.node.idx.15" className="text-center text-sm text-slate-500">טוען...</p>
-        ) : users.length === 0 ? (
+        ) : visibleUsers.length === 0 ? (
           <p data-testid="km.autogen.adminusersscreen.node.idx.16" className="text-center text-sm text-slate-500">אין משתמשים עדיין</p>
         ) : (
           <ul data-testid="km.autogen.adminusersscreen.node.idx.17" className="divide-y divide-slate-100">
-            {users.map((u) => (
+            {visibleUsers.map((u) => (
               <li
                 key={u.userId}
                 data-testid={testIds.component.adminUsers.userRow(u.userId)}
-                className="py-3"
+                className={isDeleted(u) ? "py-3 opacity-60" : "py-3"}
               >
                 <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="flex items-center justify-between gap-3">
                   <div data-testid="km.autogen.adminusersscreen.node.idx.19" className="min-w-0">
                     <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="flex items-center gap-2 truncate font-semibold text-slate-800" dir="ltr">
                       <span data-testid="km.autogen.adminusersscreen.node.uname" className="truncate">{u.username}</span>
+                      {u.status && u.status !== "active" && (
+                        <span
+                          data-testid={testIds.component.adminUsers.statusBadge(u.userId)}
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            isDeleted(u)
+                              ? "bg-[#fee2e2] text-[#991b1b]"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                          dir="rtl"
+                        >
+                          {isDeleted(u) ? "מחוק" : "מושבת"}
+                        </span>
+                      )}
                       {u.isLocked && (
                         <span
                           data-testid={testIds.component.adminUsers.lockedBadge(u.userId)}
@@ -341,22 +435,23 @@ export function AdminUsersScreen() {
                     </p>
                   </div>
 
-                  {confirmDeleteId === u.userId ? (
+                  {isDeleted(u) ? (
                     <div data-testid="km.autogen.adminusersscreen.node.idx.22" className="flex shrink-0 gap-2">
                       <button
-                        data-testid={testIds.component.adminUsers.deleteConfirm(u.userId)}
-                        onClick={() => handleDelete(u.userId)}
-                        className="rounded-lg bg-[#dc2626] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b91c1c]"
+                        data-testid={testIds.component.adminUsers.restoreButton(u.userId)}
+                        onClick={() => handleLifecycle(u.userId, "restore")}
+                        className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1.5 text-xs font-semibold text-[#166534] hover:bg-[#dcfce7]"
                       >
-                        אשר מחיקה
+                        שחזר
                       </button>
-                      <button
-                        data-testid={testIds.component.adminUsers.deleteCancel(u.userId)}
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      <a
+                        data-testid={testIds.component.adminUsers.exportButton(u.userId)}
+                        href={`/api/admin/users/export?userId=${encodeURIComponent(u.userId)}`}
+                        download
+                        className="rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
                       >
-                        ביטול
-                      </button>
+                        ייצוא נתונים
+                      </a>
                     </div>
                   ) : changePwUserId !== u.userId ? (
                     <div data-testid="km.autogen.adminusersscreen.node.idx.23" className="flex shrink-0 gap-2">
@@ -372,9 +467,34 @@ export function AdminUsersScreen() {
                       <button
                         data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
                         onClick={() => openChangePw(u.userId)}
-                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[#6d28d9] hover:bg-[#f3effb]"
+                        disabled={u.status === "deactivated"}
+                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[#6d28d9] hover:bg-[#f3effb] disabled:opacity-40"
                       >
                         שנה סיסמה
+                      </button>
+                      {/* Guardian data export (Phase 3.2) — admin-operated. A plain download link:
+                          the cookie rides along and the browser saves the file, no JS needed. */}
+                      <a
+                        data-testid={testIds.component.adminUsers.exportButton(u.userId)}
+                        href={`/api/admin/users/export?userId=${encodeURIComponent(u.userId)}`}
+                        download
+                        className="rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
+                      >
+                        ייצוא נתונים
+                      </a>
+                      <button
+                        data-testid={
+                          u.status === "deactivated"
+                            ? testIds.component.adminUsers.restoreButton(u.userId)
+                            : testIds.component.adminUsers.deactivateButton(u.userId)
+                        }
+                        onClick={() =>
+                          handleLifecycle(u.userId, u.status === "deactivated" ? "restore" : "deactivate")
+                        }
+                        disabled={u.userId === user?.userId}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        {u.status === "deactivated" ? "הפעל מחדש" : "השבת"}
                       </button>
                       <button
                         data-testid={testIds.component.adminUsers.deleteButton(u.userId)}

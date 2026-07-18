@@ -201,8 +201,27 @@ describe("/api/admin/users", () => {
     });
   });
 
+  // Production reality, not a fake artifact: `orderBy("createdAt")` omits docs lacking the field,
+  // so such a user would be unmanageable from the admin UI. Every creation path writes it today
+  // (`POST /api/admin/users`, `scripts/create-user.mjs`); this pins that they must keep doing so.
+  it("GET omits a user doc with no createdAt (orderBy excludes missing fields)", async () => {
+    holder.db = new FakeFirestore({
+      seed: {
+        users: {
+          admin1: { role: "admin", createdAt: "2024-01-01" },
+          legacy: { username: "Old", usernameLower: "old", role: "user" },
+        },
+      },
+    });
+    const res = await listUsers(req("GET", { token: adminToken }));
+    const ids = ((await res.json()) as Array<{ userId: string }>).map((u) => u.userId);
+    expect(ids).toEqual(["admin1"]);
+  });
+
   describe("DELETE", () => {
-    it("deletes a user and cascades their progress doc", async () => {
+    // Delete is SOFT since Phase 3: the doc and the progress bundle survive so a restore returns
+    // the child's work intact. This test previously asserted both were destroyed.
+    it("marks the user deleted and RETAINS their progress doc", async () => {
       const db = new FakeFirestore({
         seed: {
           users: { admin1: { role: "admin" }, u2: { role: "user" } },
@@ -212,8 +231,38 @@ describe("/api/admin/users", () => {
       holder.db = db;
       const res = await deleteUser(req("DELETE", { token: adminToken, body: { userId: "u2" } }));
       expect(res.status).toBe(200);
-      expect(db.docs("users").find((d) => d.id === "u2")).toBeUndefined();
-      expect(db.docs("user_progress").find((d) => d.id === "u2")).toBeUndefined();
+      expect(db.docs("users").find((d) => d.id === "u2")?.data).toMatchObject({ status: "deleted" });
+      expect(db.docs("user_progress").find((d) => d.id === "u2")).toBeDefined();
+    });
+
+    it("revokes live sessions by bumping tokenVersion on delete", async () => {
+      const db = new FakeFirestore({
+        seed: { users: { admin1: { role: "admin" }, u2: { role: "user", tokenVersion: 3 } } },
+      });
+      holder.db = db;
+      await deleteUser(req("DELETE", { token: adminToken, body: { userId: "u2" } }));
+      expect(db.docs("users").find((d) => d.id === "u2")?.data.tokenVersion).toBe(4);
+    });
+
+    it("returns 404 for an unknown user", async () => {
+      const db = new FakeFirestore({ seed: { users: { admin1: { role: "admin" } } } });
+      holder.db = db;
+      const res = await deleteUser(req("DELETE", { token: adminToken, body: { userId: "nope" } }));
+      expect(res.status).toBe(404);
+    });
+
+    // The caller is provably an active admin and cannot act on themselves, so deleting anyone
+    // else always leaves an active admin behind. An explicit last-admin guard was written and
+    // then removed as unreachable; this pins the invariant that made it unnecessary.
+    it("leaves the acting admin active when deleting the only other admin", async () => {
+      const db = new FakeFirestore({
+        seed: { users: { admin1: { role: "admin" }, other: { role: "admin" } } },
+      });
+      holder.db = db;
+      expect(
+        (await deleteUser(req("DELETE", { token: adminToken, body: { userId: "other" } }))).status,
+      ).toBe(200);
+      expect(db.docs("users").find((d) => d.id === "admin1")?.data.status).toBeUndefined();
     });
 
     it("refuses to let an admin delete their own account → 400", async () => {
@@ -230,6 +279,130 @@ describe("/api/admin/users", () => {
 
     it("returns 400 for a malformed body", async () => {
       expect((await deleteUser(req("DELETE", { token: adminToken, body: {} }))).status).toBe(400);
+    });
+  });
+
+  describe("lifecycle actions", () => {
+    function lifecycleDb() {
+      return new FakeFirestore({
+        seed: { users: { admin1: { role: "admin" }, u2: { role: "user", usernameLower: "dana" } } },
+      });
+    }
+
+    it("deactivate sets status and bumps tokenVersion", async () => {
+      const db = lifecycleDb();
+      holder.db = db;
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", action: "deactivate" } }),
+      );
+      expect(res.status).toBe(200);
+      expect(db.docs("users").find((d) => d.id === "u2")?.data).toMatchObject({
+        status: "deactivated",
+        tokenVersion: 1,
+      });
+    });
+
+    it("restore returns the account to active and bumps again", async () => {
+      const db = new FakeFirestore({
+        seed: {
+          users: { admin1: { role: "admin" }, u2: { role: "user", status: "deleted", tokenVersion: 5 } },
+        },
+      });
+      holder.db = db;
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", action: "restore" } }),
+      );
+      expect(res.status).toBe(200);
+      // Bumping on restore too keeps any token minted before the deletion dead.
+      expect(db.docs("users").find((d) => d.id === "u2")?.data).toMatchObject({
+        status: "active",
+        tokenVersion: 6,
+      });
+    });
+
+    it("refuses to change your own status → 400", async () => {
+      holder.db = lifecycleDb();
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: ADMIN.userId, action: "deactivate" } }),
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("refuses a password reset on a non-active account → 409", async () => {
+      holder.db = new FakeFirestore({
+        seed: { users: { admin1: { role: "admin" }, u2: { role: "user", status: "deleted" } } },
+      });
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", password: "pw123456" } }),
+      );
+      expect(res.status).toBe(409);
+    });
+
+    it("records deactivate and restore audit rows", async () => {
+      const db = lifecycleDb();
+      holder.db = db;
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", action: "deactivate" } }));
+      await resetPassword(req("PATCH", { token: adminToken, body: { userId: "u2", action: "restore" } }));
+      expect(db.docs("audit_log").map((d) => d.data.action)).toEqual([
+        "user.deactivate",
+        "user.restore",
+      ]);
+    });
+
+    // Two admins deactivating each other at the same moment both pass their pre-flight checks.
+    // The transaction re-reads the ACTOR so the loser sees the other's write; without that the
+    // two transactions touch disjoint docs, neither conflicts, and both commit — leaving zero
+    // active admins and no in-app way back.
+    it("refuses the transition if the actor was deactivated mid-transaction → 409", async () => {
+      // admin1 is ACTIVE at requireAdmin time — otherwise the request 403s before reaching the
+      // transaction, which is a different (already-covered) path.
+      let db: FakeFirestore;
+      db = new FakeFirestore({
+        seed: {
+          users: { admin1: { role: "admin" }, u2: { role: "user" } },
+        },
+        // The competing admin's write lands between our read of the target and our commit.
+        onTransactionRead: async (ref) => {
+          if (ref.id === "u2") {
+            await db.collection("users").doc("admin1").update({ status: "deactivated" });
+          }
+        },
+      });
+      holder.db = db;
+
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", action: "deactivate" } }),
+      );
+      expect(res.status).toBe(409);
+      expect(db.docs("users").find((d) => d.id === "u2")?.data.status).toBeUndefined();
+    });
+
+    it("rejects a userId containing a Firestore path separator → 400", async () => {
+      // "a/b/c" is a valid document PATH, so an unconstrained id escapes the users collection
+      // and also sidesteps the `userId === admin.userId` self-guard by string inequality.
+      holder.db = lifecycleDb();
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2/sub/x", action: "deactivate" } }),
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it("refuses to deactivate an already-deleted account → 409", async () => {
+      holder.db = new FakeFirestore({
+        seed: { users: { admin1: { role: "admin" }, u2: { role: "user", status: "deleted" } } },
+      });
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "u2", action: "deactivate" } }),
+      );
+      expect(res.status).toBe(409);
+    });
+
+    it("returns 404 when the target does not exist", async () => {
+      holder.db = lifecycleDb();
+      const res = await resetPassword(
+        req("PATCH", { token: adminToken, body: { userId: "ghost", action: "deactivate" } }),
+      );
+      expect(res.status).toBe(404);
     });
   });
 

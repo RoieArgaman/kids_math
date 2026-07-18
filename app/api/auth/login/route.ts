@@ -6,6 +6,7 @@ import { getClientIp } from "@/lib/security/clientIp";
 import { enforceRateLimit, rateLimitedResponse } from "@/lib/security/rateLimit";
 import { isBodyTooLarge, LOGIN_MAX_BODY_BYTES } from "@/lib/security/bodyLimit";
 import { loginSchema } from "@/lib/security/schemas";
+import { isDocActive } from "@/lib/auth/accountStatus";
 import {
   checkLockout,
   clearLockout,
@@ -73,7 +74,11 @@ export async function POST(request: NextRequest) {
     const passwordHash = (userData?.passwordHash as string | undefined) ?? DUMMY_PASSWORD_HASH;
     const passwordMatch = await bcrypt.compare(password, passwordHash);
 
-    if (!userDoc || !userData || !passwordMatch) {
+    // Deactivated/deleted accounts fail through the SAME branch as a wrong password: after the
+    // bcrypt work (so timing is unchanged), recording the attempt (so lockout behaves identically
+    // and a deactivated account can't be identified by never locking out), and before clearLockout
+    // (so a correct password on a deactivated account can't reset the counter).
+    if (!userDoc || !userData || !passwordMatch || !isDocActive(userData)) {
       // Count the failure (unknown usernames too — anti-enumeration). If this tips the
       // account into a lock, return the uniform locked response; else a generic 401.
       const status = await recordFailedAttempt(usernameLower);

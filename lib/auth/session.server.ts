@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { getFirestore } from "@/lib/firestore/admin";
 import { SESSION_COOKIE_NAME, verifyToken } from "./jwt.server";
+import { isDocActive } from "./accountStatus";
 import type { SessionClaims } from "./types";
 
 /**
@@ -30,15 +31,23 @@ export async function verifySession(
   const claims = await verifyToken(token);
   if (!claims) return null;
 
-  if (!requireVersionCheck) return claims;
-
+  // Read unconditionally, even when requireVersionCheck is false: logout-all opts out of the
+  // version check, so gating status on that branch would let a soft-deleted account authenticate
+  // there and bump its own tokenVersion indefinitely.
   const db = getFirestore();
   const doc = await db.collection("users").doc(claims.userId).get();
-  // A deleted account ⇒ no doc ⇒ reject. Absent field ⇒ version 0.
+  // Soft-deleted accounts still have a doc — absence no longer signals deletion, `status` does.
   if (!doc.exists) return null;
-  const storedVersion = doc.data()?.tokenVersion;
-  const currentVersion = typeof storedVersion === "number" ? storedVersion : 0;
-  if (claims.tokenVersion !== currentVersion) return null;
+  const data = doc.data();
+
+  if (!isDocActive(data)) return null;
+
+  if (requireVersionCheck) {
+    // Absent field ⇒ version 0, so an untouched live 30-day session stays valid.
+    const storedVersion = data?.tokenVersion;
+    const currentVersion = typeof storedVersion === "number" ? storedVersion : 0;
+    if (claims.tokenVersion !== currentVersion) return null;
+  }
 
   return claims;
 }

@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
       if (!snap.exists) return;
       const current = snap.data()?.tokenVersion;
       const nextVersion = (typeof current === "number" ? current : 0) + 1;
-      tx.set(ref, { ...snap.data(), tokenVersion: nextVersion });
+      // Field-masked, not a whole-doc set: spreading the snapshot would write back a stale
+      // `status` and resurrect an account deleted between this read and the commit.
+      tx.update(ref, { tokenVersion: nextVersion });
     });
 
     const res = NextResponse.json({ ok: true });

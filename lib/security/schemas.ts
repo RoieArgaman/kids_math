@@ -1,6 +1,13 @@
 import { z } from "zod";
 
 /**
+ * Firestore document id. Must exclude "/" — a slashed value is a valid *path* to a nested doc,
+ * which both escapes the `users` collection and defeats the `userId === admin.userId` self-guards
+ * by string inequality.
+ */
+export const userIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
+
+/**
  * Central request-body schemas (roadmap Phase 1 / S8).
  *
  * Replaces the hand-rolled `typeof` guards scattered across the route handlers with one
@@ -34,11 +41,11 @@ export const adminCreateSchema = z.object({
  */
 export const adminPatchSchema = z.union([
   z.object({
-    userId: z.string(),
-    action: z.literal("unlock"),
+    userId: userIdSchema,
+    action: z.enum(["unlock", "deactivate", "restore"]),
   }),
   z.object({
-    userId: z.string(),
+    userId: userIdSchema,
     password: z.string(),
     overridePolicy: z.boolean().optional(),
   }),
@@ -46,7 +53,7 @@ export const adminPatchSchema = z.union([
 
 /** DELETE /api/admin/users */
 export const adminDeleteSchema = z.object({
-  userId: z.string(),
+  userId: userIdSchema,
 });
 
 /**

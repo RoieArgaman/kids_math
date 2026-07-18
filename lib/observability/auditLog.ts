@@ -20,8 +20,15 @@ import { getFirestore } from "@/lib/firestore/admin";
 export type AuditAction =
   | "user.create"
   | "user.reset"
+  // Lifecycle transitions. `user.delete` is a SOFT delete since Phase 3 — the doc is retained
+  // and `user.restore` reverses it. True erasure is a separate Phase 4 action.
   | "user.delete"
-  | "user.unlock";
+  | "user.deactivate"
+  | "user.restore"
+  | "user.unlock"
+  // Phase 3.2 — admin-operated guardian data export. Not a mutation, but the response egresses a
+  // child's full record, so every fulfilment leaves a row naming the actor and the subject.
+  | "user.export";
 
 export interface AuditEntry {
   /** The admin performing the action. */

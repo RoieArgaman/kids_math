@@ -59,12 +59,22 @@ export async function apiLogoutAll(): Promise<void> {
   }
 }
 
-export async function apiMe(): Promise<AuthUser | null> {
+/**
+ * `unauthorized` and `error` must stay distinct: the caller tears down local learner data on a
+ * revoked session, and collapsing them would wipe a logged-in child's work on a network blip.
+ */
+export type MeResult =
+  | { status: "ok"; user: AuthUser }
+  | { status: "unauthorized" }
+  | { status: "error" };
+
+export async function apiMeResult(): Promise<MeResult> {
   try {
     const res = await fetch("/api/auth/me");
-    if (!res.ok) return null;
-    return (await res.json()) as AuthUser;
+    if (res.ok) return { status: "ok", user: (await res.json()) as AuthUser };
+    if (res.status === 401) return { status: "unauthorized" };
+    return { status: "error" };
   } catch {
-    return null;
+    return { status: "error" };
   }
 }
