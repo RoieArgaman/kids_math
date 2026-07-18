@@ -38,10 +38,18 @@ describe("verifySession (S4 revocation)", () => {
     expect(await verifySession(new NextRequest("https://kids-math.test/x"))).toBeNull();
   });
 
-  it("skips the DB when requireVersionCheck is false (pure JWT)", async () => {
-    holder.db = new FakeFirestore({ throwOnAccess: new Error("should not be read") });
+  // Previously asserted the opposite (skip the DB when requireVersionCheck is false). That
+  // shortcut let a soft-deleted account authenticate via logout-all and bump its own
+  // tokenVersion. Don't restore it without re-solving that.
+  it("reads the DB even when requireVersionCheck is false (status must always be enforced)", async () => {
+    holder.db = seed({ username: "Dana", role: "user" });
     const claims = await verifySession(await reqWithToken(0), { requireVersionCheck: false });
     expect(claims).toEqual({ ...USER, tokenVersion: 0 });
+  });
+
+  it("rejects a soft-deleted account even when requireVersionCheck is false", async () => {
+    holder.db = seed({ username: "Dana", role: "user", status: "deleted" });
+    expect(await verifySession(await reqWithToken(0), { requireVersionCheck: false })).toBeNull();
   });
 
   it("token v0 + user doc with NO version field ⇒ valid (backward-compat)", async () => {

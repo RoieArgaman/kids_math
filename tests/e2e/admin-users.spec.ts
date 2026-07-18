@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import { mockAuthApi, TEST_ADMIN } from "./testUtils";
 import { testIds } from "@/lib/testIds";
 
-const MOCK_USERS = [
+// No `status` field — these are shaped like pre-Phase-3 docs, which must render as active.
+const MOCK_USERS: Array<Record<string, unknown>> = [
   { userId: "user-1", username: "alice", role: "user", createdAt: "2024-01-01T00:00:00.000Z" },
   { userId: "user-2", username: "bob", role: "admin", createdAt: "2024-01-02T00:00:00.000Z" },
 ];
@@ -25,12 +26,19 @@ async function mockAdminUsersApi(page: Parameters<typeof mockAuthApi>[0]) {
     }
 
     if (method === "PATCH") {
+      const body = route.request().postDataJSON() as { userId: string; action?: string };
+      if (body.action === "deactivate" || body.action === "restore") {
+        const status = body.action === "restore" ? "active" : "deactivated";
+        users = users.map((u) => (u.userId === body.userId ? { ...u, status } : u));
+      }
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
     }
 
+    // Soft delete: the row is RETAINED with status "deleted" so restore is reachable. Mirrors
+    // the real handler — modelling a hard delete here would let the UI drift from the server.
     if (method === "DELETE") {
       const body = route.request().postDataJSON() as { userId: string };
-      users = users.filter((u) => u.userId !== body.userId);
+      users = users.map((u) => (u.userId === body.userId ? { ...u, status: "deleted" } : u));
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
     }
 
@@ -116,5 +124,42 @@ test.describe("Admin Users screen", () => {
     await expect(noAuthPage).toHaveURL("/admin/users");
     await expect(noAuthPage.getByText("אין הרשאה לעמוד זה")).toBeVisible();
     await noAuthPage.close();
+  });
+
+  test("delete is soft: confirm dialog names the user, row becomes restorable", async ({ page }) => {
+    const tid = testIds.component.adminUsers;
+
+    await page.getByTestId(tid.deleteButton("user-1")).click();
+
+    const dialog = page.getByTestId(tid.deleteDialog());
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("alice");
+
+    // Cancel must not delete.
+    await page.getByTestId(tid.deleteCancel("user-1")).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByTestId(tid.userRow("user-1"))).toBeVisible();
+
+    await page.getByTestId(tid.deleteButton("user-1")).click();
+    await page.getByTestId(tid.deleteConfirm("user-1")).click();
+
+    // Hidden from the default list, but retained — revealed by the toggle, and restorable.
+    await expect(page.getByTestId(tid.userRow("user-1"))).toBeHidden();
+    await page.getByTestId(tid.showDeletedToggle()).check();
+    await expect(page.getByTestId(tid.userRow("user-1"))).toBeVisible();
+    await expect(page.getByTestId(tid.statusBadge("user-1"))).toBeVisible();
+
+    await page.getByTestId(tid.restoreButton("user-1")).click();
+    await expect(page.getByTestId(tid.statusBadge("user-1"))).toBeHidden();
+  });
+
+  test("deactivate marks the row and offers reactivation", async ({ page }) => {
+    const tid = testIds.component.adminUsers;
+
+    await page.getByTestId(tid.deactivateButton("user-1")).click();
+    await expect(page.getByTestId(tid.statusBadge("user-1"))).toBeVisible();
+
+    await page.getByTestId(tid.restoreButton("user-1")).click();
+    await expect(page.getByTestId(tid.statusBadge("user-1"))).toBeHidden();
   });
 });

@@ -91,6 +91,11 @@ export default defineConfig({
         "lib/badges/**": { lines: 100, branches: 97, functions: 100, statements: 100 },
         "lib/streak/**": { lines: 98, branches: 82, functions: 100, statements: 88 },
         "lib/user-data/**": { lines: 84, branches: 73, functions: 92, statements: 80 },
+        // Per-file, not `lib/auth/**`: that glob averages in api.ts (client fetch wrapper, E2E-
+        // only) and context.tsx, dragging the aggregate to ~78 and forcing a toothless threshold.
+        // These two are the authorization boundary and are fully covered.
+        "lib/auth/session.server.ts": { lines: 100, branches: 100, functions: 100, statements: 100 },
+        "lib/auth/accountStatus.ts": { lines: 100, branches: 100, functions: 100, statements: 100 },
       },
     },
   },

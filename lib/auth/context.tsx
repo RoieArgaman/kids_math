@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthUser } from "./types";
-import { apiLogin, apiLogout, apiLogoutAll, apiMe, type LoginResult } from "./api";
+import { apiLogin, apiLogout, apiLogoutAll, apiMeResult, type LoginResult } from "./api";
 import {
   bumpAuthEpoch,
   getAuthEpoch,
@@ -109,17 +109,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Shared local teardown for both logout and logout-everywhere: identity boundary first
+  // (bump epoch so any in-flight reconcile/sync aborts its hydrate), disarm pushes, then wipe
+  // this device to zero SYNCHRONOUSLY so no async pull interleaves a hydrate before the clear.
+  const teardownLocalSession = useCallback(() => {
+    bumpAuthEpoch();
+    setSyncPrimed(false);
+    unregisterSyncCallback();
+    clearLocalProgress();
+    clearReconcileGuards();
+    clearLocalOwner();
+    setUser(null);
+  }, []);
+
   // On mount: restore session if cookie exists, then reconcile against the server.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const me = await apiMe();
-        if (!me || cancelled) return;
-        const proceed = await reconcileForUser(me.userId);
+        const me = await apiMeResult();
+        if (cancelled) return;
+        if (me.status !== "ok") {
+          // Only a confirmed 401 on a device that WAS signed in means revocation. An anonymous
+          // visitor has no owner marker, and a network error is indistinguishable from one at
+          // the status level — clearing on either would destroy real learner data.
+          if (me.status === "unauthorized" && getLocalOwner()) teardownLocalSession();
+          return;
+        }
+        const proceed = await reconcileForUser(me.user.userId);
         // setUser is the LAST step: useSyncGate is gated on `isLoggedIn`, so it
         // stays disarmed until reconciliation is complete (no mid-flight push race).
-        if (!cancelled && proceed) setUser(me);
+        if (!cancelled && proceed) setUser(me.user);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -127,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [teardownLocalSession]);
 
   const login = useCallback(
     async (username: string, password: string): Promise<LoginResult> => {
@@ -143,19 +163,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
-
-  // Shared local teardown for both logout and logout-everywhere: identity boundary first
-  // (bump epoch so any in-flight reconcile/sync aborts its hydrate), disarm pushes, then wipe
-  // this device to zero SYNCHRONOUSLY so no async pull interleaves a hydrate before the clear.
-  const teardownLocalSession = useCallback(() => {
-    bumpAuthEpoch();
-    setSyncPrimed(false);
-    unregisterSyncCallback();
-    clearLocalProgress();
-    clearReconcileGuards();
-    clearLocalOwner();
-    setUser(null);
-  }, []);
 
   const logout = useCallback(async () => {
     teardownLocalSession();

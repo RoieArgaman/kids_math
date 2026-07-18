@@ -139,6 +139,65 @@ describe("POST /api/auth/login", () => {
     spy.mockRestore();
   });
 
+  describe("non-active accounts are indistinguishable from a wrong password", () => {
+    function seedWithStatus(status: string): FakeFirestore {
+      return new FakeFirestore({
+        seed: {
+          users: {
+            u1: { username: "Dana", usernameLower: "dana", passwordHash, role: "user", status },
+          },
+        },
+      });
+    }
+
+    it.each([["deactivated"], ["deleted"]])("refuses a %s account with the right password", async (status) => {
+      holder.db = seedWithStatus(status);
+      expect((await login(req({ username: "dana", password: PASSWORD }))).status).toBe(401);
+    });
+
+    // The body carries `attemptsRemaining`, so a short-circuit that skipped recordFailedAttempt
+    // would be detectable by bytes alone — no timing needed.
+    it("returns a byte-identical body to the unknown-user 401", async () => {
+      holder.db = seedWithStatus("deleted");
+      const deleted = await (await login(req({ username: "dana", password: PASSWORD }))).text();
+      holder.db = seedWithUser();
+      const unknown = await (await login(req({ username: "ghost", password: PASSWORD }))).text();
+      expect(deleted).toBe(unknown);
+    });
+
+    it("still records the failure, so the account can lock out like any other", async () => {
+      const db = seedWithStatus("deleted");
+      holder.db = db;
+      await login(req({ username: "dana", password: PASSWORD }));
+      // A non-active account that never accumulated failures would never lock, which is itself
+      // an enumeration oracle.
+      expect(db.docs("account_lockouts").length).toBe(1);
+    });
+
+    it("does not clear an existing lockout", async () => {
+      const db = seedWithStatus("deleted");
+      holder.db = db;
+      const key = createHash("sha256").update("dana").digest("hex");
+      await db.collection("account_lockouts").doc(key).set({ failures: 3, lockedUntil: null });
+      await login(req({ username: "dana", password: PASSWORD }));
+      expect(db.docs("account_lockouts").find((d) => d.id === key)?.data.failures).toBe(4);
+    });
+
+    it("compares against the real hash, not the dummy (no timing tell)", async () => {
+      holder.db = seedWithStatus("deleted");
+      const spy = vi.spyOn(bcrypt, "compare");
+      await login(req({ username: "dana", password: PASSWORD }));
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy.mock.calls[0][1]).toBe(passwordHash);
+      spy.mockRestore();
+    });
+
+    it("lets a legacy account with no status field log in", async () => {
+      holder.db = seedWithUser();
+      expect((await login(req({ username: "dana", password: PASSWORD }))).status).toBe(200);
+    });
+  });
+
   // Roadmap S5: reject oversized bodies before parsing.
   it("returns 413 for an over-cap login body", async () => {
     const res = await login(req({ username: "dana", password: PASSWORD }, { contentLength: 5000 }));

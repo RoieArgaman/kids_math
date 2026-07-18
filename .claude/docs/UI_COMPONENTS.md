@@ -204,6 +204,33 @@ import { Alert } from "@/components/ui/Alert";
 </Alert>
 ```
 
+### `ConfirmDialog` — `components/ui/ConfirmDialog.tsx`
+Modal confirmation for a destructive or irreversible action (`role="alertdialog"`, focus-trapped,
+Escape + backdrop dismiss, RTL). Owns no open/closed state — the caller does. Destructive variants
+autofocus **Cancel**, so a stray Enter or a double-tap landing on the freshly-mounted dialog cannot
+confirm. Name the affected subject in the body so the action is never ambiguous.
+
+Props: `open`, `title`, `children`, `confirmLabel` (all required), `cancelLabel?` (default
+`"ביטול"`), `destructive?`, `busy?`, `onConfirm`, `onCancel`,
+`testIds?: { root?, confirm?, cancel?, title? }`.
+
+```tsx
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+
+<ConfirmDialog
+  open={pendingUser !== null}
+  title="מחיקת משתמש"
+  confirmLabel="מחיקה"
+  destructive
+  busy={isDeleting}
+  onConfirm={handleDelete}
+  onCancel={() => setPendingUser(null)}
+  testIds={{ root: testIds.users.deleteDialog() }}
+>
+  האם למחוק את {pendingUser?.username}?
+</ConfirmDialog>
+```
+
 ### `Chip` — `components/ui/Chip.tsx` (pre-existing)
 Pill badge. Props: `children`, `tone?: "neutral" | "success" | "warning" | "danger" |
 "info"` (default `neutral`), `className?`, `data-testid?`, `aria-label?`.

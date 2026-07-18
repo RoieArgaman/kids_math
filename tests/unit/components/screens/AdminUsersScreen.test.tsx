@@ -36,6 +36,98 @@ describe("AdminUsersScreen", () => {
     expect(screen.getByTestId(testIds.component.adminUsers.root())).toHaveTextContent("אין הרשאה");
   });
 
+  describe("account lifecycle", () => {
+    const ACTIVE = { userId: "u2", username: "dana", role: "user", createdAt: "2026-01-01" };
+    const DELETED = { ...ACTIVE, userId: "u3", username: "noa", status: "deleted" };
+
+    it("hides deleted users until the toggle is checked", async () => {
+      asAdmin();
+      mockFetch([ACTIVE, DELETED]);
+      render(<AdminUsersScreen />);
+
+      await waitFor(() => expect(screen.getByTestId(testIds.component.adminUsers.userRow("u2"))).toBeInTheDocument());
+      expect(screen.queryByTestId(testIds.component.adminUsers.userRow("u3"))).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.showDeletedToggle()));
+      expect(screen.getByTestId(testIds.component.adminUsers.userRow("u3"))).toBeInTheDocument();
+    });
+
+    it("treats a legacy user with no status field as active", async () => {
+      asAdmin();
+      mockFetch([ACTIVE]);
+      render(<AdminUsersScreen />);
+      await waitFor(() => expect(screen.getByTestId(testIds.component.adminUsers.userRow("u2"))).toBeInTheDocument());
+      expect(screen.queryByTestId(testIds.component.adminUsers.statusBadge("u2"))).not.toBeInTheDocument();
+      // No deleted accounts ⇒ no toggle to clutter the list.
+      expect(screen.queryByTestId(testIds.component.adminUsers.showDeletedToggle())).not.toBeInTheDocument();
+    });
+
+    it("names the user in the delete dialog and only deletes on confirm", async () => {
+      asAdmin();
+      const fetchMock = mockFetch([ACTIVE]);
+      render(<AdminUsersScreen />);
+      await waitFor(() => expect(screen.getByTestId(testIds.component.adminUsers.userRow("u2"))).toBeInTheDocument());
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.deleteButton("u2")));
+      expect(screen.getByTestId(testIds.component.adminUsers.deleteDialog())).toHaveTextContent("dana");
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.deleteCancel("u2")));
+      expect(fetchMock.mock.calls.some(([, o]) => (o as { method?: string })?.method === "DELETE")).toBe(false);
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.deleteButton("u2")));
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.deleteConfirm("u2")));
+      await waitFor(() =>
+        expect(fetchMock.mock.calls.some(([, o]) => (o as { method?: string })?.method === "DELETE")).toBe(true),
+      );
+    });
+
+    it("offers restore on a deleted user and sends the restore action", async () => {
+      asAdmin();
+      const fetchMock = mockFetch([DELETED]);
+      render(<AdminUsersScreen />);
+      await userEvent.click(await screen.findByTestId(testIds.component.adminUsers.showDeletedToggle()));
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.restoreButton("u3")));
+      await waitFor(() => {
+        const patch = fetchMock.mock.calls.find(([, o]) => (o as { method?: string })?.method === "PATCH");
+        expect(JSON.parse((patch?.[1] as { body: string }).body)).toMatchObject({
+          userId: "u3",
+          action: "restore",
+        });
+      });
+    });
+
+    // The common guardian request is about a child who has already been deleted, so export has
+    // to be reachable from a deleted row too — not just an active one.
+    it("offers export on both active and deleted rows", async () => {
+      asAdmin();
+      mockFetch([ACTIVE, DELETED]);
+      render(<AdminUsersScreen />);
+
+      expect(await screen.findByTestId(testIds.component.adminUsers.exportButton("u2"))).toHaveAttribute(
+        "href",
+        "/api/admin/users/export?userId=u2",
+      );
+
+      await userEvent.click(screen.getByTestId(testIds.component.adminUsers.showDeletedToggle()));
+      expect(screen.getByTestId(testIds.component.adminUsers.exportButton("u3"))).toBeInTheDocument();
+    });
+
+    it("sends deactivate for an active user", async () => {
+      asAdmin();
+      const fetchMock = mockFetch([ACTIVE]);
+      render(<AdminUsersScreen />);
+      await userEvent.click(await screen.findByTestId(testIds.component.adminUsers.deactivateButton("u2")));
+      await waitFor(() => {
+        const patch = fetchMock.mock.calls.find(([, o]) => (o as { method?: string })?.method === "PATCH");
+        expect(JSON.parse((patch?.[1] as { body: string }).body)).toMatchObject({
+          userId: "u2",
+          action: "deactivate",
+        });
+      });
+    });
+  });
+
   it("shows the management form + 'allow simple password' override for an admin", () => {
     asAdmin();
     mockFetch([]);

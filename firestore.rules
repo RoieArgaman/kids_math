@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// =============================================================================
+// Firestore Security Rules — DENY ALL (defense-in-depth)
+// Roadmap Phase 3.4, finding S10.
+// =============================================================================
+//
+// THREAT MODEL
+// ------------
+// This app reaches Firestore *exclusively* through the Firebase Admin SDK on the
+// server (`lib/firestore/admin.ts`). There is no client Firebase SDK anywhere in
+// the codebase — every read/write goes through our own Next.js route handlers,
+// which enforce their own JWT auth and authorization.
+//
+// The Admin SDK runs with service-account privileges and therefore BYPASSES
+// security rules entirely. That means these rules are inert for all of our
+// current traffic — and that is precisely the point. They exist so that the
+// *default* posture of this database is closed, not open:
+//
+//   * If someone later adds a client Firebase SDK (`firebase/firestore`) — by
+//     accident, by copy-paste, or via a dependency — the browser would talk to
+//     Firestore directly with no server-side auth in front of it. These rules
+//     make that fail closed instead of silently exposing learner data.
+//   * If a Firestore API key or project id leaks, it grants nothing on its own:
+//     unauthenticated and end-user-authenticated clients are denied everywhere.
+//
+// Collections currently in use (all server-side only, all covered by the
+// catch-all below): users, user_progress, audit_log, rate_limits,
+// account_lockouts, _health.
+//
+// CHANGING THIS FILE
+// ------------------
+// If a legitimate need for direct client access ever appears, do NOT loosen the
+// catch-all. Add a narrow, explicitly-scoped `match` block above it with per-
+// document ownership checks, and treat it as a MAX-mode security change.
+//
+// DEPLOYMENT
+// ----------
+// Deployed automatically by `.github/workflows/deploy.yml` (a dedicated step after
+// the App Hosting deploy) and by `./deploy.sh`. To ship rules on their own:
+//
+//     firebase deploy --only firestore:rules --project kids-learing-hub
+//
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Catch-all: every document, at every nesting depth, in every collection.
+    // No client — authenticated or not — may read or write anything.
+    // Server-side Admin SDK access is unaffected (it bypasses rules).
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -10,14 +10,14 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-const apiMe = vi.fn();
+const apiMeResult = vi.fn();
 const apiLogin = vi.fn();
 const apiLogout = vi.fn(async () => {
   calls.push("apiLogout");
 });
 
 vi.mock("@/lib/auth/api", () => ({
-  apiMe: (...args: unknown[]) => apiMe(...args),
+  apiMeResult: (...args: unknown[]) => apiMeResult(...args),
   apiLogin: (...args: unknown[]) => apiLogin(...args),
   apiLogout: (...args: unknown[]) => apiLogout(...args),
 }));
@@ -105,7 +105,7 @@ beforeEach(() => {
   calls.length = 0;
   epoch = 0;
   primed = false;
-  apiMe.mockResolvedValue(null);
+  apiMeResult.mockResolvedValue({ status: "unauthorized" });
   apiLogin.mockResolvedValue({ ok: false, error: "x" });
   getLocalOwner.mockReturnValue(null);
   fetchUserProgress.mockImplementation(async () => {
@@ -124,7 +124,7 @@ afterEach(() => {
 
 describe("AuthProvider — server-authoritative reconcile on mount", () => {
   it("foreign/anon device with a server bundle: clears + hydrates (replace), never pushes, then primes", async () => {
-    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    apiMeResult.mockResolvedValue({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
     getLocalOwner.mockReturnValue(null); // anonymous local
 
     renderProvider();
@@ -141,7 +141,7 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
   });
 
   it("same-user device: pushes local (merge) then pulls, preserving offline work", async () => {
-    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    apiMeResult.mockResolvedValue({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
     getLocalOwner.mockReturnValue("u1"); // same user returning
 
     renderProvider();
@@ -157,7 +157,7 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
   });
 
   it("foreign device, server confirmed empty: clears and primes, no hydrate", async () => {
-    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    apiMeResult.mockResolvedValue({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
     getLocalOwner.mockReturnValue(null);
     fetchUserProgressResult.mockImplementation(async () => {
       calls.push("pullResult");
@@ -174,7 +174,7 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
   });
 
   it("foreign device, fetch ERROR: clears for confidentiality but stays UNPRIMED", async () => {
-    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    apiMeResult.mockResolvedValue({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
     getLocalOwner.mockReturnValue(null);
     fetchUserProgressResult.mockImplementation(async () => {
       calls.push("pullResult");
@@ -190,18 +190,57 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
   });
 
   it("does nothing when there is no session (anonymous)", async () => {
-    apiMe.mockResolvedValue(null);
+    apiMeResult.mockResolvedValue({ status: "unauthorized" });
     renderProvider();
     await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
     expect(calls).not.toContain("register");
     expect(calls).not.toContain("replace");
     expect(calls).not.toContain("clear");
   });
+
+  // A soft-deleted or deactivated child must not leave their workbook readable to whoever opens
+  // the browser next — school and family devices are shared.
+  describe("revocation teardown", () => {
+    it("wipes the device when a signed-in session comes back 401", async () => {
+      apiMeResult.mockResolvedValue({ status: "unauthorized" });
+      getLocalOwner.mockReturnValue("u1"); // this device WAS signed in
+
+      renderProvider();
+      await waitFor(() => expect(calls).toContain("clear"));
+
+      expect(calls).toContain("bump");
+      expect(calls).toContain("clearOwner");
+      expect(calls).toContain("guards");
+      expect(screen.getByTestId("logged-in")).toHaveTextContent("no");
+    });
+
+    it("does NOT wipe an anonymous visitor (no owner marker)", async () => {
+      apiMeResult.mockResolvedValue({ status: "unauthorized" });
+      getLocalOwner.mockReturnValue(null);
+
+      renderProvider();
+      await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
+      expect(calls).not.toContain("clear");
+      expect(calls).not.toContain("clearOwner");
+    });
+
+    it("does NOT wipe on a network error, even for a signed-in device", async () => {
+      // The offline case is the reason `error` and `unauthorized` are distinct kinds: collapsing
+      // them would destroy a logged-in child's work on a wifi blip.
+      apiMeResult.mockResolvedValue({ status: "error" });
+      getLocalOwner.mockReturnValue("u1");
+
+      renderProvider();
+      await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("no"));
+      expect(calls).not.toContain("clear");
+      expect(calls).not.toContain("clearOwner");
+    });
+  });
 });
 
 describe("AuthProvider — login", () => {
   it("foreign login clears + hydrates the incoming user's server data, bumps epoch, sets user", async () => {
-    apiMe.mockResolvedValue(null); // start logged out
+    apiMeResult.mockResolvedValue({ status: "unauthorized" }); // start logged out
     apiLogin.mockResolvedValue({ ok: true, user: { userId: "u2", username: "b", role: "user" } });
     getLocalOwner.mockReturnValue("u1"); // a DIFFERENT prior student's local data
 
@@ -221,7 +260,7 @@ describe("AuthProvider — login", () => {
 
 describe("AuthProvider — logout", () => {
   it("wipes to zero: bump, disarm, apiLogout, clear progress + guards + owner, user=null", async () => {
-    apiMe.mockResolvedValue({ userId: "u1", username: "kid", role: "user" });
+    apiMeResult.mockResolvedValue({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
     getLocalOwner.mockReturnValue("u1");
 
     renderProvider();
