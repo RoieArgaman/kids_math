@@ -1,9 +1,9 @@
 runConfig:
-  # Keep one warm instance to remove cold starts. A 2026-07-17 load test showed cold starts
-  # (minScale 0) were the dominant driver of the login p95 (~16s under burst). Small always-on
-  # cost; revert to 0 if that cost isn't justified. The deeper latency fix is co-locating the app
-  # with Firestore (finding C9) — this only removes the cold-start tail, not the cross-region hop.
-  minInstances: 1
+  # Warm instances to absorb the class-start login burst (bcrypt is CPU-bound). After the C9
+  # relocation to europe-west4 (co-located with Firestore), a load test showed minInstances=3
+  # brings login latency to ~676ms median / p95 3.73s (was ~16s p95 cross-region on us-east4).
+  # Always-on cost of 3 instances; tune down if the burst profile is gentler than modeled.
+  minInstances: 3
   # maxInstances: 100
   # concurrency: 80
   # cpu: 1
