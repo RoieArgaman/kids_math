@@ -26,6 +26,31 @@
   --muted-soft: #9a93a8;     /* progress labels, secondary muted */
   --track: #eef0f4;          /* progress-bar track */
   --title: #2c2348;
+
+  /* ---- Design-system scale (roadmap Phase 3.5.1) ----
+     Values below are the CURRENT shipping values, only named. Adoption in 3.5.2
+     is therefore a rename with zero pixel change. Do not retune here. */
+
+  /* Interactive purple. Three real roles exist today; naming them is step one —
+     collapsing the ramp further is a 3.5.2 design decision, not a rename. */
+  --accent-strong: #6d28d9;  /* links, chips, AppNavLink hover (32 sites) */
+  --accent-soft: #a78bfa;    /* gradient end, progress bars (16 sites) */
+  --accent-hover: color-mix(in srgb, var(--accent) 88%, black);
+  --accent-subtle: color-mix(in srgb, var(--accent) 12%, white);
+
+  /* Two-step radius scale. 10 distinct radii ship today; these are the two survivors. */
+  --radius-card: 20px;       /* == .surface today */
+  --radius-panel: 24px;      /* == rounded-3xl today */
+
+  --rail-width: 4px;         /* accent rail; 4/5/6px ship today */
+
+  /* Locked state. Today locked cards dim the WHOLE card (opacity-50/60), which puts
+     muted text at 2.03:1 — a hard WCAG AA failure. This treatment tints the surface
+     and keeps text at full opacity instead; --locked-muted measures 4.89:1 on
+     --locked-surface (AA needs 4.5). Verified, not estimated — see LEARNING_LOG. */
+  --locked-surface: #f7f5fa;
+  --locked-border: #e4dfee;
+  --locked-muted: #6f6880;
 }
 
 body {
@@ -74,6 +99,22 @@ main {
 .surface-near-miss {
   border-color: #fde68a;  /* amber-200 */
   background: #fefce8;    /* yellow-50 */
+}
+
+/* Shared locked treatment (roadmap Phase 3.5.1; adopted in 3.5.2).
+   Replaces the 16 `opacity-50/60` whole-card dims. Dim DECORATION only — never the
+   text — or the hint a locked card exists to deliver becomes unreadable. */
+.is-locked {
+  background: var(--locked-surface);
+  border-color: var(--locked-border);
+}
+
+.is-locked .locked-dim {
+  opacity: 0.45;
+}
+
+.is-locked .muted {
+  color: var(--locked-muted);
 }
 
 .muted {

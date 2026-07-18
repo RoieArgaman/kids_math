@@ -85,6 +85,12 @@ const config: Config = {
       borderRadius: {
         kid:  "20px",
         pill: "9999px",
+        // The two-step scale 3.5.2 collapses the current 10 radii onto.
+        card:  "var(--radius-card)",
+        panel: "var(--radius-panel)",
+      },
+      borderWidth: {
+        rail: "var(--rail-width)",
       },
       boxShadow: {
         kid:    "0 4px 20px rgba(0, 0, 0, 0.08)",
