@@ -58,14 +58,14 @@ export default defineConfig({
       // regression. Every threshold below was re-derived from the v4 numbers.
       // Do not compare these against pre-2026-07-18 values.
       thresholds: {
-        // Global floor (v4 baseline: 77.54 lines / 75.47 stmts / 74.45
-        // branches / 70.08 funcs). functions floor is low because several
-        // React hooks in lib/hooks are exercised only via E2E, not unit —
-        // out of scope for this gate.
-        lines: 75,
-        statements: 73,
-        branches: 72,
-        functions: 68,
+        // Global floor (measured 2026-07-18 after the badges/gmat test pass:
+        // 79.02 lines / 77.84 stmts / 78.23 branches / 70.55 funcs).
+        // functions floor is low because several React hooks in lib/hooks are
+        // exercised only via E2E, not unit — out of scope for this gate.
+        lines: 78,
+        statements: 77,
+        branches: 77,
+        functions: 69,
 
         // --- Highest-risk domains (CLAUDE.md MAX areas): teeth here ---
 
@@ -76,10 +76,19 @@ export default defineConfig({
         // Storage / progression: pinned ~1-2pts below the v4 baseline.
         "lib/progress/**": { lines: 83, branches: 76, functions: 93, statements: 83 },
         "lib/final-exam/**": { lines: 89, branches: 64, functions: 89, statements: 82 },
-        "lib/gmat-challenge/**": { lines: 78, branches: 55, functions: 92, statements: 71 },
+        // Ratcheted up 2026-07-18: loader-rejection + config + grading tests
+        // took this from 71/55 to 94.86/90.97. The remaining branch gap is
+        // picker.ts's leftover-backfill and insufficient-bank throw, which are
+        // unreachable with a healthy curriculum — deliberately not mocked.
+        "lib/gmat-challenge/**": { lines: 96, branches: 92, functions: 100, statements: 95 },
         "lib/completion/**": { lines: 98, branches: 84, functions: 100, statements: 92 },
         "lib/review/**": { lines: 95, branches: 85, functions: 100, statements: 90 },
-        "lib/badges/**": { lines: 84, branches: 67, functions: 92, statements: 75 },
+        // Ratcheted up 2026-07-18: the higher badge tiers (calendar streaks,
+        // grand-master, strand + graduation badges) plus the SSR and sanitizer
+        // fallbacks were previously unverified; 75/67 -> 100/98.22. Pinned at
+        // 100 like lib/exam — the module is fully covered, so any new
+        // uncovered line is a missing test, not an acceptable drift.
+        "lib/badges/**": { lines: 100, branches: 97, functions: 100, statements: 100 },
         "lib/streak/**": { lines: 98, branches: 82, functions: 100, statements: 88 },
         "lib/user-data/**": { lines: 84, branches: 73, functions: 92, statements: 80 },
       },
