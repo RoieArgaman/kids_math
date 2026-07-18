@@ -1,7 +1,7 @@
 {
   "apphosting": [
     {
-      "backendId": "kids-math",
+      "backendId": "kids-math-eu",
       "rootDir": ".",
       "ignore": [
         "node_modules",

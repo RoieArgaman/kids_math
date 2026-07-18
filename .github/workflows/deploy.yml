@@ -42,5 +42,5 @@ jobs:
         run: |
           firebase deploy \
             --project kids-learing-hub \
-            --only "apphosting:kids-math" \
+            --only "apphosting:kids-math-eu" \
             --non-interactive

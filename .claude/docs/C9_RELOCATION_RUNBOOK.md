@@ -1,7 +1,17 @@
-# App Relocation Runbook — us-east4 → europe-west1 (finding C9)
+# App Relocation Runbook — us-east4 → europe-west4 (finding C9)
 
-> **Status:** Planned (MAX, 14/14 role approval over two rounds). **Planning artifact — nothing
-> here has been executed.**
+> **Status: EXECUTED 2026-07-18 (cutover shipped; soak + decommission pending).**
+> **Region reality:** the target is **`europe-west4`** (Netherlands), NOT `europe-west1` — App
+> Hosting isn't available in europe-west1 (valid regions: asia-east1, asia-southeast1, europe-west4,
+> us-central1, us-east4, us-east5). europe-west4 is adjacent to Firestore's europe-west1 (~1–5ms), so
+> the co-location benefit is intact. **New backend:** `kids-math-eu` @
+> `kids-math-eu--kids-learing-hub.europe-west4.hosted.app`.
+> **Verified result:** with `minInstances:3`, login **median ~676ms / p95 ~3.73s** (was ~16s p95 on
+> us-east4); progress-push p95 ~887ms; `TRUSTED_PROXY_HOPS=2` + enforcement re-verified on the new
+> backend. (References to "europe-west1" as the *app* region below are superseded by europe-west4;
+> europe-west1 remains correct for *Firestore*.)
+>
+> _Original plan header (MAX, 14/14 role approval over two rounds):_
 > **Goal:** Move the app off `us-east4` (Virginia) onto `europe-west1` — co-located with Firestore
 > (`europe-west1`) and far closer to the Israeli users — to eliminate the cross-Atlantic DB hops that
 > drove the **~16s login p95** (Appendix C).

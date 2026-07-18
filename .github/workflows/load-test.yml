@@ -14,7 +14,7 @@ on:
     inputs:
       base_url:
         description: "Target base URL (must NOT be a URL serving real users unless intended)"
-        default: "https://kids-math--kids-learing-hub.us-east4.hosted.app"
+        default: "https://kids-math-eu--kids-learing-hub.europe-west4.hosted.app"
         required: true
       push_vus:
         description: "Steady progress-push VUs (~one classroom)"
@@ -40,7 +40,7 @@ jobs:
       GCLOUD_PROJECT: kids-learing-hub
       COUNT: "20"
       PREFIX: kmci
-      BASE_URL: ${{ github.event.inputs.base_url || 'https://kids-math--kids-learing-hub.us-east4.hosted.app' }}
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://kids-math-eu--kids-learing-hub.europe-west4.hosted.app' }}
       PUSH_VUS: ${{ github.event.inputs.push_vus || '20' }}
       BURST_RATE: ${{ github.event.inputs.burst_rate || '3' }}
       DURATION: ${{ github.event.inputs.duration || '60s' }}
