@@ -109,19 +109,25 @@ Set for all routes in [`next.config.mjs`](next.config.mjs):
 
 ---
 
-## Deployment caveat — `firestore.rules` is not deployed by CI
+## Deployment — `firestore.rules` ships with every production deploy
 
-**Committing `firestore.rules` does not deploy it.** `.github/workflows/deploy.yml` pins its
-deploy to `--only "apphosting:kids-math-eu"`, which by design cannot widen to Firestore
-configuration. The rules ship **only** when a human runs, explicitly:
+`.github/workflows/deploy.yml` deploys the rules in a step of its own, immediately after the App
+Hosting deploy, so the live ruleset cannot drift from the repo. The ordering is deliberate: if the
+service account lacks `roles/firebaserules.admin` the rules step fails loudly **after** the app is
+already up, rather than leaving a deploy half-applied.
+
+`./deploy.sh` does the same for a manual deploy (`--only "apphosting:<backend>,firestore:rules"`).
+
+To ship rules alone, without an app deploy:
 
 ```bash
-firebase deploy --only firestore:rules
+firebase deploy --only firestore:rules --project kids-learing-hub
 ```
 
-Treat "the file is in the repo" and "the rules are live in the project" as **two separate facts**.
-Verify the deployed rules in the Firebase console rather than inferring them from the repo. After
-deploying, confirm `/api/health` and a login still work.
+**First deploy after this change:** the rules had never been applied before, so the project is
+still serving whatever ruleset was last uploaded — possibly the original test-mode default. Confirm
+in the Firebase console that the deny-all ruleset is live, and that `/api/health` and a login still
+work.
 
 ---
 

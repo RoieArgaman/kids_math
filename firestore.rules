@@ -36,11 +36,10 @@ rules_version = '2';
 //
 // DEPLOYMENT
 // ----------
-// These rules are NOT deployed by CI. `.github/workflows/deploy.yml` pins its
-// deploy to `--only "apphosting:kids-math-eu"`, so this file ships only when a
-// human runs, explicitly:
+// Deployed automatically by `.github/workflows/deploy.yml` (a dedicated step after
+// the App Hosting deploy) and by `./deploy.sh`. To ship rules on their own:
 //
-//     firebase deploy --only firestore:rules
+//     firebase deploy --only firestore:rules --project kids-learing-hub
 //
 // =============================================================================
 

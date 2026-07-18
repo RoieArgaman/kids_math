@@ -521,8 +521,10 @@ data export, and lay the governance groundwork — without deleting anything irr
   only the Admin SDK is used — which **bypasses rules entirely**, so this is inert for our traffic)
   + a threat-model note. Add a `firestore` block to `firebase.json`.
 - **Deploy safety:** `deploy.yml:45` pins `--only "apphosting:kids-math-eu"`, so adding the block
-  **cannot** widen the CI deploy. Ship the rules via a separate manual `--only firestore:rules`, then
-  verify `/api/health` and a login.
+  **cannot** widen the CI deploy — so the deploy pipeline now deploys the rules in a **dedicated step
+  of its own**, after the app, keeping the live ruleset from drifting. Requires
+  `roles/firebaserules.admin` on the deploy service account. Verify `/api/health` and a login after
+  the first run.
 
 ### 3.5 — Compliance posture docs (C2a) — *engineering drafts, not legal advice*
 - **Deliverable:** `SECURITY.md` + `COMPLIANCE.md` + a `DPA` template, each banner-marked

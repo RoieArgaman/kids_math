@@ -6,7 +6,7 @@ usage() {
   echo ""
   echo "Examples:"
   echo "  ./deploy.sh --project my-firebase-project"
-  echo "  ./deploy.sh --project my-firebase-project --backend kids-math"
+  echo "  ./deploy.sh --project my-firebase-project --backend kids-math-eu"
   echo "  ./deploy.sh --project my-firebase-project --skip-tests   # after green CI on same commit"
   echo ""
   echo "  --skip-build  Only with --skip-tests. Skips local 'npm run build' (upload-only)."
@@ -17,7 +17,8 @@ usage() {
 }
 
 PROJECT_ID=""
-BACKEND_ID="kids-math"
+# The us-east4 backend `kids-math` was decommissioned 2026-07-18 (C9 relocation).
+BACKEND_ID="kids-math-eu"
 SKIP_TESTS="0"
 SKIP_BUILD="0"
 
@@ -108,9 +109,9 @@ else
   fi
 fi
 
-echo "Deploying to Firebase App Hosting"
+echo "Deploying to Firebase App Hosting (+ Firestore rules)"
 echo "Note: App Hosting requires the Firebase project to be on the Blaze (pay-as-you-go) plan."
-if ! firebase deploy --project "$PROJECT_ID" --only "apphosting:$BACKEND_ID"; then
+if ! firebase deploy --project "$PROJECT_ID" --only "apphosting:$BACKEND_ID,firestore:rules"; then
   echo ""
   echo "Deploy failed. If the error mentions Blaze/billing, upgrade the plan here:"
   echo "  https://console.firebase.google.com/project/${PROJECT_ID}/usage/details"

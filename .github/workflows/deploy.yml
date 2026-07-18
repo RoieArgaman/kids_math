@@ -44,3 +44,13 @@ jobs:
             --project kids-learing-hub \
             --only "apphosting:kids-math-eu" \
             --non-interactive
+
+      # Separate step, and deliberately after the app: keeps `firestore.rules` from drifting
+      # out of sync with the repo, while a permissions failure here cannot leave the app
+      # half-deployed. Needs roles/firebaserules.admin on FIREBASE_SERVICE_ACCOUNT.
+      - name: Deploy Firestore security rules
+        run: |
+          firebase deploy \
+            --project kids-learing-hub \
+            --only "firestore:rules" \
+            --non-interactive
