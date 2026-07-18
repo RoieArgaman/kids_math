@@ -52,10 +52,19 @@ Append-only record of what we learned while working on this repo.
   - A fresh `.claude/worktrees/*` checkout can have a near-empty `node_modules`; `tsc`/build resolve
     `zod` etc. against the *incomplete local* folder and fail, while `vitest` accidentally works by
     walking up to the parent repo's `node_modules`. Fix: run `npm ci` in the worktree first.
-  - `npm run lint` fails in a nested worktree with `Plugin "@next/next" was conflicted … ../../../.eslintrc.json`
+  - ~~`npm run lint` fails in a nested worktree with `Plugin "@next/next" was conflicted … ../../../.eslintrc.json`
     because the worktree `.eslintrc.json` has no `"root": true`, so ESLint walks up into the parent
     repo's config. It's environmental (CI checks out standalone). To lint locally, temporarily add
-    `"root": true`, run `npx eslint <files>`, then `git checkout -- .eslintrc.json`.
+    `"root": true`, run `npx eslint <files>`, then `git checkout -- .eslintrc.json`.~~
+    **FIXED 2026-07-18 (PR #100):** `"root": true` is now committed in `.eslintrc.json`, so
+    `npm run lint` works unchanged from a worktree — no temporary edit, no `git checkout --` to
+    remember. Verified as a pure no-op on linting: `eslint --print-config` matched the parent
+    checkout on all 98 rules and both plugin lists (the only difference was the absolute path to
+    the same `@typescript-eslint/parser` module). That match also proves nothing *above* the repo
+    root was contributing rules, so stopping the cascade drops nothing.
+    **Lesson: a workaround written down in the log is a bug that was diagnosed and then left in
+    place.** This entry sat here for a week describing the exact one-line fix while every worktree
+    session kept paying the cost. When the log records a workaround with a known fix, apply the fix.
 - **How to reuse next time:** route all server logging through `lib/observability/logger`; never
   `console.*` directly (add the sanctioned `eslint-disable` only inside the logger). Add an audit row
   for every new admin mutation. First command in any worktree: `npm ci`.
