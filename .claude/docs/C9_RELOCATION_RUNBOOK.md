@@ -1,6 +1,7 @@
 # App Relocation Runbook — us-east4 → europe-west4 (finding C9)
 
-> **Status: EXECUTED 2026-07-18 (cutover shipped; soak + decommission pending).**
+> **Status: ✅ COMPLETE — executed 2026-07-18 (cutover shipped, monitoring re-pointed, old
+> `us-east4` backend decommissioned). Kept as the record of how it was done.**
 > **Region reality:** the target is **`europe-west4`** (Netherlands), NOT `europe-west1` — App
 > Hosting isn't available in europe-west1 (valid regions: asia-east1, asia-southeast1, europe-west4,
 > us-central1, us-east4, us-east5). europe-west4 is adjacent to Firestore's europe-west1 (~1–5ms), so
