@@ -146,5 +146,5 @@ These mirror the `alwaysApply: true` rules Cursor always loads — imported so t
 - `NAVIGATION_IA.md`, `DEPLOYMENT.md`, `REGRESSION_TEST_PLAN.md` — IA, deploy, regression
 - `OBSERVABILITY_RUNBOOK.md` — Phase 2.3 ops runbook: Error Reporting, uptime check on `/api/health`, alerting, dashboard, capacity targets
 - `DISASTER_RECOVERY_RUNBOOK.md` — Phase 2.5 DR runbook: Firestore PITR + backups, RPO/RTO, tested restore procedure
-- `C9_RELOCATION_RUNBOOK.md` — planned app relocation us-east4 → europe-west1 (co-locate with Firestore; fixes ~16s login latency): parallel backend → custom-domain cutover → soak → decommission
+- `C9_RELOCATION_RUNBOOK.md` — planned app relocation us-east4 → europe-west1 (co-locate with Firestore; fixes ~16s login latency): parallel backend → cutover to new hosted.app URL → soak → decommission
 - Full list: `ls .claude/docs/`

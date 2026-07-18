@@ -5,9 +5,13 @@
 > **Goal:** Move the app off `us-east4` (Virginia) onto `europe-west1` — co-located with Firestore
 > (`europe-west1`) and far closer to the Israeli users — to eliminate the cross-Atlantic DB hops that
 > drove the **~16s login p95** (Appendix C).
-> **Shape:** create a **new parallel App Hosting backend** in `europe-west1`, verify it, cut over to a
-> **custom domain**, soak, then decommission the old backend. Firestore does **not** move → no data
-> migration. The old backend is the rollback until the soak passes.
+> **Shape:** create a **new parallel App Hosting backend** in `europe-west1`, verify it, cut over to the
+> new backend's **default `…europe-west1.hosted.app` URL** (no custom domain — owner has no domain yet),
+> soak, then decommission the old backend. Firestore does **not** move → no data migration. The old
+> backend is the rollback until the soak passes.
+> **Domain note:** a custom domain can be added later with **no further migration** — it just maps onto
+> the (already-relocated) `europe-west1` backend. Deferring it only means the URL stays region-specific
+> for now.
 > **Why now:** prod has ~3 user docs (effectively pre-launch). The one-time origin change
 > (localStorage/cookies reset) is essentially free today and gets costlier as you grow.
 
@@ -15,8 +19,9 @@
 
 ## Prerequisites (owner)
 
-- **A domain you own + DNS access** (the custom domain is the chosen strategy — the origin then never
-  changes again through future moves). Pick **one canonical origin**, e.g. `app.<yourdomain>`.
+- **No domain needed** — this uses the new backend's default `…europe-west1.hosted.app` URL (auto-SSL).
+  The new URL replaces the old one; you and any users switch to it (fine at ~3 users). Add a custom
+  domain later if/when you want a stable, region-independent URL.
 - `firebase` CLI (installed, 15.x) — may need a one-time `firebase login`.
 - `gcloud` authed on `kids-learing-hub` (already set up).
 - Do the cutover in a **low-traffic window** (pre-Shabbat Friday / late evening Israel).
@@ -53,13 +58,16 @@ firebase apphosting:secrets:grantaccess kids-math-jwt-secret \
 **Verify:** `curl -X POST https://<new-eu-url>/api/auth/login -d '{...}'` returns 200 + a `Set-Cookie`
 (not 500). Also hit `GET /api/health` → `{status:"ok"}` (proves Firestore connectivity from the new region).
 
-## Step 3 — Custom domain + SSL  ·  OWNER  ·  start EARLY (cert lead time)
+## Step 3 — Note the new default URL  ·  OWNER  ·  (no domain/DNS/SSL)
 
-Firebase console → **App Hosting → kids-math-eu → Domains → Add custom domain** → enter
-`app.<yourdomain>` → add the **DNS records** Firebase shows (A/AAAA/TXT) at your registrar. Managed SSL
-provisioning + DNS propagation can take **minutes–hours** — do this well before cutover.
-- Set the apex/`www` to **301 → the canonical `app.<yourdomain>`** so you don't create a second origin
-  split. **Verify:** `https://app.<yourdomain>` serves the app with a valid cert.
+The `europe-west1` backend automatically gets a `…europe-west1.hosted.app` URL with managed SSL —
+nothing to configure. Grab the exact URL:
+```bash
+firebase apphosting:backends:list --project kids-learing-hub   # note kids-math-eu's URL
+```
+This URL is what replaces the old `…us-east4.hosted.app`. **Caveat:** the old URL keeps serving the old
+backend until you decommission it (Step 8); after that, old-URL bookmarks break. There is no shared
+stable origin without a custom domain — acceptable at ~3 users, and a domain can be added later.
 
 ## Step 4 — Validate on the new origin  ·  OWNER (I can run under your auth)  ·  cutover gate
 
@@ -72,7 +80,7 @@ provisioning + DNS propagation can take **minutes–hours** — do this well bef
    ```bash
    ACCESS_TOKEN=$(gcloud auth print-access-token) COUNT=20 PREFIX=kmload \
      node scripts/load/seed-load-users.mjs > /tmp/users.json
-   USERS="$(cat /tmp/users.json)" BASE_URL="https://app.<yourdomain>" \
+   USERS="$(cat /tmp/users.json)" BASE_URL="https://<new-eu-url>" \
      PUSH_VUS=20 BURST_RATE=3 DURATION=60s k6 run scripts/load/progress-load.js
    ACCESS_TOKEN=$(gcloud auth print-access-token) COUNT=20 PREFIX=kmload \
      node scripts/load/cleanup-load-users.mjs
@@ -85,17 +93,17 @@ provisioning + DNS propagation can take **minutes–hours** — do this well bef
 One PR, three edits:
 - `firebase.json` → `"backendId": "kids-math-eu"`
 - `.github/workflows/deploy.yml` → `--only "apphosting:kids-math-eu"`
-- `.github/workflows/load-test.yml` → default `BASE_URL` = `https://app.<yourdomain>`
+- `.github/workflows/load-test.yml` → default `BASE_URL` = the new `…europe-west1.hosted.app` URL
 
 Merge → the CI-gated deploy now targets the new backend. **Verify:** a `main` deploy lands only on
-`kids-math-eu`; `https://app.<yourdomain>` serves the latest. **Rollback:** revert the PR → deploys
+`kids-math-eu`; `https://<new-eu-url>` serves the latest. **Rollback:** revert the PR → deploys
 return to the old backend (still running).
 
 ## Step 6 — Re-point monitoring  ·  OWNER
 
 The uptime check + alert are bound to the old host. Create a **new uptime check** on
-`app.<yourdomain>/api/health` (same steps as `OBSERVABILITY_RUNBOOK.md` Step 2), retire the old one,
-and repoint the alert policy.
+the new `…europe-west1.hosted.app/api/health` (same steps as `OBSERVABILITY_RUNBOOK.md` Step 2), retire
+the old one, and repoint the alert policy.
 
 ## Step 7 — Soak  ·  OWNER
 
@@ -124,14 +132,14 @@ point of no return — everything before it is reversible.
 |-------|----------|
 | Steps 1–4 (parallel build/verify) | Delete the new backend; prod never touched |
 | Step 5 (cutover PR merged) | Revert the PR → deploys + traffic return to old backend |
-| Step 6–7 (monitoring/soak) | Repoint the domain's DNS back to the old backend; revert PR |
+| Step 6–7 (monitoring/soak) | Revert the cutover PR (deploys return to old backend) + use the old URL |
 | Step 8 (old backend deleted) | **Point of no return** — only after soak confidence |
 
 ## Owner checklist
 
 - [ ] New `europe-west1` backend builds & serves (Step 1)
 - [ ] Secret access granted; login 200 + `/api/health` ok on new origin (Step 2)
-- [ ] Custom domain live with valid SSL; apex/www 301 → canonical (Step 3)
+- [ ] New `…europe-west1.hosted.app` URL noted (auto-SSL; no domain) (Step 3)
 - [ ] `TRUSTED_PROXY_HOPS` re-verified; load-test login p95 < 3s (Step 4)
 - [ ] Cutover PR merged; `main` deploy verified on new backend (Step 5)
 - [ ] New uptime check + alerts on the new host (Step 6)
