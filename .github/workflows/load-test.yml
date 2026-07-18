@@ -4,11 +4,11 @@ name: Load Test
 # cleans them up. Runs against a real Firestore-backed target (prod by default) — CI has no
 # Firestore, so this can't run inside the normal per-push CI.
 #
-# Manual by default (workflow_dispatch). The weekly schedule is intentionally COMMENTED.
-# DO NOT enable it until the app is relocated to europe-west1 (roadmap finding C9): until then the
-# cross-region login latency (~16s p95 under burst) exceeds the k6 thresholds, so every scheduled
-# run would fail and email a red build. After the relocation, uncomment the `schedule` block (and
-# tighten the login threshold in progress-load.js to the new, lower latency).
+# Runs manually (workflow_dispatch) AND weekly (schedule). The weekly cron was gated on the C9
+# relocation — that shipped 2026-07-18 (app now in europe-west4, co-located with Firestore), and a
+# verification run passed all thresholds (login p95 ~3.1s, push p95 ~2.2s, 0% failures), so the
+# schedule is now enabled. It runs Saturdays 02:00 UTC (low traffic) against production, seeding
+# throwaway users and always cleaning them up.
 on:
   workflow_dispatch:
     inputs:
@@ -25,8 +25,8 @@ on:
       duration:
         description: "Steady-phase duration"
         default: "60s"
-  # schedule:                # ENABLE ONLY AFTER the C9 europe-west1 relocation (see header note).
-  #   - cron: "0 2 * * 6"   # Saturdays 02:00 UTC — low-traffic.
+  schedule:
+    - cron: "0 2 * * 6"   # Saturdays 02:00 UTC — low-traffic window.
 
 concurrency:
   group: load-test
