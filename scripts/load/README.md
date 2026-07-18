@@ -83,9 +83,15 @@ ACCESS_TOKEN=$(gcloud auth print-access-token) COUNT=20 PREFIX=kmload \
   node scripts/load/cleanup-load-users.mjs
 ```
 
-**CI:** `.github/workflows/load-test.yml` runs the whole seed → k6 → cleanup cycle. It is
-**manual (`workflow_dispatch`) by default**; the weekly `schedule` is commented out because it
-hits a real Firestore-backed target (prod) — enable it only when you want light automated
-off-hours load. Auth uses the existing `FIREBASE_SERVICE_ACCOUNT` secret. This can't be a
-per-push gate: the normal CI has no Firestore backend (the e2e suite mocks Firestore), so the
-API routes a load test exercises would fail there.
+**CI:** `.github/workflows/load-test.yml` runs the whole seed → k6 → cleanup cycle, both
+**on demand (`workflow_dispatch`)** and **weekly (Sat 02:00 UTC)**. The weekly cron was gated on
+the C9 relocation; that shipped 2026-07-18 (app now in `europe-west4`, co-located with Firestore)
+and the verification run passed all thresholds, so it is enabled. It hits production, seeding
+throwaway users and always cleaning them up (`if: always()`). Auth uses the existing
+`FIREBASE_SERVICE_ACCOUNT` secret. This can't be a per-push gate: the normal CI has no Firestore
+backend (the e2e suite mocks Firestore), so the API routes a load test exercises would fail there.
+
+**Note on thresholds:** they gate the *custom* metrics (`login_latency`, `progress_push_latency`),
+not scenario-tagged `http_req_duration` — the `progress_push` scenario also performs the iter-0
+login, which would conflate login cost into push numbers. `noCookiesReset: true` is required:
+k6 clears VU cookie jars between iterations, which otherwise 401s every push after the first.
