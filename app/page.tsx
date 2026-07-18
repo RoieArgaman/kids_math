@@ -73,7 +73,7 @@ export default function GradePickerPage() {
       <section data-testid={childTid(testIds.screen.gradePicker.root(), "grid")} className="grid gap-4 sm:grid-cols-2">
         <Link
           data-testid={testIds.screen.gradePicker.gradeCard("a")}
-          className="surface p-5 shadow-sm hover:shadow-md transition-shadow"
+          className="surface p-5 shadow-xs hover:shadow-md transition-shadow"
           href={routes.subjectsForGrade("a", { previewAll })}
           onClick={() => logEvent("grade_selected", { payload: { grade: "a" }, gradeId: "a" })}
         >
@@ -103,7 +103,7 @@ export default function GradePickerPage() {
         {gradeBUnlocked ? (
           <Link
             data-testid={testIds.screen.gradePicker.gradeCard("b")}
-            className="surface p-5 shadow-sm hover:shadow-md transition-shadow"
+            className="surface p-5 shadow-xs hover:shadow-md transition-shadow"
             href={routes.subjectsForGrade("b", { previewAll })}
             onClick={() => logEvent("grade_selected", { payload: { grade: "b" }, gradeId: "b" })}
             aria-label="כיתה ב׳"

@@ -234,7 +234,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
         actions={
           <Link
             data-testid={testIds.screen.home.planCta(effectiveGrade)}
-            className="touch-button btn-accent inline-block w-full text-center text-base font-semibold shadow-sm sm:w-auto"
+            className="touch-button btn-accent inline-block w-full text-center text-base font-semibold shadow-xs sm:w-auto"
             href={routes.gradePlan(effectiveGrade, { previewAll })}
           >
             תּוֹכְנִית לִמּוּדִים לְפִי מִשְׁרַד הַחִינוּךְ

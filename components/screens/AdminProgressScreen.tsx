@@ -463,7 +463,7 @@ export function AdminProgressScreen({
               <select
                 id="admin-grade"
                 data-testid={testIds.screen.adminProgress.gradeSelect()}
-                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedGrade}
                 onChange={(event) => {
                   disarmDayReset();
@@ -496,7 +496,7 @@ export function AdminProgressScreen({
               <select
                 id="admin-subject"
                 data-testid={testIds.screen.adminProgress.subjectSelect()}
-                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedSubject}
                 onChange={(event) => {
                   disarmDayReset();
@@ -532,7 +532,7 @@ export function AdminProgressScreen({
                   id="admin-tts-toggle"
                   type="checkbox"
                   data-testid={testIds.screen.adminProgress.ttsToggle()}
-                  className="h-5 w-5 rounded border-slate-300"
+                  className="h-5 w-5 rounded-sm border-slate-300"
                   checked={ttsEnabled}
                   onChange={(event) => setTtsEnabled(event.target.checked)}
                 />

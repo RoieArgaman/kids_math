@@ -194,7 +194,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
             <Link
               key={card.subject}
               data-testid={card.cardTestId}
-              className="surface border-s-[5px] rounded-[22px] p-5 shadow-sm hover:shadow-md transition-shadow"
+              className="surface border-s-[5px] rounded-[22px] p-5 shadow-xs hover:shadow-md transition-shadow"
               style={{ borderInlineStartColor: card.borderColor }}
               href={card.href(safeGrade, { previewAll })}
               aria-label={card.title}

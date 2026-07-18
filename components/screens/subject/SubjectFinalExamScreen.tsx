@@ -205,7 +205,7 @@ export function SubjectFinalExamScreen({
 
       <div
         data-testid={stickyId}
-        className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-md backdrop-blur-sm"
+        className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-md backdrop-blur-xs"
       >
         <p data-testid={childTid(stickyId, "title")} className="mb-1 text-lg font-bold">
           📝 מִבְחָן מְסַכֵּם · {exam.levelLabel(level)}

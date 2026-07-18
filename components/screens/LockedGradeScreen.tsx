@@ -57,7 +57,7 @@ export function LockedGradeScreen({
           <Link
             href={primary.href}
             data-testid={primary.testId}
-            className="touch-button btn-accent inline-block w-full rounded-2xl px-6 py-3 text-center font-semibold shadow-sm"
+            className="touch-button btn-accent inline-block w-full rounded-2xl px-6 py-3 text-center font-semibold shadow-xs"
           >
             {primary.label}
           </Link>

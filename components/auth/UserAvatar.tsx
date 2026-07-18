@@ -50,7 +50,7 @@ export function UserAvatar() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ede9fe] text-sm font-bold text-[#6d28d9] transition hover:bg-[#e3d9fb] focus:outline-none focus:ring-2 focus:ring-[#a78bfa]"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ede9fe] text-sm font-bold text-[#6d28d9] transition hover:bg-[#e3d9fb] focus:outline-hidden focus:ring-2 focus:ring-[#a78bfa]"
       >
         {initials}
       </button>

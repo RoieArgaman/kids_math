@@ -307,7 +307,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                   <Link
                     data-testid={testIds.screen.dayOverview.sectionCardCta(effectiveGrade, dayId, section.id)}
                     href={routes.gradeSection(effectiveGrade, dayId, section.id, { previewAll })}
-                    className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm ${
+                    className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-xs ${
                       isCardComplete ? "border border-emerald-400 bg-white text-emerald-700" : "btn-accent"
                     }`}
                   >
@@ -342,7 +342,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
       {weakExercises.length > 0 && (
         <div
           data-testid={weakSpotPanelId}
-          className="mb-6 rounded-3xl border border-[--border] bg-violet-50/60 p-5 shadow-sm"
+          className="mb-6 rounded-3xl border border-[--border] bg-violet-50/60 p-5 shadow-xs"
         >
           <p
             data-testid={childTid(weakSpotPanelId, "title")}
@@ -366,7 +366,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                     exercise.id,
                   )}
                   href={routes.gradeSection(effectiveGrade, dayId, section.id, { previewAll })}
-                  className="rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-800 shadow-sm hover:bg-violet-50"
+                  className="rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-800 shadow-xs hover:bg-violet-50"
                 >
                   {exercise.prompt}
                 </Link>

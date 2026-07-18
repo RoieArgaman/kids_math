@@ -22,7 +22,7 @@ export function ProgressHeader({
   return (
     <div
       data-testid={testId}
-      className={`rounded-3xl border border-[--border] bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm ${className}`}
+      className={`rounded-3xl border border-[--border] bg-white/95 px-4 py-3 shadow-xs backdrop-blur-xs ${className}`}
     >
       <div
         data-testid={childTid(testId, "head")}

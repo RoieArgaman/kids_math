@@ -118,7 +118,7 @@ export function SubjectDayScreen({
 
       <div
         data-testid={childTid(root, "progressBar")}
-        className="mb-4 rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm"
+        className="mb-4 rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs"
       >
         <p data-testid={childTid(root, "progressBar", "label")} className="mb-1 text-xs font-semibold text-[#8a8298]">
           📊 הַהִתְקַדְּמוּת שֶׁלִּי:
@@ -152,7 +152,7 @@ export function SubjectDayScreen({
             <div
               key={section.id}
               data-testid={cardRoot}
-              className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
+              className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
                 isCardComplete
                   ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
@@ -185,7 +185,7 @@ export function SubjectDayScreen({
                   <Link
                     data-testid={ids.sectionCardCta(dayId, section.id)}
                     href={config.sectionRoute(level, dayId, section.id)}
-                    className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm ${
+                    className={`touch-button rounded-2xl px-5 py-3 text-sm font-semibold shadow-xs ${
                       isCardComplete ? "border border-[#a7f3d0] bg-white text-[#047857]" : "btn-accent"
                     }`}
                   >
