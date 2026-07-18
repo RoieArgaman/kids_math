@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Tailwind 4 is CSS-first by default; this keeps the existing JS design-token
+   config authoritative. Migrating these tokens to `@theme` is deliberately a
+   follow-up — see .claude/docs/LEARNING_LOG.md. */
+@config "../tailwind.config.ts";
 
 :root {
   --background: #fffbef;     /* warm cream */

@@ -266,7 +266,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         <AppNavLink href={routes.gradeHome(grade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
       </div>
 
-      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm">
+      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs">
         <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-[#2c2348]">
           מִבְחָן מְסַכֵּם — כִּיתָּה {gradeLabel(grade)}
         </h1>

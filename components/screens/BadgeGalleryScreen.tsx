@@ -214,7 +214,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     key={badge.id}
                     data-testid={cardTid}
                     className={[
-                      "group relative rounded-2xl border p-4 text-center shadow-sm transition-all cursor-pointer",
+                      "group relative rounded-2xl border p-4 text-center shadow-xs transition-all cursor-pointer",
                       isUnlocked
                         ? `${TIER_BORDER[badge.tier]} ${TIER_BG[badge.tier]}`
                         : `${TIER_BORDER[badge.tier]} ${TIER_BG[badge.tier]} opacity-50 grayscale`,

@@ -238,7 +238,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newUsername}
               onChange={(e) => { setNewUsername(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -253,7 +253,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -264,7 +264,7 @@ export function AdminUsersScreen() {
               type="checkbox"
               checked={newIsAdmin}
               onChange={(e) => setNewIsAdmin(e.target.checked)}
-              className="h-4 w-4 rounded accent-[#8b75cc]"
+              className="h-4 w-4 rounded-sm accent-[#8b75cc]"
               disabled={adding}
             />
             <label data-testid="km.autogen.adminusersscreen.node.idx.10" htmlFor="km-new-user-admin" className="text-sm font-medium text-slate-700">
@@ -279,7 +279,7 @@ export function AdminUsersScreen() {
               type="checkbox"
               checked={newOverridePolicy}
               onChange={(e) => { setNewOverridePolicy(e.target.checked); setAddError(""); }}
-              className="h-4 w-4 rounded accent-[#8b75cc]"
+              className="h-4 w-4 rounded-sm accent-[#8b75cc]"
               disabled={adding}
             />
             <label data-testid="km.autogen.adminusersscreen.node.overridelabel" htmlFor="km-new-user-override" className="text-sm font-medium text-slate-700">
@@ -397,7 +397,7 @@ export function AdminUsersScreen() {
                       placeholder="סיסמה חדשה"
                       value={changePwValue}
                       onChange={(e) => { setChangePwValue(e.target.value); setChangePwError(""); }}
-                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
+                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                       disabled={changePwBusy}
                       autoFocus
                     />
@@ -423,7 +423,7 @@ export function AdminUsersScreen() {
                         type="checkbox"
                         checked={changePwOverride}
                         onChange={(e) => { setChangePwOverride(e.target.checked); setChangePwError(""); }}
-                        className="h-4 w-4 rounded accent-[#8b75cc]"
+                        className="h-4 w-4 rounded-sm accent-[#8b75cc]"
                         disabled={changePwBusy}
                       />
                       אפשר סיסמה פשוטה

@@ -103,7 +103,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
       />
 
       <section data-testid={testIds.screen.plan.overall()}
-        className="surface mb-8 border border-[#bbf7d0] bg-[#f4fcf7] p-5 shadow-sm"
+        className="surface mb-8 border border-[#bbf7d0] bg-[#f4fcf7] p-5 shadow-xs"
         aria-labelledby="overall-heading"
       >
         <h2 data-testid="km.autogen.planscreen.node.idx.12" id="overall-heading" className="mb-3 text-lg font-bold text-[#2c2348]">
@@ -141,7 +141,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
           return (
             <article data-testid="km.autogen.planscreen.node.idx.22"
               key={strand.id}
-              className={`surface p-5 shadow-sm transition-shadow ${complete ? "surface-success ring-1 ring-[#bbf7d0]/60" : ""}`}
+              className={`surface p-5 shadow-xs transition-shadow ${complete ? "surface-success ring-1 ring-[#bbf7d0]/60" : ""}`}
             >
               <div data-testid="km.autogen.planscreen.node.idx.23" className="mb-2 flex flex-wrap items-start justify-between gap-2">
                 <h3 data-testid="km.autogen.planscreen.node.idx.24" className="text-base font-bold text-[#6d28d9]">{strand.title}</h3>
@@ -194,7 +194,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         })}
       </section>
 
-      <section data-testid="km.autogen.planscreen.node.idx.37" className="surface mb-8 p-5 shadow-sm" aria-labelledby="routine-heading">
+      <section data-testid="km.autogen.planscreen.node.idx.37" className="surface mb-8 p-5 shadow-xs" aria-labelledby="routine-heading">
         <h2 data-testid="km.autogen.planscreen.node.idx.38" id="routine-heading" className="mb-4 text-lg font-bold text-[#2c2348]">
           רוּטִינַת עֲבוֹדָה יוֹמִית (לְכָל יוֹם בַּחוֹבֶרֶת)
         </h2>
@@ -207,7 +207,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         </ol>
       </section>
 
-      <section data-testid="km.autogen.planscreen.node.idx.41" className="surface mb-8 p-5 shadow-sm" aria-labelledby="parents-heading">
+      <section data-testid="km.autogen.planscreen.node.idx.41" className="surface mb-8 p-5 shadow-xs" aria-labelledby="parents-heading">
         <h2 data-testid="km.autogen.planscreen.node.idx.42" id="parents-heading" className="mb-4 text-lg font-bold text-[#2c2348]">
           {PARENT_GUIDE.title}
         </h2>

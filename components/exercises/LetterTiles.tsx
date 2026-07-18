@@ -80,7 +80,7 @@ export function LetterTiles({ exercise, value, onChange }: LetterTilesProps) {
             <span
               key={`${ch}-${i}`}
               data-testid={childTid(testIds.component.exerciseBox.tileWord(exercise.id), "slot", i)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-2xl font-bold shadow-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-2xl font-bold shadow-xs"
             >
               {ch}
             </span>

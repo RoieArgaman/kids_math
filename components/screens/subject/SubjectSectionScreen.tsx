@@ -169,7 +169,7 @@ export function SubjectSectionScreen({
 
       <div
         data-testid={stickyHeaderId}
-        className="progress-sticky rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-sm"
+        className="progress-sticky rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs"
       >
         <p data-testid={childTid(stickyHeaderId, "label")} className="mb-1 text-xs font-semibold text-[#8a8298]">
           📊 הַהִתְקַדְּמוּת שֶׁלִּי:
@@ -190,7 +190,7 @@ export function SubjectSectionScreen({
         <div
           data-testid={childTid(sectionRootId, "resetNotice")}
           role="alert"
-          className="mb-5 mt-3 rounded-2xl border border-[#fecdd3] bg-[#fff5f6] p-4 text-sm font-semibold text-[#b91c1c] shadow-sm"
+          className="mb-5 mt-3 rounded-2xl border border-[#fecdd3] bg-[#fff5f6] p-4 text-sm font-semibold text-[#b91c1c] shadow-xs"
         >
           ⚠️ {resetNotice}
         </div>

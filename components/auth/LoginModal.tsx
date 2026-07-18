@@ -144,7 +144,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 setUsername(e.target.value);
                 clearErrors();
               }}
-              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={isLoading}
             />
           </div>
@@ -168,7 +168,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                   setPassword(e.target.value);
                   clearErrors();
                 }}
-                className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[#a78bfa] focus:outline-none focus:ring-2 focus:ring-[#cdbff2]"
+                className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                 disabled={isLoading}
               />
               {/* Show-password toggle — cuts mistyped passwords (and so, lockouts) for kids. */}
@@ -179,7 +179,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 aria-label={showPassword ? "הסתרת הסיסמה" : "הצגת הסיסמה"}
                 aria-pressed={showPassword}
                 // ≥44px touch target (kids a11y rule): full input height + a 44px-min hit area.
-                className="absolute inset-y-0 left-0 flex min-w-[44px] items-center justify-center rounded-l-xl text-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#cdbff2]"
+                className="absolute inset-y-0 left-0 flex min-w-[44px] items-center justify-center rounded-l-xl text-lg focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#cdbff2]"
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>

@@ -66,7 +66,7 @@ export function TrophyUnlock({ visible, newBadgeIds, onConfirm }: TrophyUnlockPr
                 <div
                   key={id}
                   data-testid={childTid(dialogTid, "badgeRow", id)}
-                  className="flex shrink-0 items-center gap-3 rounded-2xl bg-white/80 px-4 py-3 shadow-sm"
+                  className="flex shrink-0 items-center gap-3 rounded-2xl bg-white/80 px-4 py-3 shadow-xs"
                 >
                   <span data-testid={childTid(dialogTid, "badgeRow", id, "icon")} className="text-3xl">
                     {badge.icon}

@@ -79,7 +79,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
             <div
               key={day.id}
               data-testid={cardId}
-              className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
+              className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
                 isLocked ? "border-[#eceaf1] bg-[#faf9fc] opacity-60" : "border-[#efe9f7] bg-white"
               }`}
             >
@@ -100,7 +100,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
                   <Link
                     data-testid={ids.dayCardCta(day.id)}
                     href={config.dayRoute(level, day.id)}
-                    className="touch-button btn-accent rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm"
+                    className="touch-button btn-accent rounded-2xl px-5 py-3 text-sm font-semibold shadow-xs"
                   >
                     {completeMap[day.id] ? "חֲזָרָה" : "הַתְחֵל"}
                   </Link>
@@ -112,7 +112,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
 
         <div
           data-testid={ids.examCard()}
-          className={`rounded-3xl border-2 p-5 shadow-sm transition-all ${
+          className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
             examUnlocked ? "border-[#e7defb] bg-[#ede9fe]" : "border-[#eceaf1] bg-[#faf9fc] opacity-60"
           }`}
         >
@@ -129,7 +129,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
               <Link
                 data-testid={ids.examCardCta()}
                 href={config.examRoute(level, { previewAll })}
-                className="touch-button btn-accent rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm"
+                className="touch-button btn-accent rounded-2xl px-5 py-3 text-sm font-semibold shadow-xs"
               >
                 לַמִּבְחָן
               </Link>

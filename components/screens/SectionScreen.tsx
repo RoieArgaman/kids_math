@@ -256,7 +256,7 @@ export function SectionScreen({
         <div
           data-testid={childTid(sectionRootId, "resetNotice")}
           role="alert"
-          className="mb-5 mt-3 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-800 shadow-sm"
+          className="mb-5 mt-3 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-800 shadow-xs"
         >
           ⚠️ {resetNotice}
         </div>
