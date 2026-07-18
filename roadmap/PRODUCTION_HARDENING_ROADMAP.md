@@ -569,7 +569,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 |-------|-------|------|------|--------|
 | 0 | Security quick wins | ULTRA | none | ✅ Completed (`claude/roadmap-quick-wins-vdg7z7`) |
 | 1 | Session integrity & auth hardening | MAX | Phase 0 | ✅ Completed ([#70](https://github.com/RoieArgaman/kids_math/pull/70)) — S4/S7/S8/S12; all CI green |
-| 2 | Observability, DR & ops | ULTRA | Phase 0 | 🟩 Nearly done. Code (#71–#76) + ops (2026-07-17): 2.3 uptime check + alerts + error/shadow log-metrics **live**; 2.4 load-test baseline recorded (Appendix C); 2.5 **PITR + daily backups + TTL policies enabled** (restore drill pending, Appendix D); 2.7 **limiter enforcing** (`RATE_LIMIT_ENFORCE=1`, verified) after `TRUSTED_PROXY_HOPS` fix (#80). minInstances=1 set. **Remaining:** restore drill; staging (2.6, deferred); app-region relocation (finding **C9**). |
+| 2 | Observability, DR & ops | ULTRA | Phase 0 | ✅ Done (ops 2026-07-17/18). 2.3 uptime check + alerts + error/shadow log-metrics **live**; 2.4 load-test baseline (Appendix C); 2.5 **PITR + daily backups + TTL policies enabled, restore drill passed** (RTO ≈ 11.5 min, Appendix D); 2.7 **limiter enforcing** (`RATE_LIMIT_ENFORCE=1`, verified) after `TRUSTED_PROXY_HOPS` fix (#80); minInstances=1. **Deferred/follow-up:** staging (2.6); app-region relocation (finding **C9**). |
 | 3 | Compliance & data governance | MAX | 🚦 go/no-go + Phase 2 | ⬜ Not started |
 | 4 | Multi-tenancy & scale | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | 🚦 go/no-go | ⬜ Not started |
@@ -632,10 +632,17 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
   - **Progress push:** N/A this run — the k6 payload sent a minimal `{bundleVersion}` bundle that
     `mergeBundles` 500s on (test artifact, not an app bug); the push still exercised the `progress`
     limiter before the merge. Use a fuller bundle to measure push latency / the C5 contention knee.
-- **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): runbook ready
+- **Appendix D — Backup/restore drill results, RPO/RTO** (Phase 2.5): runbook
   ([`DISASTER_RECOVERY_RUNBOOK.md`](../.claude/docs/DISASTER_RECOVERY_RUNBOOK.md), sub-PR 2D).
-  Targets: **RPO ≤ 1h** (PITR, 7-day window) / **RTO ≤ 4h**. _Drill results TBD — paste date,
-  snapshot time, measured RTO, and validation outcome here after the first restore drill._
+  Targets: **RPO ≤ 1h** (PITR, 7-day window) / **RTO ≤ 4h**.
+  - **✅ Drill performed 2026-07-18.** Restored the daily backup `ee951212…` (snapshot
+    **2026-07-17 06:43 UTC**) into a new `recovery-drill` database (europe-west1), per the runbook's
+    restore-to-new-DB path — prod never touched.
+  - **RTO measured ≈ 11.5 min** (restore op 02:59:38 → 03:11:17 UTC) — **well within the ≤4h target.**
+  - **Validation:** `recovery-drill/users` doc count matched prod exactly (incl. an admin account);
+    `user_progress` present; `audit_log` empty (expected — no admin mutations before the snapshot).
+  - **Teardown:** `recovery-drill` deleted after validation. **Re-drill** quarterly and after any
+    schema/migration change (per the runbook).
 
 ---
 
