@@ -243,7 +243,7 @@ export function ParentDashboardScreen() {
               className={[
                 "min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition",
                 active
-                  ? "bg-[var(--accent)] text-white"
+                  ? "bg-[var(--accent-strong)] text-white"
                   : "border border-[#e7defb] bg-white text-[var(--accent-strong)] hover:bg-[#f7f4fd]",
               ].join(" ")}
             >

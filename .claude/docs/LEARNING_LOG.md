@@ -6,6 +6,32 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.4a — D12 CTA contrast, and measuring against EVERY surface)
+- **Trigger:** D12 — white CTA text on the `.btn-accent` gradient ran 3.81:1 down to 2.72:1.
+- **What we learned:**
+  1. **On a gradient, the lightest stop is the constraint.** Both stops must clear 4.5 against
+     white text, so the *light* end sets the ceiling. New stops `--cta-from #6d4bc4` (6.08) →
+     `--cta-to #7c5fd0` (4.77) keep the original dark→light direction. Tokenized rather than
+     inlined — hardcoded hexes in `globals.css` are the same trap 3.5.2c had to clean up.
+  2. **A token must be measured against every surface it lands on, not the two obvious ones.**
+     3.5.2c set `--muted: #6f6880` after checking white and cream. The hero gradient is darker
+     than both, and muted text there sat at **4.48:1** — failing by 0.02. Re-picked `#6b647b`,
+     the lightest value clearing 4.5 on **all four** surfaces (white 5.62 / cream 5.44 / locked
+     5.19 / hero 4.76). **Enumerate the backgrounds first, then pick the value.**
+  3. **`aria-hidden` is the right fix for decorative text, not a colour change.** The footer's
+     `·` separator failed at 1.69:1. It carries no meaning, so it is hidden from assistive tech
+     and dropped from the sweep — recolouring it would have been treating punctuation as content.
+  4. **The dev server served stale CSS through a token change.** The browser reported the OLD
+     `--muted` while the file on disk held the new one — and the gradient in the *same stylesheet*
+     had already updated, so a partial HMR looked like a correct one. Only `rm -rf .next` +
+     restart showed the truth. **When verifying a token value in-browser, read the token back
+     (`getPropertyValue`) rather than trusting a rendered colour** — otherwise you are measuring
+     the previous build and calling it a pass.
+- **How to reuse next time:** the contrast sweep now walks every leaf text node, extracts *all*
+  gradient colour stops and tests against the worst, applies the WCAG large-text rule, and skips
+  `aria-hidden` subtrees. Re-run it after any palette change; it takes seconds and it is the only
+  check here that has never given a false pass once it could see gradients.
+
 ### 2026-07-18 (Phase 3.5.2c — fixing a token doesn't fix its copies; correcting 3.5.2b)
 - **Trigger:** Starting the 3.5.4 component work, noticed `CenteredPanel` hardcodes
   `text-[#8a8298]` — the *old*, failing `--muted` value that 3.5.2b had supposedly fixed.
