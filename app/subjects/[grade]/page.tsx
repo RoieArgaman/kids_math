@@ -123,7 +123,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
   }
 
   return (
-    <main data-testid={testIds.screen.subjectPicker.root()} className="pb-10">
+    <main data-testid={testIds.screen.subjectPicker.root()} className="screen-wide pb-10">
       <div data-testid={childTid(testIds.screen.subjectPicker.root(), "topNav")} className="mb-4 flex items-center justify-between gap-3">
         <AppNavLink data-testid={testIds.screen.subjectPicker.navBack()} href={routes.gradePicker({ previewAll })}>
           חֲזָרָה לִבְחִירַת כִּיתָּה
@@ -147,7 +147,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
         ]}
       />
 
-      <section data-testid={childTid(testIds.screen.subjectPicker.root(), "grid")} className="grid gap-4 sm:grid-cols-2">
+      <section data-testid={childTid(testIds.screen.subjectPicker.root(), "grid")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SUBJECT_CARDS.map((card) => {
           const unlocked = unlockedMap[card.subject];
           const cardInner = (

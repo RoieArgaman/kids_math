@@ -6,6 +6,30 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.5 — desktop layout, opt-in rather than global)
+- **Trigger:** D1 — `main` hard-capped at 720px with 43 `sm:` utilities and effectively no
+  `md:`/`lg:`/`xl:` in the tree, so every screen was a mobile column in empty gutters.
+- **What we learned:**
+  1. **Opt-in beats opt-out for a layout change this wide.** `main.screen-wide` (1120px at `lg`)
+     is applied per screen instead of raising the global cap and clawing screens back. Six
+     screens changed; everything else is provably untouched, which is what made a change of this
+     blast radius reviewable at all.
+  2. **The narrow column is a feature in the practice flow.** Product decision on record: only
+     browsing/reporting screens widen. Verified rather than assumed — Day Overview at a 1440px
+     viewport still measures `mainWidth: 720`, no opt-in class, no horizontal scroll.
+  3. **The roadmap's own task text had drifted from the recorded decision.** The 3.5.5 section
+     listed Day Overview and Subject Home as "widen"; the product decision named five browsing
+     screens. Followed the decision, not the plan text, and corrected the roadmap. **When a plan
+     and a recorded decision disagree, the decision wins — and the plan is the thing that is
+     wrong.**
+  4. **Chrome needs a width too.** Once content can be 1120px, a full-bleed TopBar looks
+     detached. Its inner row is now constrained to the same 1120px, matching what `SiteFooter`
+     already did — the QA report had flagged the footer as the correct reference.
+- **How to reuse next time:** to widen a screen, add `screen-wide` to its `<main>` and give the
+  relevant grid an `lg:` column count. To keep a screen narrow, do nothing. Practice screens
+  (Section, Day Overview, exams, legal) must stay narrow — re-check `mainWidth` at ≥1280px if
+  that is ever revisited.
+
 ### 2026-07-18 (Phase 3.5.4b — component consolidation, and what consolidation quietly costs)
 - **Trigger:** D5/D8 — two centred-panel shells, four bespoke loading blocks, `!important`
   overrides, and the small UX defects.

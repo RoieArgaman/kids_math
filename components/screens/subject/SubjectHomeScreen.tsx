@@ -53,7 +53,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
   const root = ids.root();
 
   return (
-    <main data-testid={root} className="pb-10">
+    <main data-testid={root} className="screen-wide pb-10">
       <div data-testid={childTid(root, "nav")} className="mb-4">
         <AppNavLink href={routes.subjectsForGrade(level, { previewAll })}>חֲזָרָה לִבְחִירַת נוֹשֵׂא</AppNavLink>
       </div>
@@ -65,7 +65,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
         decorations={config.home.decorations}
       />
 
-      <section data-testid={childTid(root, "grid")} className="flex flex-col gap-4">
+      <section data-testid={childTid(root, "grid")} className="grid gap-4 lg:grid-cols-2">
         {days.map((day, idx) => {
           const previousComplete = idx === 0 ? true : (completeMap[days[idx - 1]!.id] ?? false);
           const previousDay = idx === 0 ? null : days[idx - 1]!;

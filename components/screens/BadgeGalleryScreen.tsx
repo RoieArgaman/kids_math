@@ -144,7 +144,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
   const badgeById = Object.fromEntries(allBadges.map((b) => [b.id, b]));
 
   return (
-    <main data-testid={badgesRoot}>
+    <main data-testid={badgesRoot} className="screen-wide">
       {/* Navigation */}
       <div data-testid={childTid(badgesRoot, "nav")} className="mb-4">
         <AppNavLink href={routes.gradeHome(grade)}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
@@ -200,7 +200,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
             </h2>
             <div
               data-testid={childTid(badgesRoot, "grid")}
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {catBadges.map((badge) => {
                 const isUnlocked = unlockedIds.has(badge.id);

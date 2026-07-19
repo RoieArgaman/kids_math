@@ -248,7 +248,7 @@ export function AdminUsersScreen() {
   }
 
   return (
-    <main data-testid={testIds.component.adminUsers.root()} className="mx-auto max-w-2xl p-6">
+    <main data-testid={testIds.component.adminUsers.root()} className="screen-wide p-6">
       <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-[var(--title)]">ניהול משתמשים</h1>
 
       {statusMsg && (
