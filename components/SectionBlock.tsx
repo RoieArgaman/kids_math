@@ -50,7 +50,7 @@ export function SectionBlock({
       className="surface mb-4 rounded-[22px] border-s-[6px] p-[18px]"
       style={{ borderInlineStartColor: BORDER_BY_TYPE[type] }}
     >
-      <h2 data-testid={testIds.component.sectionBlock.title(sectionId)} className="text-xl font-bold text-[--title]">
+      <h2 data-testid={testIds.component.sectionBlock.title(sectionId)} className="text-xl font-bold text-[var(--title)]">
         <span
           data-testid={testIds.component.sectionBlock.emoji(sectionId)}
           className="me-2"
@@ -61,7 +61,7 @@ export function SectionBlock({
         </span>
         {title}
       </h2>
-      <p data-testid={testIds.component.sectionBlock.learningGoal(sectionId)} className="mt-1 text-sm text-[--muted]">
+      <p data-testid={testIds.component.sectionBlock.learningGoal(sectionId)} className="mt-1 text-sm text-[var(--muted)]">
         {learningGoal}
       </p>
       {example ? (

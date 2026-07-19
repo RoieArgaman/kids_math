@@ -20,7 +20,7 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
             aria-valuemin={0}
             aria-valuenow={safeValue}
             role="progressbar"
-            className="h-2 overflow-hidden rounded-full bg-[--track]"
+            className="h-2 overflow-hidden rounded-full bg-[var(--track)]"
           >
             <div data-testid="km.autogen.progressbar.node.idx.6"
               className="h-full rounded-full transition-all duration-700"
@@ -36,7 +36,7 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
         <span
           data-testid="km.autogen.progressbar.node.idx.3"
           className={`inline-flex min-w-[3rem] justify-center rounded-full px-2.5 py-1 text-xs font-bold ${
-            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[--accent]"
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent)]"
           }`}
         >
           {safeValue}%
@@ -48,11 +48,11 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
   return (
     <div data-testid="km.autogen.progressbar.node.idx.0" className="surface p-4">
       <div data-testid="km.autogen.progressbar.node.idx.1" className="mb-3 flex items-center justify-between">
-        <span data-testid="km.autogen.progressbar.node.idx.2" className="font-medium text-[--muted]">{label ?? "הִתְקַדְּמוּת יוֹמִית"}</span>
+        <span data-testid="km.autogen.progressbar.node.idx.2" className="font-medium text-[var(--muted)]">{label ?? "הִתְקַדְּמוּת יוֹמִית"}</span>
         <span
           data-testid="km.autogen.progressbar.node.idx.3"
           className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[--accent]"
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent)]"
           }`}
         >
           {safeValue}%
@@ -65,7 +65,7 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
           aria-valuemin={0}
           aria-valuenow={safeValue}
           role="progressbar"
-          className="h-2.5 overflow-hidden rounded-full bg-[--track]"
+          className="h-2.5 overflow-hidden rounded-full bg-[var(--track)]"
         >
           <div data-testid="km.autogen.progressbar.node.idx.6"
             className="h-full rounded-full transition-all duration-700"

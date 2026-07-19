@@ -13,9 +13,9 @@ describe("AppNavLink", () => {
 
   it("maps the tone prop to its colour classes", () => {
     const { rerender } = render(<AppNavLink href="/x" data-testid="nav" tone="muted">x</AppNavLink>);
-    expect(screen.getByTestId("nav")).toHaveClass("text-[--muted-soft]");
+    expect(screen.getByTestId("nav")).toHaveClass("text-[var(--muted-soft)]");
     rerender(<AppNavLink href="/x" data-testid="nav" tone="primary">x</AppNavLink>);
-    expect(screen.getByTestId("nav")).toHaveClass("text-[--accent]");
+    expect(screen.getByTestId("nav")).toHaveClass("text-[var(--accent)]");
   });
 
   it("keeps the shared base classes and appends a custom className", () => {
