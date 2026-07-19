@@ -6,6 +6,25 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.5b — closing audit: "all done" was not true)
+- **Trigger:** final hygiene pass over the findings register before flipping the tracker to ✅.
+- **What the audit caught:** I had reported "all 14 findings closed" in conversation. Three rows
+  (**D2, D6, D8**) had **no status recorded at all** — I had fixed the work but never updated the
+  register — and **D8 was not actually finished**. Two of its sub-items were still open: the exam
+  results still nested a bordered card inside a bordered panel, and **132 `km.autogen.*` testids
+  remained** across 10 components.
+- **The lesson: a multi-item finding is not closed until every item is checked off individually.**
+  D8 read as "smaller UX defects: …" with six items in one prose sentence. I fixed four, remembered
+  it as done, and would have marked it ✅ if the audit had not enumerated them. **When a finding
+  bundles several fixes, expand it into a checklist before claiming it — prose hides remainders.**
+- **Split rather than stretched:** the `km.autogen.*` ids are position-derived (`…node.idx.15`), so
+  any markup change silently repoints them at a different element — a spec can keep passing while
+  asserting on the wrong node. That is a **testability** problem, not design QA, so it became
+  **D15** with its own task rather than being quietly dropped or padded into this phase.
+- **How to reuse next time:** before flipping a phase to ✅, tally every finding's status
+  programmatically (`grep` the register per id) instead of trusting the working memory of the
+  person who did the work. Mine was wrong on three of fourteen.
+
 ### 2026-07-18 (Phase 3.5.4d — the day-card merge, and a local suite that lies)
 - **D5 closed.** `DayCardShell` is now the one day-card design; `DayCard` (math) and
   `SubjectHomeScreen` (English/Science) are thin wrappers. **English/Science day cards gained a

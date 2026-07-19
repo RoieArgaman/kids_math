@@ -334,7 +334,9 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         {showResults ? (
           <div
             data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results")}
-            className="mt-4 rounded-2xl border border-[#efe9f7] bg-white p-4"
+            /* Flattened (D8): this sat as a bordered white card INSIDE the bordered
+               `surface` panel above — two borders, two paddings, for one result. */
+            className="mt-4"
           >
             <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-[var(--title)]">
               ציון: {scorePercent}%
