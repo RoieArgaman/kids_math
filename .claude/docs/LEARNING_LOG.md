@@ -6,6 +6,27 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.4d — D14 headings, and retracting a wrong call)
+- **D14 fixed:** `CenteredPanel` renders its title as `<h1>` by default. Verified *before*
+  flipping that every call site is an early-return full-page state (404, locked, loading, PIN
+  gate), so no page can emit a duplicate `<h1>`. Confirmed in-browser: `/this-page-does-not-exist`
+  and `/admin` each report `h1Count: 1`, where 404 previously had **zero**.
+- **Retraction — I got D5 wrong in 3.5.4c.** I declared the day-card merge "a product decision,
+  not an engineering one", on the grounds that *no per-day score exists in the subject model*.
+  That was false. I inferred it from the **subject screen's JSX** (which renders only title +
+  objective + CTA) and never opened the storage module. `lib/english/storage.ts` and
+  `lib/science/storage.ts` persist **`WorkbookProgressState` — the same days/sections shape as
+  math** — so `percentDone` is already stored per day for every subject. The card simply never
+  read it.
+- **The lesson, and it is the sharper version of one already in this log:** *absence in the UI is
+  not absence in the model.* Read the **data contract** before declaring something a product
+  question. Declining work is a legitimate and sometimes correct answer — but a decline justified
+  by an unverified claim is worse than doing the work, because it gets written into the roadmap
+  as settled and nobody re-checks it.
+- **How to reuse next time:** when about to write "X doesn't exist, so this needs a product
+  decision", grep the storage/types layer for X first. The check costs one command; the wrong
+  answer costs a permanently mis-recorded finding.
+
 ### 2026-07-18 (Phase 3.5.4c — the last D8 defects, and a merge that shouldn't happen)
 - **Shipped:** badge tooltip no longer clips; retry button moved to its own row; tier label
   11px and off the deleted `--muted-soft` value.

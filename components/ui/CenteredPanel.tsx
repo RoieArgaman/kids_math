@@ -14,9 +14,10 @@ export type CenteredPanelProps = {
    *  different name for this slot (e.g. lockedGrade's `reason`) keep it when they
    *  move onto this shell, so their specs don't churn. */
   descriptionTestId?: string;
-  /** Render the title as a real heading when this panel IS the page (locked/404
-   *  screens). Defaults to `div` so existing call sites are untouched — several of
-   *  them still have no heading at all, tracked as D14. */
+  /** The panel's title is the page title: every call site is an early-return
+   *  full-page state (404, locked, loading, PIN gate), so `h1` is the correct
+   *  default (D14). Opt down to `div` only if a panel is ever embedded beside
+   *  other content that already owns the page heading. */
   titleAs?: "div" | "h1";
   /** Render the outer element as the page's `main` landmark when this panel IS the
    *  page. Keeps the root testid on one element instead of duplicating it onto a
@@ -33,7 +34,7 @@ export function CenteredPanel({
   className,
   "data-testid": testId,
   descriptionTestId,
-  titleAs: TitleTag = "div",
+  titleAs: TitleTag = "h1",
   as: Root = "div",
 }: CenteredPanelProps) {
   return (
