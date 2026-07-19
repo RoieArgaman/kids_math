@@ -182,7 +182,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.home.root(`${effectiveGrade}.loading`)} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.home.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-slate-600">
+        <Surface data-testid={childTid(testIds.screen.home.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
           טוֹעֲנִים...
         </Surface>
       </main>

@@ -117,7 +117,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.subjectPicker.root()} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.subjectPicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-slate-600">
+        <Surface data-testid={childTid(testIds.screen.subjectPicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
           טוֹעֲנִים...
         </Surface>
       </main>

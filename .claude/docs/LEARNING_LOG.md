@@ -6,6 +6,36 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.2b — the consistency fix that would have broken accessibility)
+- **Trigger:** D7, "admin is off-palette — re-skin `slate-*` onto the app tokens." A pure
+  find-and-replace on paper.
+- **What we learned:**
+  1. **Measure the token you are migrating *to*, not just the one you are migrating *from*.**
+     The obvious mapping was admin's `text-slate-600` → `--muted`. Checked first: `slate-600`
+     passes AA at **7.58:1**; `--muted` (#8a8298) *fails* at **3.67:1**. Shipping the "cleanup"
+     would have made the admin area measurably less accessible in the name of consistency. A
+     consistency change is a regression whenever the standard is worse than what it replaces.
+  2. **A local fix surfaced a global bug.** `--muted` failing meant every screen already had
+     failing secondary text — D7 was a symptom, not the disease. Fixed the token
+     (`#6f6880`, **5.29 / 5.12**) rather than routing around it. Chose the *lightest* passing
+     value on the hue deliberately: it is the smallest change that clears the bar, so the app's
+     feel moves as little as possible.
+  3. **Three greys collapsed into one.** `--muted-soft` (#9a93a8, **2.95:1** — the worst in the
+     palette, one call site) deleted; `--locked-muted` folded in once `--muted` was corrected to
+     the same value. Fixing contrast and reducing token count turned out to be the same edit.
+  4. **Collapsing tokens can silently kill an interaction.** Folding `--muted-soft` into `--muted`
+     left `AppNavLink`'s muted tone as `text-[var(--muted)] hover:text-[var(--muted)]` — a hover
+     state that no longer changes anything. Type-checks, lints, passes. **After merging two
+     tokens, grep for pairs where base and `hover:`/`focus:` now resolve to the same value.**
+     Repointed the hover to `--title`.
+- **How to reuse next time:** before any palette unification, build the contrast table for both
+  the old and new values across every background they land on. `--title` and `--accent` were fine;
+  only the greys were not — and only measurement distinguished them.
+- **Naming debt (deliberate, flagged):** the AdminUsers *deleted-user* row now uses `.is-locked`.
+  Visually correct (identical de-emphasis intent, same 2:1 contrast bug) but semantically loose —
+  a deleted account is not "locked". Left as-is rather than keeping a known contrast bug; rename
+  the class to something like `.is-inactive` when a third state needs it.
+
 ### 2026-07-18 (Phase 3.5.1b — the v4 regression the 3.5.1 audit missed)
 - **Trigger:** Starting 3.5.2, about to write `text-[--title]` by hand, checked whether the
   codebase's existing syntax was still valid under v4. It was not.

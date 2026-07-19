@@ -41,7 +41,7 @@ export default function GradePickerPage() {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.gradePicker.root()} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.gradePicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-slate-600">
+        <Surface data-testid={childTid(testIds.screen.gradePicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
           טוֹעֲנִים...
         </Surface>
       </main>
