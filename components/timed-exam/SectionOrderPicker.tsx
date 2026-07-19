@@ -34,7 +34,7 @@ export function SectionOrderPicker({
   }
 
   return (
-    <Surface data-testid={rootTestId} variant="default" className="rounded-3xl p-6 shadow-xs">
+    <Surface data-testid={rootTestId} variant="default" className="rounded-panel p-6 shadow-xs">
       <h2 data-testid={childTid(rootTestId, "title")} className="text-lg font-bold text-slate-900">
         סדר המקטעים
       </h2>

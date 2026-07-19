@@ -23,7 +23,7 @@ export function CompletionPanel({
   return (
     <div
       data-testid={testId}
-      className="mb-6 rounded-[22px] border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-[0_2px_14px_rgba(16,185,129,0.10)]"
+      className="mb-6 rounded-card border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-[0_2px_14px_rgba(16,185,129,0.10)]"
     >
       <p
         data-testid={childTid(testId, "icon")}

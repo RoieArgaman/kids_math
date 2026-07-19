@@ -50,7 +50,7 @@ export function UserAvatar() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ede9fe] text-sm font-bold text-[#6d28d9] transition hover:bg-[#e3d9fb] focus:outline-hidden focus:ring-2 focus:ring-[#a78bfa]"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ede9fe] text-sm font-bold text-[var(--accent-strong)] transition hover:bg-[#e3d9fb] focus:outline-hidden focus:ring-2 focus:ring-[var(--accent-soft)]"
       >
         {initials}
       </button>
@@ -73,7 +73,7 @@ export function UserAvatar() {
               data-testid={testIds.component.auth.adminUsersLink()}
               href={routes.adminUsers()}
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#6d28d9] hover:bg-[#f3effb]"
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-sm font-medium text-[var(--accent-strong)] hover:bg-[#f3effb]"
               role="menuitem"
             >
               👥 ניהול משתמשים

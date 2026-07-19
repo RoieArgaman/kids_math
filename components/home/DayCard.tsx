@@ -65,11 +65,11 @@ export function DayCard({
       ? "bg-[#fee2e2] text-[#b91c1c]"
       : state === "complete"
         ? "bg-[#d1fae5] text-[#047857]"
-        : "bg-[#ede9fe] text-[#6d28d9]";
+        : "bg-[#ede9fe] text-[var(--accent-strong)]";
 
   const railColor =
     state === "open" ? "#a78bfa" : state === "complete" ? "#34d399" : undefined;
-  const cardBorderClasses = railColor ? "border-s-4" : "";
+  const cardBorderClasses = railColor ? "border-s-rail" : "";
 
   const root = testIds.screen.home.dayCard(day.id);
 
@@ -77,7 +77,7 @@ export function DayCard({
     <article
       data-testid={root}
       style={railColor ? { borderInlineStartColor: railColor } : undefined}
-      className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "opacity-60" : ""}`}
+      className={`surface relative overflow-hidden p-5 ${state === "complete" ? "surface-success" : ""} ${cardBorderClasses} ${state === "locked" ? "is-locked" : ""}`}
     >
       {/* Card header row */}
       <div

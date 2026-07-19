@@ -16,7 +16,7 @@ export function LegalSection({ rootTestId, sectionKey, title, paragraphs, listIt
   return (
     <Surface className="p-5 sm:p-6" data-testid={base}>
       <div data-testid={childTid(base, "stack")} className="space-y-3">
-        <h2 data-testid={childTid(base, "heading")} className="text-lg font-bold text-violet-900">
+        <h2 data-testid={childTid(base, "heading")} className="text-lg font-bold text-[var(--title)]">
           {title}
         </h2>
         {paragraphs?.map((text, i) => (

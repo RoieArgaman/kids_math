@@ -34,7 +34,7 @@ export function StarReward({ visible, text, onConfirm }: StarRewardProps) {
         <div data-testid="km.autogen.starreward.node.idx.4" className="star-pop text-6xl" aria-hidden>
           ⭐⭐⭐⭐⭐
         </div>
-        <p data-testid="km.autogen.starreward.node.idx.5" id="star-reward-title" className="mt-3 text-2xl font-bold text-[#6d28d9]">
+        <p data-testid="km.autogen.starreward.node.idx.5" id="star-reward-title" className="mt-3 text-2xl font-bold text-[var(--accent-strong)]">
           כָּל הַכָּבוֹד!
         </p>
         <p data-testid="km.autogen.starreward.node.idx.6" className="mt-1 text-lg font-bold text-[#b45309]">אַתָּה אַלּוּף! 🏆</p>

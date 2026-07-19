@@ -18,7 +18,7 @@ export function TimedExamSectionHeader({
   return (
     <header
       data-testid={rootTestId}
-      className="progress-sticky rounded-3xl border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-xs"
+      className="progress-sticky rounded-panel border border-slate-200 bg-white/95 px-4 py-3 shadow-md backdrop-blur-xs"
     >
       <div data-testid={childTid(rootTestId, "bar")} className="flex flex-wrap items-center justify-between gap-2">
         <h1 data-testid={childTid(rootTestId, "title")} className="text-lg font-bold text-slate-900">

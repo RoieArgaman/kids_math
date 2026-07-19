@@ -63,8 +63,8 @@ export function SubjectLevelPickerScreen({ config }: { config: SubjectScreenConf
             <div
               key={level}
               data-testid={cardId}
-              className={`surface border-s-[5px] rounded-[22px] p-5 shadow-xs transition-all ${
-                isUnlocked ? "" : "opacity-60"
+              className={`surface border-s-rail rounded-card p-5 shadow-xs transition-all ${
+                isUnlocked ? "" : "is-locked"
               }`}
               style={{ borderInlineStartColor: config.levelPicker.medallionBorderColor(level) }}
             >

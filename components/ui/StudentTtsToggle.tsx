@@ -21,7 +21,7 @@ export function StudentTtsToggle() {
       aria-label={autoPlay ? "כיבוי הקראה אוטומטית" : "הפעלת הקראה אוטומטית"}
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
         autoPlay
-          ? "border-[#cdbff2] bg-[#ede9fe] text-[#6d28d9]"
+          ? "border-[#cdbff2] bg-[#ede9fe] text-[var(--accent-strong)]"
           : "border-[#e7defb] bg-white text-[#8a8298] hover:bg-[#f3effb]"
       }`}
     >
@@ -30,11 +30,11 @@ export function StudentTtsToggle() {
           <span data-testid={childTid(baseId, "pulse")} className="relative flex size-2 shrink-0">
             <span
               data-testid={childTid(baseId, "pulse", "ring")}
-              className="absolute inline-flex size-full animate-ping rounded-full bg-[#a78bfa] opacity-75"
+              className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--accent-soft)] opacity-75"
             />
             <span
               data-testid={childTid(baseId, "pulse", "dot")}
-              className="relative inline-flex size-2 rounded-full bg-[#8b75cc]"
+              className="relative inline-flex size-2 rounded-full bg-[var(--accent)]"
             />
           </span>
           <span data-testid={childTid(baseId, "icon")} aria-hidden="true">🔊</span>

@@ -35,7 +35,7 @@ export function DayHeader({
   return (
     <header
       data-testid={rootTestId ?? "km.autogen.dayheader.node.idx.0"}
-      className="mb-4 rounded-3xl border border-[#e7defb] bg-[linear-gradient(135deg,#e9e2fb_0%,#f3ecfa_55%,#fbf4ee_100%)] p-6"
+      className="mb-4 rounded-panel border border-[#e7defb] bg-[linear-gradient(135deg,#e9e2fb_0%,#f3ecfa_55%,#fbf4ee_100%)] p-6"
     >
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">
         <span

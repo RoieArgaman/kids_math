@@ -47,7 +47,7 @@ export function SectionBlock({
   return (
     <section
       data-testid={rootTestId}
-      className="surface mb-4 rounded-[22px] border-s-[6px] p-[18px]"
+      className="surface mb-4 rounded-card border-s-rail p-[18px]"
       style={{ borderInlineStartColor: BORDER_BY_TYPE[type] }}
     >
       <h2 data-testid={testIds.component.sectionBlock.title(sectionId)} className="text-xl font-bold text-[var(--title)]">

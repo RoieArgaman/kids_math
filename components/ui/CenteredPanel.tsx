@@ -26,7 +26,7 @@ export function CenteredPanel({
       <Surface
         data-testid={testId ? childTid(testId, "card") : undefined}
         variant={surfaceVariant}
-        className="mx-auto max-w-sm rounded-[22px] p-8 text-center shadow-[0_2px_14px_rgba(80,60,140,0.06)]"
+        className="mx-auto max-w-sm rounded-card p-8 text-center shadow-[0_2px_14px_rgba(80,60,140,0.06)]"
       >
         {emoji ? (
           <p data-testid={testId ? childTid(testId, "emoji") : undefined} className="mb-2 text-6xl" aria-hidden>

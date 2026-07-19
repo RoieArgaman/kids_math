@@ -44,7 +44,7 @@ export function PinInput({
       <input
         id={id}
         data-testid={testIds.input}
-        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
+        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)]"
         type="password"
         inputMode="numeric"
         dir="ltr"
