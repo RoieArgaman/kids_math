@@ -6,6 +6,26 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.4c — the last D8 defects, and a merge that shouldn't happen)
+- **Shipped:** badge tooltip no longer clips; retry button moved to its own row; tier label
+  11px and off the deleted `--muted-soft` value.
+- **The tooltip fix is a case where the obvious approach is wrong.** The report said "flip the
+  tooltip below for the first row". But the badge grid is `sm:2 / lg:3 / xl:4` columns, so *which
+  badges are in the first row changes per breakpoint* — an index-based flip is correct at one
+  width and wrong at the others. Opening **downward always** is unconditionally safe: the page can
+  scroll down, but it can never scroll above the viewport top. **When a fix depends on layout
+  position, check whether that position is responsive before encoding it.**
+- **Declined: merging the Math and English/Science day-cards** (the last part of D5). They differ
+  in **data, not styling**. Math renders a day-number circle, medallion, state chip and a
+  score-driven progress bar; the subject card renders title + objective + CTA because **the
+  subject model has no per-day score**. So "one component" would be either a union of optional
+  props with two disjoint modes — hiding the divergence rather than resolving it, and worse than
+  two honest components — or a content change to add per-day scoring to English/Science.
+  **Recorded as needing a product decision instead of forcing the abstraction.** A shared
+  component that immediately branches on `if (mode === 'math')` has not shared anything.
+- **Reinforced:** `check:testids` caught two new wrapper `<div>`s **locally this time**, because
+  the full gate set was run after the JSX change. That is the exact failure that broke CI on #113.
+
 ### 2026-07-18 (Phase 3.5 retrospective — what a design-QA report is actually worth)
 - **Outcome:** 8 PRs, D1–D13 closed. Zero contrast failures across every leaf text node (gradients
   included), zero sub-44px controls, zero `!important`, one accent ramp / two radii / one rail /

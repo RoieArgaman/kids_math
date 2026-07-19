@@ -230,7 +230,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     }}
                   >
                     {/* Tier label */}
-                    <span data-testid={childTid(cardTid, "tier")} className="absolute right-2 top-2 text-[10px] font-semibold uppercase tracking-wide text-[#9a93a8]">
+                    <span data-testid={childTid(cardTid, "tier")} className="absolute right-2 top-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                       {TIER_LABEL[badge.tier]}
                     </span>
 
@@ -238,7 +238,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     <div
                       data-testid={childTid(cardTid, "tooltip")}
                       className={[
-                        "pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-48",
+                        "pointer-events-none absolute top-full left-1/2 z-10 mt-2 w-48",
                         "-translate-x-1/2 rounded-xl bg-slate-800 px-3 py-2 text-center",
                         "text-xs leading-snug text-white shadow-lg transition-opacity duration-150",
                         isTooltipOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100",
@@ -246,7 +246,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       dir="rtl"
                     >
                       {badge.description}
-                      <div data-testid={childTid(cardTid, "tooltip", "arrow")} className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                      <div data-testid={childTid(cardTid, "tooltip", "arrow")} className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-800" />
                     </div>
 
                     {/* Icon with lock overlay */}
