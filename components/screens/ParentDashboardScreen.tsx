@@ -448,7 +448,8 @@ export function ParentDashboardScreen() {
         <Chip
           data-testid={testIds.screen.parentDashboard.encourageStep()}
           tone="success"
-          className="min-h-[44px] !px-4 !py-3 text-sm"
+          size="lg"
+          className="min-h-[44px]"
         >
           {encourageStepLabel}
         </Chip>

@@ -26,7 +26,7 @@ export default function CookiesPage() {
 
       <HeroHeader
         data-testid={childTid(root, "hero")}
-        className="!px-6 !py-8 sm:!px-8 sm:!py-10"
+        size="roomy"
         title="מדיניות עוגיות ואחסון דומה"
         subtitle="הבהרה קצרה על עוגיות טכניות ועל אחסון מקומי בדפדפן. אין כאן ייעוץ משפטי."
         decorations={[

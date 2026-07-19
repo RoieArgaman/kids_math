@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { HeroHeader } from "@/components/ui/HeroHeader";
-import { Surface } from "@/components/ui/Surface";
 import { logEvent } from "@/lib/analytics/events";
 import {
   COMPLETION_GATE_NOTE,
@@ -26,6 +25,7 @@ import { useReloadOnStorageResume } from "@/lib/hooks/useReloadOnStorageResume";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import type { WorkbookProgressState } from "@/lib/types";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
 
 export function PlanScreen({ grade }: { grade: GradeId }) {
   const effectiveGrade = grade ?? DEFAULT_GRADE;
@@ -67,9 +67,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.plan.root(`${effectiveGrade}.loading`)} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.plan.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
-          טוֹעֲנִים...
-        </Surface>
+        <LoadingPanel data-testid={childTid(testIds.screen.plan.root(`${effectiveGrade}.loading`), "loading")} emoji="⏳" title="טוֹעֲנִים..." />
       </main>
     );
   }

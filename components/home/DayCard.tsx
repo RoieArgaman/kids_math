@@ -105,7 +105,7 @@ export function DayCard({
             data-testid={childTid(root, "title")}
             className="min-w-0 text-base font-bold leading-snug break-words text-[var(--title)]"
           >
-            {dayEmoji} יוֹם {day.dayNumber}: {day.title}
+            יוֹם {day.dayNumber}: {day.title}
           </strong>
         </div>
 
