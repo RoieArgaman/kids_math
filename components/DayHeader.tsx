@@ -40,7 +40,7 @@ export function DayHeader({
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">
         <span
           data-testid={weekBadgeTestId}
-          className="inline-block rounded-full bg-white/75 px-3 py-1 text-xs font-semibold text-[--accent]"
+          className="inline-block rounded-full bg-white/75 px-3 py-1 text-xs font-semibold text-[var(--accent)]"
         >
           ⭐ שָׁבוּעַ {day.week}
         </span>
@@ -48,7 +48,7 @@ export function DayHeader({
           <span
             data-testid={sessionTimerTestId}
             dir="ltr"
-            className="inline-block min-w-[3.25rem] rounded-full bg-white/70 px-3 py-1 text-xs font-semibold font-mono tabular-nums text-[--accent]"
+            className="inline-block min-w-[3.25rem] rounded-full bg-white/70 px-3 py-1 text-xs font-semibold font-mono tabular-nums text-[var(--accent)]"
             aria-live="polite"
           >
             ⏱ {timerLabel}
@@ -64,11 +64,11 @@ export function DayHeader({
             {emoji}
           </span>
         </span>
-        <h1 data-testid={titleTestId} className="text-3xl font-bold text-[--title]">
+        <h1 data-testid={titleTestId} className="text-3xl font-bold text-[var(--title)]">
           יוֹם {day.dayNumber}: {day.title}
         </h1>
       </div>
-      <p data-testid={objectiveTestId} className="mt-2 text-sm text-[--muted]">
+      <p data-testid={objectiveTestId} className="mt-2 text-sm text-[var(--muted)]">
         {day.objective}
       </p>
     </header>

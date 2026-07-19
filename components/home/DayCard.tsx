@@ -103,7 +103,7 @@ export function DayCard({
           </span>
           <strong
             data-testid={childTid(root, "title")}
-            className="min-w-0 text-base font-bold leading-snug break-words text-[--title]"
+            className="min-w-0 text-base font-bold leading-snug break-words text-[var(--title)]"
           >
             {dayEmoji} יוֹם {day.dayNumber}: {day.title}
           </strong>
@@ -137,23 +137,23 @@ export function DayCard({
           data-testid={childTid(root, "progressRowHeader")}
           className="mb-1 flex items-center justify-between text-xs font-medium"
         >
-          <span data-testid={childTid(root, "progressLabel")} className="text-[--muted]">
+          <span data-testid={childTid(root, "progressLabel")} className="text-[var(--muted)]">
             הִתְקַדְּמוּת
           </span>
           <span
             data-testid={childTid(root, "progressPercent")}
-            className={`rounded-full px-2.5 py-1 text-xs font-bold ${score === 100 ? "bg-[#d1fae5] text-emerald-600" : "bg-[#f3effb] text-[--accent]"}`}
+            className={`rounded-full px-2.5 py-1 text-xs font-bold ${score === 100 ? "bg-[#d1fae5] text-emerald-600" : "bg-[#f3effb] text-[var(--accent)]"}`}
           >
             {Math.round(score)}%
           </span>
         </div>
         <div
           data-testid={childTid(root, "progressTrack")}
-          className="h-2 w-full overflow-hidden rounded-full bg-[--track]"
+          className="h-2 w-full overflow-hidden rounded-full bg-[var(--track)]"
         >
           <div
             data-testid={childTid(root, "progressFill")}
-            className={`h-full rounded-full transition-all ${score === 100 ? "bg-[#34d399]" : "bg-[--accent]"}`}
+            className={`h-full rounded-full transition-all ${score === 100 ? "bg-[#34d399]" : "bg-[var(--accent)]"}`}
             style={{ width: `${score}%` }}
           />
         </div>

@@ -78,10 +78,10 @@ export function SubjectLevelPickerScreen({ config }: { config: SubjectScreenConf
                       {config.levelPicker.levelEmoji[level]}
                     </span>
                   </div>
-                  <p data-testid={childTid(cardId, "title")} className="mt-2 text-xl font-bold text-[--title]">
+                  <p data-testid={childTid(cardId, "title")} className="mt-2 text-xl font-bold text-[var(--title)]">
                     {config.levelLabel(level)}
                   </p>
-                  <p data-testid={childTid(cardId, "subtitle")} className="mt-1 text-sm text-[--muted]">
+                  <p data-testid={childTid(cardId, "subtitle")} className="mt-1 text-sm text-[var(--muted)]">
                     {config.levelSubtitle(level)} • {total} שִׁעוּרִים וּמִבְחָן
                   </p>
                 </div>

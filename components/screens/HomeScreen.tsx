@@ -252,24 +252,24 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
         >
           <span
             data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "label")}
-            className="text-[--title]"
+            className="text-[var(--title)]"
           >
             הִתְקַדְּמוּת כְּלָלִית
           </span>
           <span
             data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "count")}
-            className="text-[--muted]"
+            className="text-[var(--muted)]"
           >
             {completedDays} / {totalDays} יָמִים
           </span>
         </div>
         <div
           data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "track")}
-          className="h-2 w-full overflow-hidden rounded-full bg-[--track]"
+          className="h-2 w-full overflow-hidden rounded-full bg-[var(--track)]"
         >
           <div
             data-testid={childTid(testIds.screen.home.root(effectiveGrade), "overall", "fill")}
-            className={`h-full rounded-full transition-all ${allComplete ? "bg-[#34d399]" : "bg-[--accent]"}`}
+            className={`h-full rounded-full transition-all ${allComplete ? "bg-[#34d399]" : "bg-[var(--accent)]"}`}
             style={{ width: `${overallPercent}%` }}
           />
         </div>
@@ -343,7 +343,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
               </span>
               <div
                 data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "rule")}
-                className="h-px flex-1 bg-[--hairline]"
+                className="h-px flex-1 bg-[var(--hairline)]"
               />
             </div>
 

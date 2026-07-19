@@ -6,6 +6,35 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.1b — the v4 regression the 3.5.1 audit missed)
+- **Trigger:** Starting 3.5.2, about to write `text-[--title]` by hand, checked whether the
+  codebase's existing syntax was still valid under v4. It was not.
+- **The bug:** v4 **removed** the v3 shorthand `text-[--token]`. The class still compiles, but
+  emits `color: --title` — **invalid CSS, silently discarded by the browser**. 43 usages across
+  14 files had been inert since the v4 migration (#101).
+- **Why three reviewers and a full audit missed it:**
+  1. **It compiles.** No build error, no lint error, no type error, no test failure. Every gate
+     was green with the entire token layer dead.
+  2. **The most-visible case was invisible.** `--title` (#2c2348) is byte-identical to
+     `--foreground`, so every broken title *inherited the correct colour by coincidence*. The
+     screens you'd check first looked perfect. `--muted`, `--accent` and `--track` were the
+     visibly-broken ones, and they read as "slightly off", not "broken".
+  3. **My 3.5.1 audit asked the wrong questions.** I checked border *colour*, ring *width*, and
+     the shadow *rename* — three known v4 changes — and declared D4 clean. I never asked whether
+     the *arbitrary-value variable syntax* had changed. A migration audit driven by a list of
+     remembered breaking changes will only ever find the ones you remembered.
+- **What actually catches this class of bug:** assert on the **compiled output**, not the source.
+  `grep -oE '(color|background-color|border-color):--[a-z-]+' <built css>` must return zero — a
+  bare token after a colon is always invalid. That check is cheap, mechanical, and would have
+  caught this the day #101 landed. **A green test suite proves the code runs, not that the CSS
+  applies.**
+- **Second-order lesson:** a unit test asserted `toHaveClass("text-[--accent]")` and passed
+  happily, because `toHaveClass` compares class *strings* — it cannot know the class produces no
+  style. Class-name assertions are not styling assertions.
+- **How to reuse next time:** after any Tailwind major upgrade, diff the *compiled* stylesheet for
+  dropped declarations rather than trusting that the source still compiles. Prefer the explicit
+  `[var(--token)]` form — it is valid in both v3 and v4, so the next major can't silently kill it.
+
 ### 2026-07-18 (Phase 3.5.1 — design-token foundation + Tailwind v4 audit, MAX)
 - **Trigger:** Roadmap Phase 3.5, PR 1 of 5. Seeded by the `Full App QA Report` design-QA pass.
 - **What we learned:**

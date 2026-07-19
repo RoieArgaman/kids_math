@@ -106,7 +106,7 @@ export function DayTeachingPrimer({ day, grade, dayId }: DayTeachingPrimerProps)
       >
         <h2
           data-testid={childTid(primerRoot, "title")}
-          className="text-base font-bold text-[--title]"
+          className="text-base font-bold text-[var(--title)]"
         >
           <span
             data-testid={childTid(primerRoot, "title", "icon")}

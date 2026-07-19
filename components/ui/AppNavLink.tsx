@@ -6,8 +6,8 @@ const baseClassName =
 
 const toneClassName = {
   default: "text-violet-700 hover:text-violet-900",
-  primary: "text-[--accent] hover:text-[#6d28d9]",
-  muted: "text-[--muted-soft] hover:text-[--muted]",
+  primary: "text-[var(--accent)] hover:text-[#6d28d9]",
+  muted: "text-[var(--muted-soft)] hover:text-[var(--muted)]",
 } as const;
 
 export type AppNavLinkTone = keyof typeof toneClassName;

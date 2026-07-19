@@ -165,10 +165,10 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
                       {card.emoji}
                     </p>
                   </div>
-                  <p data-testid={childTid(card.cardTestId, "title")} className="mt-2 text-xl font-bold text-[--title]">
+                  <p data-testid={childTid(card.cardTestId, "title")} className="mt-2 text-xl font-bold text-[var(--title)]">
                     {card.title}
                   </p>
-                  <p data-testid={childTid(card.cardTestId, "subtitle")} className="mt-1 text-sm text-[--muted]">
+                  <p data-testid={childTid(card.cardTestId, "subtitle")} className="mt-1 text-sm text-[var(--muted)]">
                     {card.subtitle}
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
                     {card.ctaLabel}
                   </span>
                 ) : (
-                  <p data-testid={card.lockedHintTestId} className="text-center text-sm text-[--muted]">
+                  <p data-testid={card.lockedHintTestId} className="text-center text-sm text-[var(--muted)]">
                     {card.lockedHint}
                   </p>
                 )}

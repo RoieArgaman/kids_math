@@ -122,7 +122,7 @@ export function SpiralReviewBlock({ grade, subject, dayId, sectionId }: SpiralRe
       style={{ borderInlineStartColor: "var(--section-review)" }}
     >
       <div data-testid={headerId} className="mb-3">
-        <h2 data-testid={childTid(headerId, "title")} className="text-xl font-bold text-[--title]">
+        <h2 data-testid={childTid(headerId, "title")} className="text-xl font-bold text-[var(--title)]">
           <span
             data-testid={childTid(headerId, "emoji")}
             className="me-2"
@@ -133,7 +133,7 @@ export function SpiralReviewBlock({ grade, subject, dayId, sectionId }: SpiralRe
           </span>
           חֲזָרָה סְפִּירָלִית
         </h2>
-        <p data-testid={childTid(headerId, "subtitle")} className="mt-1 text-sm text-[--muted]">
+        <p data-testid={childTid(headerId, "subtitle")} className="mt-1 text-sm text-[var(--muted)]">
           תַּרְגִּילִים קְצָרִים לְחִזּוּק דְּבָרִים שֶׁכְּבָר לָמַדְנוּ — בְּלִי לְהַשְׁפִּיעַ עַל הַהִתְקַדְּמוּת.
         </p>
       </div>

@@ -265,7 +265,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                   ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
                     ? "border-[#eceaf1] opacity-60"
-                    : "border-[--border] bg-white"
+                    : "border-[var(--border)] bg-white"
               }`}
             >
               <div data-testid={childTid(cardRoot, "topRow")} className="mb-3 flex items-center gap-3">
@@ -278,10 +278,10 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                   </span>
                 </span>
                 <div data-testid={childTid(cardRoot, "info")} className="min-w-0 flex-1">
-                  <p data-testid={childTid(cardRoot, "title")} className="text-base font-bold leading-tight text-[--title]">
+                  <p data-testid={childTid(cardRoot, "title")} className="text-base font-bold leading-tight text-[var(--title)]">
                     {section.title}
                   </p>
-                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[--muted]">
+                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[var(--muted)]">
                     {section.learningGoal}
                   </p>
                 </div>
@@ -293,13 +293,13 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
                 </span>
               </div>
               <div data-testid={childTid(cardRoot, "bottomRow")} className="flex items-center justify-between gap-3">
-                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[--muted]">
+                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[var(--muted)]">
                   {correctInSection}/{section.exercises.length} תרגילים ✓
                 </span>
                 {isCardLocked ? (
                   <span
                     data-testid={childTid(cardRoot, "lockedHint")}
-                    className="text-sm font-semibold text-[--muted]"
+                    className="text-sm font-semibold text-[var(--muted)]"
                   >
                     הַשְׁלֵם חִימּוּם תְּחִילָה
                   </span>
@@ -342,7 +342,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
       {weakExercises.length > 0 && (
         <div
           data-testid={weakSpotPanelId}
-          className="mb-6 rounded-3xl border border-[--border] bg-violet-50/60 p-5 shadow-xs"
+          className="mb-6 rounded-3xl border border-[var(--border)] bg-violet-50/60 p-5 shadow-xs"
         >
           <p
             data-testid={childTid(weakSpotPanelId, "title")}
