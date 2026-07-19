@@ -6,6 +6,34 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5 retrospective — what a design-QA report is actually worth)
+- **Outcome:** 8 PRs, D1–D13 closed. Zero contrast failures across every leaf text node (gradients
+  included), zero sub-44px controls, zero `!important`, one accent ramp / two radii / one rail /
+  one locked treatment / one grey.
+- **The report was a good map with unreliable specifics.** Roughly a quarter of its concrete
+  claims did not survive contact with the source: "56 bare border sites" (really **0**), "at least
+  four card radii" (really **10**), "GMAT bookmark under 44px" (already 52px), "LoadingPanel is
+  min-h-screen" (it is a card). **Verify every claim before fixing it** — and re-record the true
+  number, because the wrong one silently mis-scopes the work.
+- **The most valuable findings were the ones the report could not see.** Six of the fourteen
+  (D9–D14) were discovered *while* fixing others, and included the worst bug of the phase: v4 had
+  removed the `text-[--token]` shorthand, so **the entire design-token layer had been dead in
+  production** since #101 — compiling fine, every gate green. Static review cannot find that;
+  only inspecting compiled output could.
+- **Recurring shape: gates that check nothing.** Three instances in one phase — invalid CSS that
+  still compiled; `tsconfig` excluding `tests/` so specs were never typechecked; and a CI watcher
+  piped through `tail`, which returns tail's exit code, so **failures reported success**. When a
+  check is the only thing standing between you and a regression, verify the *check* works.
+- **Fix the token, not the call site.** Twice the "obvious" local fix would have made things
+  worse: mapping admin's passing `slate-600` onto a *failing* `--muted` (D10), and fixing `--muted`
+  while 35 hardcoded copies of the old value kept failing (D11). Ask what else shares the defect.
+- **Consolidation silently drops semantics.** Merging `LockedGradeScreen` into `CenteredPanel`
+  looked identical and kept tests green while deleting the page's only `<h1>` (D14). Diff
+  semantics, not pixels.
+- **How to reuse next time:** name tokens at their current values first so adoption is a provably
+  empty visual diff; write the systemic sweep (contrast, touch targets) instead of per-screen
+  assertions; and make layout opt-in per screen rather than flipping a global cap.
+
 ### 2026-07-18 (Phase 3.5.5 — desktop layout, opt-in rather than global)
 - **Trigger:** D1 — `main` hard-capped at 720px with 43 `sm:` utilities and effectively no
   `md:`/`lg:`/`xl:` in the tree, so every screen was a mobile column in empty gutters.
