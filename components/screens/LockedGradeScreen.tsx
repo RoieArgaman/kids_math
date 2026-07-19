@@ -43,7 +43,6 @@ export function LockedGradeScreen({
         as="main"
         data-testid={rootTestId}
         descriptionTestId={reasonTestId ?? childTid(rootTestId, "reason")}
-        titleAs="h1"
         emoji={emoji}
         title={title}
         description={reason}
