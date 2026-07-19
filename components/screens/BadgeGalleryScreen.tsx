@@ -176,7 +176,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Progress counter */}
       <div
         data-testid={childTid(badgesRoot, "progressCounter")}
-        className="mb-6 flex items-center justify-between rounded-xl bg-[#f3effb] px-4 py-2 text-sm font-semibold text-[#8b75cc]"
+        className="mb-6 flex items-center justify-between rounded-xl bg-[#f3effb] px-4 py-2 text-sm font-semibold text-[var(--accent)]"
         dir="rtl"
       >
         <span data-testid={childTid(badgesRoot, "progressCounter", "label")}>🏅 הפרסים שלי</span>
@@ -217,7 +217,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       "group relative rounded-2xl border p-4 text-center shadow-xs transition-all cursor-pointer",
                       isUnlocked
                         ? `${TIER_BORDER[badge.tier]} ${TIER_BG[badge.tier]}`
-                        : `${TIER_BORDER[badge.tier]} ${TIER_BG[badge.tier]} opacity-50 grayscale`,
+                        : `${TIER_BORDER[badge.tier]} ${TIER_BG[badge.tier]} is-locked`,
                       isRecentlyUnlocked ? "badge-new-glow" : "",
                     ]
                       .filter(Boolean)

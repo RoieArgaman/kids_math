@@ -235,8 +235,8 @@ export function SpeakerButton({
   const stateClass = !available
     ? "border-[#e5e7eb] bg-[#f1f5f9] text-[#94a3b8] opacity-70 cursor-not-allowed"
     : isSpeaking
-      ? "border-[#a78bfa] bg-[#ede9fe] text-[#6d28d9] ring-1 ring-[#cdbff2]"
-      : "border-[#e7defb] bg-[#faf7ff] text-[#8b75cc] hover:bg-[#f3effb]";
+      ? "border-[var(--accent-soft)] bg-[#ede9fe] text-[var(--accent-strong)] ring-1 ring-[#cdbff2]"
+      : "border-[#e7defb] bg-[#faf7ff] text-[var(--accent)] hover:bg-[#f3effb]";
 
   return (
     <button

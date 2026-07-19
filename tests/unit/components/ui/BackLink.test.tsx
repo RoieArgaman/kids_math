@@ -15,6 +15,6 @@ describe("BackLink", () => {
 
   it("passes ButtonLink props (variant) through", () => {
     render(<BackLink href="/x" data-testid="back" variant="outline">חזרה</BackLink>);
-    expect(screen.getByTestId("back")).toHaveClass("text-[#6d28d9]");
+    expect(screen.getByTestId("back")).toHaveClass("text-[var(--accent-strong)]");
   });
 });

@@ -6,7 +6,7 @@ const baseClassName =
 
 const toneClassName = {
   default: "text-violet-700 hover:text-violet-900",
-  primary: "text-[var(--accent)] hover:text-[#6d28d9]",
+  primary: "text-[var(--accent)] hover:text-[var(--accent-strong)]",
   muted: "text-[var(--muted-soft)] hover:text-[var(--muted)]",
 } as const;
 

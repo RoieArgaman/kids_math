@@ -38,7 +38,7 @@ export function TopBar() {
             <button
               data-testid={testIds.component.auth.loginButton()}
               onClick={() => setShowLogin(true)}
-              className="rounded-xl px-3 py-1.5 text-sm font-semibold text-[#8b75cc] transition hover:bg-[#f3effb] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="rounded-xl px-3 py-1.5 text-sm font-semibold text-[var(--accent)] transition hover:bg-[#f3effb] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
             >
               כניסה
             </button>

@@ -258,13 +258,13 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
               data-testid={cardRoot}
               data-state={isUnlocking ? "unlocking" : undefined}
               style={{ borderInlineStartColor: railColor }}
-              className={`rounded-[20px] border border-s-4 p-4 shadow-[0_2px_12px_rgba(80,60,140,0.05)] transition-all ${
+              className={`rounded-card border border-s-rail p-4 shadow-[0_2px_12px_rgba(80,60,140,0.05)] transition-all ${
                 isUnlocking ? "animate-unlock-pulse" : ""
               } ${
                 isCardComplete
                   ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
-                    ? "border-[#eceaf1] opacity-60"
+                    ? "is-locked"
                     : "border-[var(--border)] bg-white"
               }`}
             >
@@ -342,11 +342,11 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
       {weakExercises.length > 0 && (
         <div
           data-testid={weakSpotPanelId}
-          className="mb-6 rounded-3xl border border-[var(--border)] bg-violet-50/60 p-5 shadow-xs"
+          className="mb-6 rounded-panel border border-[var(--border)] bg-violet-50/60 p-5 shadow-xs"
         >
           <p
             data-testid={childTid(weakSpotPanelId, "title")}
-            className="mb-3 text-sm font-bold text-violet-900"
+            className="mb-3 text-sm font-bold text-[var(--title)]"
           >
             💪 רוצים לתרגל שוב? אלה התרגילים שכדאי לחזור עליהם:
           </p>

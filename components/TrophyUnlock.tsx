@@ -47,7 +47,7 @@ export function TrophyUnlock({ visible, newBadgeIds, onConfirm }: TrophyUnlockPr
             <p
               id="trophy-unlock-title"
               data-testid={childTid(dialogTid, "title")}
-              className="mt-3 text-2xl font-bold text-[#6d28d9]"
+              className="mt-3 text-2xl font-bold text-[var(--accent-strong)]"
             >
               פְּרָס חָדָשׁ!
             </p>

@@ -126,7 +126,7 @@ export function SubjectDayScreen({
         <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
       </div>
 
-      <div data-testid={childTid(root, "header")} className="mb-4 rounded-[20px] border border-[#efe9f7] bg-white p-5 shadow-[0_2px_12px_rgba(80,60,140,0.05)]">
+      <div data-testid={childTid(root, "header")} className="mb-4 rounded-card border border-[#efe9f7] bg-white p-5 shadow-[0_2px_12px_rgba(80,60,140,0.05)]">
         <h1 data-testid={childTid(root, "title")} className="text-2xl font-bold">
           {day.title}
         </h1>
@@ -152,11 +152,11 @@ export function SubjectDayScreen({
             <div
               key={section.id}
               data-testid={cardRoot}
-              className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
+              className={`rounded-panel border-2 p-5 shadow-xs transition-all ${
                 isCardComplete
                   ? "border-[#bbf7d0] bg-[#f4fcf7]"
                   : isCardLocked
-                    ? "border-[#eceaf1] bg-[#faf9fc] opacity-60"
+                    ? "is-locked"
                     : "border-[#efe9f7] bg-white"
               }`}
             >
@@ -201,7 +201,7 @@ export function SubjectDayScreen({
       {allSectionsComplete && (
         <div
           data-testid={ids.completionPanel(dayId)}
-          className="mb-6 rounded-3xl border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
+          className="mb-6 rounded-panel border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
         >
           <p data-testid={childTid(ids.completionPanel(dayId), "icon")} className="mb-1 text-5xl">
             🎉

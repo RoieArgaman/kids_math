@@ -30,7 +30,7 @@ export function ExamRulesPanel({
   onContinue,
 }: ExamRulesPanelProps) {
   return (
-    <Surface data-testid={rootTestId} variant="default" className="rounded-3xl p-6 shadow-xs">
+    <Surface data-testid={rootTestId} variant="default" className="rounded-panel p-6 shadow-xs">
       <h1 data-testid={childTid(rootTestId, "title")} className="text-xl font-bold text-slate-900">
         {title}
       </h1>

@@ -34,7 +34,7 @@ export function SiteFooter() {
             <Link
               data-testid={testIds.layout.siteFooter.linkPrivacy()}
               href={routes.privacy()}
-              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[#6d28d9] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
+              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[var(--accent-strong)] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
             >
               מדיניות פרטיות
             </Link>
@@ -48,7 +48,7 @@ export function SiteFooter() {
             <Link
               data-testid={testIds.layout.siteFooter.linkCookies()}
               href={routes.cookies()}
-              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[#6d28d9] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
+              className="inline-flex min-h-[44px] items-center rounded-lg px-2 py-1.5 font-semibold text-[var(--accent-strong)] underline decoration-[#cdbff2] underline-offset-2 transition hover:bg-[#f7f4fd] hover:text-[#2c2348] motion-reduce:transition-none"
             >
               מדיניות עוגיות
             </Link>

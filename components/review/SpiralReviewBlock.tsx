@@ -118,7 +118,7 @@ export function SpiralReviewBlock({ grade, subject, dayId, sectionId }: SpiralRe
     <section
       data-testid={rootId}
       dir="rtl"
-      className="surface mb-4 rounded-[22px] border-s-[6px] p-[18px]"
+      className="surface mb-4 rounded-card border-s-rail p-[18px]"
       style={{ borderInlineStartColor: "var(--section-review)" }}
     >
       <div data-testid={headerId} className="mb-3">

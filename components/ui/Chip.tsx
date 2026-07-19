@@ -15,7 +15,7 @@ function toneClassName(tone: ChipTone): string {
   if (tone === "danger") return "bg-[#fee2e2] text-[#dc2626]";
   if (tone === "warning") return "bg-[#fef3c7] text-[#92400e]";
   if (tone === "success") return "bg-[#d1fae5] text-[#047857]";
-  if (tone === "info") return "bg-[#ede9fe] text-[#6d28d9]";
+  if (tone === "info") return "bg-[#ede9fe] text-[var(--accent-strong)]";
   return "bg-[#f3effb] text-[#6b6577]";
 }
 

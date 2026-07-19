@@ -292,7 +292,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
       {finalExam?.passed ? (
         <div
           data-testid={childTid(testIds.screen.home.root(effectiveGrade), "gmatBanner")}
-          className="surface mb-6 rounded-3xl p-4"
+          className="surface mb-6 rounded-panel p-4"
         >
           <p data-testid={childTid(testIds.screen.home.root(effectiveGrade), "gmatBanner", "text")} className="text-sm font-semibold text-slate-800">רוצים עוד אתגר מתמטי (רשות)?</p>
           <Link

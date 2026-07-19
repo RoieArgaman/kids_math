@@ -82,7 +82,7 @@ export default function GradePickerPage() {
               <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "emoji")} className="text-4xl leading-none" aria-hidden>
                 🧮
               </p>
-              <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "title")} className="mt-2 text-xl font-bold text-violet-900">
+              <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "title")} className="mt-2 text-xl font-bold text-[var(--title)]">
                 כִּיתָּה א׳
               </p>
               <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("a"), "subtitle")} className="muted mt-1 text-sm">
@@ -113,7 +113,7 @@ export default function GradePickerPage() {
                 <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "emoji")} className="text-4xl leading-none" aria-hidden>
                   📘
                 </p>
-                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "title")} className="mt-2 text-xl font-bold text-violet-900">
+                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "title")} className="mt-2 text-xl font-bold text-[var(--title)]">
                   כִּיתָּה ב׳
                 </p>
                 <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "subtitle")} className="muted mt-1 text-sm">
@@ -133,15 +133,15 @@ export default function GradePickerPage() {
         ) : (
           <div
             data-testid={testIds.screen.gradePicker.gradeCard("b")}
-            className="surface p-5 opacity-60"
+            className="surface is-locked p-5"
             aria-label="כיתה ב׳ (נעולה)"
           >
             <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "row")} className="flex items-start justify-between gap-3">
               <div data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "content")}>
-                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "emoji")} className="text-4xl leading-none" aria-hidden>
+                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "emoji")} className="locked-dim text-4xl leading-none" aria-hidden>
                   📘
                 </p>
-                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "title")} className="mt-2 text-xl font-bold text-violet-900">
+                <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "title")} className="mt-2 text-xl font-bold text-[var(--title)]">
                   כִּיתָּה ב׳
                 </p>
                 <p data-testid={childTid(testIds.screen.gradePicker.gradeCard("b"), "subtitle")} className="muted mt-1 text-sm">

@@ -1,5 +1,5 @@
 const defaultCardClass =
-  "surface mx-auto max-w-sm rounded-3xl p-8 text-center shadow-lg";
+  "surface mx-auto max-w-sm rounded-panel p-8 text-center shadow-lg";
 
 export type LoadingPanelProps = {
   emoji?: string;

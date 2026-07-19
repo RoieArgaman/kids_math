@@ -13,7 +13,7 @@ type CommonProps = {
 function variantClassName(variant: ButtonVariant): string {
   if (variant === "accent") return "btn-accent";
   if (variant === "disabled") return "btn-disabled";
-  return "border border-[#e7defb] bg-white text-[#6d28d9] hover:bg-[#f7f4fd]";
+  return "border border-[#e7defb] bg-white text-[var(--accent-strong)] hover:bg-[#f7f4fd]";
 }
 
 export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> &

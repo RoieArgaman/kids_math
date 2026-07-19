@@ -229,7 +229,7 @@ export function SubjectSectionScreen({
       {sectionComplete && !showReward && (
         <div
           data-testid={completionPanelId}
-          className="mb-6 rounded-3xl border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
+          className="mb-6 rounded-panel border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-[#d1fae5] p-6 text-center shadow-md"
         >
           <p data-testid={childTid(completionPanelId, "icon")} className="mb-1 text-4xl">
             ✅

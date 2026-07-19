@@ -14,7 +14,7 @@ describe("Button", () => {
 
   it("uses the outline variant classes when asked", () => {
     render(<Button data-testid="b" variant="outline">Go</Button>);
-    expect(screen.getByTestId("b")).toHaveClass("text-[#6d28d9]");
+    expect(screen.getByTestId("b")).toHaveClass("text-[var(--accent-strong)]");
   });
 
   it("forces the disabled variant and disables the element when disabled", () => {

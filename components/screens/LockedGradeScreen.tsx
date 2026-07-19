@@ -38,7 +38,7 @@ export function LockedGradeScreen({
     <main data-testid={rootTestId} className="flex min-h-screen items-center justify-center px-4">
       <div
         data-testid={childTid(rootTestId, "panel")}
-        className="surface mx-auto w-full max-w-md rounded-3xl p-8 text-center shadow-lg"
+        className="surface mx-auto w-full max-w-md rounded-panel p-8 text-center shadow-lg"
       >
         <p data-testid={childTid(rootTestId, "emoji")} className="mb-2 text-6xl" aria-hidden="true">
           {emoji}
@@ -65,7 +65,7 @@ export function LockedGradeScreen({
             <Link
               href={secondary.href}
               data-testid={secondary.testId}
-              className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
+              className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[var(--accent-strong)] hover:bg-[#f7f4fd]"
             >
               {secondary.label}
             </Link>

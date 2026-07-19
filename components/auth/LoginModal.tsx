@@ -112,7 +112,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
     >
       <div
         data-testid={testIds.component.auth.loginModal()}
-        className="surface w-full max-w-sm rounded-3xl p-6 shadow-xl"
+        className="surface w-full max-w-sm rounded-panel p-6 shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="login-modal-title"
@@ -144,7 +144,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 setUsername(e.target.value);
                 clearErrors();
               }}
-              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={isLoading}
             />
           </div>
@@ -168,7 +168,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                   setPassword(e.target.value);
                   clearErrors();
                 }}
-                className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+                className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                 disabled={isLoading}
               />
               {/* Show-password toggle — cuts mistyped passwords (and so, lockouts) for kids. */}

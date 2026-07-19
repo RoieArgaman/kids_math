@@ -266,7 +266,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         <AppNavLink href={routes.gradeHome(grade, { previewAll })}>חֲזָרָה לַחוֹבֶרֶת</AppNavLink>
       </div>
 
-      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-3xl border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs">
+      <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-panel border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs">
         <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-[#2c2348]">
           מִבְחָן מְסַכֵּם — כִּיתָּה {gradeLabel(grade)}
         </h1>
@@ -313,7 +313,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
         })}
       </SectionBlock>
 
-      <div data-testid={testIds.screen.finalExam.finishPanel(grade)} className="surface mt-4 rounded-3xl p-5">
+      <div data-testid={testIds.screen.finalExam.finishPanel(grade)} className="surface mt-4 rounded-panel p-5">
         {!showResults ? (
           canFinish ? (
             <button
@@ -386,7 +386,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
               )}
               <Link
                 href={routes.gradeHome(grade, { previewAll })}
-                className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#f7f4fd]"
+                className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[var(--accent-strong)] hover:bg-[#f7f4fd]"
               >
                 חזרה לחוברת
               </Link>
@@ -394,7 +394,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
                 <Link
                   data-testid={testIds.screen.finalExam.gmatChallengeCta(grade)}
                   href={routes.gradeGmatChallenge(grade, { previewAll })}
-                  className="touch-button col-span-full inline-block w-full rounded-2xl border-2 border-[#e7defb] bg-[#ede9fe] px-6 py-3 text-center font-semibold text-[#6d28d9] hover:bg-[#e3d9fb] sm:col-span-2"
+                  className="touch-button col-span-full inline-block w-full rounded-2xl border-2 border-[#e7defb] bg-[#ede9fe] px-6 py-3 text-center font-semibold text-[var(--accent-strong)] hover:bg-[#e3d9fb] sm:col-span-2"
                 >
                   אתגר התנסות רשות (בהשראת GMAT Focus)
                 </Link>

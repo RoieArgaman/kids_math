@@ -79,8 +79,8 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
             <div
               key={day.id}
               data-testid={cardId}
-              className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
-                isLocked ? "border-[#eceaf1] bg-[#faf9fc] opacity-60" : "border-[#efe9f7] bg-white"
+              className={`rounded-panel border-2 p-5 shadow-xs transition-all ${
+                isLocked ? "is-locked" : "border-[#efe9f7] bg-white"
               }`}
             >
               <div data-testid={childTid(cardId, "row")} className="flex items-center justify-between gap-3">
@@ -112,8 +112,8 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
 
         <div
           data-testid={ids.examCard()}
-          className={`rounded-3xl border-2 p-5 shadow-xs transition-all ${
-            examUnlocked ? "border-[#e7defb] bg-[#ede9fe]" : "border-[#eceaf1] bg-[#faf9fc] opacity-60"
+          className={`rounded-panel border-2 p-5 shadow-xs transition-all ${
+            examUnlocked ? "border-[#e7defb] bg-[#ede9fe]" : "is-locked"
           }`}
         >
           <div data-testid={childTid(ids.examCard(), "row")} className="flex items-center justify-between gap-3">
