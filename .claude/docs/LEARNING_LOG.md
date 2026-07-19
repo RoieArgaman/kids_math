@@ -6,6 +6,32 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.4d — the day-card merge, and a local suite that lies)
+- **D5 closed.** `DayCardShell` is now the one day-card design; `DayCard` (math) and
+  `SubjectHomeScreen` (English/Science) are thin wrappers. **English/Science day cards gained a
+  progress bar, day number, medallion and state chip** — using `percentDone` that was *already
+  persisted* and simply never read.
+- **The split that made it work: pass ids in, keep domain logic out.** The shell takes
+  `rootTestId` / `ctaTestId` rather than deriving them, so each subject keeps its own testid
+  namespace and **no spec changed**. Math-specific behaviour (final-exam scoring, GMAT hint, best
+  time, grade routing) stays in the math wrapper and reaches the shell through two
+  `ReactNode` slots. A shared component that needed to know which subject it was rendering would
+  have been the failure mode described in 3.5.4c.
+- **Checked first that only `dayCard(...)` and `dayCardCta(...)` were referenced by tests** —
+  no child ids — which is what made restructuring the subject card's internals safe.
+- **The local unit suite is flaky on this machine and it nearly cost an hour.** Three consecutive
+  full runs gave `179 passed`, then `2 failed | 174 passed (176)`, then on a **clean `main`
+  tree**, `179 passed` followed by `1 failed | 170 passed (171)` — a *different* test each time,
+  with the collected-file count varying (179 / 176 / 171). Both suspect specs passed in isolation
+  on both trees. **Diagnosis procedure that settles it quickly:** run the failing spec alone on
+  your branch, then run the *full* suite on a clean tree. If the clean tree also fails — with a
+  different test — it is the environment, not the change. Trust CI, which has reported
+  1472/1472 on every PR this phase.
+- **`rm -rf .next` while a dev server is running corrupts it** (`Cannot find module
+  './vendor-chunks/…'`, blank page, no console error — only the *server* log shows it). Stop the
+  preview before clearing the build cache; when a page renders blank with a clean console, read
+  `preview_logs` before suspecting your code.
+
 ### 2026-07-18 (Phase 3.5.4d — D14 headings, and retracting a wrong call)
 - **D14 fixed:** `CenteredPanel` renders its title as `<h1>` by default. Verified *before*
   flipping that every call site is an early-return full-page state (404, locked, loading, PIN
