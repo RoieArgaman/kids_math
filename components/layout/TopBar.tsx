@@ -30,7 +30,10 @@ export function TopBar() {
         {/* Bar stays full-bleed; the ROW is constrained so chrome lines up with page
             content instead of floating to the viewport edge on wide screens. 1120px
             matches `main.screen-wide`, the widest content column. */}
-        <div className="mx-auto flex h-full w-full max-w-[1120px] items-center px-4">
+        <div
+          data-testid={testIds.component.topBar.row()}
+          className="mx-auto flex h-full w-full max-w-[1120px] items-center px-4"
+        >
           <StudentTtsToggle />
           {/* ms-auto pins the auth section to the inline-end (visual left in RTL) even when
               StudentTtsToggle renders null — without it, justify-between collapses the lone
