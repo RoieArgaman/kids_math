@@ -50,7 +50,7 @@ export function CookieConsentBanner() {
           אנחנו משתמשים בעוגיות טכניות ובאחסון מקומי כדי שהאפליקציה תעבוד ותזכור את ההתקדמות. אפשר לקרוא עוד ב
           <Link
             data-testid={childTid(root, "link", "cookies")}
-            className="mx-1 font-semibold text-[var(--accent-strong)] underline decoration-[#cdbff2] underline-offset-2 hover:text-[#2c2348]"
+            className="mx-1 font-semibold text-[var(--accent-strong)] underline decoration-[#cdbff2] underline-offset-2 hover:text-[var(--title)]"
             href={routes.cookies()}
           >
             מדיניות העוגיות

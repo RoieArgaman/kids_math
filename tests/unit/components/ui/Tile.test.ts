@@ -27,7 +27,7 @@ describe("Tile", () => {
     const html = renderToStaticMarkup(createElement(Tile, { label: "L", value: "1" }));
     expect(html).toContain("border border-[#e7defb]");
     expect(html).toContain("bg-white/70");
-    expect(html).toContain("text-[#2c2348]");
+    expect(html).toContain("text-[var(--title)]");
   });
 
   it("colored tones reproduce CounterTile fills", () => {

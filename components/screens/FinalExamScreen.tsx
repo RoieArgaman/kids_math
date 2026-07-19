@@ -267,7 +267,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
       </div>
 
       <header data-testid={testIds.screen.finalExam.stickyHeader(grade)} className="progress-sticky rounded-panel border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs">
-        <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-[#2c2348]">
+        <h1 data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "title")} className="text-xl font-bold text-[var(--title)]">
           מִבְחָן מְסַכֵּם — כִּיתָּה {gradeLabel(grade)}
         </h1>
         <p data-testid={childTid(testIds.screen.finalExam.stickyHeader(grade), "subtitle")} className="muted mt-1 text-sm">
@@ -336,7 +336,7 @@ export function FinalExamScreen({ grade }: { grade: GradeId }) {
             data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results")}
             className="mt-4 rounded-2xl border border-[#efe9f7] bg-white p-4"
           >
-            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-[#2c2348]">
+            <p data-testid={childTid(testIds.screen.finalExam.finishPanel(grade), "results", "score")} className="text-lg font-bold text-[var(--title)]">
               ציון: {scorePercent}%
             </p>
             <p

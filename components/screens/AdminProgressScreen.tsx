@@ -441,10 +441,10 @@ export function AdminProgressScreen({
 
       <Surface data-testid={childTid(rootTid, "panel")} className="space-y-4 p-5">
         <header data-testid={childTid(rootTid, "header")} className="space-y-1">
-          <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[#2c2348]">
+          <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[var(--title)]">
             ניהול התקדמות
           </h1>
-          <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[#8a8298]">
+          <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[var(--muted)]">
             בחרו מסלול וסמנו לכל יום אם הושלם או אופס.
           </p>
         </header>
@@ -655,7 +655,7 @@ export function AdminProgressScreen({
                                   </span>
                                   <span
                                     data-testid={testIds.screen.adminProgress.sectionState(trackKey, day.id, section.id)}
-                                    className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#8a8298]"
+                                    className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[var(--muted)]"
                                   >
                                     {sectionStatusLabel(section, dayProgress)}
                                   </span>

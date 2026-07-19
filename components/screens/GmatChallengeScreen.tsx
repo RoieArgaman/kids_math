@@ -535,7 +535,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ) : (
               <div
                 data-testid={childTid(root, "activeQuestion", "loading")}
-                className="surface rounded-2xl p-4 text-center text-sm text-[#8a8298]"
+                className="surface rounded-2xl p-4 text-center text-sm text-[var(--muted)]"
               >
                 טוֹעֲנִים שְׁאֵלָה...
               </div>
@@ -552,7 +552,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
         return (
           <>
             <header data-testid={childTid(root, "reviewHeader")} className="progress-sticky mb-4 rounded-panel border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)]">
-              <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-[#2c2348]">
+              <h1 data-testid={childTid(root, "reviewTitle")} className="text-lg font-bold text-[var(--title)]">
                 סקירת מקטע — {SECTION_LABELS[currentKey]}
               </h1>
               <p data-testid={childTid(root, "review", "divergences")} className="muted mt-1 text-sm">
@@ -581,7 +581,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                     </button>
                     <p
                       data-testid={childTid(root, "reviewQuestionNumber", String(reviewQuestionIndex))}
-                      className="mb-2 text-sm font-semibold text-[#8a8298]"
+                      className="mb-2 text-sm font-semibold text-[var(--muted)]"
                     >
                       שאלה {reviewQuestionIndex + 1}
                     </p>
@@ -616,7 +616,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
             ) : (
               // Show question grid
               <div data-testid={childTid(root, "reviewGrid")} className="surface rounded-panel p-4">
-                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-[#8a8298]">
+                <p data-testid={childTid(root, "reviewInstructions")} className="mb-3 text-sm text-[var(--muted)]">
                   לחצו על שאלה כדי לעיין בה או לשנות את תשובתכם.
                 </p>
                 <div data-testid={childTid(root, "reviewGrid", "tiles")} className="grid grid-cols-4 gap-2">
@@ -635,7 +635,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
                             ? "border-[#7cc4ec] bg-[#e0f2fe] text-[#075985]"
                             : answered
                               ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#047857]"
-                              : "border-[#e3e0ec] bg-white text-[#8a8298]"
+                              : "border-[#e3e0ec] bg-white text-[var(--muted)]"
                         }`}
                       >
                         {i + 1}
@@ -666,7 +666,7 @@ export function GmatChallengeScreen({ grade }: { grade: GradeId }) {
 
       {state.phase === "results" ? (
         <div data-testid={testIds.screen.gmatChallenge.results(grade)} className="surface rounded-panel p-6">
-          <h2 data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "title")} className="text-xl font-bold text-[#2c2348]">סיימתם את האתגר</h2>
+          <h2 data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "title")} className="text-xl font-bold text-[var(--title)]">סיימתם את האתגר</h2>
           <p data-testid={childTid(testIds.screen.gmatChallenge.results(grade), "score")} className="mt-2 text-2xl font-bold">
             ציון כולל: {state.scorePercent ?? 0}%
           </p>

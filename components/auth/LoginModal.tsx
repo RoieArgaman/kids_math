@@ -119,7 +119,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
       >
         <h2 data-testid="km.autogen.loginmodal.node.idx.0"
           id="login-modal-title"
-          className="mb-5 text-center text-xl font-bold text-[#2c2348]"
+          className="mb-5 text-center text-xl font-bold text-[var(--title)]"
         >
           כניסה לחשבון
         </h2>

@@ -99,7 +99,7 @@ export function MatchPairs({ exercise, value, onChange }: MatchPairsProps) {
                   ? "border-[#86efac] bg-[#f0fdf4]"
                   : isActive
                     ? "btn-accent"
-                    : "border-2 border-[#e3e0ec] bg-white text-[#2c2348]"
+                    : "border-2 border-[#e3e0ec] bg-white text-[var(--title)]"
               }`}
             >
               <span data-testid={childTid(root, "leftLabel", index)}>{left}</span>
@@ -132,7 +132,7 @@ export function MatchPairs({ exercise, value, onChange }: MatchPairsProps) {
               type="button"
               onClick={() => onRightTap(right)}
               className={`touch-button flex min-h-12 items-center justify-between gap-2 rounded-2xl border-2 px-3 text-base font-semibold transition-transform hover:scale-[1.03] ${
-                matched ? "border-[#86efac] bg-[#f0fdf4]" : "border-2 border-[#e3e0ec] bg-white text-[#2c2348]"
+                matched ? "border-[#86efac] bg-[#f0fdf4]" : "border-2 border-[#e3e0ec] bg-white text-[var(--title)]"
               }`}
             >
               <span data-testid={childTid(root, "rightLabel", index)}>{right}</span>

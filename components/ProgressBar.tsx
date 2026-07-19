@@ -36,7 +36,7 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
         <span
           data-testid="km.autogen.progressbar.node.idx.3"
           className={`inline-flex min-w-[3rem] justify-center rounded-full px-2.5 py-1 text-xs font-bold ${
-            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent)]"
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent-strong)]"
           }`}
         >
           {safeValue}%
@@ -52,7 +52,7 @@ export function ProgressBar({ value, label, compact = false }: ProgressBarProps)
         <span
           data-testid="km.autogen.progressbar.node.idx.3"
           className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent)]"
+            isComplete ? "bg-[#e7f8f0] text-[#047857]" : "bg-[#f3effb] text-[var(--accent-strong)]"
           }`}
         >
           {safeValue}%

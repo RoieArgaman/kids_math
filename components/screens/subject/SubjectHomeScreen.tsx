@@ -88,12 +88,12 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
                   <p data-testid={childTid(cardId, "title")} className="text-base font-bold leading-tight">
                     {day.title}
                   </p>
-                  <p data-testid={childTid(cardId, "objective")} className="mt-0.5 text-xs text-[#8a8298]">
+                  <p data-testid={childTid(cardId, "objective")} className="mt-0.5 text-xs text-[var(--muted)]">
                     {day.objective}
                   </p>
                 </div>
                 {isLocked ? (
-                  <span data-testid={childTid(cardId, "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
+                  <span data-testid={childTid(cardId, "lockedHint")} className="text-sm font-semibold text-[var(--muted)]">
                     🔒 נָעוּל
                   </span>
                 ) : (
@@ -121,7 +121,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
               <p data-testid={childTid(ids.examCard(), "title")} className="text-base font-bold leading-tight">
                 📝 מִבְחָן מְסַכֵּם · {config.levelLabel(level)}
               </p>
-              <p data-testid={childTid(ids.examCard(), "objective")} className="mt-0.5 text-xs text-[#8a8298]">
+              <p data-testid={childTid(ids.examCard(), "objective")} className="mt-0.5 text-xs text-[var(--muted)]">
                 נִפְתָּח אַחֲרֵי שֶׁמַּשְׁלִימִים אֶת כָּל הַשִּׁעוּרִים בַּשָּׁלָב.
               </p>
             </div>
@@ -134,7 +134,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
                 לַמִּבְחָן
               </Link>
             ) : (
-              <span data-testid={childTid(ids.examCard(), "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
+              <span data-testid={childTid(ids.examCard(), "lockedHint")} className="text-sm font-semibold text-[var(--muted)]">
                 🔒 נָעוּל
               </span>
             )}

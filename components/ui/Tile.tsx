@@ -37,8 +37,8 @@ function toneClassName(tone: TileTone): {
   // default
   return {
     container: "border border-[#e7defb] bg-white/70",
-    value: "text-[#2c2348]",
-    label: "text-[#8a8298]",
+    value: "text-[var(--title)]",
+    label: "text-[var(--muted)]",
   };
 }
 

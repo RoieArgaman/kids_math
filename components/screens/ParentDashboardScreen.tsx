@@ -158,7 +158,7 @@ export function ParentDashboardScreen() {
   if (!hydrated || !unlocked || !vm) {
     return (
       <main data-testid={rootTid} dir="rtl" className="mx-auto max-w-2xl p-6">
-        <p data-testid={childTid(rootTid, "loading")} className="text-center text-sm text-[#8a8298]">
+        <p data-testid={childTid(rootTid, "loading")} className="text-center text-sm text-[var(--muted)]">
           טוען...
         </p>
       </main>
@@ -292,7 +292,7 @@ export function ParentDashboardScreen() {
         </div>
 
         {/* Per-subject accuracy */}
-        <p data-testid={childTid(snapshotTid, "subjectCaption")} className="mb-2 mt-4 text-xs font-medium text-[#8a8298]">
+        <p data-testid={childTid(snapshotTid, "subjectCaption")} className="mb-2 mt-4 text-xs font-medium text-[var(--muted)]">
           דיוק לפי מקצוע
         </p>
         <div data-testid={childTid(snapshotTid, "subjectTiles")} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -305,7 +305,7 @@ export function ParentDashboardScreen() {
                 data-testid={testId}
                 className="flex items-center justify-between rounded-2xl border border-[#e7defb] bg-white/70 px-4 py-3"
               >
-                <span data-testid={childTid(testId, "label")} className="text-sm font-semibold text-[#2c2348]">
+                <span data-testid={childTid(testId, "label")} className="text-sm font-semibold text-[var(--title)]">
                   {subjectLabel(subject)}
                 </span>
                 <span data-testid={childTid(testId, "value")} className="text-sm font-bold text-[var(--accent-strong)]">
@@ -319,7 +319,7 @@ export function ParentDashboardScreen() {
 
       {/* ② Progress over time */}
       <Card data-testid={progressTid} padding="md">
-        <h2 data-testid={childTid(progressTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid={childTid(progressTid, "title")} className="mb-4 text-lg font-bold text-[var(--title)]">
           התקדמות לאורך זמן
         </h2>
         {/* Grade-first rollup: כיתה א׳ then כיתה ב׳ */}
@@ -329,7 +329,7 @@ export function ParentDashboardScreen() {
             const rowTid = testIds.screen.parentDashboard.gradeRollupRow(grade);
             return (
               <div key={grade} data-testid={rowTid} className="flex items-center justify-between rounded-2xl border border-[#e7defb] bg-white/70 px-4 py-2 text-sm">
-                <span data-testid={childTid(rowTid, "label")} className="font-semibold text-[#2c2348]">
+                <span data-testid={childTid(rowTid, "label")} className="font-semibold text-[var(--title)]">
                   כיתה {gradeLabel(grade)}
                 </span>
                 <span data-testid={childTid(rowTid, "value")} className="text-[#6b6577]">
@@ -351,7 +351,7 @@ export function ParentDashboardScreen() {
             <span data-testid={childTid(progressTid, "sectionsLabel")} className="text-[#6b6577]">
               מקטעים שהושלמו
             </span>
-            <span data-testid={childTid(progressTid, "sectionsValue")} className="font-bold text-[#2c2348]">
+            <span data-testid={childTid(progressTid, "sectionsValue")} className="font-bold text-[var(--title)]">
               <Ltr>
                 {daysSections.sectionsComplete} / {daysSections.totalSections}
               </Ltr>
@@ -361,7 +361,7 @@ export function ParentDashboardScreen() {
             <span data-testid={childTid(progressTid, "timeLabel")} className="text-[#6b6577]">
               זמן תרגול השבוע (משוער)
             </span>
-            <span data-testid={childTid(progressTid, "timeValue")} className="font-bold text-[#2c2348]">
+            <span data-testid={childTid(progressTid, "timeValue")} className="font-bold text-[var(--title)]">
               <Ltr>{formatMinutes(timeOnTask.approxWeeklyMs)}</Ltr>
             </span>
           </div>
@@ -370,16 +370,16 @@ export function ParentDashboardScreen() {
 
       {/* ③ Weak skills */}
       <Card data-testid={weakTid} padding="md">
-        <h2 data-testid={childTid(weakTid, "title")} className="mb-1 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid={childTid(weakTid, "title")} className="mb-1 text-lg font-bold text-[var(--title)]">
           מה כדאי לחזק 💪
         </h2>
-        <p data-testid={childTid(weakTid, "subtitle")} className="mb-4 text-xs text-[#8a8298]">
+        <p data-testid={childTid(weakTid, "subtitle")} className="mb-4 text-xs text-[var(--muted)]">
           לפי מיומנות · ניסיון ראשון
         </p>
         {filteredWeakSkills.length === 0 ? (
           <p
             data-testid={testIds.screen.parentDashboard.weakSkillsEmpty()}
-            className="text-sm text-[#8a8298]"
+            className="text-sm text-[var(--muted)]"
           >
             עוד אין מספיק נתונים כדי להעריך מיומנויות.
           </p>
@@ -391,7 +391,7 @@ export function ParentDashboardScreen() {
               return (
                 <li key={`${entry.subject}-${entry.tag}`} data-testid={rowTid}>
                   <div data-testid={childTid(rowTid, "header")} className="flex items-center justify-between gap-2">
-                    <span data-testid={childTid(rowTid, "label")} className="flex items-center gap-2 text-sm font-semibold text-[#2c2348]">
+                    <span data-testid={childTid(rowTid, "label")} className="flex items-center gap-2 text-sm font-semibold text-[var(--title)]">
                       {entry.label}
                       <Chip tone="info">{subjectLabel(entry.subject)}</Chip>
                     </span>
@@ -409,7 +409,7 @@ export function ParentDashboardScreen() {
 
       {/* ④ Review backlog */}
       <Card data-testid={reviewTid} padding="md">
-        <h2 data-testid={childTid(reviewTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid={childTid(reviewTid, "title")} className="mb-4 text-lg font-bold text-[var(--title)]">
           תרגול חוזר 🔁
         </h2>
         <div data-testid={childTid(reviewTid, "counters")} className="grid grid-cols-3 gap-3">
@@ -439,7 +439,7 @@ export function ParentDashboardScreen() {
 
       {/* ⑤ Encourage next */}
       <Card data-testid={encourageTid} padding="md">
-        <h2 data-testid={childTid(encourageTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid={childTid(encourageTid, "title")} className="mb-4 text-lg font-bold text-[var(--title)]">
           מה לעודד עכשיו 🌱
         </h2>
         <p data-testid={childTid(encourageTid, "sentence")} className="mb-3 text-sm text-[#6b6577]">
@@ -456,7 +456,7 @@ export function ParentDashboardScreen() {
 
       {/* Exam results */}
       <Card data-testid={examTid} padding="md">
-        <h2 data-testid={childTid(examTid, "title")} className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid={childTid(examTid, "title")} className="mb-4 text-lg font-bold text-[var(--title)]">
           תוצאות מבחן מסכם
         </h2>
         <ul data-testid={childTid(examTid, "list")} className="space-y-2">
@@ -469,17 +469,17 @@ export function ParentDashboardScreen() {
                 data-testid={examRowTid}
                 className="flex items-center justify-between gap-2 rounded-2xl border border-[#e7defb] bg-white/70 px-4 py-3"
               >
-                <span data-testid={childTid(examRowTid, "label")} className="text-sm font-semibold text-[#2c2348]">
+                <span data-testid={childTid(examRowTid, "label")} className="text-sm font-semibold text-[var(--title)]">
                   {subjectLabel(exam.key.subject)} · רמה {exam.key.grade.toUpperCase()}
                 </span>
                 {!taken ? (
-                  <span data-testid={childTid(examRowTid, "pending")} className="text-sm text-[#8a8298]">
+                  <span data-testid={childTid(examRowTid, "pending")} className="text-sm text-[var(--muted)]">
                     המבחן עוד לא נעשה
                   </span>
                 ) : (
                   <span data-testid={childTid(examRowTid, "result")} className="flex items-center gap-2">
                     {exam.scorePercent !== null ? (
-                      <span data-testid={childTid(examRowTid, "score")} className="text-sm font-bold text-[#2c2348]">
+                      <span data-testid={childTid(examRowTid, "score")} className="text-sm font-bold text-[var(--title)]">
                         <Ltr>{exam.scorePercent}%</Ltr>
                       </span>
                     ) : null}

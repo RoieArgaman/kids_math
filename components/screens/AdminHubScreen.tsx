@@ -74,10 +74,10 @@ export function AdminHubScreen() {
       </div>
 
       <header data-testid={childTid(rootTid, "header")} className="mb-4 space-y-1 text-right">
-        <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[#2c2348]">
+        <h1 data-testid={childTid(rootTid, "title")} className="text-2xl font-bold text-[var(--title)]">
           אזור הורים
         </h1>
-        <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[#8a8298]">
+        <p data-testid={childTid(rootTid, "subtitle")} className="text-sm text-[var(--muted)]">
           בחרו לאן להיכנס. קוד הגישה יישאר פעיל עד שתצאו מהאזור.
         </p>
       </header>

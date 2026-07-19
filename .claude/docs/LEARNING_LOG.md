@@ -6,6 +6,41 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.2c — fixing a token doesn't fix its copies; correcting 3.5.2b)
+- **Trigger:** Starting the 3.5.4 component work, noticed `CenteredPanel` hardcodes
+  `text-[#8a8298]` — the *old*, failing `--muted` value that 3.5.2b had supposedly fixed.
+- **What we learned:**
+  1. **I verified a sample and reported it as a general claim.** 3.5.2b said "all muted text now
+     passes AA," measured on three rendered `.muted` elements. True — and irrelevant to the **35
+     sites hardcoding `#8a8298`** (plus 43 hardcoding `#2c2348`), which bypass the token and kept
+     failing. Correcting the token fixed the *variable*, not the copies of its value.
+     **When a fix is "change the token", the very next check is `grep` for the literal.**
+  2. **The drift was worst in the shared components.** `Card`, `Tile`, `SectionHeader`,
+     `CenteredPanel` — the ones the QA report held up as the quality bar — were the ones with
+     hardcoded hexes, so every screen built "correctly" on them inherited the bug.
+  3. **Sweep every element, don't sample.** The rewrite walks *every leaf text node* on the page,
+     applies the WCAG large-text rule, and reports all failures. That found `--accent` failing as
+     **text** at 3.81:1 (8 sites, incl. TopBar login) — invisible to a sample. Fixed by routing
+     text usages to `--accent-strong` (7.10:1); as a background/border `--accent` is fine.
+  4. **A measurement script that can't see a case will report it as passing.** The first sweep
+     read only `backgroundColor`, so white text on `.btn-accent`'s **gradient** resolved to
+     "white on white" and was dismissed as a false positive. It is a real failure (3.81 → 2.72).
+     Fixed the script to detect `backgroundImage` and report gradient cases **separately as
+     unmeasurable** rather than silently passing them. **Absence of a failure from a tool is not
+     evidence of a pass — check what the tool is blind to.**
+  5. **Second dead hover, same cause.** Routing `--accent` → `--accent-strong` left
+     `AppNavLink`'s primary tone with base and `hover:` identical, exactly as the 3.5.2b
+     `--muted-soft` collapse did. This is now a known consequence of any token re-point.
+  6. **Tailwind v4 compiled our docs.** Auto source detection runs *on top of* the config's
+     `content`, so class names written as prose in `.md` became shipped CSS — including invalid
+     `color: --token` from examples of the v3 syntax we removed. Dead CSS in production, and it
+     poisoned the "zero invalid declarations" check. Fixed with `@source not "../**/*.md"`.
+- **How to reuse next time:** after changing a token, `grep` the literal value; after any
+  contrast fix, sweep every text node rather than sampling; and confirm the sweep can *see* the
+  backgrounds it is judging against.
+- **Left open deliberately (D12):** white-on-gradient on the primary CTA fails AA. Not auto-fixed
+  — darkening the brand gradient is a product decision, not a sweep.
+
 ### 2026-07-18 (Phase 3.5.3 — touch targets, and why the test had to come first)
 - **Trigger:** D3, "lift the sub-44px controls" — TopBar login, Plan day-chips, Admin row actions.
 - **What we learned:**
