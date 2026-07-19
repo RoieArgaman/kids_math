@@ -170,24 +170,28 @@ export function ExerciseBox({
           </span>
           {retryMessage}
           {showRetryAction ? (
-            <button
-              data-testid={testIds.component.exerciseBox.retry(exercise.id)}
-              type="button"
-              className="me-2 touch-button rounded-2xl border-2 border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
-              onClick={onRetry}
-            >
-              נַסּוּ שׁוּב
-            </button>
+            <div data-testid={childTid(baseTestId, "feedback", "retryRow")} className="mt-2">
+              <button
+                data-testid={testIds.component.exerciseBox.retry(exercise.id)}
+                type="button"
+                className="touch-button rounded-card border-2 border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+                onClick={onRetry}
+              >
+                נַסּוּ שׁוּב
+              </button>
+            </div>
           ) : null}
           {showNearMissRetry ? (
-            <button
-              data-testid={testIds.component.exerciseBox.retry(exercise.id)}
-              type="button"
-              className="me-2 touch-button rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
-              onClick={onRetry}
-            >
-              נַסּוּ שׁוּב — כִּמְעַט!
-            </button>
+            <div data-testid={childTid(baseTestId, "feedback", "nearMissRetryRow")} className="mt-2">
+              <button
+                data-testid={testIds.component.exerciseBox.retry(exercise.id)}
+                type="button"
+                className="touch-button rounded-card border-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                onClick={onRetry}
+              >
+                נַסּוּ שׁוּב — כִּמְעַט!
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}
