@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
+import { DayCardShell, type DayCardState } from "@/components/home/DayCardShell";
 import { HeroHeader } from "@/components/ui/HeroHeader";
 import type { GradeId } from "@/lib/grades";
 import { canUnlockNextDay } from "@/lib/progress/engine";
@@ -23,6 +24,7 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
   const [isHydrated, setIsHydrated] = useState(false);
   const [previewAll, setPreviewAll] = useState(false);
   const [completeMap, setCompleteMap] = useState<Record<string, boolean>>({});
+  const [scoreMap, setScoreMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const preview = getPreviewAllFromLocation();
@@ -37,10 +39,15 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
 
     const progress = config.loadProgressState();
     const map: Record<string, boolean> = {};
+    // percentDone was ALWAYS persisted here (subject stores reuse
+    // WorkbookProgressState) — this screen just never read it. See D5.
+    const scores: Record<string, number> = {};
     for (const day of days) {
       map[day.id] = progress.days[day.id]?.isComplete ?? false;
+      scores[day.id] = progress.days[day.id]?.percentDone ?? 0;
     }
     setCompleteMap(map);
+    setScoreMap(scores);
     setIsHydrated(true);
     // days is module-stable for a given level; safe to run once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,39 +81,26 @@ export function SubjectHomeScreen({ config, level }: { config: SubjectScreenConf
               ? !canUnlockNextDay(previousDay!, config.loadProgressState().days[previousDay!.id])
               : !previousComplete && idx > 0;
           const cardId = ids.dayCard(day.id);
+          const state: DayCardState = isLocked
+            ? "locked"
+            : (completeMap[day.id] ?? false)
+              ? "complete"
+              : "open";
 
           return (
-            <div
+            <DayCardShell
               key={day.id}
-              data-testid={cardId}
-              className={`rounded-panel border-2 p-5 shadow-xs transition-all ${
-                isLocked ? "is-locked" : "border-[#efe9f7] bg-white"
-              }`}
-            >
-              <div data-testid={childTid(cardId, "row")} className="flex items-center justify-between gap-3">
-                <div data-testid={childTid(cardId, "info")} className="min-w-0 flex-1">
-                  <p data-testid={childTid(cardId, "title")} className="text-base font-bold leading-tight">
-                    {day.title}
-                  </p>
-                  <p data-testid={childTid(cardId, "objective")} className="mt-0.5 text-xs text-[var(--muted)]">
-                    {day.objective}
-                  </p>
-                </div>
-                {isLocked ? (
-                  <span data-testid={childTid(cardId, "lockedHint")} className="text-sm font-semibold text-[var(--muted)]">
-                    🔒 נָעוּל
-                  </span>
-                ) : (
-                  <Link
-                    data-testid={ids.dayCardCta(day.id)}
-                    href={config.dayRoute(level, day.id)}
-                    className="touch-button btn-accent rounded-2xl px-5 py-3 text-sm font-semibold shadow-xs"
-                  >
-                    {completeMap[day.id] ? "חֲזָרָה" : "הַתְחֵל"}
-                  </Link>
-                )}
-              </div>
-            </div>
+              rootTestId={cardId}
+              ctaTestId={ids.dayCardCta(day.id)}
+              dayNumber={idx + 1}
+              title={day.title}
+              objective={day.objective}
+              state={state}
+              score={scoreMap[day.id] ?? 0}
+              ctaHref={config.dayRoute(level, day.id)}
+              ctaLabel={state === "complete" ? "חֲזָרָה" : "הַתְחֵל"}
+              lockedHint="סַיְּימוּ אֶת הַיּוֹם הַקּוֹדֵם כְּדֵי לִפְתּוֹחַ 🔒"
+            />
           );
         })}
 
