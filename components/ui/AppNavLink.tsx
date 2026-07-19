@@ -2,7 +2,7 @@ import Link, { type LinkProps } from "next/link";
 import type { ReactNode } from "react";
 
 const baseClassName =
-  "inline-flex items-center gap-1 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2";
+  "inline-flex min-h-[44px] items-center gap-1 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2";
 
 const toneClassName = {
   default: "text-violet-700 hover:text-violet-900",

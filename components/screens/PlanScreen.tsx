@@ -173,7 +173,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
                   return (
                     <li data-testid="km.autogen.planscreen.node.idx.34" key={n}>
                       <Link
-                        className={`inline-flex min-h-10 min-w-10 flex-col items-center justify-center rounded-2xl px-3 py-2 text-center text-sm font-bold transition-colors ${done
+                        className={`inline-flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-2xl px-3 py-2 text-center text-sm font-bold transition-colors ${done
                           ? "bg-[#d1fae5] text-[#047857] ring-1 ring-[#bbf7d0]/60 hover:bg-[#bbf7d0]"
                           : "bg-[#ede9fe] text-[var(--accent-strong)] hover:bg-[#e3d9fb]"
                           }`}
