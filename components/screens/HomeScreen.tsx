@@ -319,7 +319,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           </div>
           <Link
             href={routes.gradeBadges(effectiveGrade)}
-            className="shrink-0 text-xs font-semibold text-violet-600 hover:underline"
+            className="inline-flex min-h-[44px] shrink-0 items-center text-xs font-semibold text-violet-600 hover:underline"
           >
             כל הפרסים ←
           </Link>

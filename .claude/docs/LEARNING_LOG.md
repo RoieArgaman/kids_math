@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.3 — touch targets, and why the test had to come first)
+- **Trigger:** D3, "lift the sub-44px controls" — TopBar login, Plan day-chips, Admin row actions.
+- **What we learned:**
+  1. **Write the sweep, then let it find the list.** I fixed the four controls the report named,
+     then wrote `tests/e2e/touch-targets.spec.ts` to walk *every* visible interactive element on a
+     route. It immediately failed on offenders nobody had listed: the **TTS toggle at 88×26 on
+     every route**, and **standalone nav/back links at 16–20px** across four screens. A
+     per-screen assertion only ever covers what someone remembered — which is precisely how this
+     rule eroded while individual screens had passing tests.
+  2. **Fix at the component, not the call site.** The undersized links were `AppNavLink` and
+     `StudentTtsToggle`, so two component edits fixed every screen and every future screen. Only
+     one raw `<Link>` (HomeScreen's "כל הפרסים") needed a local fix — and it needed one *because*
+     it bypassed the shared component.
+  3. **`tsconfig` excludes `tests/`, so `tsc` does not typecheck specs.** I shipped three wrong
+     route helpers (`routes.home` / `.plan` / `.badges` instead of `gradeHome` / `gradePlan` /
+     `gradeBadges`) and `npm run tsc` stayed green. Only running the spec caught it. **A new spec
+     that has never executed is not evidence of anything** — run it once locally before trusting
+     CI, and expect no type safety inside `tests/`.
+  4. **The report was wrong about GMAT.** It claimed the bookmark button "can fall under 44px";
+     it already carries `.touch-button` (`min-height: 52px`). Third report claim that didn't
+     survive contact with the source — verify each one rather than fixing on faith.
+- **How to reuse next time:** for any "the codebase should always X" rule, the durable artifact is
+  the sweep, not the fixes. Fixes decay; a spec that walks every element does not.
+- **Deliberate exemptions in the spec (documented there):** inline prose links (`p a, li a,
+  footer a`) — padding them to 44px would wreck body copy; and checkboxes/radios, measured via
+  their `<label>` hit area rather than the tick itself.
+
 ### 2026-07-18 (Phase 3.5.2b — the consistency fix that would have broken accessibility)
 - **Trigger:** D7, "admin is off-palette — re-skin `slate-*` onto the app tokens." A pure
   find-and-replace on paper.

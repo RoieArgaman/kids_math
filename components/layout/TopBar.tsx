@@ -16,7 +16,7 @@ export function TopBar() {
     return (
       <div
         data-testid={testIds.component.auth.topBar()}
-        className="h-10 w-full bg-[#fffefb] border-b border-[#efe9f7]"
+        className="h-12 w-full bg-[#fffefb] border-b border-[#efe9f7]"
       />
     );
   }
@@ -25,7 +25,7 @@ export function TopBar() {
     <>
       <div
         data-testid={testIds.component.auth.topBar()}
-        className="flex h-10 w-full items-center justify-between border-b border-[#efe9f7] bg-[#fffefb] px-4"
+        className="flex h-12 w-full items-center justify-between border-b border-[#efe9f7] bg-[#fffefb] px-4"
       >
         <StudentTtsToggle />
         {/* ms-auto pins the auth section to the inline-end (visual left in RTL) even when
@@ -38,7 +38,7 @@ export function TopBar() {
             <button
               data-testid={testIds.component.auth.loginButton()}
               onClick={() => setShowLogin(true)}
-              className="rounded-xl px-3 py-1.5 text-sm font-semibold text-[var(--accent)] transition hover:bg-[#f3effb] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="inline-flex min-h-[44px] items-center rounded-xl px-3 py-1.5 text-sm font-semibold text-[var(--accent)] transition hover:bg-[#f3effb] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
             >
               כניסה
             </button>

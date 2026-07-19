@@ -276,7 +276,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newUsername}
               onChange={(e) => { setNewUsername(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="min-h-[44px] w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -291,7 +291,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="min-h-[44px] w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -440,7 +440,7 @@ export function AdminUsersScreen() {
                       <button
                         data-testid={testIds.component.adminUsers.restoreButton(u.userId)}
                         onClick={() => handleLifecycle(u.userId, "restore")}
-                        className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1.5 text-xs font-semibold text-[#166534] hover:bg-[#dcfce7]"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1.5 text-xs font-semibold text-[#166534] hover:bg-[#dcfce7]"
                       >
                         שחזר
                       </button>
@@ -448,7 +448,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.exportButton(u.userId)}
                         href={`/api/admin/users/export?userId=${encodeURIComponent(u.userId)}`}
                         download
-                        className="rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
                       >
                         ייצוא נתונים
                       </a>
@@ -459,7 +459,7 @@ export function AdminUsersScreen() {
                         <button
                           data-testid={testIds.component.adminUsers.unlockButton(u.userId)}
                           onClick={() => handleUnlock(u.userId)}
-                          className="rounded-lg border border-[#fcd34d] bg-[#fffbeb] px-3 py-1.5 text-xs font-semibold text-[#92400e] hover:bg-[#fef3c7]"
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#fcd34d] bg-[#fffbeb] px-3 py-1.5 text-xs font-semibold text-[#92400e] hover:bg-[#fef3c7]"
                         >
                           שחרר חשבון
                         </button>
@@ -468,7 +468,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
                         onClick={() => openChangePw(u.userId)}
                         disabled={u.status === "deactivated"}
-                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] hover:bg-[#f3effb] disabled:opacity-40"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] hover:bg-[#f3effb] disabled:opacity-40"
                       >
                         שנה סיסמה
                       </button>
@@ -478,7 +478,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.exportButton(u.userId)}
                         href={`/api/admin/users/export?userId=${encodeURIComponent(u.userId)}`}
                         download
-                        className="rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#bfdbfe] px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] hover:bg-[#eff6ff]"
                       >
                         ייצוא נתונים
                       </a>
@@ -492,7 +492,7 @@ export function AdminUsersScreen() {
                           handleLifecycle(u.userId, u.status === "deactivated" ? "restore" : "deactivate")
                         }
                         disabled={u.userId === user?.userId}
-                        className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)] disabled:opacity-40"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)] disabled:opacity-40"
                       >
                         {u.status === "deactivated" ? "הפעל מחדש" : "השבת"}
                       </button>
@@ -500,7 +500,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.deleteButton(u.userId)}
                         onClick={() => setConfirmDeleteId(u.userId)}
                         disabled={u.userId === user?.userId}
-                        className="rounded-lg border border-[#fecaca] px-3 py-1.5 text-xs font-semibold text-[#dc2626] hover:bg-red-50 disabled:opacity-40"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#fecaca] px-3 py-1.5 text-xs font-semibold text-[#dc2626] hover:bg-red-50 disabled:opacity-40"
                       >
                         מחק
                       </button>
@@ -517,7 +517,7 @@ export function AdminUsersScreen() {
                       placeholder="סיסמה חדשה"
                       value={changePwValue}
                       onChange={(e) => { setChangePwValue(e.target.value); setChangePwError(""); }}
-                      className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-1.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+                      className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-1.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                       disabled={changePwBusy}
                       autoFocus
                     />
@@ -525,7 +525,7 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordSubmit(u.userId)}
                       onClick={() => handleChangePassword(u.userId)}
                       disabled={!changePwValue || changePwBusy}
-                      className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
                     >
                       {changePwBusy ? "..." : "שמור"}
                     </button>
@@ -533,7 +533,7 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordCancel(u.userId)}
                       onClick={cancelChangePw}
                       disabled={changePwBusy}
-                      className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)]"
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)]"
                     >
                       ביטול
                     </button>

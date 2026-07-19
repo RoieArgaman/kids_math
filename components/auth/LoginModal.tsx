@@ -144,7 +144,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                 setUsername(e.target.value);
                 clearErrors();
               }}
-              className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="min-h-[44px] w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={isLoading}
             />
           </div>
@@ -168,7 +168,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
                   setPassword(e.target.value);
                   clearErrors();
                 }}
-                className="w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+                className="min-h-[44px] w-full rounded-xl border border-[#e3e0ec] px-4 py-2.5 pl-12 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                 disabled={isLoading}
               />
               {/* Show-password toggle — cuts mistyped passwords (and so, lockouts) for kids. */}

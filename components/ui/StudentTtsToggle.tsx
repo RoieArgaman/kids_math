@@ -19,7 +19,7 @@ export function StudentTtsToggle() {
       onClick={() => setAutoPlay(!autoPlay)}
       aria-pressed={autoPlay}
       aria-label={autoPlay ? "כיבוי הקראה אוטומטית" : "הפעלת הקראה אוטומטית"}
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+      className={`flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
         autoPlay
           ? "border-[#cdbff2] bg-[#ede9fe] text-[var(--accent-strong)]"
           : "border-[#e7defb] bg-white text-[#8a8298] hover:bg-[#f3effb]"
