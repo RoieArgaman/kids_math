@@ -153,7 +153,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Title */}
       <h1
         data-testid={childTid(badgesRoot, "title")}
-        className="mb-4 text-2xl font-bold text-[#2c2348]"
+        className="mb-4 text-2xl font-bold text-[var(--title)]"
       >
         🏆 הַפְּרָסִים שֶׁלִּי
       </h1>
@@ -176,7 +176,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
       {/* Progress counter */}
       <div
         data-testid={childTid(badgesRoot, "progressCounter")}
-        className="mb-6 flex items-center justify-between rounded-xl bg-[#f3effb] px-4 py-2 text-sm font-semibold text-[var(--accent)]"
+        className="mb-6 flex items-center justify-between rounded-xl bg-[#f3effb] px-4 py-2 text-sm font-semibold text-[var(--accent-strong)]"
         dir="rtl"
       >
         <span data-testid={childTid(badgesRoot, "progressCounter", "label")}>🏅 הפרסים שלי</span>
@@ -263,7 +263,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                     {/* Badge name */}
                     <div
                       data-testid={childTid(cardTid, "name")}
-                      className="mb-1 text-sm font-bold text-[#2c2348]"
+                      className="mb-1 text-sm font-bold text-[var(--title)]"
                     >
                       {badge.name}
                     </div>
@@ -289,7 +289,7 @@ export function BadgeGalleryScreen({ grade }: { grade: GradeId }) {
                       /* Locked: show description as hint */
                       <div
                         data-testid={childTid(cardTid, "lockedHint")}
-                        className="text-xs text-[#8a8298]"
+                        className="text-xs text-[var(--muted)]"
                       >
                         {badge.description}
                       </div>

@@ -5,6 +5,13 @@
    follow-up — see .claude/docs/LEARNING_LOG.md. */
 @config "../tailwind.config.ts";
 
+/* v4 auto-detects sources on top of the config's `content`, which swept our docs:
+   class names written as PROSE in .md (roadmap, LEARNING_LOG) were compiled into
+   real rules and shipped. Harmless-looking, but it emitted dead CSS — including
+   invalid `color: --token` from examples of the v3 syntax we removed in 3.5.1b,
+   which also poisons the "zero invalid declarations" build check. */
+@source not "../**/*.md";
+
 :root {
   --background: #fffbef;     /* warm cream */
   --surface: #ffffff;

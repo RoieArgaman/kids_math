@@ -142,7 +142,7 @@ export function DayCard({
           </span>
           <span
             data-testid={childTid(root, "progressPercent")}
-            className={`rounded-full px-2.5 py-1 text-xs font-bold ${score === 100 ? "bg-[#d1fae5] text-emerald-600" : "bg-[#f3effb] text-[var(--accent)]"}`}
+            className={`rounded-full px-2.5 py-1 text-xs font-bold ${score === 100 ? "bg-[#d1fae5] text-emerald-600" : "bg-[#f3effb] text-[var(--accent-strong)]"}`}
           >
             {Math.round(score)}%
           </span>

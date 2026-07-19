@@ -65,7 +65,7 @@ export function UserAvatar() {
         >
           <div data-testid="km.autogen.useravatar.node.idx.1" className="border-b border-[#efe9f7] px-4 py-2">
             <p data-testid="km.autogen.useravatar.node.idx.2" className="text-xs font-semibold text-[#9a93a8]">מחובר כ:</p>
-            <p data-testid="km.autogen.useravatar.node.idx.3" className="truncate text-sm font-bold text-[#2c2348]" dir="ltr">{user.username}</p>
+            <p data-testid="km.autogen.useravatar.node.idx.3" className="truncate text-sm font-bold text-[var(--title)]" dir="ltr">{user.username}</p>
           </div>
 
           {user.role === "admin" && (

@@ -20,8 +20,8 @@ export type SectionHeaderProps = {
  * Compact title + optional subtitle header. Reproduces the parent-dashboard
  * snapshot header exactly:
  *   header.mb-4.text-center
- *     > h2.text-xl.font-bold.text-[#2c2348]
- *     > p.mt-1.text-sm.text-[#8a8298]
+ *     > h2.text-xl.font-bold.text-[var(--title)]
+ *     > p.mt-1.text-sm.text-[var(--muted)]
  */
 export function SectionHeader({
   title,
@@ -36,11 +36,11 @@ export function SectionHeader({
   const resolvedSubtitleTid = subtitleTestId ?? (testId ? childTid(testId, "subtitle") : undefined);
   return (
     <header data-testid={testId} className={`mb-4 ${alignClass}`}>
-      <h2 data-testid={resolvedTitleTid} className="text-xl font-bold text-[#2c2348]">
+      <h2 data-testid={resolvedTitleTid} className="text-xl font-bold text-[var(--title)]">
         {title}
       </h2>
       {subtitle ? (
-        <p data-testid={resolvedSubtitleTid} className="mt-1 text-sm text-[#8a8298]">
+        <p data-testid={resolvedSubtitleTid} className="mt-1 text-sm text-[var(--muted)]">
           {subtitle}
         </p>
       ) : null}

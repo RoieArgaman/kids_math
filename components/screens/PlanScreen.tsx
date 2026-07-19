@@ -67,7 +67,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.plan.root(`${effectiveGrade}.loading`)} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.plan.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-[#8a8298]">
+        <Surface data-testid={childTid(testIds.screen.plan.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
           טוֹעֲנִים...
         </Surface>
       </main>
@@ -106,14 +106,14 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         className="surface mb-8 border border-[#bbf7d0] bg-[#f4fcf7] p-5 shadow-xs"
         aria-labelledby="overall-heading"
       >
-        <h2 data-testid="km.autogen.planscreen.node.idx.12" id="overall-heading" className="mb-3 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid="km.autogen.planscreen.node.idx.12" id="overall-heading" className="mb-3 text-lg font-bold text-[var(--title)]">
           הַהִתְקַדְּמוּת בְּכָל הַחוֹבֶרֶת
         </h2>
         <p data-testid="km.autogen.planscreen.node.idx.13" className="muted mb-4 text-sm leading-relaxed">
           {totalCurriculumDays} יְמוֹת לִמּוּד — כָּל יוֹם בְּנוּי מִקְטָעִים שֶׁמְחַזְּקִים חִשּׁוּב, שָׂפָה וּבְדִיקַת עַצְמִי.
         </p>
         <div data-testid="km.autogen.planscreen.node.idx.14" className="mb-2 flex items-center justify-between text-xs font-medium">
-          <span data-testid="km.autogen.planscreen.node.idx.15" className="text-[#8a8298]">יָמִים שֶׁהוּשְׁלְמוּ</span>
+          <span data-testid="km.autogen.planscreen.node.idx.15" className="text-[var(--muted)]">יָמִים שֶׁהוּשְׁלְמוּ</span>
           <span data-testid="km.autogen.planscreen.node.idx.16" className={`font-bold ${overallPct === 100 ? "text-[#047857]" : "text-[var(--accent-strong)]"}`}>
             {overallPct}%
           </span>
@@ -130,7 +130,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
       </section>
 
       <section data-testid="km.autogen.planscreen.node.idx.20" className="mb-8 space-y-4" aria-labelledby="strands-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.21" id="strands-heading" className="text-lg font-bold text-[#2c2348]">
+        <h2 data-testid="km.autogen.planscreen.node.idx.21" id="strands-heading" className="text-lg font-bold text-[var(--title)]">
           יְסוֹדוֹת הַלִּמּוּד לְפִי תְחוּמִים
         </h2>
         {ministryStrands.map((strand) => {
@@ -195,7 +195,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
       </section>
 
       <section data-testid="km.autogen.planscreen.node.idx.37" className="surface mb-8 p-5 shadow-xs" aria-labelledby="routine-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.38" id="routine-heading" className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid="km.autogen.planscreen.node.idx.38" id="routine-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
           רוּטִינַת עֲבוֹדָה יוֹמִית (לְכָל יוֹם בַּחוֹבֶרֶת)
         </h2>
         <ol data-testid="km.autogen.planscreen.node.idx.39" className="list-decimal list-inside space-y-3 text-sm leading-relaxed text-[#4f4860]">
@@ -208,7 +208,7 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
       </section>
 
       <section data-testid="km.autogen.planscreen.node.idx.41" className="surface mb-8 p-5 shadow-xs" aria-labelledby="parents-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.42" id="parents-heading" className="mb-4 text-lg font-bold text-[#2c2348]">
+        <h2 data-testid="km.autogen.planscreen.node.idx.42" id="parents-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
           {PARENT_GUIDE.title}
         </h2>
         <dl data-testid="km.autogen.planscreen.node.idx.43" className="space-y-4 text-sm">

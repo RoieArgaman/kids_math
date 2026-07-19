@@ -98,7 +98,7 @@ export function SubjectLevelPickerScreen({ config }: { config: SubjectScreenConf
                 ) : (
                   <span
                     data-testid={ids.levelLockedHint(level)}
-                    className="inline-flex w-full justify-center text-center text-sm font-semibold text-[#8a8298]"
+                    className="inline-flex w-full justify-center text-center text-sm font-semibold text-[var(--muted)]"
                   >
                     {config.levelPicker.lockedHint}
                   </span>

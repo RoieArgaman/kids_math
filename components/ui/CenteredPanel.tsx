@@ -34,11 +34,11 @@ export function CenteredPanel({
           </p>
         ) : null}
         <div data-testid={testId ? childTid(testId, "body") : undefined}>
-          <div data-testid={testId ? childTid(testId, "title") : undefined} className="mb-2 text-xl font-bold text-[#2c2348]">
+          <div data-testid={testId ? childTid(testId, "title") : undefined} className="mb-2 text-xl font-bold text-[var(--title)]">
             {title}
           </div>
           {description ? (
-            <div data-testid={testId ? childTid(testId, "description") : undefined} className="mb-6 text-sm text-[#8a8298]">
+            <div data-testid={testId ? childTid(testId, "description") : undefined} className="mb-6 text-sm text-[var(--muted)]">
               {description}
             </div>
           ) : null}

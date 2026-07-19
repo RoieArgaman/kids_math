@@ -40,7 +40,7 @@ export function DayHeader({
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">
         <span
           data-testid={weekBadgeTestId}
-          className="inline-block rounded-full bg-white/75 px-3 py-1 text-xs font-semibold text-[var(--accent)]"
+          className="inline-block rounded-full bg-white/75 px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]"
         >
           ⭐ שָׁבוּעַ {day.week}
         </span>
@@ -48,7 +48,7 @@ export function DayHeader({
           <span
             data-testid={sessionTimerTestId}
             dir="ltr"
-            className="inline-block min-w-[3.25rem] rounded-full bg-white/70 px-3 py-1 text-xs font-semibold font-mono tabular-nums text-[var(--accent)]"
+            className="inline-block min-w-[3.25rem] rounded-full bg-white/70 px-3 py-1 text-xs font-semibold font-mono tabular-nums text-[var(--accent-strong)]"
             aria-live="polite"
           >
             ⏱ {timerLabel}

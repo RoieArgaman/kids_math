@@ -43,12 +43,12 @@ export function LockedGradeScreen({
         <p data-testid={childTid(rootTestId, "emoji")} className="mb-2 text-6xl" aria-hidden="true">
           {emoji}
         </p>
-        <h1 data-testid={childTid(rootTestId, "title")} className="mb-2 text-2xl font-bold text-[#2c2348]">
+        <h1 data-testid={childTid(rootTestId, "title")} className="mb-2 text-2xl font-bold text-[var(--title)]">
           {title}
         </h1>
         <p
           data-testid={reasonTestId ?? childTid(rootTestId, "reason")}
-          className="mb-6 text-sm text-[#8a8298]"
+          className="mb-6 text-sm text-[var(--muted)]"
         >
           {reason}
         </p>

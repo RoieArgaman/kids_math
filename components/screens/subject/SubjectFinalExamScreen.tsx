@@ -248,7 +248,7 @@ export function SubjectFinalExamScreen({
           <p data-testid={childTid(finishPanelId, "icon")} className="mb-1 text-5xl">
             {state?.passed ? "🎉" : "💪"}
           </p>
-          <p data-testid={childTid(finishPanelId, "score")} className="mb-1 text-2xl font-bold text-[#2c2348]">
+          <p data-testid={childTid(finishPanelId, "score")} className="mb-1 text-2xl font-bold text-[var(--title)]">
             {state?.scorePercent}%
           </p>
           <p data-testid={childTid(finishPanelId, "verdict")} className="mb-4 text-base font-semibold text-[#4f4860]">

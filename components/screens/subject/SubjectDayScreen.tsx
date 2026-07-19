@@ -120,7 +120,7 @@ export function SubjectDayScreen({
         data-testid={childTid(root, "progressBar")}
         className="mb-4 rounded-[18px] border border-[#efe9f7] bg-white/95 px-4 py-3 shadow-[0_2px_12px_rgba(80,60,140,0.05)] backdrop-blur-xs"
       >
-        <p data-testid={childTid(root, "progressBar", "label")} className="mb-1 text-xs font-semibold text-[#8a8298]">
+        <p data-testid={childTid(root, "progressBar", "label")} className="mb-1 text-xs font-semibold text-[var(--muted)]">
           📊 הַהִתְקַדְּמוּת שֶׁלִּי:
         </p>
         <ProgressBar value={percentDone} label={`הַיַּעַד לְהַשְׁלָמָה: ${COMPLETION_GATE_PERCENT}%`} />
@@ -130,7 +130,7 @@ export function SubjectDayScreen({
         <h1 data-testid={childTid(root, "title")} className="text-2xl font-bold">
           {day.title}
         </h1>
-        <p data-testid={childTid(root, "objective")} className="mt-1 text-sm text-[#8a8298]">
+        <p data-testid={childTid(root, "objective")} className="mt-1 text-sm text-[var(--muted)]">
           {day.objective}
         </p>
         {day.teachingSummary ? (
@@ -168,17 +168,17 @@ export function SubjectDayScreen({
                   <p data-testid={childTid(cardRoot, "cardTitle")} className="text-base font-bold leading-tight">
                     {section.title}
                   </p>
-                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[#8a8298]">
+                  <p data-testid={childTid(cardRoot, "goal")} className="mt-0.5 text-xs text-[var(--muted)]">
                     {section.learningGoal}
                   </p>
                 </div>
               </div>
               <div data-testid={childTid(cardRoot, "bottomRow")} className="flex items-center justify-between gap-3">
-                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[#8a8298]">
+                <span data-testid={childTid(cardRoot, "progress")} className="text-sm text-[var(--muted)]">
                   {correctInSection}/{section.exercises.length} תרגילים ✓
                 </span>
                 {isCardLocked ? (
-                  <span data-testid={childTid(cardRoot, "lockedHint")} className="text-sm font-semibold text-[#8a8298]">
+                  <span data-testid={childTid(cardRoot, "lockedHint")} className="text-sm font-semibold text-[var(--muted)]">
                     הַשְׁלִימוּ אֶת הַחֵלֶק הַקּוֹדֵם
                   </span>
                 ) : (

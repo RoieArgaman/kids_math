@@ -108,11 +108,11 @@ export function ActionCard({
             {emoji}
           </p>
         ) : null}
-        <h2 data-testid={titleTestId} className="text-xl font-bold text-[#2c2348]">
+        <h2 data-testid={titleTestId} className="text-xl font-bold text-[var(--title)]">
           {title}
         </h2>
         {subtitle ? (
-          <p data-testid={subtitleTestId} className="text-sm text-[#8a8298]">
+          <p data-testid={subtitleTestId} className="text-sm text-[var(--muted)]">
             {subtitle}
           </p>
         ) : null}
