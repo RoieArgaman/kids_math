@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Chip } from "@/components/ui/Chip";
 import { HeroHeader } from "@/components/ui/HeroHeader";
-import { Surface } from "@/components/ui/Surface";
 import { logEvent } from "@/lib/analytics/events";
 import { isGradeUnlocked } from "@/lib/completion/subjectGrade";
 import { reconcileGradeUnlockCookies } from "@/lib/completion/reconcile";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
 
 /**
  * Landing GRADE picker — top of the Grade → Subject → Day flow. Grade A is always
@@ -41,9 +41,7 @@ export default function GradePickerPage() {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.gradePicker.root()} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.gradePicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
-          טוֹעֲנִים...
-        </Surface>
+        <LoadingPanel data-testid={childTid(testIds.screen.gradePicker.root(), "loading")} emoji="⏳" title="טוֹעֲנִים..." />
       </main>
     );
   }

@@ -6,6 +6,36 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.4b — component consolidation, and what consolidation quietly costs)
+- **Trigger:** D5/D8 — two centred-panel shells, four bespoke loading blocks, `!important`
+  overrides, and the small UX defects.
+- **What we learned:**
+  1. **Consolidating onto a shared component can silently downgrade the richer one.**
+     `LockedGradeScreen` used an `<h1>`; `CenteredPanel` renders its title as a `<div>`. Moving
+     the screen onto the shell "worked" — same look, tests green — while deleting the page's only
+     heading. Caught by asking what the *old* markup did that the new one doesn't. Added opt-in
+     `titleAs="h1"` (default unchanged) rather than flipping it globally. **The general rule:
+     diff semantics, not just pixels, when replacing bespoke markup with a shared component.**
+     It also exposed **D14** — most `CenteredPanel` screens have no heading at all.
+  2. **A shared component used as a page root needs to be able to BE the landmark.**
+     Wrapping `CenteredPanel` in a `<main>` to keep the landmark duplicated the root testid
+     (`check:testids` requires an id on every `<main>`), and moving the id to the wrapper broke
+     `childTid(root, "title")`. Adding `as="main"` let one element be landmark + testid root.
+  3. **Give shared components a size axis before call sites reach for `!important`.**
+     Every `!important` in the codebase (`HeroHeader` ×2, `Chip` ×1) existed to out-specify a
+     base padding. Adding `size="roomy"` / `size="lg"` retired all of them — **the codebase now
+     has zero `!important` utilities.** An `!important` at a call site is a missing prop.
+  4. **Optional-testid props are what make consolidation non-breaking.** `LoadingPanel` and
+     `CenteredPanel` gained `data-testid` / `descriptionTestId` passthroughs so four screens and
+     the locked screen kept their published ids. Without that, "one loading treatment" would have
+     meant rewriting specs — which is how consolidation work usually gets abandoned halfway.
+- **Also fixed here:** `LoadingPanel`'s off-palette `text-gray-700`; `HeroHeader`'s one-off
+  `rounded-[26px]`; DayCard rendering the day emoji twice (medallion + inline in the title); the
+  next-badge description `truncate` → `line-clamp-2` (it was routinely clipped to nothing).
+- **Deferred deliberately:** unifying the Math vs English/Science day-card into one component
+  (the largest part of D5). It spans three subjects' progress semantics and deserves its own PR
+  rather than riding along with this one.
+
 ### 2026-07-18 (Phase 3.5.4a — D12 CTA contrast, and measuring against EVERY surface)
 - **Trigger:** D12 — white CTA text on the `.btn-accent` gradient ran 3.81:1 down to 2.72:1.
 - **What we learned:**

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { HeroHeader } from "@/components/ui/HeroHeader";
-import { Surface } from "@/components/ui/Surface";
 import { DayCard, type DayCardState } from "@/components/home/DayCard";
 import { logEvent } from "@/lib/analytics/events";
 import { computeAnalyticsRollups } from "@/lib/analytics/metrics";
@@ -29,6 +28,7 @@ import { childTid, testIds } from "@/lib/testIds";
 import type { AnalyticsEvent, DayId, WorkbookDay, WorkbookProgressState } from "@/lib/types";
 import type { BadgeId } from "@/lib/badges/types";
 import { BADGE_DEFINITIONS_MAP } from "@/lib/badges/definitions";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
 
 const BADGE_CATEGORY_ORDER: BadgeId[] = [
   "first-day-done", "halfway-there", "streak-3-days", "streak-5-days", "streak-10-days",
@@ -182,9 +182,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.home.root(`${effectiveGrade}.loading`)} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.home.root(`${effectiveGrade}.loading`), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
-          טוֹעֲנִים...
-        </Surface>
+        <LoadingPanel data-testid={childTid(testIds.screen.home.root(`${effectiveGrade}.loading`), "loading")} emoji="⏳" title="טוֹעֲנִים..." />
       </main>
     );
   }
@@ -315,7 +313,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
           <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "body")} className="min-w-0 flex-1">
             <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "label")} className="text-xs font-semibold text-amber-700">הפרס הבא שאפשר להשיג:</div>
             <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "name")} className="truncate text-sm font-bold text-amber-900">{nextBadge.name}</div>
-            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "description")} className="truncate text-xs text-amber-700">{nextBadge.description}</div>
+            <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "nextBadge", "description")} className="line-clamp-2 text-xs text-amber-700">{nextBadge.description}</div>
           </div>
           <Link
             href={routes.gradeBadges(effectiveGrade)}

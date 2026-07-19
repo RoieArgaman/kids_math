@@ -6,13 +6,23 @@ export type HeroDecoration = {
   className: string;
 };
 
+/** `roomy` is the legal-page hero: more vertical air for long documents. It exists
+ *  so those pages stop reaching for `!important` to out-specify the base padding. */
+export type HeroHeaderSize = "default" | "roomy";
+
 export type HeroHeaderProps = {
   title: ReactNode;
   subtitle?: ReactNode;
   decorations?: HeroDecoration[];
   actions?: ReactNode;
+  size?: HeroHeaderSize;
   className?: string;
   "data-testid"?: string;
+};
+
+const sizeClassName: Record<HeroHeaderSize, string> = {
+  default: "p-6",
+  roomy: "px-6 py-8 sm:px-8 sm:py-10",
 };
 
 const defaultDecorations: HeroDecoration[] = [
@@ -26,11 +36,13 @@ export function HeroHeader({
   subtitle,
   decorations = defaultDecorations,
   actions,
+  size = "default",
   className,
   "data-testid": testId,
 }: HeroHeaderProps) {
   const merged = [
-    "relative mb-6 overflow-hidden rounded-[26px] border border-[#e7defb] bg-[linear-gradient(135deg,#efe9ff_0%,#f6f0fb_55%,#fbf4ee_100%)] p-6 text-center shadow-md",
+    "relative mb-6 overflow-hidden rounded-panel border border-[#e7defb] bg-[linear-gradient(135deg,#efe9ff_0%,#f6f0fb_55%,#fbf4ee_100%)] text-center shadow-md",
+    sizeClassName[size],
     className,
   ]
     .filter(Boolean)

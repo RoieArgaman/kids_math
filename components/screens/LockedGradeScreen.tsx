@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { childTid } from "@/lib/testIds";
+import { CenteredPanel } from "@/components/ui/CenteredPanel";
 
 export type LockedGradeCta = {
   href: string;
@@ -24,6 +25,9 @@ export type LockedGradeScreenProps = {
  * and the grade-level `/subjects/b`). Always states WHY it's locked and HOW to
  * unlock it, with a CTA back to the relevant picker/exam. Server-rendered — the
  * middleware is the real gate; this is what the learner lands on after a redirect.
+ *
+ * Built on `CenteredPanel` (roadmap 3.5.4b): this used to hand-roll a second
+ * centred-panel shell that differed only by width, radius and shadow.
  */
 export function LockedGradeScreen({
   rootTestId,
@@ -35,43 +39,34 @@ export function LockedGradeScreen({
   secondary,
 }: LockedGradeScreenProps) {
   return (
-    <main data-testid={rootTestId} className="flex min-h-screen items-center justify-center px-4">
-      <div
-        data-testid={childTid(rootTestId, "panel")}
-        className="surface mx-auto w-full max-w-md rounded-panel p-8 text-center shadow-lg"
-      >
-        <p data-testid={childTid(rootTestId, "emoji")} className="mb-2 text-6xl" aria-hidden="true">
-          {emoji}
-        </p>
-        <h1 data-testid={childTid(rootTestId, "title")} className="mb-2 text-2xl font-bold text-[var(--title)]">
-          {title}
-        </h1>
-        <p
-          data-testid={reasonTestId ?? childTid(rootTestId, "reason")}
-          className="mb-6 text-sm text-[var(--muted)]"
-        >
-          {reason}
-        </p>
-
-        <div data-testid={childTid(rootTestId, "ctas")} className="space-y-3">
-          <Link
-            href={primary.href}
-            data-testid={primary.testId}
-            className="touch-button btn-accent inline-block w-full rounded-2xl px-6 py-3 text-center font-semibold shadow-xs"
-          >
-            {primary.label}
-          </Link>
-          {secondary ? (
+    <CenteredPanel
+        as="main"
+        data-testid={rootTestId}
+        descriptionTestId={reasonTestId ?? childTid(rootTestId, "reason")}
+        titleAs="h1"
+        emoji={emoji}
+        title={title}
+        description={reason}
+        actions={
+          <div data-testid={childTid(rootTestId, "ctas")} className="space-y-3">
             <Link
-              href={secondary.href}
-              data-testid={secondary.testId}
-              className="touch-button inline-block w-full rounded-2xl border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[var(--accent-strong)] hover:bg-[#f7f4fd]"
+              href={primary.href}
+              data-testid={primary.testId}
+              className="touch-button btn-accent inline-block w-full rounded-card px-6 py-3 text-center font-semibold shadow-xs"
             >
-              {secondary.label}
+              {primary.label}
             </Link>
-          ) : null}
-        </div>
-      </div>
-    </main>
+            {secondary ? (
+              <Link
+                href={secondary.href}
+                data-testid={secondary.testId}
+                className="touch-button inline-block w-full rounded-card border border-[#e7defb] bg-white px-6 py-3 text-center font-semibold text-[var(--accent-strong)] hover:bg-[#f7f4fd]"
+              >
+                {secondary.label}
+              </Link>
+            ) : null}
+          </div>
+        }
+      />
   );
 }

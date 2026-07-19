@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Chip } from "@/components/ui/Chip";
 import { HeroHeader } from "@/components/ui/HeroHeader";
-import { Surface } from "@/components/ui/Surface";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { logEvent } from "@/lib/analytics/events";
 import { isSubjectUnlockedInGrade } from "@/lib/completion/subjectGrade";
@@ -15,6 +14,7 @@ import type { Subject } from "@/lib/subjects";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
 
 type SubjectCardDef = {
   subject: Subject;
@@ -117,9 +117,7 @@ export default function SubjectPickerPage({ params }: { params: { grade: string 
   if (!isHydrated) {
     return (
       <main data-testid={testIds.screen.subjectPicker.root()} className="pb-10">
-        <Surface data-testid={childTid(testIds.screen.subjectPicker.root(), "loading")} className="p-6 text-center text-lg font-semibold text-[var(--muted)]">
-          טוֹעֲנִים...
-        </Surface>
+        <LoadingPanel data-testid={childTid(testIds.screen.subjectPicker.root(), "loading")} emoji="⏳" title="טוֹעֲנִים..." />
       </main>
     );
   }

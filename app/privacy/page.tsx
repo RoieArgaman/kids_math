@@ -26,7 +26,7 @@ export default function PrivacyPage() {
 
       <HeroHeader
         data-testid={childTid(root, "hero")}
-        className="!px-6 !py-8 sm:!px-8 sm:!py-10"
+        size="roomy"
         title="מדיניות פרטיות"
         subtitle="מסמך זה מסביר בקצרה אילו נתונים נשמרים במכשיר ולמה, בהתאם לשקיפות מומלצת. אין כאן ייעוץ משפטי."
         decorations={[
