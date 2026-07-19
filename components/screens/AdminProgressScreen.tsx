@@ -456,14 +456,14 @@ export function AdminProgressScreen({
               <label
                 data-testid={childTid(rootTid, "gradeLabel")}
                 htmlFor="admin-grade"
-                className="block text-sm font-semibold text-slate-700"
+                className="block text-sm font-semibold text-[var(--title)]"
               >
                 מסלול
               </label>
               <select
                 id="admin-grade"
                 data-testid={testIds.screen.adminProgress.gradeSelect()}
-                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedGrade}
                 onChange={(event) => {
                   disarmDayReset();
@@ -489,14 +489,14 @@ export function AdminProgressScreen({
               <label
                 data-testid={childTid(rootTid, "subjectLabel")}
                 htmlFor="admin-subject"
-                className="block text-sm font-semibold text-slate-700"
+                className="block text-sm font-semibold text-[var(--title)]"
               >
                 מקצוע
               </label>
               <select
                 id="admin-subject"
                 data-testid={testIds.screen.adminProgress.subjectSelect()}
-                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-base outline-hidden focus-visible:ring-2 focus-visible:ring-violet-400"
                 value={selectedSubject}
                 onChange={(event) => {
                   disarmDayReset();
@@ -526,13 +526,13 @@ export function AdminProgressScreen({
               <label
                 data-testid={childTid(rootTid, "ttsLabel")}
                 htmlFor="admin-tts-toggle"
-                className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800"
+                className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-[var(--title)]"
               >
                 <input
                   id="admin-tts-toggle"
                   type="checkbox"
                   data-testid={testIds.screen.adminProgress.ttsToggle()}
-                  className="h-5 w-5 rounded-sm border-slate-300"
+                  className="h-5 w-5 rounded-sm border-[var(--border)]"
                   checked={ttsEnabled}
                   onChange={(event) => setTtsEnabled(event.target.checked)}
                 />
@@ -573,7 +573,7 @@ export function AdminProgressScreen({
             {status ? (
               <p
                 data-testid={testIds.screen.adminProgress.statusMessage()}
-                className={`text-sm font-medium ${status.kind === "error" ? "text-rose-700" : "text-slate-700"}`}
+                className={`text-sm font-medium ${status.kind === "error" ? "text-rose-700" : "text-[var(--title)]"}`}
               >
                 {status.message}
               </p>
@@ -590,9 +590,9 @@ export function AdminProgressScreen({
               const sectionsExpanded = expandedDaySectionLists.has(dayIdTyped);
               const sectionsPanelId = `admin-sections-panel-${trackKey}-${day.id}`;
               return (
-                <article data-testid={rowTid} key={day.id} className="rounded-2xl border border-slate-200 p-4">
+                <article data-testid={rowTid} key={day.id} className="rounded-card border border-[var(--border)] p-4">
                   <div data-testid={childTid(rowTid, "header")} className="mb-2 flex items-start justify-between gap-3">
-                    <h2 data-testid={childTid(rowTid, "title")} className="text-base font-semibold text-slate-800">
+                    <h2 data-testid={childTid(rowTid, "title")} className="text-base font-semibold text-[var(--title)]">
                       יום {day.dayNumber}: {day.title}
                     </h2>
                     <span
@@ -603,14 +603,14 @@ export function AdminProgressScreen({
                     </span>
                   </div>
 
-                  <p data-testid={childTid(rowTid, "objective")} className="mb-3 text-sm text-slate-600">
+                  <p data-testid={childTid(rowTid, "objective")} className="mb-3 text-sm text-[var(--muted)]">
                     {day.objective}
                   </p>
 
                   {day.sections.length > 0 ? (
                     <div
                       data-testid={childTid(rowTid, "sectionsWrap")}
-                      className="mb-3 border-t border-slate-100 pt-3"
+                      className="mb-3 border-t border-[var(--border)] pt-3"
                     >
                       <Button
                         type="button"
@@ -644,13 +644,13 @@ export function AdminProgressScreen({
                               <li
                                 key={section.id}
                                 data-testid={secRowTid}
-                                className="rounded-xl bg-slate-50/80 px-3 py-2 text-right"
+                                className="rounded-xl bg-[var(--background)]/80 px-3 py-2 text-right"
                               >
                                 <div
                                   data-testid={childTid(secRowTid, "header")}
                                   className="mb-2 flex flex-wrap items-start justify-between gap-2"
                                 >
-                                  <span data-testid={childTid(secRowTid, "title")} className="text-sm font-semibold text-slate-800">
+                                  <span data-testid={childTid(secRowTid, "title")} className="text-sm font-semibold text-[var(--title)]">
                                     {section.title}
                                   </span>
                                   <span

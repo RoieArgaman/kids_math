@@ -242,14 +242,14 @@ export function AdminUsersScreen() {
   if (!isAdminUser) {
     return (
       <main data-testid={testIds.component.adminUsers.root()} className="p-6 text-center">
-        <p data-testid="km.autogen.adminusersscreen.node.idx.0" className="text-slate-600">אין הרשאה לעמוד זה</p>
+        <p data-testid="km.autogen.adminusersscreen.node.idx.0" className="text-[var(--muted)]">אין הרשאה לעמוד זה</p>
       </main>
     );
   }
 
   return (
     <main data-testid={testIds.component.adminUsers.root()} className="mx-auto max-w-2xl p-6">
-      <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-slate-800">ניהול משתמשים</h1>
+      <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-[var(--title)]">ניהול משתמשים</h1>
 
       {statusMsg && (
         <Alert data-testid="km.autogen.adminusersscreen.node.idx.2" tone="success" className="mb-4">
@@ -258,8 +258,8 @@ export function AdminUsersScreen() {
       )}
 
       {/* Add user form */}
-      <section data-testid="km.autogen.adminusersscreen.node.idx.3" className="surface mb-6 rounded-2xl p-5">
-        <h2 data-testid="km.autogen.adminusersscreen.node.idx.4" className="mb-4 text-lg font-bold text-slate-700">הוספת משתמש חדש</h2>
+      <section data-testid="km.autogen.adminusersscreen.node.idx.3" className="surface mb-6 rounded-card p-5">
+        <h2 data-testid="km.autogen.adminusersscreen.node.idx.4" className="mb-4 text-lg font-bold text-[var(--title)]">הוספת משתמש חדש</h2>
         <form
           data-testid={testIds.component.adminUsers.addForm()}
           onSubmit={handleAdd}
@@ -276,7 +276,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newUsername}
               onChange={(e) => { setNewUsername(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -291,7 +291,7 @@ export function AdminUsersScreen() {
               dir="ltr"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setAddError(""); }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+              className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
               disabled={adding}
             />
           </Field>
@@ -302,10 +302,10 @@ export function AdminUsersScreen() {
               type="checkbox"
               checked={newIsAdmin}
               onChange={(e) => setNewIsAdmin(e.target.checked)}
-              className="h-4 w-4 rounded-sm accent-[#8b75cc]"
+              className="h-4 w-4 rounded-sm accent-[var(--accent)]"
               disabled={adding}
             />
-            <label data-testid="km.autogen.adminusersscreen.node.idx.10" htmlFor="km-new-user-admin" className="text-sm font-medium text-slate-700">
+            <label data-testid="km.autogen.adminusersscreen.node.idx.10" htmlFor="km-new-user-admin" className="text-sm font-medium text-[var(--title)]">
               הרשאות מנהל
             </label>
           </div>
@@ -317,10 +317,10 @@ export function AdminUsersScreen() {
               type="checkbox"
               checked={newOverridePolicy}
               onChange={(e) => { setNewOverridePolicy(e.target.checked); setAddError(""); }}
-              className="h-4 w-4 rounded-sm accent-[#8b75cc]"
+              className="h-4 w-4 rounded-sm accent-[var(--accent)]"
               disabled={adding}
             />
-            <label data-testid="km.autogen.adminusersscreen.node.overridelabel" htmlFor="km-new-user-override" className="text-sm font-medium text-slate-700">
+            <label data-testid="km.autogen.adminusersscreen.node.overridelabel" htmlFor="km-new-user-override" className="text-sm font-medium text-[var(--title)]">
               אפשר סיסמה פשוטה (למשל קוד ספרתי לילד)
             </label>
           </div>
@@ -368,15 +368,15 @@ export function AdminUsersScreen() {
       </ConfirmDialog>
 
       {/* User list */}
-      <section data-testid="km.autogen.adminusersscreen.node.idx.12" className="surface rounded-2xl p-5">
+      <section data-testid="km.autogen.adminusersscreen.node.idx.12" className="surface rounded-card p-5">
         <div data-testid="km.autogen.adminusersscreen.node.listHeader" className="mb-4 flex items-center justify-between gap-3">
-          <h2 data-testid="km.autogen.adminusersscreen.node.idx.13" className="text-lg font-bold text-slate-700">
+          <h2 data-testid="km.autogen.adminusersscreen.node.idx.13" className="text-lg font-bold text-[var(--title)]">
             משתמשים רשומים {!loading && `(${visibleUsers.length})`}
           </h2>
           {deletedCount > 0 && (
             <label
               data-testid="km.autogen.adminusersscreen.node.showDeletedLabel"
-              className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-500"
+              className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]"
             >
               <input
                 data-testid={testIds.component.adminUsers.showDeletedToggle()}
@@ -392,20 +392,20 @@ export function AdminUsersScreen() {
         {error && <p data-testid="km.autogen.adminusersscreen.node.idx.14" className="mb-3 text-sm font-medium text-red-600">{error}</p>}
 
         {loading ? (
-          <p data-testid="km.autogen.adminusersscreen.node.idx.15" className="text-center text-sm text-slate-500">טוען...</p>
+          <p data-testid="km.autogen.adminusersscreen.node.idx.15" className="text-center text-sm text-[var(--muted)]">טוען...</p>
         ) : visibleUsers.length === 0 ? (
-          <p data-testid="km.autogen.adminusersscreen.node.idx.16" className="text-center text-sm text-slate-500">אין משתמשים עדיין</p>
+          <p data-testid="km.autogen.adminusersscreen.node.idx.16" className="text-center text-sm text-[var(--muted)]">אין משתמשים עדיין</p>
         ) : (
-          <ul data-testid="km.autogen.adminusersscreen.node.idx.17" className="divide-y divide-slate-100">
+          <ul data-testid="km.autogen.adminusersscreen.node.idx.17" className="divide-y divide-[var(--border)]">
             {visibleUsers.map((u) => (
               <li
                 key={u.userId}
                 data-testid={testIds.component.adminUsers.userRow(u.userId)}
-                className={isDeleted(u) ? "py-3 opacity-60" : "py-3"}
+                className={isDeleted(u) ? "py-3 is-locked" : "py-3"}
               >
                 <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="flex items-center justify-between gap-3">
                   <div data-testid="km.autogen.adminusersscreen.node.idx.19" className="min-w-0">
-                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="flex items-center gap-2 truncate font-semibold text-slate-800" dir="ltr">
+                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="flex items-center gap-2 truncate font-semibold text-[var(--title)]" dir="ltr">
                       <span data-testid="km.autogen.adminusersscreen.node.uname" className="truncate">{u.username}</span>
                       {u.status && u.status !== "active" && (
                         <span
@@ -413,7 +413,7 @@ export function AdminUsersScreen() {
                           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                             isDeleted(u)
                               ? "bg-[#fee2e2] text-[#991b1b]"
-                              : "bg-slate-100 text-slate-600"
+                              : "bg-[var(--background)] text-[var(--muted)]"
                           }`}
                           dir="rtl"
                         >
@@ -430,7 +430,7 @@ export function AdminUsersScreen() {
                         </span>
                       )}
                     </p>
-                    <p data-testid="km.autogen.adminusersscreen.node.idx.21" className="text-xs text-slate-500">
+                    <p data-testid="km.autogen.adminusersscreen.node.idx.21" className="text-xs text-[var(--muted)]">
                       {u.role === "admin" ? "מנהל" : "משתמש"} · {new Date(u.createdAt).toLocaleDateString("he-IL")}
                     </p>
                   </div>
@@ -468,7 +468,7 @@ export function AdminUsersScreen() {
                         data-testid={testIds.component.adminUsers.changePasswordButton(u.userId)}
                         onClick={() => openChangePw(u.userId)}
                         disabled={u.status === "deactivated"}
-                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[#6d28d9] hover:bg-[#f3effb] disabled:opacity-40"
+                        className="rounded-lg border border-[#e7defb] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] hover:bg-[#f3effb] disabled:opacity-40"
                       >
                         שנה סיסמה
                       </button>
@@ -492,7 +492,7 @@ export function AdminUsersScreen() {
                           handleLifecycle(u.userId, u.status === "deactivated" ? "restore" : "deactivate")
                         }
                         disabled={u.userId === user?.userId}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                        className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)] disabled:opacity-40"
                       >
                         {u.status === "deactivated" ? "הפעל מחדש" : "השבת"}
                       </button>
@@ -517,7 +517,7 @@ export function AdminUsersScreen() {
                       placeholder="סיסמה חדשה"
                       value={changePwValue}
                       onChange={(e) => { setChangePwValue(e.target.value); setChangePwError(""); }}
-                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-[#a78bfa] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
+                      className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-1.5 text-sm focus:border-[var(--accent-soft)] focus:outline-hidden focus:ring-2 focus:ring-[#cdbff2]"
                       disabled={changePwBusy}
                       autoFocus
                     />
@@ -525,7 +525,7 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordSubmit(u.userId)}
                       onClick={() => handleChangePassword(u.userId)}
                       disabled={!changePwValue || changePwBusy}
-                      className="rounded-lg bg-[#8b75cc] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
+                      className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
                     >
                       {changePwBusy ? "..." : "שמור"}
                     </button>
@@ -533,17 +533,17 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordCancel(u.userId)}
                       onClick={cancelChangePw}
                       disabled={changePwBusy}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)]"
                     >
                       ביטול
                     </button>
-                    <label data-testid={`km.autogen.adminusersscreen.node.pwoverride.${u.userId}`} className="flex w-full items-center gap-2 text-xs font-medium text-slate-600">
+                    <label data-testid={`km.autogen.adminusersscreen.node.pwoverride.${u.userId}`} className="flex w-full items-center gap-2 text-xs font-medium text-[var(--muted)]">
                       <input
                         data-testid={testIds.component.adminUsers.changePasswordOverride(u.userId)}
                         type="checkbox"
                         checked={changePwOverride}
                         onChange={(e) => { setChangePwOverride(e.target.checked); setChangePwError(""); }}
-                        className="h-4 w-4 rounded-sm accent-[#8b75cc]"
+                        className="h-4 w-4 rounded-sm accent-[var(--accent)]"
                         disabled={changePwBusy}
                       />
                       אפשר סיסמה פשוטה

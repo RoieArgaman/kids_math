@@ -96,12 +96,12 @@ function CorrectnessBar({ testId, correctPercent }: { testId: string; correctPer
   return (
     <div
       data-testid={childTid(testId, "bar")}
-      className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#f0ebfb]"
+      className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--track)]"
       aria-hidden
     >
       <div
         data-testid={childTid(testId, "barFill")}
-        className="h-full rounded-full bg-[#a78bfa]"
+        className="h-full rounded-full bg-[var(--accent-soft)]"
         style={{ width: `${clamped}%` }}
       />
     </div>
@@ -243,8 +243,8 @@ export function ParentDashboardScreen() {
               className={[
                 "min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition",
                 active
-                  ? "bg-[#8b75cc] text-white"
-                  : "border border-[#e7defb] bg-white text-[#6d28d9] hover:bg-[#f7f4fd]",
+                  ? "bg-[var(--accent)] text-white"
+                  : "border border-[#e7defb] bg-white text-[var(--accent-strong)] hover:bg-[#f7f4fd]",
               ].join(" ")}
             >
               {opt.label}
@@ -308,7 +308,7 @@ export function ParentDashboardScreen() {
                 <span data-testid={childTid(testId, "label")} className="text-sm font-semibold text-[#2c2348]">
                   {subjectLabel(subject)}
                 </span>
-                <span data-testid={childTid(testId, "value")} className="text-sm font-bold text-[#6d28d9]">
+                <span data-testid={childTid(testId, "value")} className="text-sm font-bold text-[var(--accent-strong)]">
                   {percent === null || percent === undefined ? "—" : <Ltr>{percent}%</Ltr>}
                 </span>
               </div>
@@ -395,7 +395,7 @@ export function ParentDashboardScreen() {
                       {entry.label}
                       <Chip tone="info">{subjectLabel(entry.subject)}</Chip>
                     </span>
-                    <span data-testid={childTid(rowTid, "value")} className="text-sm font-bold text-[#6d28d9]">
+                    <span data-testid={childTid(rowTid, "value")} className="text-sm font-bold text-[var(--accent-strong)]">
                       <Ltr>{correctPercent}% נכון</Ltr>
                     </span>
                   </div>

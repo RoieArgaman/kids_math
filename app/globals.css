@@ -9,7 +9,11 @@
   --background: #fffbef;     /* warm cream */
   --surface: #ffffff;
   --foreground: #2c2348;     /* softer deep indigo for titles */
-  --muted: #8a8298;          /* warm grey-violet */
+  /* WCAG AA. #8a8298 shipped at 3.67:1 on white / 3.54:1 on cream — a live AA
+     failure everywhere secondary text is used. #6f6880 is the LIGHTEST value on
+     this hue that passes (5.29 / 5.12), so it is the smallest correcting change.
+     Do not lighten without re-measuring. */
+  --muted: #6f6880;          /* warm grey-violet */
   --border: #efe9f7;         /* soft lavender hairline */
   --accent: #8b75cc;         /* aligned to the button accent */
   --success: #15803d;
@@ -23,7 +27,8 @@
 
   /* calm refresh helper tokens */
   --hairline: #ece7f5;       /* week dividers, subtle separators */
-  --muted-soft: #9a93a8;     /* progress labels, secondary muted */
+  /* --muted-soft removed (3.5.2b): at #9a93a8 it was 2.95:1 — the worst AA
+     failure in the palette — and had exactly one call site. Folded into --muted. */
   --track: #eef0f4;          /* progress-bar track */
   --title: #2c2348;
 
@@ -44,13 +49,13 @@
 
   --rail-width: 4px;         /* accent rail; 4/5/6px ship today */
 
-  /* Locked state. Today locked cards dim the WHOLE card (opacity-50/60), which puts
-     muted text at 2.03:1 — a hard WCAG AA failure. This treatment tints the surface
-     and keeps text at full opacity instead; --locked-muted measures 4.89:1 on
-     --locked-surface (AA needs 4.5). Verified, not estimated — see LEARNING_LOG. */
+  /* Locked state. Locked cards used to dim the WHOLE card (opacity-50/60), putting
+     muted text at 2.03:1 — a hard WCAG AA failure. This tints the surface and keeps
+     text at full opacity instead. --muted measures 4.89:1 on --locked-surface.
+     (--locked-muted was folded into --muted in 3.5.2b once --muted was corrected to
+     the same value — one grey, not two.) */
   --locked-surface: #f7f5fa;
   --locked-border: #e4dfee;
-  --locked-muted: #6f6880;
 }
 
 body {
@@ -111,10 +116,6 @@ main {
 
 .is-locked .locked-dim {
   opacity: 0.45;
-}
-
-.is-locked .muted {
-  color: var(--locked-muted);
 }
 
 .muted {
