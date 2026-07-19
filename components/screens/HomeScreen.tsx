@@ -188,7 +188,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
   }
 
   return (
-    <main data-testid={testIds.screen.home.root(effectiveGrade)} className="pb-10">
+    <main data-testid={testIds.screen.home.root(effectiveGrade)} className="screen-wide pb-10">
       <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav")} className="mb-4">
         <div data-testid={childTid(testIds.screen.home.root(effectiveGrade), "topNav", "actions")} className="flex items-center gap-4">
           <AppNavLink href={routes.subjectsForGrade(effectiveGrade, { previewAll })}>חזרה לבחירת נושא</AppNavLink>
@@ -347,7 +347,7 @@ export function HomeScreen({ grade }: { grade: GradeId }) {
 
             <div
               data-testid={childTid(testIds.screen.home.root(effectiveGrade), "week", week, "grid")}
-              className="grid gap-4"
+              className="grid gap-4 lg:grid-cols-2"
             >
               {weekDays.map((day) => {
                 const isFinalExamDay = day.id === FINAL_EXAM_DAY_ID;

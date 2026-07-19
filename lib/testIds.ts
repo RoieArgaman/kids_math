@@ -525,6 +525,8 @@ export const testIds = {
     topBar: {
       studentTtsToggle: () => tid("component", "topBar", "studentTts", "toggle"),
       authSection: () => tid("component", "topBar", "auth", "section"),
+      /** Inner row constrained to the content column width (roadmap 3.5.5). */
+      row: () => tid("component", "topBar", "row"),
     },
     metacognitionToast: {
       root: () => tid("component", "metacognitionToast"),

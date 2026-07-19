@@ -217,7 +217,7 @@ export function ParentDashboardScreen() {
   const examTid = testIds.screen.parentDashboard.examSection();
 
   return (
-    <main data-testid={rootTid} dir="rtl" className="mx-auto max-w-2xl space-y-6 p-6">
+    <main data-testid={rootTid} dir="rtl" className="screen-wide space-y-6 p-6">
       <div data-testid={childTid(rootTid, "navWrap")}>{navBack}</div>
 
       {/* Subject filter */}

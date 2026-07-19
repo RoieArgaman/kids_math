@@ -91,6 +91,16 @@ main {
   overflow-x: visible;
 }
 
+/* Desktop opt-in (roadmap 3.5.5). Product decision on record: the app stays a
+   comfortable narrow column for READING and ANSWERING — a 1400px-wide input line
+   helps nobody — and only the browsing/reporting screens use the extra width.
+   Opt in per screen; never widen the practice flow. */
+@media (min-width: 1024px) {
+  main.screen-wide {
+    width: min(100%, 1120px);
+  }
+}
+
 .surface {
   background: var(--surface);
   border-radius: 20px;
