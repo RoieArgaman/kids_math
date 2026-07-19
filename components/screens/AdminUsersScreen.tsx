@@ -525,7 +525,7 @@ export function AdminUsersScreen() {
                       data-testid={testIds.component.adminUsers.changePasswordSubmit(u.userId)}
                       onClick={() => handleChangePassword(u.userId)}
                       disabled={!changePwValue || changePwBusy}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--accent-strong)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6fcd] disabled:opacity-50"
                     >
                       {changePwBusy ? "..." : "שמור"}
                     </button>

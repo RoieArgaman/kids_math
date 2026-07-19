@@ -16,11 +16,13 @@
   --background: #fffbef;     /* warm cream */
   --surface: #ffffff;
   --foreground: #2c2348;     /* softer deep indigo for titles */
-  /* WCAG AA. #8a8298 shipped at 3.67:1 on white / 3.54:1 on cream — a live AA
-     failure everywhere secondary text is used. #6f6880 is the LIGHTEST value on
-     this hue that passes (5.29 / 5.12), so it is the smallest correcting change.
-     Do not lighten without re-measuring. */
-  --muted: #6f6880;          /* warm grey-violet */
+  /* WCAG AA. #8a8298 shipped at 3.67:1 on white — a live AA failure everywhere
+     secondary text is used. #6b647b is the LIGHTEST value on this hue that clears
+     4.5 on EVERY surface it lands on: 5.62 white / 5.44 cream / 5.19 locked /
+     4.76 hero gradient. The hero gradient is the binding constraint — an earlier
+     pass measured only white+cream, picked #6f6880, and missed it at 4.48.
+     Do not lighten without re-measuring against all four. */
+  --muted: #6b647b;          /* warm grey-violet */
   --border: #efe9f7;         /* soft lavender hairline */
   --accent: #8b75cc;         /* aligned to the button accent */
   --success: #15803d;
@@ -56,9 +58,14 @@
 
   --rail-width: 4px;         /* accent rail; 4/5/6px ship today */
 
+  /* Primary-CTA gradient stops. Both measured against WHITE text (D12):
+     --cta-from 6.08:1, --cta-to 4.77:1. AA needs 4.5. */
+  --cta-from: #6d4bc4;
+  --cta-to: #7c5fd0;
+
   /* Locked state. Locked cards used to dim the WHOLE card (opacity-50/60), putting
      muted text at 2.03:1 — a hard WCAG AA failure. This tints the surface and keeps
-     text at full opacity instead. --muted measures 4.89:1 on --locked-surface.
+     text at full opacity instead. --muted measures 5.19:1 on --locked-surface.
      (--locked-muted was folded into --muted in 3.5.2b once --muted was corrected to
      the same value — one grey, not two.) */
   --locked-surface: #f7f5fa;
@@ -265,8 +272,13 @@ a:focus-visible {
   transform: scale(1.03);
 }
 
+/* Primary CTA. White text means BOTH gradient stops must clear 4.5:1 against
+   white — the old #8b75cc→#a78bfa ran 3.81 down to 2.72, so the app's most-used
+   button failed AA at every point. Stops below are measured, and keep the
+   original dark→light direction. Re-measure before retuning: the light stop
+   (--cta-to) is the binding constraint, not the dark one. */
 .btn-accent {
-  background: linear-gradient(135deg, #8b75cc 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, var(--cta-from) 0%, var(--cta-to) 100%);
   color: #ffffff;
   border-color: transparent;
   box-shadow: 0 6px 16px rgba(124, 117, 204, 0.18);

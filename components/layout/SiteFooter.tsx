@@ -40,7 +40,7 @@ export function SiteFooter() {
             </Link>
             <span
               data-testid={testIds.layout.siteFooter.sep()}
-              className="select-none text-[#cdbff2]"
+              className="select-none text-[var(--muted)]"
               aria-hidden
             >
               ·
