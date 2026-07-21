@@ -104,31 +104,31 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         className="surface mb-8 border border-[#bbf7d0] bg-[#f4fcf7] p-5 shadow-xs"
         aria-labelledby="overall-heading"
       >
-        <h2 data-testid="km.autogen.planscreen.node.idx.12" id="overall-heading" className="mb-3 text-lg font-bold text-[var(--title)]">
+        <h2 data-testid={testIds.screen.plan.overallHeading()} id="overall-heading" className="mb-3 text-lg font-bold text-[var(--title)]">
           הַהִתְקַדְּמוּת בְּכָל הַחוֹבֶרֶת
         </h2>
-        <p data-testid="km.autogen.planscreen.node.idx.13" className="muted mb-4 text-sm leading-relaxed">
+        <p data-testid={testIds.screen.plan.overallIntro()} className="muted mb-4 text-sm leading-relaxed">
           {totalCurriculumDays} יְמוֹת לִמּוּד — כָּל יוֹם בְּנוּי מִקְטָעִים שֶׁמְחַזְּקִים חִשּׁוּב, שָׂפָה וּבְדִיקַת עַצְמִי.
         </p>
-        <div data-testid="km.autogen.planscreen.node.idx.14" className="mb-2 flex items-center justify-between text-xs font-medium">
-          <span data-testid="km.autogen.planscreen.node.idx.15" className="text-[var(--muted)]">יָמִים שֶׁהוּשְׁלְמוּ</span>
-          <span data-testid="km.autogen.planscreen.node.idx.16" className={`font-bold ${overallPct === 100 ? "text-[#047857]" : "text-[var(--accent-strong)]"}`}>
+        <div data-testid={testIds.screen.plan.overallRow()} className="mb-2 flex items-center justify-between text-xs font-medium">
+          <span data-testid={testIds.screen.plan.overallLabel()} className="text-[var(--muted)]">יָמִים שֶׁהוּשְׁלְמוּ</span>
+          <span data-testid={testIds.screen.plan.overallPercent()} className={`font-bold ${overallPct === 100 ? "text-[#047857]" : "text-[var(--accent-strong)]"}`}>
             {overallPct}%
           </span>
         </div>
-        <div data-testid="km.autogen.planscreen.node.idx.17" className="h-3 w-full overflow-hidden rounded-full bg-[#eef0f4]">
-          <div data-testid="km.autogen.planscreen.node.idx.18"
+        <div data-testid={testIds.screen.plan.overallTrack()} className="h-3 w-full overflow-hidden rounded-full bg-[#eef0f4]">
+          <div data-testid={testIds.screen.plan.overallFill()}
             className={`h-full rounded-full transition-all ${overallPct === 100 ? "bg-[#10b981]" : "bg-[var(--accent)]"}`}
             style={{ width: `${overallPct}%` }}
           />
         </div>
-        <p data-testid="km.autogen.planscreen.node.idx.19" className="muted mt-4 rounded-xl border border-[#efe9f7] bg-white/80 p-3 text-xs leading-relaxed">
+        <p data-testid={testIds.screen.plan.overallNote()} className="muted mt-4 rounded-xl border border-[#efe9f7] bg-white/80 p-3 text-xs leading-relaxed">
           {COMPLETION_GATE_NOTE}
         </p>
       </section>
 
-      <section data-testid="km.autogen.planscreen.node.idx.20" className="mb-8 space-y-4" aria-labelledby="strands-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.21" id="strands-heading" className="text-lg font-bold text-[var(--title)]">
+      <section data-testid={testIds.screen.plan.strandsSection()} className="mb-8 space-y-4" aria-labelledby="strands-heading">
+        <h2 data-testid={testIds.screen.plan.strandsHeading()} id="strands-heading" className="text-lg font-bold text-[var(--title)]">
           יְסוֹדוֹת הַלִּמּוּד לְפִי תְחוּמִים
         </h2>
         {ministryStrands.map((strand) => {
@@ -137,39 +137,39 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
           const complete = isStrandComplete(strand.dayNumbers, progress);
 
           return (
-            <article data-testid="km.autogen.planscreen.node.idx.22"
+            <article data-testid={testIds.screen.plan.strand(effectiveGrade, strand.id)}
               key={strand.id}
               className={`surface p-5 shadow-xs transition-shadow ${complete ? "surface-success ring-1 ring-[#bbf7d0]/60" : ""}`}
             >
-              <div data-testid="km.autogen.planscreen.node.idx.23" className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                <h3 data-testid="km.autogen.planscreen.node.idx.24" className="text-base font-bold text-[var(--accent-strong)]">{strand.title}</h3>
+              <div data-testid={testIds.screen.plan.strandHeader(strand.id)} className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                <h3 data-testid={testIds.screen.plan.strandTitle(strand.id)} className="text-base font-bold text-[var(--accent-strong)]">{strand.title}</h3>
                 {complete ? (
-                  <span data-testid="km.autogen.planscreen.node.idx.25" className="inline-flex shrink-0 items-center rounded-full bg-[#fef3c7] px-2.5 py-1 text-xs font-semibold text-[#92400e]">
+                  <span data-testid={testIds.screen.plan.strandChip(strand.id)} className="inline-flex shrink-0 items-center rounded-full bg-[#fef3c7] px-2.5 py-1 text-xs font-semibold text-[#92400e]">
                     הוּשְׁלַם
                   </span>
                 ) : null}
               </div>
-              <p data-testid="km.autogen.planscreen.node.idx.26" className="muted mb-4 text-sm leading-relaxed">{strand.summary}</p>
+              <p data-testid={testIds.screen.plan.strandSummary(strand.id)} className="muted mb-4 text-sm leading-relaxed">{strand.summary}</p>
 
-              <div data-testid="km.autogen.planscreen.node.idx.27" className="mb-4">
-                <div data-testid="km.autogen.planscreen.node.idx.28" className="mb-1 flex items-center justify-between text-xs font-medium">
-                  <span data-testid="km.autogen.planscreen.node.idx.29" className="text-[#9a93a8]">הִתְקַדְּמוּת בַּתְחוּם</span>
-                  <span data-testid="km.autogen.planscreen.node.idx.30" className={`font-bold ${complete ? "text-[#047857]" : "text-[var(--accent-strong)]"}`}>{pct}%</span>
+              <div data-testid={testIds.screen.plan.strandProgress(strand.id)} className="mb-4">
+                <div data-testid={testIds.screen.plan.strandProgressRow(strand.id)} className="mb-1 flex items-center justify-between text-xs font-medium">
+                  <span data-testid={testIds.screen.plan.strandProgressLabel(strand.id)} className="text-[#9a93a8]">הִתְקַדְּמוּת בַּתְחוּם</span>
+                  <span data-testid={testIds.screen.plan.strandProgressPercent(strand.id)} className={`font-bold ${complete ? "text-[#047857]" : "text-[var(--accent-strong)]"}`}>{pct}%</span>
                 </div>
-                <div data-testid="km.autogen.planscreen.node.idx.31" className="h-2.5 w-full overflow-hidden rounded-full bg-[#eef0f4]">
-                  <div data-testid="km.autogen.planscreen.node.idx.32"
+                <div data-testid={testIds.screen.plan.strandTrack(strand.id)} className="h-2.5 w-full overflow-hidden rounded-full bg-[#eef0f4]">
+                  <div data-testid={testIds.screen.plan.strandFill(strand.id)}
                     className={`h-full rounded-full transition-all ${complete ? "bg-[#10b981]" : "bg-[var(--accent)]"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
               </div>
 
-              <ul data-testid="km.autogen.planscreen.node.idx.33" className="flex flex-wrap gap-2" aria-label={`קישורים לימים ב${strand.title}`}>
+              <ul data-testid={testIds.screen.plan.strandDayList(strand.id)} className="flex flex-wrap gap-2" aria-label={`קישורים לימים ב${strand.title}`}>
                 {strand.dayNumbers.map((n) => {
                   const done = progress.days[dayIdFromNumber(n)]?.isComplete;
                   const dayId = dayIdFromNumber(n);
                   return (
-                    <li data-testid="km.autogen.planscreen.node.idx.34" key={n}>
+                    <li data-testid={testIds.screen.plan.strandDayItem(strand.id, n)} key={n}>
                       <Link
                         className={`inline-flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-2xl px-3 py-2 text-center text-sm font-bold transition-colors ${done
                           ? "bg-[#d1fae5] text-[#047857] ring-1 ring-[#bbf7d0]/60 hover:bg-[#bbf7d0]"
@@ -178,8 +178,8 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
                         href={routes.gradeDay(effectiveGrade, dayId, { previewAll })}
                         title={dayTitle(n)}
                       >
-                        <span data-testid="km.autogen.planscreen.node.idx.35" className="leading-none">{n}</span>
-                        <span data-testid="km.autogen.planscreen.node.idx.36" className="mt-0.5 max-w-[7rem] truncate text-[10px] font-normal opacity-80 sm:max-w-[9rem]">
+                        <span data-testid={testIds.screen.plan.strandDayNumber(strand.id, n)} className="leading-none">{n}</span>
+                        <span data-testid={testIds.screen.plan.strandDayLabel(strand.id, n)} className="mt-0.5 max-w-[7rem] truncate text-[10px] font-normal opacity-80 sm:max-w-[9rem]">
                           {dayTitle(n)}
                         </span>
                       </Link>
@@ -192,51 +192,51 @@ export function PlanScreen({ grade }: { grade: GradeId }) {
         })}
       </section>
 
-      <section data-testid="km.autogen.planscreen.node.idx.37" className="surface mb-8 p-5 shadow-xs" aria-labelledby="routine-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.38" id="routine-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
+      <section data-testid={testIds.screen.plan.routineSection()} className="surface mb-8 p-5 shadow-xs" aria-labelledby="routine-heading">
+        <h2 data-testid={testIds.screen.plan.routineHeading()} id="routine-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
           רוּטִינַת עֲבוֹדָה יוֹמִית (לְכָל יוֹם בַּחוֹבֶרֶת)
         </h2>
-        <ol data-testid="km.autogen.planscreen.node.idx.39" className="list-decimal list-inside space-y-3 text-sm leading-relaxed text-[#4f4860]">
+        <ol data-testid={testIds.screen.plan.routineList()} className="list-decimal list-inside space-y-3 text-sm leading-relaxed text-[#4f4860]">
           {LEARNING_ROUTINE_STEPS.map((step, i) => (
-            <li data-testid="km.autogen.planscreen.node.idx.40" key={i} className="marker:font-bold marker:text-[var(--accent-strong)]">
+            <li data-testid={testIds.screen.plan.routineStep(i)} key={i} className="marker:font-bold marker:text-[var(--accent-strong)]">
               {step}
             </li>
           ))}
         </ol>
       </section>
 
-      <section data-testid="km.autogen.planscreen.node.idx.41" className="surface mb-8 p-5 shadow-xs" aria-labelledby="parents-heading">
-        <h2 data-testid="km.autogen.planscreen.node.idx.42" id="parents-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
+      <section data-testid={testIds.screen.plan.parentsSection()} className="surface mb-8 p-5 shadow-xs" aria-labelledby="parents-heading">
+        <h2 data-testid={testIds.screen.plan.parentsHeading()} id="parents-heading" className="mb-4 text-lg font-bold text-[var(--title)]">
           {PARENT_GUIDE.title}
         </h2>
-        <dl data-testid="km.autogen.planscreen.node.idx.43" className="space-y-4 text-sm">
-          <div data-testid="km.autogen.planscreen.node.idx.44">
-            <dt data-testid="km.autogen.planscreen.node.idx.45" className="font-semibold text-[var(--accent-strong)]">לִפְנֵי</dt>
-            <dd data-testid="km.autogen.planscreen.node.idx.46" className="muted mt-1 leading-relaxed">{PARENT_GUIDE.before}</dd>
+        <dl data-testid={testIds.screen.plan.parentsList()} className="space-y-4 text-sm">
+          <div data-testid={testIds.screen.plan.parentEntry("before")}>
+            <dt data-testid={testIds.screen.plan.parentTerm("before")} className="font-semibold text-[var(--accent-strong)]">לִפְנֵי</dt>
+            <dd data-testid={testIds.screen.plan.parentDescription("before")} className="muted mt-1 leading-relaxed">{PARENT_GUIDE.before}</dd>
           </div>
-          <div data-testid="km.autogen.planscreen.node.idx.47">
-            <dt data-testid="km.autogen.planscreen.node.idx.48" className="font-semibold text-[var(--accent-strong)]">אַחֲרֵי</dt>
-            <dd data-testid="km.autogen.planscreen.node.idx.49" className="muted mt-1 leading-relaxed">{PARENT_GUIDE.after}</dd>
+          <div data-testid={testIds.screen.plan.parentEntry("after")}>
+            <dt data-testid={testIds.screen.plan.parentTerm("after")} className="font-semibold text-[var(--accent-strong)]">אַחֲרֵי</dt>
+            <dd data-testid={testIds.screen.plan.parentDescription("after")} className="muted mt-1 leading-relaxed">{PARENT_GUIDE.after}</dd>
           </div>
-          <div data-testid="km.autogen.planscreen.node.idx.50">
-            <dt data-testid="km.autogen.planscreen.node.idx.51" className="font-semibold text-[var(--accent-strong)]">מַגָּע וּכְּלִים</dt>
-            <dd data-testid="km.autogen.planscreen.node.idx.52" className="muted mt-1 leading-relaxed">{PARENT_GUIDE.tactile}</dd>
+          <div data-testid={testIds.screen.plan.parentEntry("tactile")}>
+            <dt data-testid={testIds.screen.plan.parentTerm("tactile")} className="font-semibold text-[var(--accent-strong)]">מַגָּע וּכְּלִים</dt>
+            <dd data-testid={testIds.screen.plan.parentDescription("tactile")} className="muted mt-1 leading-relaxed">{PARENT_GUIDE.tactile}</dd>
           </div>
-          <div data-testid="km.autogen.planscreen.node.idx.53">
-            <dt data-testid="km.autogen.planscreen.node.idx.54" className="font-semibold text-[var(--accent-strong)]">גִּישָּׁה</dt>
-            <dd data-testid="km.autogen.planscreen.node.idx.55" className="muted mt-1 leading-relaxed">{PARENT_GUIDE.mindset}</dd>
+          <div data-testid={testIds.screen.plan.parentEntry("mindset")}>
+            <dt data-testid={testIds.screen.plan.parentTerm("mindset")} className="font-semibold text-[var(--accent-strong)]">גִּישָּׁה</dt>
+            <dd data-testid={testIds.screen.plan.parentDescription("mindset")} className="muted mt-1 leading-relaxed">{PARENT_GUIDE.mindset}</dd>
           </div>
         </dl>
       </section>
 
-      <div data-testid="km.autogen.planscreen.node.idx.56" className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
+      <div data-testid={testIds.screen.plan.footerRow()} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
         <Link
           className="touch-button btn-accent block w-full text-center sm:w-auto"
           href={routes.gradeHome(effectiveGrade, { previewAll })}
         >
           חֲזָרָה לְרַשִׁימַת הַיָּמִים
         </Link>
-        <span data-testid="km.autogen.planscreen.node.idx.57" className="hidden text-center text-xs text-[#b9b2c4] sm:inline sm:self-center">
+        <span data-testid={testIds.screen.plan.footerNote()} className="hidden text-center text-xs text-[#b9b2c4] sm:inline sm:self-center">
           {workbookDaysList.length} יְמוֹת · כִּיתָּה {gradeLabel(effectiveGrade)}
         </span>
       </div>

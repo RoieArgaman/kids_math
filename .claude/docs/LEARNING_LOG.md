@@ -6,6 +6,32 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-18 (Phase 3.5.6 — test-integrity guard + the autogen-testid migration)
+- **D16 (silent under-collection).** Vitest reports "Test Files N passed (N)" using the count it
+  *collected*, so a file that fails to collect just lowers N — a run of 176/179 files exits 0 and
+  reads green. `scripts/check-test-collection.mjs` now diffs the json-reporter file list against
+  the `.test.tsx?` files on disk and fails on any shortfall. **I could not reproduce the
+  intermittent cause in 5+ clean runs, and said so rather than inventing one** — the guard makes
+  the failure loud whether or not the cause is ever found, which is the part that matters. Proved
+  the guard by simulating a 3-file gap in the report and watching it fail with the names.
+- **A guard I built and then removed.** I also added a vitest `afterEach` that failed any render
+  with a duplicate `data-testid`. It produced ~180 false failures immediately: many ids repeat
+  BY DESIGN for `getAllByTestId` group queries (numberline points, confetti pieces, badge cards),
+  and the guard could not tell an intentional repeat from an accidental collision. Backed it out
+  with a comment explaining why. **A guard that fails correct code is worse than no guard** — and
+  the real collision it was meant to catch is already caught by `getByTestId` throwing.
+- **D15 (position-derived testids).** Replaced all 132 `km.autogen.*.node.idx.N` with semantic
+  ids; repeated nodes keyed by domain id (`strandDayItem(strandId, n)`, `rowUsername(userId)`)
+  rather than a shared index. **The migration reproduced the finding's own hazard in miniature:**
+  mapping `idx.5` onto `usernameInput()` collided a `Field` wrapper with its `<input>` — two
+  structurally different elements, one id — exactly what position ids let happen. Caught by an
+  e2e `getByTestId` throwing, not by any static check; `check:testids` only flags *missing* ids,
+  not duplicates, and duplicates-as-function-calls can't be caught statically anyway.
+- **How to reuse next time:** when a "check the invariant" idea occurs, first list the *legitimate*
+  cases that satisfy the negative — if there are many (intentional id repeats), the blanket guard
+  is the wrong tool. And prefer the guard that runs where the failure already lands (a throwing
+  `getByTestId`) over a new global one.
+
 ### 2026-07-18 (Phase 3.5.5b — closing audit: "all done" was not true)
 - **Trigger:** final hygiene pass over the findings register before flipping the tracker to ✅.
 - **What the audit caught:** I had reported "all 14 findings closed" in conversation. Three rows

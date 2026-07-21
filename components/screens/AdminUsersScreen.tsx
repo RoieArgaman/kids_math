@@ -242,32 +242,32 @@ export function AdminUsersScreen() {
   if (!isAdminUser) {
     return (
       <main data-testid={testIds.component.adminUsers.root()} className="p-6 text-center">
-        <p data-testid="km.autogen.adminusersscreen.node.idx.0" className="text-[var(--muted)]">אין הרשאה לעמוד זה</p>
+        <p data-testid={testIds.component.adminUsers.noAccessNotice()} className="text-[var(--muted)]">אין הרשאה לעמוד זה</p>
       </main>
     );
   }
 
   return (
     <main data-testid={testIds.component.adminUsers.root()} className="screen-wide p-6">
-      <h1 data-testid="km.autogen.adminusersscreen.node.idx.1" className="mb-6 text-2xl font-bold text-[var(--title)]">ניהול משתמשים</h1>
+      <h1 data-testid={testIds.component.adminUsers.heading()} className="mb-6 text-2xl font-bold text-[var(--title)]">ניהול משתמשים</h1>
 
       {statusMsg && (
-        <Alert data-testid="km.autogen.adminusersscreen.node.idx.2" tone="success" className="mb-4">
+        <Alert data-testid={testIds.component.adminUsers.successAlert()} tone="success" className="mb-4">
           {statusMsg}
         </Alert>
       )}
 
       {/* Add user form */}
-      <section data-testid="km.autogen.adminusersscreen.node.idx.3" className="surface mb-6 rounded-card p-5">
-        <h2 data-testid="km.autogen.adminusersscreen.node.idx.4" className="mb-4 text-lg font-bold text-[var(--title)]">הוספת משתמש חדש</h2>
+      <section data-testid={testIds.component.adminUsers.addFormSection()} className="surface mb-6 rounded-card p-5">
+        <h2 data-testid={testIds.component.adminUsers.addFormHeading()} className="mb-4 text-lg font-bold text-[var(--title)]">הוספת משתמש חדש</h2>
         <form
           data-testid={testIds.component.adminUsers.addForm()}
           onSubmit={handleAdd}
           noValidate
         >
           <Field
-            data-testid="km.autogen.adminusersscreen.node.idx.5"
-            labelTestId="km.autogen.adminusersscreen.node.idx.6"
+            data-testid={testIds.component.adminUsers.usernameField()}
+            labelTestId={testIds.component.adminUsers.usernameLabel()}
             label="שם משתמש"
           >
             <input
@@ -281,8 +281,8 @@ export function AdminUsersScreen() {
             />
           </Field>
           <Field
-            data-testid="km.autogen.adminusersscreen.node.idx.7"
-            labelTestId="km.autogen.adminusersscreen.node.idx.8"
+            data-testid={testIds.component.adminUsers.passwordField()}
+            labelTestId={testIds.component.adminUsers.passwordLabel()}
             label="סיסמה"
           >
             <input
@@ -295,7 +295,7 @@ export function AdminUsersScreen() {
               disabled={adding}
             />
           </Field>
-          <div data-testid="km.autogen.adminusersscreen.node.idx.9" className="mb-4 flex items-center gap-2">
+          <div data-testid={testIds.component.adminUsers.adminToggleRow()} className="mb-4 flex items-center gap-2">
             <input
               data-testid={testIds.component.adminUsers.adminToggle()}
               id="km-new-user-admin"
@@ -305,12 +305,12 @@ export function AdminUsersScreen() {
               className="h-4 w-4 rounded-sm accent-[var(--accent)]"
               disabled={adding}
             />
-            <label data-testid="km.autogen.adminusersscreen.node.idx.10" htmlFor="km-new-user-admin" className="text-sm font-medium text-[var(--title)]">
+            <label data-testid={testIds.component.adminUsers.adminToggleLabel()} htmlFor="km-new-user-admin" className="text-sm font-medium text-[var(--title)]">
               הרשאות מנהל
             </label>
           </div>
 
-          <div data-testid="km.autogen.adminusersscreen.node.overridewrap" className="mb-4 flex items-center gap-2">
+          <div data-testid={testIds.component.adminUsers.overrideToggleRow()} className="mb-4 flex items-center gap-2">
             <input
               data-testid={testIds.component.adminUsers.overridePolicyToggle()}
               id="km-new-user-override"
@@ -320,13 +320,13 @@ export function AdminUsersScreen() {
               className="h-4 w-4 rounded-sm accent-[var(--accent)]"
               disabled={adding}
             />
-            <label data-testid="km.autogen.adminusersscreen.node.overridelabel" htmlFor="km-new-user-override" className="text-sm font-medium text-[var(--title)]">
+            <label data-testid={testIds.component.adminUsers.overrideToggleLabel()} htmlFor="km-new-user-override" className="text-sm font-medium text-[var(--title)]">
               אפשר סיסמה פשוטה (למשל קוד ספרתי לילד)
             </label>
           </div>
 
           {addError && (
-            <p data-testid="km.autogen.adminusersscreen.node.idx.11" className="mb-3 text-sm font-medium text-red-600">{addError}</p>
+            <p data-testid={testIds.component.adminUsers.addFormError()} className="mb-3 text-sm font-medium text-red-600">{addError}</p>
           )}
 
           <button
@@ -359,23 +359,23 @@ export function AdminUsersScreen() {
             : undefined,
         }}
       >
-        <p data-testid="km.autogen.adminusersscreen.node.dlgName">
-          <strong data-testid="km.autogen.adminusersscreen.node.dlgUname" dir="ltr">{users.find((u) => u.userId === confirmDeleteId)?.username}</strong>
+        <p data-testid={testIds.component.adminUsers.deleteDialogName()}>
+          <strong data-testid={testIds.component.adminUsers.deleteDialogUsername()} dir="ltr">{users.find((u) => u.userId === confirmDeleteId)?.username}</strong>
         </p>
-        <p data-testid="km.autogen.adminusersscreen.node.dlgBody">
+        <p data-testid={testIds.component.adminUsers.deleteDialogBody()}>
           הכניסה והסנכרון ייחסמו מיד, וההתקדמות תישמר. אם המכשיר מחובר לרשת, המידע המקומי יימחק ממנו בטעינה הבאה. ניתן לשחזר את החשבון בהמשך.
         </p>
       </ConfirmDialog>
 
       {/* User list */}
-      <section data-testid="km.autogen.adminusersscreen.node.idx.12" className="surface rounded-card p-5">
-        <div data-testid="km.autogen.adminusersscreen.node.listHeader" className="mb-4 flex items-center justify-between gap-3">
-          <h2 data-testid="km.autogen.adminusersscreen.node.idx.13" className="text-lg font-bold text-[var(--title)]">
+      <section data-testid={testIds.component.adminUsers.listSection()} className="surface rounded-card p-5">
+        <div data-testid={testIds.component.adminUsers.listHeader()} className="mb-4 flex items-center justify-between gap-3">
+          <h2 data-testid={testIds.component.adminUsers.listHeading()} className="text-lg font-bold text-[var(--title)]">
             משתמשים רשומים {!loading && `(${visibleUsers.length})`}
           </h2>
           {deletedCount > 0 && (
             <label
-              data-testid="km.autogen.adminusersscreen.node.showDeletedLabel"
+              data-testid={testIds.component.adminUsers.showDeletedLabel()}
               className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]"
             >
               <input
@@ -389,24 +389,24 @@ export function AdminUsersScreen() {
           )}
         </div>
 
-        {error && <p data-testid="km.autogen.adminusersscreen.node.idx.14" className="mb-3 text-sm font-medium text-red-600">{error}</p>}
+        {error && <p data-testid={testIds.component.adminUsers.listError()} className="mb-3 text-sm font-medium text-red-600">{error}</p>}
 
         {loading ? (
-          <p data-testid="km.autogen.adminusersscreen.node.idx.15" className="text-center text-sm text-[var(--muted)]">טוען...</p>
+          <p data-testid={testIds.component.adminUsers.listLoading()} className="text-center text-sm text-[var(--muted)]">טוען...</p>
         ) : visibleUsers.length === 0 ? (
-          <p data-testid="km.autogen.adminusersscreen.node.idx.16" className="text-center text-sm text-[var(--muted)]">אין משתמשים עדיין</p>
+          <p data-testid={testIds.component.adminUsers.listEmpty()} className="text-center text-sm text-[var(--muted)]">אין משתמשים עדיין</p>
         ) : (
-          <ul data-testid="km.autogen.adminusersscreen.node.idx.17" className="divide-y divide-[var(--border)]">
+          <ul data-testid={testIds.component.adminUsers.list()} className="divide-y divide-[var(--border)]">
             {visibleUsers.map((u) => (
               <li
                 key={u.userId}
                 data-testid={testIds.component.adminUsers.userRow(u.userId)}
                 className={isDeleted(u) ? "py-3 is-locked" : "py-3"}
               >
-                <div data-testid="km.autogen.adminusersscreen.node.idx.18" className="flex items-center justify-between gap-3">
-                  <div data-testid="km.autogen.adminusersscreen.node.idx.19" className="min-w-0">
-                    <p data-testid="km.autogen.adminusersscreen.node.idx.20" className="flex items-center gap-2 truncate font-semibold text-[var(--title)]" dir="ltr">
-                      <span data-testid="km.autogen.adminusersscreen.node.uname" className="truncate">{u.username}</span>
+                <div data-testid={testIds.component.adminUsers.rowMain(u.userId)} className="flex items-center justify-between gap-3">
+                  <div data-testid={testIds.component.adminUsers.rowInfo(u.userId)} className="min-w-0">
+                    <p data-testid={testIds.component.adminUsers.rowNameLine(u.userId)} className="flex items-center gap-2 truncate font-semibold text-[var(--title)]" dir="ltr">
+                      <span data-testid={testIds.component.adminUsers.rowUsername(u.userId)} className="truncate">{u.username}</span>
                       {u.status && u.status !== "active" && (
                         <span
                           data-testid={testIds.component.adminUsers.statusBadge(u.userId)}
@@ -430,13 +430,13 @@ export function AdminUsersScreen() {
                         </span>
                       )}
                     </p>
-                    <p data-testid="km.autogen.adminusersscreen.node.idx.21" className="text-xs text-[var(--muted)]">
+                    <p data-testid={testIds.component.adminUsers.rowMeta(u.userId)} className="text-xs text-[var(--muted)]">
                       {u.role === "admin" ? "מנהל" : "משתמש"} · {new Date(u.createdAt).toLocaleDateString("he-IL")}
                     </p>
                   </div>
 
                   {isDeleted(u) ? (
-                    <div data-testid="km.autogen.adminusersscreen.node.idx.22" className="flex shrink-0 gap-2">
+                    <div data-testid={testIds.component.adminUsers.rowActionsPrimary(u.userId)} className="flex shrink-0 gap-2">
                       <button
                         data-testid={testIds.component.adminUsers.restoreButton(u.userId)}
                         onClick={() => handleLifecycle(u.userId, "restore")}
@@ -454,7 +454,7 @@ export function AdminUsersScreen() {
                       </a>
                     </div>
                   ) : changePwUserId !== u.userId ? (
-                    <div data-testid="km.autogen.adminusersscreen.node.idx.23" className="flex shrink-0 gap-2">
+                    <div data-testid={testIds.component.adminUsers.rowActionsSecondary(u.userId)} className="flex shrink-0 gap-2">
                       {u.isLocked && (
                         <button
                           data-testid={testIds.component.adminUsers.unlockButton(u.userId)}
@@ -509,7 +509,7 @@ export function AdminUsersScreen() {
                 </div>
 
                 {changePwUserId === u.userId && (
-                  <div data-testid="km.autogen.adminusersscreen.node.idx.24" className="mt-2 flex flex-wrap items-center gap-2">
+                  <div data-testid={testIds.component.adminUsers.rowChangePwRow(u.userId)} className="mt-2 flex flex-wrap items-center gap-2">
                     <input
                       data-testid={testIds.component.adminUsers.changePasswordInput(u.userId)}
                       type="text"
@@ -537,7 +537,7 @@ export function AdminUsersScreen() {
                     >
                       ביטול
                     </button>
-                    <label data-testid={`km.autogen.adminusersscreen.node.pwoverride.${u.userId}`} className="flex w-full items-center gap-2 text-xs font-medium text-[var(--muted)]">
+                    <label data-testid={testIds.component.adminUsers.rowChangePwOverrideLabel(u.userId)} className="flex w-full items-center gap-2 text-xs font-medium text-[var(--muted)]">
                       <input
                         data-testid={testIds.component.adminUsers.changePasswordOverride(u.userId)}
                         type="checkbox"
@@ -549,7 +549,7 @@ export function AdminUsersScreen() {
                       אפשר סיסמה פשוטה
                     </label>
                     {changePwError && (
-                      <p data-testid="km.autogen.adminusersscreen.node.idx.25" className="text-xs font-medium text-red-600">{changePwError}</p>
+                      <p data-testid={testIds.component.adminUsers.rowError(u.userId)} className="text-xs font-medium text-red-600">{changePwError}</p>
                     )}
                   </div>
                 )}

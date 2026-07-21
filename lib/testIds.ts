@@ -283,6 +283,53 @@ export const testIds = {
       overall: () => tid("screen", "plan", "overall"),
       strand: (grade: string, strandId: string) => tid("screen", "plan", "strand", "grade", grade, "strand", strandId),
       dayLink: (grade: string, dayId: string) => tid("screen", "plan", "dayLink", "grade", grade, "day", dayId),
+
+      // Stable ids replacing position-derived `km.autogen.planscreen.node.idx.N`
+      // (roadmap D15). Repeated nodes are keyed by strand/guide id so each
+      // instance is addressable, instead of every strand card sharing `idx.22`.
+      overallHeading: () => tid("screen", "plan", "overall", "heading"),
+      overallIntro: () => tid("screen", "plan", "overall", "intro"),
+      overallRow: () => tid("screen", "plan", "overall", "row"),
+      overallLabel: () => tid("screen", "plan", "overall", "label"),
+      overallPercent: () => tid("screen", "plan", "overall", "percent"),
+      overallTrack: () => tid("screen", "plan", "overall", "track"),
+      overallFill: () => tid("screen", "plan", "overall", "fill"),
+      overallNote: () => tid("screen", "plan", "overall", "note"),
+
+      strandsSection: () => tid("screen", "plan", "strands"),
+      strandsHeading: () => tid("screen", "plan", "strands", "heading"),
+      strandHeader: (strandId: string) => tid("screen", "plan", "strand", strandId, "header"),
+      strandTitle: (strandId: string) => tid("screen", "plan", "strand", strandId, "title"),
+      strandChip: (strandId: string) => tid("screen", "plan", "strand", strandId, "chip"),
+      strandSummary: (strandId: string) => tid("screen", "plan", "strand", strandId, "summary"),
+      strandProgress: (strandId: string) => tid("screen", "plan", "strand", strandId, "progress"),
+      strandProgressRow: (strandId: string) => tid("screen", "plan", "strand", strandId, "progress", "row"),
+      strandProgressLabel: (strandId: string) => tid("screen", "plan", "strand", strandId, "progress", "label"),
+      strandProgressPercent: (strandId: string) => tid("screen", "plan", "strand", strandId, "progress", "percent"),
+      strandTrack: (strandId: string) => tid("screen", "plan", "strand", strandId, "track"),
+      strandFill: (strandId: string) => tid("screen", "plan", "strand", strandId, "fill"),
+      strandDayList: (strandId: string) => tid("screen", "plan", "strand", strandId, "dayList"),
+      strandDayItem: (strandId: string, dayNumber: number) =>
+        tid("screen", "plan", "strand", strandId, "dayItem", "day", dayNumber),
+      strandDayNumber: (strandId: string, dayNumber: number) =>
+        tid("screen", "plan", "strand", strandId, "dayItem", "day", dayNumber, "number"),
+      strandDayLabel: (strandId: string, dayNumber: number) =>
+        tid("screen", "plan", "strand", strandId, "dayItem", "day", dayNumber, "label"),
+
+      routineSection: () => tid("screen", "plan", "routine"),
+      routineHeading: () => tid("screen", "plan", "routine", "heading"),
+      routineList: () => tid("screen", "plan", "routine", "list"),
+      routineStep: (index: number) => tid("screen", "plan", "routine", "step", index),
+
+      parentsSection: () => tid("screen", "plan", "parents"),
+      parentsHeading: () => tid("screen", "plan", "parents", "heading"),
+      parentsList: () => tid("screen", "plan", "parents", "list"),
+      parentEntry: (key: string) => tid("screen", "plan", "parents", "entry", key),
+      parentTerm: (key: string) => tid("screen", "plan", "parents", "entry", key, "term"),
+      parentDescription: (key: string) => tid("screen", "plan", "parents", "entry", key, "description"),
+
+      footerRow: () => tid("screen", "plan", "footer", "row"),
+      footerNote: () => tid("screen", "plan", "footer", "note"),
     },
     day: {
       root: (grade: string, dayId: string) => tid("screen", "day", "grade", grade, "day", dayId),
@@ -495,6 +542,13 @@ export const testIds = {
       overlay: () => tid("component", "starReward", "overlay"),
       dialog: () => tid("component", "starReward", "dialog"),
       confirm: () => tid("component", "starReward", "cta", "confirm"),
+      confetti: () => tid("component", "starReward", "confetti"),
+      /** Repeated per piece — query with getAllByTestId. */
+      confettiPiece: () => tid("component", "starReward", "confetti", "piece"),
+      star: () => tid("component", "starReward", "star"),
+      title: () => tid("component", "starReward", "title"),
+      subtitle: () => tid("component", "starReward", "subtitle"),
+      message: () => tid("component", "starReward", "message"),
     },
     trophyUnlock: {
       overlay: () => tid("component", "trophyUnlock", "overlay"),
@@ -503,6 +557,69 @@ export const testIds = {
     },
     streakBadge: {
       root: () => tid("component", "streakBadge"),
+    },
+    /**
+     * Stable semantic ids replacing position-derived `km.autogen.*.node.idx.N`
+     * (roadmap D15). Those encoded a node's INDEX, so moving markup silently
+     * repointed an assertion at a different element — and `ProgressBar` reused
+     * idx.0/3/4/5/6 across its compact and full branches, i.e. one id for two
+     * structurally different elements.
+     */
+    progressBar: {
+      root: () => tid("component", "progressBar"),
+      header: () => tid("component", "progressBar", "header"),
+      label: () => tid("component", "progressBar", "label"),
+      percent: () => tid("component", "progressBar", "percent"),
+      /** Wrapper that positions the markers; `track` is the role=progressbar node. */
+      trackWrap: () => tid("component", "progressBar", "trackWrap"),
+      track: () => tid("component", "progressBar", "track"),
+      fill: () => tid("component", "progressBar", "fill"),
+      markerHalfway: () => tid("component", "progressBar", "marker", "halfway"),
+      markerComplete: () => tid("component", "progressBar", "marker", "complete"),
+      completeMessage: () => tid("component", "progressBar", "completeMessage"),
+    },
+    numberLine: {
+      root: () => tid("component", "numberLine"),
+      row: () => tid("component", "numberLine", "row"),
+      axis: () => tid("component", "numberLine", "axis"),
+      /** Repeated once per point — query with getAllByTestId. */
+      point: () => tid("component", "numberLine", "point"),
+      pointTick: () => tid("component", "numberLine", "point", "tick"),
+      pointLabel: () => tid("component", "numberLine", "point", "label"),
+    },
+    appShell: {
+      html: () => tid("component", "appShell", "html"),
+      body: () => tid("component", "appShell", "body"),
+    },
+    dayHeader: {
+      root: () => tid("component", "dayHeader"),
+      weekRow: () => tid("component", "dayHeader", "weekRow"),
+      weekBadge: () => tid("component", "dayHeader", "weekBadge"),
+      titleRow: () => tid("component", "dayHeader", "titleRow"),
+      medallion: () => tid("component", "dayHeader", "medallion"),
+      emoji: () => tid("component", "dayHeader", "emoji"),
+      title: () => tid("component", "dayHeader", "title"),
+      objective: () => tid("component", "dayHeader", "objective"),
+    },
+    loginModal: {
+      heading: () => tid("component", "loginModal", "heading"),
+      form: () => tid("component", "loginModal", "form"),
+      usernameField: () => tid("component", "loginModal", "field", "username"),
+      usernameLabel: () => tid("component", "loginModal", "field", "username", "label"),
+      passwordField: () => tid("component", "loginModal", "field", "password"),
+      passwordLabel: () => tid("component", "loginModal", "field", "password", "label"),
+      passwordInputWrap: () => tid("component", "loginModal", "field", "password", "wrap"),
+      unlockedNotice: () => tid("component", "loginModal", "unlockedNotice"),
+    },
+    userAvatarDropdown: {
+      identity: () => tid("component", "auth", "avatar", "dropdown", "identity"),
+      identityLabel: () => tid("component", "auth", "avatar", "dropdown", "identity", "label"),
+      identityUsername: () => tid("component", "auth", "avatar", "dropdown", "identity", "username"),
+    },
+    loadingPanel: {
+      root: () => tid("component", "loadingPanel"),
+      emoji: () => tid("component", "loadingPanel", "emoji"),
+      title: () => tid("component", "loadingPanel", "title"),
     },
     auth: {
       topBar: () => tid("component", "auth", "topBar"),
@@ -552,6 +669,46 @@ export const testIds = {
       deactivateButton: (userId: string) => tid("component", "adminUsers", "user", userId, "deactivate"),
       restoreButton: (userId: string) => tid("component", "adminUsers", "user", userId, "restore"),
       showDeletedToggle: () => tid("component", "adminUsers", "showDeleted"),
+
+      // Stable ids replacing `km.autogen.adminusersscreen.node.*` (roadmap D15).
+      // Row-level nodes are keyed by userId — previously EVERY row shared one id,
+      // so an assertion resolved to whichever row happened to render first.
+      addFormSection: () => tid("component", "adminUsers", "addForm", "section"),
+      noAccessNotice: () => tid("component", "adminUsers", "noAccess"),
+      heading: () => tid("component", "adminUsers", "heading"),
+      successAlert: () => tid("component", "adminUsers", "successAlert"),
+      addFormHeading: () => tid("component", "adminUsers", "addForm", "heading"),
+      usernameLabel: () => tid("component", "adminUsers", "addForm", "username", "label"),
+      usernameField: () => tid("component", "adminUsers", "addForm", "username", "field"),
+      passwordLabel: () => tid("component", "adminUsers", "addForm", "password", "label"),
+      passwordField: () => tid("component", "adminUsers", "addForm", "password", "field"),
+      adminToggleRow: () => tid("component", "adminUsers", "addForm", "adminToggle", "row"),
+      adminToggleLabel: () => tid("component", "adminUsers", "addForm", "adminToggle", "label"),
+      overrideToggleRow: () => tid("component", "adminUsers", "addForm", "overridePolicy", "row"),
+      overrideToggleLabel: () => tid("component", "adminUsers", "addForm", "overridePolicy", "label"),
+      addFormError: () => tid("component", "adminUsers", "addForm", "error"),
+      deleteDialogName: () => tid("component", "adminUsers", "deleteDialog", "name"),
+      deleteDialogUsername: () => tid("component", "adminUsers", "deleteDialog", "username"),
+      deleteDialogBody: () => tid("component", "adminUsers", "deleteDialog", "body"),
+      listSection: () => tid("component", "adminUsers", "list"),
+      listHeader: () => tid("component", "adminUsers", "list", "header"),
+      listHeading: () => tid("component", "adminUsers", "list", "heading"),
+      showDeletedLabel: () => tid("component", "adminUsers", "showDeleted", "label"),
+      listError: () => tid("component", "adminUsers", "list", "error"),
+      listLoading: () => tid("component", "adminUsers", "list", "loading"),
+      listEmpty: () => tid("component", "adminUsers", "list", "empty"),
+      list: () => tid("component", "adminUsers", "list", "items"),
+      rowMain: (userId: string) => tid("component", "adminUsers", "user", userId, "main"),
+      rowInfo: (userId: string) => tid("component", "adminUsers", "user", userId, "info"),
+      rowNameLine: (userId: string) => tid("component", "adminUsers", "user", userId, "nameLine"),
+      rowUsername: (userId: string) => tid("component", "adminUsers", "user", userId, "username"),
+      rowMeta: (userId: string) => tid("component", "adminUsers", "user", userId, "meta"),
+      rowActionsPrimary: (userId: string) => tid("component", "adminUsers", "user", userId, "actions", "primary"),
+      rowActionsSecondary: (userId: string) => tid("component", "adminUsers", "user", userId, "actions", "secondary"),
+      rowChangePwRow: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "row"),
+      rowChangePwOverrideLabel: (userId: string) =>
+        tid("component", "adminUsers", "user", userId, "changePw", "override", "label"),
+      rowError: (userId: string) => tid("component", "adminUsers", "user", userId, "error"),
       changePasswordButton: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw"),
       changePasswordInput: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "input"),
       changePasswordSubmit: (userId: string) => tid("component", "adminUsers", "user", userId, "changePw", "submit"),

@@ -25,9 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html data-testid="km.autogen.layout.node.idx.0" lang="he" dir="rtl">
+    <html data-testid={testIds.component.appShell.html()} lang="he" dir="rtl">
       <body
-        data-testid="km.autogen.layout.node.idx.1"
+        data-testid={testIds.component.appShell.body()}
         className={`${rubik.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
         <AppProviders>

@@ -117,16 +117,16 @@ export function LoginModal({ onClose }: LoginModalProps) {
         aria-modal="true"
         aria-labelledby="login-modal-title"
       >
-        <h2 data-testid="km.autogen.loginmodal.node.idx.0"
+        <h2 data-testid={testIds.component.loginModal.heading()}
           id="login-modal-title"
           className="mb-5 text-center text-xl font-bold text-[var(--title)]"
         >
           כניסה לחשבון
         </h2>
 
-        <form data-testid="km.autogen.loginmodal.node.idx.1" onSubmit={handleSubmit} noValidate>
-          <div data-testid="km.autogen.loginmodal.node.idx.2" className="mb-4">
-            <label data-testid="km.autogen.loginmodal.node.idx.3"
+        <form data-testid={testIds.component.loginModal.form()} onSubmit={handleSubmit} noValidate>
+          <div data-testid={testIds.component.loginModal.usernameField()} className="mb-4">
+            <label data-testid={testIds.component.loginModal.usernameLabel()}
               htmlFor="km-login-username"
               className="mb-1 block text-sm font-semibold text-[#4f4860]"
             >
@@ -149,14 +149,14 @@ export function LoginModal({ onClose }: LoginModalProps) {
             />
           </div>
 
-          <div data-testid="km.autogen.loginmodal.node.idx.4" className="mb-5">
-            <label data-testid="km.autogen.loginmodal.node.idx.5"
+          <div data-testid={testIds.component.loginModal.passwordField()} className="mb-5">
+            <label data-testid={testIds.component.loginModal.passwordLabel()}
               htmlFor="km-login-password"
               className="mb-1 block text-sm font-semibold text-[#4f4860]"
             >
               סיסמה
             </label>
-            <div data-testid="km.autogen.loginmodal.node.pwwrap" className="relative">
+            <div data-testid={testIds.component.loginModal.passwordInputWrap()} className="relative">
               <input
                 id="km-login-password"
                 data-testid={testIds.component.auth.passwordInput()}
@@ -199,7 +199,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
 
           {justUnlocked && !isLocked && !errorKind && (
             <p
-              data-testid="km.autogen.loginmodal.node.unlocked"
+              data-testid={testIds.component.loginModal.unlockedNotice()}
               className="mb-4 rounded-xl bg-[#ecfdf5] px-4 py-2.5 text-center text-sm font-medium text-[#047857]"
               role="status"
               aria-live="polite"

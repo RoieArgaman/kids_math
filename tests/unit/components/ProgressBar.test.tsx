@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProgressBar } from "@/components/ProgressBar";
+import { testIds } from "@/lib/testIds";
 
-const bar = () => screen.getByTestId("km.autogen.progressbar.node.idx.5");
+const bar = () => screen.getByTestId(testIds.component.progressBar.track());
 
 describe("ProgressBar", () => {
   it("clamps and rounds the value into 0..100", () => {
@@ -16,20 +17,20 @@ describe("ProgressBar", () => {
 
   it("shows the completion message and trophy at 100%", () => {
     render(<ProgressBar value={100} />);
-    expect(screen.getByTestId("km.autogen.progressbar.node.idx.9")).toHaveTextContent("כָּל הַכָּבוֹד");
-    expect(screen.getByTestId("km.autogen.progressbar.node.idx.8")).toHaveTextContent("🏆");
+    expect(screen.getByTestId(testIds.component.progressBar.completeMessage())).toHaveTextContent("כָּל הַכָּבוֹד");
+    expect(screen.getByTestId(testIds.component.progressBar.markerComplete())).toHaveTextContent("🏆");
   });
 
   it("shows the mid ⭐ marker between 50 and 99 but not the completion message", () => {
     render(<ProgressBar value={60} />);
-    expect(screen.getByTestId("km.autogen.progressbar.node.idx.7")).toHaveTextContent("⭐");
-    expect(screen.queryByTestId("km.autogen.progressbar.node.idx.9")).toBeNull();
+    expect(screen.getByTestId(testIds.component.progressBar.markerHalfway())).toHaveTextContent("⭐");
+    expect(screen.queryByTestId(testIds.component.progressBar.completeMessage())).toBeNull();
   });
 
   it("renders the compact variant without the card markers", () => {
     render(<ProgressBar value={40} compact />);
     expect(bar()).toHaveAttribute("aria-valuenow", "40");
     // The mid-marker / completion nodes only exist in the full variant.
-    expect(screen.queryByTestId("km.autogen.progressbar.node.idx.7")).toBeNull();
+    expect(screen.queryByTestId(testIds.component.progressBar.markerHalfway())).toBeNull();
   });
 });
