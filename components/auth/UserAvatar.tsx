@@ -63,9 +63,9 @@ export function UserAvatar() {
           className="absolute left-0 top-full z-40 mt-1 min-w-[160px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[#efe9f7] bg-white py-1 shadow-[0_2px_14px_rgba(80,60,140,0.10)]"
           role="menu"
         >
-          <div data-testid="km.autogen.useravatar.node.idx.1" className="border-b border-[#efe9f7] px-4 py-2">
-            <p data-testid="km.autogen.useravatar.node.idx.2" className="text-xs font-semibold text-[#9a93a8]">מחובר כ:</p>
-            <p data-testid="km.autogen.useravatar.node.idx.3" className="truncate text-sm font-bold text-[var(--title)]" dir="ltr">{user.username}</p>
+          <div data-testid={testIds.component.userAvatarDropdown.identity()} className="border-b border-[#efe9f7] px-4 py-2">
+            <p data-testid={testIds.component.userAvatarDropdown.identityLabel()} className="text-xs font-semibold text-[#9a93a8]">מחובר כ:</p>
+            <p data-testid={testIds.component.userAvatarDropdown.identityUsername()} className="truncate text-sm font-bold text-[var(--title)]" dir="ltr">{user.username}</p>
           </div>
 
           {user.role === "admin" && (

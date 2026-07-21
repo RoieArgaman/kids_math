@@ -13,7 +13,7 @@
     "codemod:add-testids": "node scripts/add-missing-testids.mjs",
     "codemod:dedupe-testids": "node scripts/dedupe-testids.mjs",
     "test:qa": "npm run lint && npm run test:unit && npm run build && npm run test:e2e",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --reporter=default --reporter=json --outputFile.json=.vitest-report.json && node scripts/check-test-collection.mjs",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "create-user": "node --env-file=.env.local scripts/create-user.mjs",

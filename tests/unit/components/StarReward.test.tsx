@@ -15,13 +15,13 @@ describe("StarReward", () => {
     const dialog = screen.getByTestId(testIds.component.starReward.dialog());
     expect(dialog).toHaveAttribute("role", "dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
-    expect(screen.getByTestId("km.autogen.starreward.node.idx.7")).toHaveTextContent("הִשְׁלַמְתֶּם");
+    expect(screen.getByTestId(testIds.component.starReward.message())).toHaveTextContent("הִשְׁלַמְתֶּם");
   });
 
   it("renders a custom message and fires onConfirm", async () => {
     const onConfirm = vi.fn();
     render(<StarReward visible text="מעולה!" onConfirm={onConfirm} />);
-    expect(screen.getByTestId("km.autogen.starreward.node.idx.7")).toHaveTextContent("מעולה!");
+    expect(screen.getByTestId(testIds.component.starReward.message())).toHaveTextContent("מעולה!");
     await userEvent.click(screen.getByTestId(testIds.component.starReward.confirm()));
     expect(onConfirm).toHaveBeenCalledOnce();
   });

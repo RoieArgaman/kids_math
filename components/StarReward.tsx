@@ -23,22 +23,22 @@ export function StarReward({ visible, text, onConfirm }: StarRewardProps) {
         aria-labelledby="star-reward-title"
         style={{ background: "linear-gradient(135deg, #fffbeb 0%, #fef9c3 50%, #fef3c7 100%)" }}
       >
-        <div data-testid="km.autogen.starreward.node.idx.2" className="star-reward-confetti" aria-hidden>
+        <div data-testid={testIds.component.starReward.confetti()} className="star-reward-confetti" aria-hidden>
           {CONFETTI_PARTICLES.map((particle) => (
-            <span data-testid="km.autogen.starreward.node.idx.3"
+            <span data-testid={testIds.component.starReward.confettiPiece()}
               key={particle}
               className={`star-reward-confetti-piece star-reward-confetti-piece-${(particle % 14) + 1}`}
             />
           ))}
         </div>
-        <div data-testid="km.autogen.starreward.node.idx.4" className="star-pop text-6xl" aria-hidden>
+        <div data-testid={testIds.component.starReward.star()} className="star-pop text-6xl" aria-hidden>
           ⭐⭐⭐⭐⭐
         </div>
-        <p data-testid="km.autogen.starreward.node.idx.5" id="star-reward-title" className="mt-3 text-2xl font-bold text-[var(--accent-strong)]">
+        <p data-testid={testIds.component.starReward.title()} id="star-reward-title" className="mt-3 text-2xl font-bold text-[var(--accent-strong)]">
           כָּל הַכָּבוֹד!
         </p>
-        <p data-testid="km.autogen.starreward.node.idx.6" className="mt-1 text-lg font-bold text-[#b45309]">אַתָּה אַלּוּף! 🏆</p>
-        <p data-testid="km.autogen.starreward.node.idx.7" className="mt-2 text-base font-medium text-[#4f4860]">
+        <p data-testid={testIds.component.starReward.subtitle()} className="mt-1 text-lg font-bold text-[#b45309]">אַתָּה אַלּוּף! 🏆</p>
+        <p data-testid={testIds.component.starReward.message()} className="mt-2 text-base font-medium text-[#4f4860]">
           {text ?? "הִשְׁלַמְתֶּם אֶת הַיּוֹם בְּהַצְלָחָה."}
         </p>
         <button

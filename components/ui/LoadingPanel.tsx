@@ -1,4 +1,4 @@
-import { childTid } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 
 const defaultCardClass =
   "surface mx-auto max-w-sm rounded-panel p-8 text-center shadow-lg";
@@ -19,10 +19,10 @@ export function LoadingPanel({ emoji, title, className, "data-testid": testId }:
       : defaultCardClass;
 
   return (
-    <div data-testid={testId ?? "km.autogen.loadingpanel.node.idx.0"} className={merged}>
+    <div data-testid={testId ?? testIds.component.loadingPanel.root()} className={merged}>
       {emoji ? (
         <p
-          data-testid={testId ? childTid(testId, "emoji") : "km.autogen.loadingpanel.node.idx.1"}
+          data-testid={testId ? childTid(testId, "emoji") : testIds.component.loadingPanel.emoji()}
           className="mb-2 text-5xl"
           aria-hidden
         >
@@ -30,7 +30,7 @@ export function LoadingPanel({ emoji, title, className, "data-testid": testId }:
         </p>
       ) : null}
       <p
-        data-testid={testId ? childTid(testId, "title") : "km.autogen.loadingpanel.node.idx.2"}
+        data-testid={testId ? childTid(testId, "title") : testIds.component.loadingPanel.title()}
         className="text-lg font-semibold text-[var(--muted)]"
       >
         {title}

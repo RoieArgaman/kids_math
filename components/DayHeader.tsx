@@ -1,5 +1,5 @@
 import type { WorkbookDay } from "@/lib/types";
-import { childTid } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 import { formatMs } from "@/lib/utils/formatMs";
 
 interface DayHeaderProps {
@@ -24,17 +24,17 @@ export function DayHeader({
     showSessionTimer && sessionTimerMs != null && Number.isFinite(sessionTimerMs)
       ? formatMs(sessionTimerMs)
       : null;
-  const weekRowTestId = rootTestId ? childTid(rootTestId, "weekRow") : "km.autogen.dayheader.node.idx.weekRow";
-  const weekBadgeTestId = rootTestId ? childTid(rootTestId, "weekBadge") : "km.autogen.dayheader.node.idx.1";
-  const titleTestId = rootTestId ? childTid(rootTestId, "title") : "km.autogen.dayheader.node.idx.2";
-  const emojiTestId = rootTestId ? childTid(rootTestId, "emoji") : "km.autogen.dayheader.node.idx.3";
-  const objectiveTestId = rootTestId ? childTid(rootTestId, "objective") : "km.autogen.dayheader.node.idx.4";
-  const medallionTestId = rootTestId ? childTid(rootTestId, "medallion") : "km.autogen.dayheader.node.idx.5";
-  const titleRowTestId = rootTestId ? childTid(rootTestId, "titleRow") : "km.autogen.dayheader.node.idx.6";
+  const weekRowTestId = rootTestId ? childTid(rootTestId, "weekRow") : testIds.component.dayHeader.weekRow();
+  const weekBadgeTestId = rootTestId ? childTid(rootTestId, "weekBadge") : testIds.component.dayHeader.weekBadge();
+  const titleTestId = rootTestId ? childTid(rootTestId, "title") : testIds.component.dayHeader.title();
+  const emojiTestId = rootTestId ? childTid(rootTestId, "emoji") : testIds.component.dayHeader.emoji();
+  const objectiveTestId = rootTestId ? childTid(rootTestId, "objective") : testIds.component.dayHeader.objective();
+  const medallionTestId = rootTestId ? childTid(rootTestId, "medallion") : testIds.component.dayHeader.medallion();
+  const titleRowTestId = rootTestId ? childTid(rootTestId, "titleRow") : testIds.component.dayHeader.titleRow();
 
   return (
     <header
-      data-testid={rootTestId ?? "km.autogen.dayheader.node.idx.0"}
+      data-testid={rootTestId ?? testIds.component.dayHeader.root()}
       className="mb-4 rounded-panel border border-[#e7defb] bg-[linear-gradient(135deg,#e9e2fb_0%,#f3ecfa_55%,#fbf4ee_100%)] p-6"
     >
       <div data-testid={weekRowTestId} className="flex flex-wrap items-center gap-2">

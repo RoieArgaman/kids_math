@@ -44,7 +44,7 @@ describe("ExerciseRenderer with a generated number_line_jump", () => {
 
     expect(screen.getByTestId(childTid(BASE, "number-line-jump"))).toBeInTheDocument();
 
-    const labels = screen.getAllByTestId("km.autogen.numberline.node.idx.5");
+    const labels = screen.getAllByTestId(testIds.component.numberLine.pointLabel());
     expect(labels).toHaveLength(ex.end - ex.start + 1);
     expect(labels[0].textContent).toBe(String(ex.start));
     expect(labels[labels.length - 1].textContent).toBe(String(ex.end));
