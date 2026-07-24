@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BackLink } from "@/components/ui/BackLink";
+import { Button } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { routes } from "@/lib/routes";
@@ -33,14 +34,15 @@ export function AnonDailyLimitLock({ subject }: { subject: Subject }) {
         description="כָּל יוֹם אֶפְשָׁר לִלְמֹד יוֹם אֶחָד חִינָּם. אֶפְשָׁר לַחֲזוֹר מָחָר, אוֹ לְהִתְחַבֵּר כְּדֵי לְהַמְשִׁיךְ לִלְמֹד עַכְשָׁיו."
         actions={
           <div data-testid={childTid(root, "ctas")} className="space-y-3">
-            <button
+            <Button
+              variant="accent"
               type="button"
               data-testid={testIds.screen.anonDailyLimit.loginCta(subject)}
               onClick={() => setShowLogin(true)}
-              className="touch-button btn-accent inline-block w-full rounded-card px-6 py-3 text-center font-semibold shadow-xs"
+              className="w-full"
             >
               לְהִתְחַבֵּר וּלְהַמְשִׁיךְ
-            </button>
+            </Button>
             <BackLink
               href={routes.gradePicker()}
               data-testid={testIds.screen.anonDailyLimit.backCta(subject)}

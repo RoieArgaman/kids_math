@@ -105,7 +105,9 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     dayId,
   });
 
-  const anonGate = useAnonDailyGate("math", dayId);
+  // Claim the free slot only for a real, unlocked day — never a not-found or
+  // progression-locked one (that would burn the anon's day on a page they can't use).
+  const anonGate = useAnonDailyGate("math", dayId, Boolean(day) && isLocked === false);
 
   const [showReward, setShowReward] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
@@ -179,7 +181,11 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     );
   }
 
-  if (!isRouteReady || isLocked === null || anonGate === "loading") {
+  // Note: the anon gate is deliberately NOT part of this loading condition. Blocking
+  // render until auth settles would make a logged-in child wait on the /me round-trip
+  // to see a day already available locally (see the C9 login-latency history). We only
+  // ever act on a definitive "blocked"; "loading"/"allowed" both render the day.
+  if (!isRouteReady || isLocked === null) {
     return (
       <main
         data-testid={testIds.screen.dayOverview.root(effectiveGrade, `${dayId}.loading`)}

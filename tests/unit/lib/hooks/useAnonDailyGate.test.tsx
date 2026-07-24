@@ -72,4 +72,26 @@ describe("useAnonDailyGate", () => {
     const { result } = renderHook(() => useAnonDailyGate("math", "day-2"));
     expect(result.current).toBe("blocked");
   });
+
+  it("does NOT claim when the day is inaccessible (canClaim=false), even if allowed", () => {
+    // A not-found or progression-locked day: the visitor never gets to use it, so the
+    // free slot must not be burned. The gate still resolves "allowed" (no conflict),
+    // but nothing is written.
+    const { result } = renderHook(() => useAnonDailyGate("math", "day-3", false));
+    expect(result.current).toBe("allowed");
+    expect(readAnonDailyUsage()).toBeNull();
+  });
+
+  it("claims once the same day becomes accessible after being locked", () => {
+    // Locked first render → no claim; then unlocked → claims. Proves the slot is tied
+    // to actual access, not mere navigation.
+    const first = renderHook(({ can }) => useAnonDailyGate("math", "day-3", can), {
+      initialProps: { can: false },
+    });
+    expect(readAnonDailyUsage()).toBeNull();
+    first.rerender({ can: true });
+    expect(readAnonDailyUsage()).toEqual(
+      expect.objectContaining({ subject: "math", dayId: "day-3" }),
+    );
+  });
 });
