@@ -15,6 +15,6 @@ export const concept: DayConcept = {
   languageAnswer: "כַּד",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: לְתִיבָה מְאֻרֶכֶת יֵשׁ תָּמִיד 12 צְלָעוֹת",
   reviewAnswer: true,
-  challengePrompt: "קוּבִּיָּה וְעוֹד קוּבִּיָּה — כַּמָּה קוֹדְקוֹדִים (פִינוֹת) לְרֹב יֵשׁ לִשְׁנֵיהֶם בַּסַּךְ?",
+  challengePrompt: "קוּבִּיָּה וְעוֹד קוּבִּיָּה — כַּמָּה קוֹדְקוֹדִים (פִּנּוֹת) יֵשׁ לִשְׁנֵיהֶם בְּיַחַד?",
   challengeAnswer: 16,
 };

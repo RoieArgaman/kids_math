@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 21,
   title: "כֶּסֶף פָּשׁוּט (שְׁקָלִים)",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְחַבֵּר סְכוּמִים קְטַנּוֹת בְּמַטְבֵּעוֹת.",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְחַבֵּר סְכוּמִים קְטַנִּים בְּמַטְבֵּעוֹת.",
   mainTags: ["money-shekel", "addition"],
   spiralReviewTags: ["fractions-parts", "word-problems"],
   arithmeticPrompt: "מַטְבֵּעַ 10 שְׁקָלִים וְעוֹד מַטְבֵּעַ 10 וְעוֹד 5 — כַּמָּה בַּסַּךְ?",
@@ -15,6 +15,6 @@ export const concept: DayConcept = {
   languageAnswer: "עֲשָׂרָה וּשְׁנַיִם",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 5 + 5 + 1 + 1 = 12",
   reviewAnswer: true,
-  challengePrompt: "מַחִיר מֹחַ 18 שְׁקָלִים. שִׁילְּמוּ 20. כַּמָּה עוֹדֵף?",
+  challengePrompt: "מְחִיר צַעֲצוּעַ 18 שְׁקָלִים. שִׁילְּמוּ 20. כַּמָּה עוֹדֶף?",
   challengeAnswer: 2,
 };

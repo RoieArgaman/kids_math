@@ -20,6 +20,6 @@ export const concept: DayConcept = {
   reviewAnswer: true,
   challengePrompt: "נַעַר קִבֵּל 9 מַדְבֵּקוֹת, הִפְסִיד 4, וְקִבֵּל עוֹד 6. כַּמָּה יֵשׁ לוֹ עַכְשָׁיו?",
   challengeAnswer: 11,
-  geometryPrompt: "אֵיזוֹ צוּרָה לְרֹב יֵשׁ לָהּ 4 צְלָעוֹת?",
+  geometryPrompt: "לְאֵיזוֹ צוּרָה יֵשׁ בְּדֶרֶךְ כְּלָל 4 צְלָעוֹת?",
   geometryAnswer: "rectangle",
 };

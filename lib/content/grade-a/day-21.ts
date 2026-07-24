@@ -21,6 +21,6 @@ export const concept: DayConcept = {
   challengePrompt:
     "חַשְּׁבוּ ב' (2) + ה' (5) + ג' (3)",
   challengeAnswer: 10,
-  geometryPrompt: "אֵיזוֹ צוּרָה מוּזְכֶּרֶת לְעִתִּים בְּמוֹפַע שְׁלוֹשָׁה קְצָווֹת?",
+  geometryPrompt: "לְאֵיזוֹ צוּרָה יֵשׁ שָׁלוֹשׁ פִּנּוֹת?",
   geometryAnswer: "triangle",
 };

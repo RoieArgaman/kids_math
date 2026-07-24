@@ -8,7 +8,7 @@ export const concept: DayConcept = {
 
   mainTags: ["measurement-length", "addition"],
   spiralReviewTags: ["measurement-length", "counting"],
-  arithmeticPrompt: "קִטְעַי ס״מ: אֶחָד בְּאֹרֶךְ 4 ס״מ וְעוֹד אֶחָד 5 ס״מ. כַּמָּה ס״מ בַּסַּךְ?",
+  arithmeticPrompt: "שְׁנֵי קְטָעִים: אֶחָד בְּאֹרֶךְ 4 ס״מ וְהַשֵּׁנִי 5 ס״מ. כַּמָּה ס״מ בַּסַּךְ?",
   arithmeticAnswer: 9,
   arithmeticMcOptions: ["8", "9", "10"],
   arithmeticMcAnswer: "9",

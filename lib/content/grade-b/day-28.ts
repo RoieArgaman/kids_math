@@ -15,8 +15,8 @@ export const concept: DayConcept = {
   languageAnswer: "חֲמִישִּׁים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 100 - 1 = 99",
   reviewAnswer: true,
-  challengePrompt: "מַחִיר שְׁנֵי חֲבִילוֹת: חַשְּׁבוּ 29 + 29",
+  challengePrompt: "מְחִיר שְׁנֵי חֲבִילוֹת: חַשְּׁבוּ 29 + 29",
   challengeAnswer: 58,
-  geometryPrompt: "אֵיזוֹ צוּרָה פָּשׁוּטָה מְתַאֶרֶת «שָׁלֵם סביב»?",
+  geometryPrompt: "אֵיזוֹ צוּרָה עֲגֻלָּה לְגַמְרֵי וְאֵין לָהּ פִּנּוֹת?",
   geometryAnswer: "circle",
 };

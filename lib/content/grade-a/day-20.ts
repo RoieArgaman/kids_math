@@ -8,7 +8,7 @@ export const concept: DayConcept = {
 
   mainTags: ["geometry-shapes", "comparing"],
   spiralReviewTags: ["symmetry-transform", "number-recognition"],
-  arithmeticPrompt: "לִשְׁנֵי רִיבּוּעִים יֵשׁ בִּיחַד כַּמָּה צְלָעוֹת?",
+  arithmeticPrompt: "כַּמָּה צְלָעוֹת יֵשׁ בְּיַחַד לִשְׁנֵי רִיבּוּעִים?",
   arithmeticAnswer: 8,
   arithmeticMcOptions: ["6", "8", "10"],
   arithmeticMcAnswer: "8",

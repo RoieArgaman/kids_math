@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 23,
   title: "קַו מִסְפָּרִים עַד 100",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יַזְחִיל קְפִיצוֹת וְהֶפְרְשִׁים עַל קַו.",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְחַשֵּׁב קְפִיצוֹת וְהֶפְרֵשִׁים עַל הַקַּו.",
   mainTags: ["number-line", "patterns"],
   spiralReviewTags: ["word-problems", "place-value"],
   arithmeticPrompt: "מִ-40 עַד 55 בִּקְפִיצוֹת שֶׁל 5. כַּמָּה קְפִיצוֹת?",

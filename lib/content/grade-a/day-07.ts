@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 7,
   title: "בְּעָיוֹת מִילּוּלִיּוֹת פְּשׁוּטוֹת",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִקְרֹא בְּעִיָּה מִילּוּלִית, לְזַהוֹת אֶת הַפְּעוּלָה וְלִפְתּוֹר 3 מִתּוֹךְ 4 בְּעָיוֹת חַד-שְׁלָבִיּוֹת.",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִקְרֹא בְּעָיָה מִילּוּלִית, לְזַהוֹת אֶת הַפְּעוּלָה וְלִפְתּוֹר 3 מִתּוֹךְ 4 בְּעָיוֹת חַד-שְׁלָבִיּוֹת.",
 
   mainTags: ["word-problems", "addition", "subtraction"],
   spiralReviewTags: ["number-line", "comparing"],

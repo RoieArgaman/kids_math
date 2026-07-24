@@ -2,8 +2,8 @@ import type { DayConcept } from "../engine/day-builder";
 
 export const concept: DayConcept = {
   dayNumber: 22,
-  title: "בְּעִיָּה בִּשְׁנֵי שְׁלָבִים",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יִפְתֹּר בְּעִיָּה שֶׁדּוֹרֶשֶׁת שְׁנֵי צְעָדִים.",
+  title: "בְּעָיָה בִּשְׁנֵי שְׁלָבִים",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יִפְתֹּר בְּעָיָה שֶׁדּוֹרֶשֶׁת שְׁנֵי צְעָדִים.",
   mainTags: ["word-problems", "addition", "subtraction"],
   spiralReviewTags: ["money-shekel", "number-line"],
   arithmeticPrompt: "בַּגַּן 60 יְלָדִים. 15 יָצְאוּ וְאַחַר כָּךְ חָזְרוּ 8. כַּמָּה עַכְשָׁיו?",
@@ -15,6 +15,6 @@ export const concept: DayConcept = {
   languageAnswer: "קוֹדֶם מַחְסִירִים אַחַר כָּךְ מוֹסִיפִים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 40 + 10 - 5 = 45",
   reviewAnswer: true,
-  challengePrompt: "דֶּפִי צִבְעוֹן: 3 חֲבִילוֹת שֶׁל 8 וְעוֹד 12 דָּפִים. כַּמָּה דָּפִים?",
+  challengePrompt: "דַּפֵּי צְבִיעָה: 3 חֲבִילוֹת שֶׁל 8 וְעוֹד 12 דַּפִּים. כַּמָּה דַּפִּים בַּסַּךְ?",
   challengeAnswer: 36,
 };

@@ -17,6 +17,6 @@ export const concept: DayConcept = {
   reviewAnswer: true,
   challengePrompt: "יֵשׁ 4 כִּיסִים וּבְכָל כִּיס 3 אֲבָנִים. כַּמָּה בַּסַּךְ?",
   challengeAnswer: 12,
-  geometryPrompt: "אֵיזוֹ צוּרָה נִיתָן לְחַלֵּק לִשְׁנֵי חֲצָאִים שָׁווִים בְּקִפּוּל?",
+  geometryPrompt: "אֵיזוֹ צוּרָה אֶפְשָׁר לְחַלֵּק לִשְׁנֵי חֲצָאִים שָׁווִים עַל יְדֵי קִפּוּל?",
   geometryAnswer: "circle",
 };

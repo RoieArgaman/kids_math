@@ -3,10 +3,10 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 19,
   title: "חִלּוּק לִשְׁלוֹשׁ קְבוּצוֹת",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְחַלֵּק כַּמּוּת לִשְׁלוֹשׁ קְבוּצוֹת שָׁווֹת (בְּתוֹךְ טַבִּית הַכֶּפֶל).",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְחַלֵּק כַּמּוּת לִשְׁלוֹשׁ קְבוּצוֹת שָׁווֹת (בְּתוֹךְ לוּחַ הַכֶּפֶל).",
   mainTags: ["division-equal-groups", "multiplication-tables"],
   spiralReviewTags: ["multiplication-tables", "fractions-parts"],
-  arithmeticPrompt: "21 דָּגִימוֹת חִילְּקוּ לִשָׁלוֹשׁ קְבוּצוֹת שָׁווֹת. כַּמָּה בְּכָל קְבוּצָה?",
+  arithmeticPrompt: "חִלְּקוּ 21 גֻּלּוֹת לְשָׁלוֹשׁ קְבוּצוֹת שָׁווֹת. כַּמָּה בְּכָל קְבוּצָה?",
   arithmeticAnswer: 7,
   arithmeticMcOptions: ["6", "7", "8"],
   arithmeticMcAnswer: "7",
@@ -15,6 +15,6 @@ export const concept: DayConcept = {
   languageAnswer: "חָמֵשׁ",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 12 חִלּוּק לִשְׁלוֹשׁ שָׁוֶה לְ-4",
   reviewAnswer: true,
-  challengePrompt: "תּוֹקְפִים 6 שׁוּרוֹת בִּכְתִיבָה. בְּכָל שׁוּרָה 7 אוֹתִיּוֹת. כַּמָּה אוֹתִיּוֹת?",
+  challengePrompt: "כּוֹתְבִים 6 שׁוּרוֹת. בְּכָל שׁוּרָה 7 אוֹתִיּוֹת. כַּמָּה אוֹתִיּוֹת בַּסַּךְ?",
   challengeAnswer: 42,
 };

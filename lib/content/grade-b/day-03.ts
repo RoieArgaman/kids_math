@@ -15,6 +15,6 @@ export const concept: DayConcept = {
   languageAnswer: "תִּשְׁעִים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 70 - 20 = 40",
   reviewAnswer: false,
-  challengePrompt: "הָיוּ 95 דַּפִּים. הִשְׁתַּמְּשׁוּ בְ-52. כַּמָּה נִשְׁאֲרוּ?",
+  challengePrompt: "הָיוּ 95 דַּפִּים. הִשְׁתַּמְּשׁוּ בְּ-52. כַּמָּה נִשְׁאֲרוּ?",
   challengeAnswer: 43,
 };

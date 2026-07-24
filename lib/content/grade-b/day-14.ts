@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 14,
   title: "זְמַן וְשָׁעוֹן",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יִקְרָא שָׁעוֹת שָׁלֵמוֹת בְּשָׁעוֹן דִּגּוּטָלִי פָּשׁוּט.",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יִקְרָא שָׁעוֹת שָׁלֵמוֹת בְּשָׁעוֹן דִּיגִיטָלִי פָּשׁוּט.",
   mainTags: ["measurement-time", "number-recognition"],
   spiralReviewTags: ["measurement-weight", "patterns"],
   arithmeticPrompt: "שְׁעָתַיִם = כַּמָּה דַּקּוֹת?",
@@ -13,7 +13,7 @@ export const concept: DayConcept = {
   languagePrompt: "בַּחֲרוּ: חֲצִי שָׁעָה = כַּמָּה דַּקּוֹת?",
   languageOptions: ["שְׁלוֹשִׁים", "עֶשְׂרִים", "אַרְבָּעִים וְחָמֵשׁ"],
   languageAnswer: "שְׁלוֹשִׁים",
-  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: אַחַר הַשָּׁעָה 2 בָּאָה 3",
+  reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: אַחֲרֵי הַשָּׁעָה 2 בָּאָה הַשָּׁעָה 3",
   reviewAnswer: true,
   challengePrompt: "הִתְחִילוּ בְּ-7 וְהִמְשִׁיכוּ שָׁעָה אַחַת. לְאֵיזוֹ שָׁעָה הִגִּיעוּ? (מספר)",
   challengeAnswer: 8,

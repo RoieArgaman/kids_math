@@ -2,7 +2,7 @@ import type { DayConcept } from "../engine/day-builder";
 
 export const concept: DayConcept = {
   dayNumber: 6,
-  title: "כֶּפֶל כַּחִזּוּר — 2 וְ-3",
+  title: "כֶּפֶל כַּחֲזָרַת חִיבּוּר — 2 וְ-3",
   objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְתַרְגֵּל כֶּפֶל 2 וְ-3 כַּחִיבּוּר חוֹזֵר.",
   mainTags: ["multiplication-tables", "multiplication-intro"],
   spiralReviewTags: ["addition", "patterns"],

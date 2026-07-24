@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 4,
   title: "חִיבּוּר עִם נְשִׂיאָה פְּשׁוּטָה",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְבִין נְשִׂיאָה לַעֲשָׂרָה וִיחַבֵּר (לְמָשָׁל 47 + 6).",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יָבִין נְשִׂיאָה לַעֲשָׂרָה וִיחַבֵּר (לְמָשָׁל 47 + 6).",
   mainTags: ["addition", "number-bonds"],
   spiralReviewTags: ["subtraction", "place-value"],
   arithmeticPrompt: "חַשְּׁבוּ 58 + 7",
@@ -17,6 +17,6 @@ export const concept: DayConcept = {
   reviewAnswer: true,
   challengePrompt: "בְּאַרְגָּז 28 אֲבָנִים. הוֹסִיפוּ 14. כַּמָּה עַכְשָׁיו?",
   challengeAnswer: 42,
-  geometryPrompt: "אֵיזוֹ צוּרָה כָּל הַצְּלָעוֹת שָׁווֹת וְיֵשׁ 4 זָווִיּוֹת יְשָׁרוֹת?",
+  geometryPrompt: "אֵיזוֹ צוּרָה שֶׁכָּל צְלָעוֹתֶיהָ שָׁווֹת וְיֵשׁ לָהּ 4 זָווִיּוֹת יְשָׁרוֹת?",
   geometryAnswer: "square",
 };
