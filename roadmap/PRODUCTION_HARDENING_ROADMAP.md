@@ -155,7 +155,7 @@ Phase 1**; the two below are their own tasks.
 | ID | Finding | Severity | Phase |
 |----|---------|----------|-------|
 | **UX1** | Login asks pre-literate 6–8-year-olds to type a username string + masked password. The kids-native pattern is **pick-your-avatar + a numeric PIN pad** (aligns with the app's numbers/taps-only ethos and the Phase 1 `overridePolicy` simple-password path). Reduces failed logins → fewer lockouts. | MEDIUM (UX) | Backlog (own ULTRA task) |
-| **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. | LOW (UX/engagement) | Backlog (own task) |
+| **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. **Grown into a full animated companion — now owned by Phase 6.** | LOW (UX/engagement) | 6 |
 | **UX3** | **Guardian-consent capture** has no flow. Split out of Phase 3.5 (2026-07-18): consent is a product/UX problem — who consents, how it is evidenced, what happens when it is withheld or withdrawn — not a document, and designing it for guardians of 6–8-year-olds is a task in its own right. `COMPLIANCE.md` documents the *posture*; capturing consent is separate. | MEDIUM (compliance/UX) | Backlog (own ULTRA task) |
 
 ### Design system & responsive (surfaced 2026-07-18 by the FE-framework design QA)
@@ -873,6 +873,110 @@ in (unlocked).
 
 ---
 
+## Phase 6 — Animated learning companion  ·  Mode: MAX  ·  🚦 product go/no-go before start
+
+**Objective:** A persistent, animated **companion character** that travels with the student across
+the app, **grows up / evolves** as they progress and **re-themes when they move between grades**, and
+**reacts to cursor movement and clicks/taps**. This is an **engagement & retention** lever for
+6–8-year-olds — it grows finding **UX2** ("avatar is two gray initials — no identity/delight") from a
+static avatar into a living companion. Not a hardening/sellability phase; it is the first entry in the
+product's **"Grow & Teach"** arc.
+
+**Product decisions on record (2026-07-24, via `/plan`):**
+- **Growth model = Hybrid.** The character evolves through several **progress-derived stages** (from
+  completed days / badges / streak — signals that already exist) **and** wears a **grade-themed
+  outfit/palette** keyed to the current grade (א׳/ב׳). Grade alone gives only two looks (`GradeId =
+  "a" | "b"`), so the stage progression carries the "growing up" feeling; the grade theme layers on top.
+- **Tech = Rive.** Interactive state-machine animation (`@rive-app/react-canvas` + a `.riv` asset),
+  chosen for best-in-class cursor-follow and click states. No animation library exists today, so this
+  adds the first one.
+- **Placement = everywhere except exams.** Persistent on hubs and practice; **hidden** on timed/final/
+  GMAT exams, the Phase 5 freemium lock, and admin — assessment-integrity + professionalism.
+
+**Mode rationale:** MAX, on three stacked triggers — (1) it mounts in the **root layout**
+(`app/layout.tsx`), so it is app-wide chrome (same blast-radius reason Phase 3.5 was MAX); (2) Rive is a
+**WebAssembly runtime** needing a **CSP change** (`'wasm-unsafe-eval'` in `next.config.mjs`) —
+security-sensitive config; (3) it spans **>8 files** and adds a dependency. It **does not** touch
+`lib/*/storage.ts`, auth, or the grade-unlock chain — kept that way on purpose (growth is *derived*, and
+the only new persisted state is a brand-new anon-safe key, mirroring Phase 5's `lib/access/` precedent).
+
+**Gate to start:** product go/no-go. Independent of Phases 1–4 (no server/schema surface). **Best after
+Phase 3.5** ✅ (inherits the consolidated design system rather than adding motion to a drifted one).
+
+### 6.0 — Critical-path dependency: the `.riv` art asset (state-machine input contract)
+- The `.riv` does **not** exist yet. Build **scaffold-first** against a documented input contract so
+  engineering is never blocked on art; real art drops in with **zero code change**, behind a flag.
+- **Contract** — one state machine (`Companion`) exposing: `stage` (number 0…N, derived growth stage),
+  `gradeTheme` (0=א׳/1=ב׳), `lookX`/`lookY` (−1…1, normalized cursor direction), `tap` (trigger),
+  `celebrate` (trigger, fired once on stage-up), `idle` (boolean — reduced-motion / off-screen calm).
+- Self-host the `.riv` in `/public` (no new external host → CSP `connect-src`/`img-src` untouched).
+
+### 6.1 — Growth logic (pure, headless, derived)
+- `lib/companion/signals.ts` — **read-only** aggregation of `lib/badges` / `lib/progress` / `lib/streak`
+  (+ english/science) into growth signals. Reads existing storage; **modifies none of it.**
+- `lib/companion/stage.ts` — **pure** `deriveCompanionStage(signals) → { stage, gradeTheme }`. Must be
+  **monotonic** (progress can never *un*-grow the character) and **total** (empty progress ⇒ stage 0).
+- **New persisted state = one anon-safe key** `kids_math.companion.v1` (`{ hidden, lastCelebratedStage }`)
+  in **`lib/companion/preferences.ts`** — deliberately **not** a `lib/*/storage.ts` file, so it does not
+  trip the storage-schema MAX-coupling. Never synced to the server.
+- **Tests:** unit — threshold table → expected stages; grade mapping; property test for monotonic+total.
+
+### 6.2 — Placement gate
+- `lib/companion/routeVisibility.ts` — `shouldShowCompanion(pathname)` deny-list: all exams
+  (timed / final / GMAT / `**/exam`), the freemium lock, and `/admin/**`.
+- **Tests:** unit — exam/lock/admin → hidden; hub/practice → shown. e2e — present on a hub, **absent** on
+  an exam and on admin.
+
+### 6.3 — Companion component (lazy, gated, a11y-first)
+- `components/companion/Companion.tsx` — mounted in `app/layout.tsx`. Rive loaded via `next/dynamic`
+  (client-only, **post-hydration**, never in the login/initial path → protects the C9 latency win);
+  **poster image first paint**. Renders only when `shouldShowCompanion && !hidden && !reducedMotionStatic`.
+- **a11y (mandatory, not optional):** under `prefers-reduced-motion` → **static poster**, no loop, no
+  cursor-follow. **WCAG 2.2.2 (Pause/Stop/Hide)** requires an **off/hide control** → persisted in the
+  companion key. `aria-hidden` (decorative), not a keyboard tab-stop, hit area ≥44px if tappable.
+- **Layout safety:** fixed RTL corner via `inset-inline`; z-index **below** `LoginModal`/`ConfirmDialog`;
+  `pointer-events` only on the sprite; must not cover the freemium-lock CTA or cookie banner (320px check).
+
+### 6.4 — Interaction controller
+- `components/companion/useCompanionController.ts` — rAF-throttled `pointermove` → `lookX/lookY`; tap →
+  `tap` trigger; pause on `visibilitychange` / off-screen. **Touch devices skip cursor-follow** (no hover)
+  and react to taps only. Typed adapter at the Rive-input boundary — **no `any`**.
+- **Stage-up celebration:** when `stage > lastCelebratedStage`, fire `celebrate` once and persist. Optional
+  TTS encouragement obeys the existing `StudentTtsToggle` mute and takes the spoken-content/voice review
+  (CLAUDE.md rule 12).
+- **Tests:** e2e via a test hook exposing the last-fed Rive inputs (canvas pixels aren't assertable) —
+  cursor move updates inputs; tap fires a reaction; hidden tab pauses; hide toggle persists.
+
+### 6.5 — Config, docs, scope
+- `next.config.mjs` CSP `'wasm-unsafe-eval'` (minimal widening; verify against the Phase 0 Report-Only
+  report before it ever enforces); `package.json` adds `@rive-app/react-canvas`; `lib/testIds.ts` +
+  `app/globals.css` (positioning + a `prefers-reduced-motion` guard — also flags the pre-existing
+  stars/confetti motion gap as a finding, not fixed here); register the primitive in `UI_COMPONENTS.md`.
+- **v1 scope (SeniorProductManager):** **one** character (Hybrid = stages + grade theme, *not* a character
+  picker); ship **flag-gated** until real art lands. Multi-character / pick-a-name (pick-list only per
+  rule 10, never free text) → **v2 follow-up**.
+
+### Phase 6 quality gates
+MAX: two plan-review rounds + QA team → `npm run test:qa` on PR CI → MCP Playwright visual on a hub
+(companion present) **and** an exam (companion absent) → verification report. Manual **RTL + 320px +
+reduced-motion** passes. No `lib/*/storage.ts` change (new anon key only), so no storage-schema escalation
+beyond the MAX already justified by blast radius + CSP.
+
+### Phase 6 Definition of Done
+1. Companion mounts app-wide and is **absent on all exams + freemium lock + admin** (e2e-enforced).
+2. Character **evolves through progress-derived stages** *and* re-themes on grade א׳→ב׳ (Hybrid); the
+   stage function is pure, **monotonic**, and unit-tested.
+3. **Cursor-follow + tap reactions** work on desktop; touch skips follow and still reacts to taps.
+4. **Reduced-motion → static poster**; a **hide/off control** persists (WCAG 2.2.2).
+5. Rive is **lazy-loaded** — no login-path / initial-bundle latency regression; CSP allows the wasm and is
+   verified against the Report-Only report.
+6. New key `kids_math.companion.v1` only; **no `lib/*/storage.ts` change**; `multi-user-isolation` +
+   `auth-backward-compat` anchors green.
+7. Ships **flag-gated** with a placeholder `.riv` behind the documented input contract; real art integrates
+   with zero code change. Closes/grows **UX2**.
+
+---
+
 ## Cross-cutting rules (apply to every phase)
 
 - **Backward compatibility is sacred.** `multi-user-isolation.spec.ts` and
@@ -974,6 +1078,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | **3.5** | **Design system consolidation & desktop layout** | MAX | ✅ desktop intent decided 2026-07-18 | ✅ **COMPLETE 2026-07-18** — 14 PRs ([#105](https://github.com/RoieArgaman/kids_math/pull/105)–[#119](https://github.com/RoieArgaman/kids_math/pull/119)). **D1–D16 all resolved** (D4 & D8 partial-with-reason; the rest fixed). The report named 8 findings; the pass uncovered **8 more it could not see** (D9–D16) — a live regression that had killed the entire design-token layer in production, three WCAG failures, a unit suite that could pass without running every test, and 132 position-derived testids. |
 | 4 | Multi-tenancy & scale **+ permanent erasure** | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started — now also owns **C2b** (erasure, super-admin privilege) + **C10** |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | ✅ go/no-go given (nudge, not DRM) | ✅ **Implemented** (branch `claude/roadmap-priorities-v1kcgr`) — anon one-day/one-subject cap via a new anon-only localStorage key (`kids_math.anon.dailyUsage.v1`), gated at the day hubs with a login-CTA lock. **Signup (5.4) explicitly deferred to its own phase** (per product): the lock's CTA uses the existing login only. Cap survives login→logout (slot excluded from the teardown allow-list); resets only at local midnight / site-data clear / new profile / incognito session. Soft nudge, not DRM — non-bypassable metering still needs server-side per-account entitlement (post-signup). |
+| 6 | **Animated learning companion** | MAX | 🚦 product go/no-go | ⬜ Not started — planned 2026-07-24 (`/plan`). Persistent Rive companion in the root layout: **Hybrid** growth (progress-derived stages + grade א׳/ב׳ theme), cursor-follow + tap reactions, **hidden on exams / freemium lock / admin**. Scaffold-first against a documented Rive input contract (art-asset-independent), flag-gated, new anon key `kids_math.companion.v1` only (no `lib/*/storage.ts` change). Grows **UX2**. First entry in the **"Grow & Teach"** arc. |
 
 ---
 
