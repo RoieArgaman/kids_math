@@ -384,6 +384,12 @@ export const testIds = {
     notFound: {
       root: () => tid("screen", "notFound"),
     },
+    anonDailyLimit: {
+      root: (subject: string) => tid("screen", "anonDailyLimit", "subject", subject),
+      reason: (subject: string) => tid("screen", "anonDailyLimit", "subject", subject, "reason"),
+      loginCta: (subject: string) => tid("screen", "anonDailyLimit", "subject", subject, "cta", "login"),
+      backCta: (subject: string) => tid("screen", "anonDailyLimit", "subject", subject, "cta", "back"),
+    },
     dayOverview: {
       root: (grade: string, dayId: string) => tid("screen", "dayOverview", "grade", grade, "day", dayId),
       nav: (grade: string, dayId: string) => tid("screen", "dayOverview", "nav", "grade", grade, "day", dayId),

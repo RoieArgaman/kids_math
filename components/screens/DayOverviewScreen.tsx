@@ -18,6 +18,8 @@ import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
+import { useAnonDailyGate } from "@/lib/hooks/useAnonDailyGate";
+import { AnonDailyLimitLock } from "@/components/screens/AnonDailyLimitLock";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
@@ -103,6 +105,8 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     dayId,
   });
 
+  const anonGate = useAnonDailyGate("math", dayId);
+
   const [showReward, setShowReward] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
   const { newlyUnlockedIds, markAllSeen } = useBadges(effectiveGrade, {
@@ -175,7 +179,7 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     );
   }
 
-  if (!isRouteReady || isLocked === null) {
+  if (!isRouteReady || isLocked === null || anonGate === "loading") {
     return (
       <main
         data-testid={testIds.screen.dayOverview.root(effectiveGrade, `${dayId}.loading`)}
@@ -184,6 +188,13 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         <LoadingPanel emoji="⏳" title="טוֹעֲנִים אֶת הַיּוֹם..." />
       </main>
     );
+  }
+
+  // Freemium cap: an anonymous visitor who already used today's free day sees the
+  // conversion nudge before the progression lock (the cross-subject case is its
+  // main teeth — a first day in another subject isn't progression-locked at all).
+  if (anonGate === "blocked") {
+    return <AnonDailyLimitLock subject="math" />;
   }
 
   if (isLocked) {

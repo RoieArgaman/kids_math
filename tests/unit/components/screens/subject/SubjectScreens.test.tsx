@@ -13,6 +13,9 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/hooks/useProgress", () => ({
   useProgress: () => ({ markComplete: vi.fn(() => false), percentDone: 0, correctAnswers: {} }),
 }));
+vi.mock("@/lib/hooks/useAnonDailyGate", () => ({
+  useAnonDailyGate: () => "allowed",
+}));
 
 const firstLevel = cfg.levels[0]!;
 

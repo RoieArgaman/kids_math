@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { LoadingPanel } from "@/components/ui/LoadingPanel";
+import { AnonDailyLimitLock } from "@/components/screens/AnonDailyLimitLock";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
+import { useAnonDailyGate } from "@/lib/hooks/useAnonDailyGate";
 import { childTid } from "@/lib/testIds";
 import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
@@ -81,6 +84,8 @@ export function SubjectDayScreen({
     [day, sectionStates],
   );
 
+  const anonGate = useAnonDailyGate(config.subject, dayId);
+
   const ids = config.day.testIds;
 
   if (!day) {
@@ -97,6 +102,21 @@ export function SubjectDayScreen({
         />
       </main>
     );
+  }
+
+  // Freemium cap (Phase 5): gate an anonymous visitor to one day/subject per day.
+  if (anonGate === "loading") {
+    return (
+      <main
+        data-testid={ids.root(`${dayId}.loading`)}
+        className="flex min-h-screen items-center justify-center"
+      >
+        <LoadingPanel emoji="⏳" title="טוֹעֲנִים אֶת הַיּוֹם..." />
+      </main>
+    );
+  }
+  if (anonGate === "blocked") {
+    return <AnonDailyLimitLock subject={config.subject} />;
   }
 
   const root = ids.root(dayId);
