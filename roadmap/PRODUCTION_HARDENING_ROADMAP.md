@@ -906,9 +906,16 @@ Phase 3.5** ✅ (inherits the consolidated design system rather than adding moti
 ### 6.0 — Critical-path dependency: the `.riv` art asset (state-machine input contract)
 - The `.riv` does **not** exist yet. Build **scaffold-first** against a documented input contract so
   engineering is never blocked on art; real art drops in with **zero code change**, behind a flag.
-- **Contract** — one state machine (`Companion`) exposing: `stage` (number 0…N, derived growth stage),
-  `gradeTheme` (0=א׳/1=ב׳), `lookX`/`lookY` (−1…1, normalized cursor direction), `tap` (trigger),
-  `celebrate` (trigger, fired once on stage-up), `idle` (boolean — reduced-motion / off-screen calm).
+- **Contract** — one state machine (`Companion`) exposing:
+  - **Growth/look:** `stage` (number 0…N, derived growth stage), `gradeTheme` (0=א׳/1=ב׳),
+    `lookX`/`lookY` (−1…1, normalized cursor direction), `tap` (trigger).
+  - **Emotional reactions (6.6):** `mood` (number enum — `neutral | concerned | happy | sad | celebrate`)
+    plus `reactionFire` (trigger) and `reactionVariant` (number 0…k) so **each mood has *many*
+    interchangeable animations**, not one. React sets `mood` + a chosen `reactionVariant`, then pulses
+    `reactionFire`; the state machine plays that variant and eases back to `neutral`/`idle`.
+  - **Calm:** `idle` (boolean — reduced-motion / off-screen / exam-hidden → calm state).
+- The `.riv` must ship **≥3 variant animations per mood** (concerned/happy/sad), authored under the same
+  `reactionVariant` index space, so the variety is a data/art concern the code selects into — not branching.
 - Self-host the `.riv` in `/public` (no new external host → CSP `connect-src`/`img-src` untouched).
 
 ### 6.1 — Growth logic (pure, headless, derived)
@@ -956,6 +963,46 @@ Phase 3.5** ✅ (inherits the consolidated design system rather than adding moti
   picker); ship **flag-gated** until real art lands. Multi-character / pick-a-name (pick-list only per
   rule 10, never free text) → **v2 follow-up**.
 
+### 6.6 — Answer-context reactions & a reaction-variety engine
+The companion must react to what the student is *doing with an answer*, with **many** animations per
+emotion so it never feels canned. **Practice-only** — the companion is hidden on exams (6.2), so these
+reactions never fire during assessment (no stress, no correctness telegraphing).
+
+- **When it reacts (the emotion triggers):**
+
+  | Trigger | Mood | Cross-device detection |
+  |---|---|---|
+  | About to answer — hovering / focusing an answer option, or finger pressed **down** before release | `concerned` (gentle "thinking with you", **never anxious/scary**) | desktop: `pointerover`/`focus` on an answer control; touch: `pointerdown` (press-in) — there is no hover, so press-in is the "about to commit" signal |
+  | Answer graded **correct** | `happy` → `celebrate` on a streak/milestone | hook the existing grading/reward moment (`StarReward`/`TrophyUnlock` path) |
+  | Answer graded **incorrect** | `sad` (empathetic "aww, let's try again", **never shaming/disappointed**) | same grading hook |
+  | Focus leaves the answer without committing | back to `neutral`/`idle` | blur / `pointerout` |
+
+- **The integration seam (new).** Answer widgets must *emit* these signals. Add a tiny app-level
+  **companion event bus** (`lib/companion/events.ts` — a typed pub/sub, no React coupling) that the
+  answer components (`components/ExerciseBox.tsx`, `components/exercises/**` — `multiple_choice`,
+  `number_input`) publish to (`answerHover`, `answerPressIn`, `answerGraded{correct}`), and the
+  companion controller subscribes to. Emitters are **fire-and-forget and side-effect-free** if no
+  companion is mounted (hidden/reduced-motion/exam) — the exercise never depends on the companion.
+- **Reaction-variety engine** (`lib/companion/reactions.ts`, **pure + unit-tested**): given a mood, pick
+  a `reactionVariant` from that mood's pool with **anti-repetition** (never replay the immediately
+  previous variant) and optional weighting, so repeated correct answers show *different* happy
+  animations. Deterministic under an injected RNG for testing. This is where "many reactions, not one"
+  actually lives — adding variety later is adding art + a pool entry, **zero control-flow change**.
+- **Debounce/coalesce:** rapid hover→press→grade must not thrash moods (a child scrubbing options).
+  Short debounce on `concerned`; `happy`/`sad` win over `concerned`; `celebrate` wins over all.
+- **a11y & reduced-motion:** reactions are **decorative and additive** — correct/incorrect already have
+  their own non-companion feedback, so a screen-reader/reduced-motion user loses nothing. Under
+  `prefers-reduced-motion` the companion stays on its static poster and **does not** animate reactions
+  (mood may still swap the poster expression; no motion).
+- **Pedagogical guardrail (MoE_PedagogyLead + SeniorProductDesigner):** on a 6–8-year-old's product,
+  `concerned` reads **curious/supportive**, `sad` reads **empathetic and brief** then bounces back to
+  encouragement — the character is *with* the child, never judging them. This is a **content-review
+  gate on the `.riv` art itself**, not just code.
+- **Tests:** unit — variety engine never repeats the last variant and is total over each pool; event
+  bus is no-op with no subscriber. e2e (practice screen, via the input test hook) — hover an option →
+  `mood=concerned`; submit correct → `happy`; submit wrong → `sad`; two correct in a row → **two
+  different** `reactionVariant`s; **no reaction events fire on an exam screen**.
+
 ### Phase 6 quality gates
 MAX: two plan-review rounds + QA team → `npm run test:qa` on PR CI → MCP Playwright visual on a hub
 (companion present) **and** an exam (companion absent) → verification report. Manual **RTL + 320px +
@@ -967,12 +1014,17 @@ beyond the MAX already justified by blast radius + CSP.
 2. Character **evolves through progress-derived stages** *and* re-themes on grade א׳→ב׳ (Hybrid); the
    stage function is pure, **monotonic**, and unit-tested.
 3. **Cursor-follow + tap reactions** work on desktop; touch skips follow and still reacts to taps.
-4. **Reduced-motion → static poster**; a **hide/off control** persists (WCAG 2.2.2).
-5. Rive is **lazy-loaded** — no login-path / initial-bundle latency regression; CSP allows the wasm and is
+4. **Context-aware answer reactions (practice-only):** `concerned` on hovering/pressing an answer,
+   `happy` on correct, `sad` on incorrect — each mood plays one of **≥3 variants** via the
+   anti-repetition variety engine (two correct in a row ⇒ two different animations). Emitted through a
+   side-effect-free event bus the exercise never depends on; **no reaction fires on an exam** (e2e-enforced).
+   Reactions read as **supportive/empathetic, never shaming** (art content-review gate).
+5. **Reduced-motion → static poster**; a **hide/off control** persists (WCAG 2.2.2).
+6. Rive is **lazy-loaded** — no login-path / initial-bundle latency regression; CSP allows the wasm and is
    verified against the Report-Only report.
-6. New key `kids_math.companion.v1` only; **no `lib/*/storage.ts` change**; `multi-user-isolation` +
+7. New key `kids_math.companion.v1` only; **no `lib/*/storage.ts` change**; `multi-user-isolation` +
    `auth-backward-compat` anchors green.
-7. Ships **flag-gated** with a placeholder `.riv` behind the documented input contract; real art integrates
+8. Ships **flag-gated** with a placeholder `.riv` behind the documented input contract; real art integrates
    with zero code change. Closes/grows **UX2**.
 
 ---
@@ -1078,7 +1130,7 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | **3.5** | **Design system consolidation & desktop layout** | MAX | ✅ desktop intent decided 2026-07-18 | ✅ **COMPLETE 2026-07-18** — 14 PRs ([#105](https://github.com/RoieArgaman/kids_math/pull/105)–[#119](https://github.com/RoieArgaman/kids_math/pull/119)). **D1–D16 all resolved** (D4 & D8 partial-with-reason; the rest fixed). The report named 8 findings; the pass uncovered **8 more it could not see** (D9–D16) — a live regression that had killed the entire design-token layer in production, three WCAG failures, a unit suite that could pass without running every test, and 132 position-derived testids. |
 | 4 | Multi-tenancy & scale **+ permanent erasure** | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started — now also owns **C2b** (erasure, super-admin privilege) + **C10** |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | ✅ go/no-go given (nudge, not DRM) | ✅ **Implemented** (branch `claude/roadmap-priorities-v1kcgr`) — anon one-day/one-subject cap via a new anon-only localStorage key (`kids_math.anon.dailyUsage.v1`), gated at the day hubs with a login-CTA lock. **Signup (5.4) explicitly deferred to its own phase** (per product): the lock's CTA uses the existing login only. Cap survives login→logout (slot excluded from the teardown allow-list); resets only at local midnight / site-data clear / new profile / incognito session. Soft nudge, not DRM — non-bypassable metering still needs server-side per-account entitlement (post-signup). |
-| 6 | **Animated learning companion** | MAX | 🚦 product go/no-go | ⬜ Not started — planned 2026-07-24 (`/plan`). Persistent Rive companion in the root layout: **Hybrid** growth (progress-derived stages + grade א׳/ב׳ theme), cursor-follow + tap reactions, **hidden on exams / freemium lock / admin**. Scaffold-first against a documented Rive input contract (art-asset-independent), flag-gated, new anon key `kids_math.companion.v1` only (no `lib/*/storage.ts` change). Grows **UX2**. First entry in the **"Grow & Teach"** arc. |
+| 6 | **Animated learning companion** | MAX | 🚦 product go/no-go | ⬜ Not started — planned 2026-07-24 (`/plan`). Persistent Rive companion in the root layout: **Hybrid** growth (progress-derived stages + grade א׳/ב׳ theme), cursor-follow + tap reactions, and **context-aware answer moods** — `concerned` on hover/press, `happy` on correct, `sad` on incorrect, each with **≥3 variants** via an anti-repetition variety engine (practice-only; **hidden on exams / freemium lock / admin**). Answer widgets feed it through a side-effect-free event bus. Scaffold-first against a documented Rive input contract (art-asset-independent), flag-gated, new anon key `kids_math.companion.v1` only (no `lib/*/storage.ts` change). Grows **UX2**. First entry in the **"Grow & Teach"** arc. |
 
 ---
 
