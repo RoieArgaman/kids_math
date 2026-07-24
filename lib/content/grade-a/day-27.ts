@@ -13,13 +13,13 @@ export const concept: DayConcept = {
   arithmeticMcOptions: ["13", "14", "15"],
   arithmeticMcAnswer: "14",
   languagePrompt:
-    "כְּשֶׁכָּתוּב 'נִשְׁאֲרוּ' אַחֲרֵי שֶׁיֹּדְעִים כַּמָּה הָיוּ בַּהַתְחָלָה — בִּחְרוּ: חִיבּוּר אוֹ חִיסּוּר.",
+    "כְּשֶׁכָּתוּב 'נִשְׁאֲרוּ' אַחֲרֵי שֶׁיֹּדְעִים כַּמָּה הָיוּ בַּהַתְחָלָה — בַּחֲרוּ: חִיבּוּר אוֹ חִיסּוּר.",
   languageOptions: ["חִיבּוּר", "חִיסּוּר", "כֶּפֶל"],
   languageAnswer: "חִיסּוּר",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 20 + 10 - 5 = 25",
   reviewAnswer: true,
   challengePrompt: "נַעַר קִבֵּל 9 מַדְבֵּקוֹת, הִפְסִיד 4, וְקִבֵּל עוֹד 6. כַּמָּה יֵשׁ לוֹ עַכְשָׁיו?",
   challengeAnswer: 11,
-  geometryPrompt: "אֵיזוֹ צוּרָה לְרֹב יֵשׁ לָהּ 4 צְלָעוֹת?",
+  geometryPrompt: "לְאֵיזוֹ צוּרָה יֵשׁ בְּדֶרֶךְ כְּלָל 4 צְלָעוֹת?",
   geometryAnswer: "rectangle",
 };

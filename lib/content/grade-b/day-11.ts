@@ -2,15 +2,15 @@ import type { DayConcept } from "../engine/day-builder";
 
 export const concept: DayConcept = {
   dayNumber: 11,
-  title: "מִדִּידַת אֹרֶךְ",
+  title: "מְדִידַת אֹרֶךְ",
   objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יְסַכֵּם אֹרְכִים בְּס״מ פָּשׁוּט.",
   mainTags: ["measurement-length", "addition"],
   spiralReviewTags: ["patterns", "place-value"],
-  arithmeticPrompt: "קֶפֶץ אָרֹךְ 24 ס״מ וְעוֹד 15 ס״מ. כַּמָּה ס״מ בַּסַּךְ?",
+  arithmeticPrompt: "קֶטַע אֶחָד בְּאֹרֶךְ 24 ס״מ וְעוֹד קֶטַע 15 ס״מ. כַּמָּה ס״מ בַּסַּךְ?",
   arithmeticAnswer: 39,
   arithmeticMcOptions: ["37", "39", "41"],
   arithmeticMcAnswer: "39",
-  languagePrompt: "בִּחְרוּ: אֵיזוֹ יְחִידָה מַתְאִימָה לְאֹרֶךְ דֶּף?",
+  languagePrompt: "בַּחֲרוּ: אֵיזוֹ יְחִידָה מַתְאִימָה לְאֹרֶךְ דַּף?",
   languageOptions: ["ס״מ", "מֶטֶר", "ק״מ"],
   languageAnswer: "ס״מ",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 1 מֶטֶר = 10 ס״מ",

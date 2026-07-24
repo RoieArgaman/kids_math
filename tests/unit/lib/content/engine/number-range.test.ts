@@ -85,7 +85,7 @@ describe("buildNumberLineJumpParams", () => {
 describe("numberLineJumpTail", () => {
   it("uses SINGULAR jump wording for a step of 1 (spoken agreement)", () => {
     const tail = numberLineJumpTail(0, 5, 1);
-    expect(tail).toContain("בְּקְפִיצָה שֶׁל 1");
+    expect(tail).toContain("בִּקְפִיצָה שֶׁל 1");
     expect(tail).not.toContain("בִּקְפִיצוֹת שֶׁל 1");
   });
 

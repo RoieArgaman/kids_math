@@ -3,7 +3,7 @@ import type { DayConcept } from "../engine/day-builder";
 export const concept: DayConcept = {
   dayNumber: 13,
   title: "בְּעָיוֹת מִילּוּלִיּוֹת מִתְקַדְּמוֹת",
-  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לִזַהוֹת שְׁנֵי שְׁלָבִים בְּעִיָּה מִילּוּלִית וְלִפְתּוֹר 3 מִתּוֹךְ 4 בְּעָיוֹת כָּאֵלּוּ.",
+  objective: "בְּסוֹף הַיּוֹם הַתַּלְמִיד/ה יוּכַל לְזַהוֹת שְׁנֵי שְׁלָבִים בִּבְעָיָה מִילּוּלִית וְלִפְתּוֹר 3 מִתּוֹךְ 4 בְּעָיוֹת כָּאֵלּוּ.",
 
   mainTags: ["word-problems", "addition", "subtraction"],
   spiralReviewTags: ["subtraction", "place-value"],
@@ -11,7 +11,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 17,
   arithmeticMcOptions: ["16", "17", "18"],
   arithmeticMcAnswer: "17",
-  languagePrompt: "בִּחְרוּ: אֵיךְ כּוֹתְבִים בְּעִבְרִית אֶת הַמִּסְפָּר 17?",
+  languagePrompt: "בַּחֲרוּ: אֵיךְ כּוֹתְבִים בְּעִבְרִית אֶת הַמִּסְפָּר 17?",
   languageOptions: ["שֵׁשׁ עֶשְׂרֵה", "שְׁבַע עֶשְׂרֵה", "שְׁמוֹנֶה עֶשְׂרֵה"],
   languageAnswer: "שְׁבַע עֶשְׂרֵה",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: אִם הָיוּ 12 פֵּרוֹת וְנוֹסְפוּ עוֹד 8, יֵשׁ עַכְשָׁיו 20 פֵּרוֹת",

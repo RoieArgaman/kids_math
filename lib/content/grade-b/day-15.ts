@@ -10,11 +10,11 @@ export const concept: DayConcept = {
   arithmeticAnswer: 6,
   arithmeticMcOptions: ["4", "6", "8"],
   arithmeticMcAnswer: "6",
-  languagePrompt: "בִּחְרוּ: לְאֵיזֶה גּוּף יֵשׁ עִגּוּל פּוֹתַחַת וְכִיסּוּי עָגֹל?",
+  languagePrompt: "בַּחֲרוּ: לְאֵיזֶה גּוּף יֵשׁ פֶּתַח עָגֹל?",
   languageOptions: ["כַּד", "קוּבִּיָּה", "תִּיבָה"],
   languageAnswer: "כַּד",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: לְתִיבָה מְאֻרֶכֶת יֵשׁ תָּמִיד 12 צְלָעוֹת",
   reviewAnswer: true,
-  challengePrompt: "קוּבִּיָּה וְעוֹד קוּבִּיָּה — כַּמָּה קוֹדְקוֹדִים (פִינוֹת) לְרֹב יֵשׁ לִשְׁנֵיהֶם בַּסַּךְ?",
+  challengePrompt: "קוּבִּיָּה וְעוֹד קוּבִּיָּה — כַּמָּה קוֹדְקוֹדִים (פִּנּוֹת) יֵשׁ לִשְׁנֵיהֶם בְּיַחַד?",
   challengeAnswer: 16,
 };

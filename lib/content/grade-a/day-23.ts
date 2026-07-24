@@ -12,9 +12,9 @@ export const concept: DayConcept = {
   arithmeticAnswer: 3,
   arithmeticMcOptions: ["2", "3", "4"],
   arithmeticMcAnswer: "3",
-  languagePrompt: "בִּחְרוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁמִּשְׁלִים אֶת 4 לְ-10:",
-  languageOptions: ["חָמֵשׁ", "שִׁשָּׁה", "שֶׁבַע"],
-  languageAnswer: "שִׁשָּׁה",
+  languagePrompt: "בַּחֲרוּ בְּמִילִים אֶת הַמִּסְפָּר שֶׁמִּשְׁלִים אֶת 4 לְ-10:",
+  languageOptions: ["חָמֵשׁ", "שֵׁשׁ", "שֶׁבַע"],
+  languageAnswer: "שֵׁשׁ",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 9 + 1 = 10",
   reviewAnswer: true,
   challengePrompt:
