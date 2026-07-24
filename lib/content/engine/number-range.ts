@@ -63,8 +63,8 @@ export function buildNumberLineJumpParams(seedKey: string, ceiling: number): Num
 
 /** Canonical spoken tail so the prompt's numbers always match the rendered line. */
 export function numberLineJumpTail(start: number, end: number, step: number): string {
-  // Hebrew number agreement when read aloud: singular "בְּקְפִיצָה" for a step of 1,
+  // Hebrew number agreement when read aloud: singular "בִּקְפִיצָה" for a step of 1,
   // plural "בִּקְפִיצוֹת" otherwise. "קְפִיצוֹת שֶׁל 1" sounds wrong to young learners.
-  const jumpPhrase = step === 1 ? "בְּקְפִיצָה שֶׁל 1" : `בִּקְפִיצוֹת שֶׁל ${step}`;
+  const jumpPhrase = step === 1 ? "בִּקְפִיצָה שֶׁל 1" : `בִּקְפִיצוֹת שֶׁל ${step}`;
   return `מִ-${start} עַד ${end} ${jumpPhrase}. כַּמָּה קְפִיצוֹת?`;
 }

@@ -44,7 +44,7 @@ export const MINISTRY_STRANDS_GRADE_A: MinistryStrand[] = [
   {
     id: "measurement-geometry",
     title: "מְדִידָה וּגְאוֹמֶטְרִיָּה",
-    summary: "צוּרוֹת, מְצוּלָעִים, מְדִידַת אֹרֶךְ וְזְמַן, חִשּׁוּב הַזָּזָה וְשִׁקּוּף — בְּהַשְׁלָמָה לְפִי הַתָּכְנִית.",
+    summary: "צוּרוֹת, מְצוּלָעִים, מְדִידַת אֹרֶךְ וּזְמַן, חִשּׁוּב הַזָּזָה וְשִׁקּוּף — בְּהַשְׁלָמָה לְפִי הַתָּכְנִית.",
     dayNumbers: [8, 14, 16, 17, 18, 19, 20],
     skillTags: [
       "geometry-shapes",
@@ -105,7 +105,7 @@ export const MINISTRY_STRANDS_GRADE_B: MinistryStrand[] = [
   {
     id: "supplementary-pedagogy",
     title: "שְׁבָרִים, כֶּסֶף וְהַשְׁלָמָה",
-    summary: "חֲצִי וְרֶבַע וְשְׁלִישׁ, שְׁקָלִים פְּשׁוּטִים וּבְעָיוֹת הַשְׁלָמָה.",
+    summary: "חֲצִי וְרֶבַע וּשְׁלִישׁ, שְׁקָלִים פְּשׁוּטִים וּבְעָיוֹת הַשְׁלָמָה.",
     dayNumbers: [9, 17, 20, 21],
     skillTags: ["fractions-parts", "money-shekel", "comparing", "word-problems"],
   },

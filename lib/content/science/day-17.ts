@@ -33,7 +33,7 @@ export const scienceDay17: WorkbookDay = {
   sections: [
     {
       id: "day-17-section-0",
-      title: "חִימּוּם: מַפָּה וְקְהִילָּה",
+      title: "חִימּוּם: מַפָּה וּקְהִילָּה",
       type: "warmup",
       learningGoal: "לְזַהוֹת אֵיךְ מַפָּה עוֹזֶרֶת לָנוּ וּמִי עוֹזֵר בַּקְּהִילָּה.",
       prerequisiteSkillTags: [],
