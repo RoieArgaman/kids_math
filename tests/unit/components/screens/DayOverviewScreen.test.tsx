@@ -11,6 +11,9 @@ vi.mock("@/lib/hooks/useProgress", () => ({
 vi.mock("@/lib/hooks/useDayUnlockStatus", () => ({
   useDayUnlockStatus: () => ({ previewAll: false, isRouteReady: true, isLocked: false }),
 }));
+vi.mock("@/lib/hooks/useAnonDailyGate", () => ({
+  useAnonDailyGate: () => "allowed",
+}));
 
 describe("DayOverviewScreen", () => {
   it("shows a not-found panel for an unknown day id", () => {

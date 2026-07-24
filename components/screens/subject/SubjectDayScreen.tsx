@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { AppNavLink } from "@/components/ui/AppNavLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { CenteredPanel } from "@/components/ui/CenteredPanel";
+import { AnonDailyLimitLock } from "@/components/screens/AnonDailyLimitLock";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StarReward } from "@/components/StarReward";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
+import { useAnonDailyGate } from "@/lib/hooks/useAnonDailyGate";
 import { childTid } from "@/lib/testIds";
 import { routes } from "@/lib/routes";
 import { getPreviewAllFromLocation } from "@/lib/utils/preview";
@@ -81,6 +83,10 @@ export function SubjectDayScreen({
     [day, sectionStates],
   );
 
+  // Claim the free slot only for a day that actually exists (subject day hubs have
+  // no progression lock of their own; a missing day renders not-found instead).
+  const anonGate = useAnonDailyGate(config.subject, dayId, Boolean(day));
+
   const ids = config.day.testIds;
 
   if (!day) {
@@ -97,6 +103,13 @@ export function SubjectDayScreen({
         />
       </main>
     );
+  }
+
+  // Freemium cap (Phase 5): an anonymous visitor who used today's free day sees the
+  // login nudge. Only "blocked" is acted on — never block render on the loading
+  // window, so a logged-in child doesn't wait on auth to see a locally-ready day.
+  if (anonGate === "blocked") {
+    return <AnonDailyLimitLock subject={config.subject} />;
   }
 
   const root = ids.root(dayId);

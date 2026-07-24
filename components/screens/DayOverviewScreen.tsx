@@ -18,6 +18,8 @@ import { DEFAULT_GRADE, type GradeId } from "@/lib/grades";
 import { COMPLETION_GATE_PERCENT } from "@/lib/progress/engine";
 import { useProgress } from "@/lib/hooks/useProgress";
 import { useDayUnlockStatus } from "@/lib/hooks/useDayUnlockStatus";
+import { useAnonDailyGate } from "@/lib/hooks/useAnonDailyGate";
+import { AnonDailyLimitLock } from "@/components/screens/AnonDailyLimitLock";
 import { useBadges } from "@/lib/hooks/useBadges";
 import { routes } from "@/lib/routes";
 import { childTid, testIds } from "@/lib/testIds";
@@ -103,6 +105,10 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     dayId,
   });
 
+  // Claim the free slot only for a real, unlocked day — never a not-found or
+  // progression-locked one (that would burn the anon's day on a page they can't use).
+  const anonGate = useAnonDailyGate("math", dayId, Boolean(day) && isLocked === false);
+
   const [showReward, setShowReward] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
   const { newlyUnlockedIds, markAllSeen } = useBadges(effectiveGrade, {
@@ -175,6 +181,10 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
     );
   }
 
+  // Note: the anon gate is deliberately NOT part of this loading condition. Blocking
+  // render until auth settles would make a logged-in child wait on the /me round-trip
+  // to see a day already available locally (see the C9 login-latency history). We only
+  // ever act on a definitive "blocked"; "loading"/"allowed" both render the day.
   if (!isRouteReady || isLocked === null) {
     return (
       <main
@@ -184,6 +194,13 @@ export function DayOverviewScreen({ grade, dayId }: { grade: GradeId; dayId: Day
         <LoadingPanel emoji="⏳" title="טוֹעֲנִים אֶת הַיּוֹם..." />
       </main>
     );
+  }
+
+  // Freemium cap: an anonymous visitor who already used today's free day sees the
+  // conversion nudge before the progression lock (the cross-subject case is its
+  // main teeth — a first day in another subject isn't progression-locked at all).
+  if (anonGate === "blocked") {
+    return <AnonDailyLimitLock subject="math" />;
   }
 
   if (isLocked) {

@@ -5,6 +5,7 @@ import { answerExerciseCorrectly } from "./answering";
 import { createCompletedDayProgressState, createProgressState, seedProgressState } from "./testUtils";
 import { testIds } from "@/lib/testIds";
 import { FINAL_EXAM_DAY_ID } from "@/lib/final-exam/config";
+import { ANON_DAILY_USAGE_KEY } from "@/lib/access/anonDailyLimit";
 
 function getCookieUrl() {
   return process.env.PLAYWRIGHT_COOKIE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
@@ -40,6 +41,10 @@ test.describe("day smoke", () => {
         previousDayIds(dayId).map((id) => [id, createCompletedDayProgressState(id)]),
       ) as Record<DayId, ReturnType<typeof createCompletedDayProgressState>>;
       await seedProgressState(page, "a", createProgressState({ days: completedDays }));
+      // This smoke test opens every day in one anonymous context; the Phase 5 free-day
+      // cap would block day-2+. Clear the claimed slot so each day is a fresh free day —
+      // this test exercises content rendering, not the freemium gate.
+      await page.evaluate((k) => window.localStorage.removeItem(k), ANON_DAILY_USAGE_KEY);
       await page.goto(`/grade/a/day/${dayId}`);
 
       // Day Hub renders
@@ -89,6 +94,9 @@ test.describe("day smoke", () => {
         previousDayIds(dayId).map((id) => [id, createCompletedDayProgressState(id)]),
       ) as Record<DayId, ReturnType<typeof createCompletedDayProgressState>>;
       await seedProgressState(page, "b", createProgressState({ days: completedDays }));
+      // See the grade-A loop: clear the anon free-day slot so the cap doesn't block
+      // day-2+ in this content smoke.
+      await page.evaluate((k) => window.localStorage.removeItem(k), ANON_DAILY_USAGE_KEY);
       await page.goto(`/grade/b/day/${dayId}`);
 
       // Day Hub renders

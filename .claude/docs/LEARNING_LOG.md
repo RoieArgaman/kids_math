@@ -6,6 +6,40 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-24 (Phase 5 — freemium anon daily cap, ULTRA)
+- **Trigger:** Roadmap Phase 5. Product chose the **nudge** framing (localStorage, not server
+  enforcement) and **deferred signup (5.4) to its own phase** — the lock's CTA reuses the existing
+  login modal only.
+- **Why localStorage is right for a *nudge*, not a limitation we settled for.** Every stronger
+  option fails the anonymous case: per-IP metering punishes shared classroom/family NATs (Appendix
+  A already recorded 20 users behind one IP — the first anon kid would consume the class's free
+  day), and per-account entitlement is impossible for a user with no account. localStorage stores
+  zero PII, survives cookie/cache clears, needs no server surface. Non-bypassable metering is a
+  *separate, later* feature (server entitlement, post-signup), not a swap of the storage layer.
+- **The login→logout exploit that a "tidy" clear-on-login would have created.** My first plan
+  floated clearing the anon slot on login. But the lock's own CTA is "log in" — so anon-hits-cap →
+  login → logout would mint a *fresh* free day every cycle. Dropped it: the slot's lifetime is
+  **purely date-based**, independent of every auth transition. This made `clearLocalProgress()`'s
+  **allow-list exclusion load-bearing** (the anon key must survive logout teardown), so it's pinned
+  by a guard test — seed key → `clearLocalProgress()` → assert it remains.
+- **The auth-`isLoading` window is the real correctness risk, not the happy path.** `useAuth()`
+  reports `isLoggedIn:false` while auth is still *unknown* (mount → `apiMeResult` settles). Deciding
+  then would misclassify a logged-in child as anonymous and could prematurely claim a slot or flash
+  the lock. The gate stays `"loading"` until `!isLoading && isRouteReady`; unit-tested explicitly.
+- **`*/` inside a JSDoc comment silently closed it.** Writing ``lib/*/storage.ts`` in a block
+  comment terminated the comment early, so the rest lexed as code (cascading "unterminated template
+  literal" from the *next* backtick). tsc pointed at the backticks, not the real `*/`. Lesson: never
+  put `*/` in a block comment — use `lib/<domain>/storage.ts`.
+- **A new hook that calls `useAuth()` breaks any component test that renders the screen without a
+  provider.** Two existing screen tests mocked `useProgress`/`useDayUnlockStatus` but not auth;
+  adding the gate hook surfaced them. Fixed by mocking `useAnonDailyGate` in those files (same
+  pattern they already used) rather than wrapping them in a real `AuthProvider` (which does network
+  I/O on mount).
+- **Gender-neutral copy.** The app addresses the child impersonally (`צָרִיךְ`, `אֶפְשָׁר`, warm
+  `כָּל הַכָּבוֹד!`). The draft lock copy used masculine `סִיַּמְתָּ`/`לָמַדְתָּ`; rewrote to the
+  inclusive `סִיַּמְנוּ` + impersonal `אֶפְשָׁר` per the voice review (rule 12), so TTS never
+  misgenders the learner.
+
 ### 2026-07-18 (Phase 3.5.6 — test-integrity guard + the autogen-testid migration)
 - **D16 (silent under-collection).** Vitest reports "Test Files N passed (N)" using the count it
   *collected*, so a file that fails to collect just lowers N — a run of 176/179 files exits 0 and
