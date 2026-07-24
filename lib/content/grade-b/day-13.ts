@@ -10,7 +10,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 5,
   arithmeticMcOptions: ["3", "5", "8"],
   arithmeticMcAnswer: "5",
-  languagePrompt: "בִּחְרוּ: 2 ק״ג וְעוֹד 2 ק״ג — כַּמָּה ק״ג?",
+  languagePrompt: "בַּחֲרוּ: 2 ק״ג וְעוֹד 2 ק״ג — כַּמָּה ק״ג?",
   languageOptions: ["אַרְבַּע", "שְׁנַיִם", "שֵׁשׁ"],
   languageAnswer: "אַרְבַּע",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: ק״ג מִשְׁתַּמֵּשׁ לִמְשׁקָל",

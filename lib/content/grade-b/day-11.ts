@@ -10,7 +10,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 39,
   arithmeticMcOptions: ["37", "39", "41"],
   arithmeticMcAnswer: "39",
-  languagePrompt: "בִּחְרוּ: אֵיזוֹ יְחִידָה מַתְאִימָה לְאֹרֶךְ דֶּף?",
+  languagePrompt: "בַּחֲרוּ: אֵיזוֹ יְחִידָה מַתְאִימָה לְאֹרֶךְ דֶּף?",
   languageOptions: ["ס״מ", "מֶטֶר", "ק״מ"],
   languageAnswer: "ס״מ",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 1 מֶטֶר = 10 ס״מ",

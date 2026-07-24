@@ -13,7 +13,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 30,
   arithmeticMcOptions: ["20", "30", "40"],
   arithmeticMcAnswer: "30",
-  languagePrompt: "בִּחְרוּ בִּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
+  languagePrompt: "בַּחֲרוּ בְּמִילִים אֶת הַמִּסְפָּר: כַּמָּה ס״מ בִּשְׁלוֹשָׁה סַרְגְּלִים שֶׁל 10 ס״מ כָּל אֶחָד?",
   languageOptions: ["עֶשְׂרִים", "שְׁלוֹשִׁים", "אַרְבָּעִים"],
   languageAnswer: "שְׁלוֹשִׁים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 15 ס״מ + 15 ס״מ = 30 ס״מ",
@@ -21,6 +21,6 @@ export const concept: DayConcept = {
   challengePrompt:
     "עַל קַו מִסְפָּרִים לְהַמְחָשָׁה: מִ-0 עַד 30, כָּל קְפִיצָה הִיא 10 יְחִידוֹת. כַּמָּה קְפִיצוֹת עָשִׂינוּ?",
   challengeAnswer: 3,
-  geometryPrompt: "אֵיזוֹ צוּרָה נִרְאֵית כְּמוֹ מִסְגֶּרֶת לָרִבּוּעַ?",
+  geometryPrompt: "אֵיזוֹ צוּרָה נִרְאֵית כְּמוֹ מִסְגֶּרֶת לָרִיבּוּעַ?",
   geometryAnswer: "square",
 };

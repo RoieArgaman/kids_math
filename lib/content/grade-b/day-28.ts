@@ -10,7 +10,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 43,
   arithmeticMcOptions: ["41", "43", "45"],
   arithmeticMcAnswer: "43",
-  languagePrompt: "בִּחְרוּ: אֵיךְ כּוֹתְבִים בִּמִילִים 50?",
+  languagePrompt: "בַּחֲרוּ: אֵיךְ כּוֹתְבִים בְּמִילִים 50?",
   languageOptions: ["חֲמִישִּׁים", "אַרְבָּעִים", "שִׁשִּׁים"],
   languageAnswer: "חֲמִישִּׁים",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 100 - 1 = 99",

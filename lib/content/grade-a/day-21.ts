@@ -13,7 +13,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 4,
   arithmeticMcOptions: ["3", "4", "5"],
   arithmeticMcAnswer: "4",
-  languagePrompt: "בִּחְרוּ בִּמִילִים אֶת הַמִּסְפָּר שֶׁל הָאוֹת ח (8):",
+  languagePrompt: "בַּחֲרוּ בְּמִילִים אֶת הַמִּסְפָּר שֶׁל הָאוֹת ח (8):",
   languageOptions: ["שֶׁבַע", "שְׁמוֹנֶה", "תֵּשַׁע"],
   languageAnswer: "שְׁמוֹנֶה",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: בְּגִימַטְרְיָה, הָאוֹת י (10) גְּדוֹלָה מִן הָאוֹת ח (8)",

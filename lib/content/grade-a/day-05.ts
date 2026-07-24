@@ -11,7 +11,7 @@ export const concept: DayConcept = {
   arithmeticAnswer: 14,
   arithmeticMcOptions: ["14", "11", "שָׁוִים"],
   arithmeticMcAnswer: "14",
-  languagePrompt: "בִּחְרוּ: אֵיךְ כּוֹתְבִים בְּעִבְרִית אֶת הַמִּסְפָּר 10?",
+  languagePrompt: "בַּחֲרוּ: אֵיךְ כּוֹתְבִים בְּעִבְרִית אֶת הַמִּסְפָּר 10?",
   languageOptions: ["תֵּשַׁע", "עֶשֶׂר", "אַחַת עֶשְׂרֵה"],
   languageAnswer: "עֶשֶׂר",
   reviewPrompt: "אֱמֶת אוֹ שֶׁקֶר: 9 גָּדוֹל מִ-13",

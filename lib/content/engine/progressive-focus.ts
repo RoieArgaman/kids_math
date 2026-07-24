@@ -32,7 +32,7 @@ export function buildProgressiveConceptFocusSection(
       d,
       2,
       exNum++,
-      "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
+      "בַּחֲרוּ אֶת הַתְּשׁוּבָה הַנְּכוֹנָה.",
       concept.arithmeticMcOptions,
       concept.arithmeticMcAnswer,
       tags,
