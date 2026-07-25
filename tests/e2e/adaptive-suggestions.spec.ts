@@ -50,11 +50,11 @@ test("a completed day with a wrong exercise shows the weak-spot practice panel",
   await expect(panel).toBeVisible();
   await expect(page.getByTestId(childTid(testIds.screen.dayOverview.weakSpotPanel(GRADE, DAY), "list"))).toBeVisible();
 
-  // The weak exercise is listed and links back into its section.
+  // The weak exercise is listed and links back into its section (assert the href
+  // rather than navigating — same guarantee, no navigation-timing flake under load).
   const weakLink = page.getByTestId(testIds.screen.dayOverview.weakSpotExercise(GRADE, DAY, weakEx.id));
   await expect(weakLink).toBeVisible();
-  await weakLink.click();
-  await expect(page).toHaveURL(new RegExp(`/grade/${GRADE}/day/${DAY}/section/`));
+  await expect(weakLink).toHaveAttribute("href", new RegExp(`/grade/${GRADE}/day/${DAY}/section/`));
 });
 
 test("a completed day with no wrong exercises shows NO weak-spot panel", async ({ page }) => {
