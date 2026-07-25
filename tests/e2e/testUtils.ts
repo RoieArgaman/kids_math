@@ -284,6 +284,65 @@ export async function dismissDayCompletionCelebration(page: Page): Promise<void>
   }
 }
 
+// ─── Streak / analytics / read helpers (Phase A additions) ────────────────────
+
+const STREAK_KEY = "kids_math.streak.v1";
+const ANALYTICS_EVENTS_KEY = "kids_math.analytics_events.v1";
+
+/** Read a JSON localStorage value back out of the page for assertions. */
+export async function readLocalStorage<T = unknown>(page: Page, key: string): Promise<T | null> {
+  return page.evaluate((k) => {
+    const raw = window.localStorage.getItem(k);
+    return raw == null ? null : (JSON.parse(raw) as unknown);
+  }, key) as Promise<T | null>;
+}
+
+/** True when a localStorage key is present (non-null). */
+export async function hasLocalStorageKey(page: Page, key: string): Promise<boolean> {
+  return page.evaluate((k) => window.localStorage.getItem(k) != null, key);
+}
+
+/**
+ * Seed a streak state. `days` sets both current and longest unless overridden.
+ * `lastActiveDate` defaults to today (local) so the streak reads as "active".
+ */
+export async function seedStreakState(
+  page: Page,
+  opts: { days: number; longest?: number; lastActiveDate?: string; earnedBadges?: string[] },
+): Promise<void> {
+  const today = opts.lastActiveDate ?? new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+  const state = {
+    version: 1 as const,
+    lastActiveDate: today,
+    currentStreak: opts.days,
+    longestStreak: opts.longest ?? opts.days,
+    earnedBadges: opts.earnedBadges ?? [],
+    updatedAt: new Date().toISOString(),
+  };
+  await seedLocalStorage(page, { [STREAK_KEY]: state });
+}
+
+/** Seed raw analytics events (used to prove F4: events cleared on user switch). */
+export async function seedAnalyticsEvents(
+  page: Page,
+  events: Array<{ name: string; at?: string; props?: Record<string, unknown> }>,
+): Promise<void> {
+  const normalized = events.map((e) => ({
+    name: e.name,
+    at: e.at ?? new Date().toISOString(),
+    ...(e.props ? { props: e.props } : {}),
+  }));
+  await seedLocalStorage(page, { [ANALYTICS_EVENTS_KEY]: normalized });
+}
+
+export const STORAGE_KEYS = {
+  streak: STREAK_KEY,
+  analyticsEvents: ANALYTICS_EVENTS_KEY,
+  workbookProgress: (grade: GradeId) => `${PROGRESS_KEY_PREFIX}${grade}`,
+  finalExam: (grade: GradeId) => `${FINAL_EXAM_KEY_PREFIX}${grade}`,
+  badges: (grade: GradeId) => `${BADGE_KEY_PREFIX}${grade}`,
+} as const;
+
 // ─── Auth test helpers ────────────────────────────────────────────────────────
 
 export const TEST_USER = {
