@@ -48,6 +48,21 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * A single 401 from `/api/auth/me` at boot is NOT trusted as a revocation on a device that was
+ * signed in. On some devices (notably Android tablets), pressing Back evicts the bfcache and does
+ * a full document reload during which the session cookie can be momentarily omitted — a transient
+ * 401 that has nothing to do with the session being revoked. Tearing down here wipes real learner
+ * data, so we re-check once after this delay and only tear the session down if the retry is ALSO
+ * unauthorized. Kept short so a genuine revocation still logs out within ~1s; the server-side
+ * version check (`verifySession`) remains the real security boundary regardless.
+ */
+const REVOCATION_CONFIRM_DELAY_MS = 500;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function makeSyncFn() {
   return () => {
     // Never push before local is reconciled with the server for this identity:
@@ -138,8 +153,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const me = await apiMeResult();
+        let me = await apiMeResult();
         if (cancelled) return;
+
+        // Confirm an ambiguous boot 401 before destroying anything. Only a device that WAS
+        // signed in (owner marker present) takes this path; an anonymous visitor's 401 is the
+        // normal logged-out state and must not delay boot. A transient blip clears on the retry
+        // and the session is preserved; a genuine revocation stays 401 and tears down below.
+        if (me.status === "unauthorized" && getLocalOwner()) {
+          await delay(REVOCATION_CONFIRM_DELAY_MS);
+          if (cancelled) return;
+          me = await apiMeResult();
+          if (cancelled) return;
+        }
+
         if (me.status !== "ok") {
           // Only a confirmed 401 on a device that WAS signed in means revocation. An anonymous
           // visitor has no owner marker, and a network error is indistinguishable from one at

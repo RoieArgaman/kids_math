@@ -70,7 +70,10 @@ export type MeResult =
 
 export async function apiMeResult(): Promise<MeResult> {
   try {
-    const res = await fetch("/api/auth/me");
+    // `no-store` + explicit same-origin credentials: identity must never be served from the
+    // browser's heuristic HTTP cache. A stale 401 replayed on a Back-button full reload (seen on
+    // Android tablets) would otherwise look like a revocation and tear down real learner data.
+    const res = await fetch("/api/auth/me", { cache: "no-store", credentials: "same-origin" });
     if (res.ok) return { status: "ok", user: (await res.json()) as AuthUser };
     if (res.status === 401) return { status: "unauthorized" };
     return { status: "error" };
