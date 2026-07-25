@@ -3,7 +3,7 @@ import {
   buildBundleFromLocalStorage,
   hydrateLocalStorageFromBundle,
 } from "@/lib/user-data/api";
-import { mergeBundles } from "@/lib/user-data/merge";
+import { mergeBundles, clampFutureTimestamps } from "@/lib/user-data/merge";
 import { englishFinalExamStorageKey } from "@/lib/english/final-exam/storage";
 import { scienceFinalExamStorageKey } from "@/lib/science/final-exam/storage";
 import type { UserProgressBundle } from "@/lib/user-data/types";
@@ -154,5 +154,101 @@ describe("F1 — per-level final-exam cross-device sync", () => {
     expect(() => hydrateLocalStorageFromBundle(legacyBundle)).not.toThrow();
     expect(JSON.parse(window.localStorage.getItem(EN_A)!).scorePercent).toBe(90);
     expect(window.localStorage.getItem(EN_B)).toBeNull();
+  });
+
+  it("build: a Level-ב׳-only child produces a map with just b and a null legacy slot", () => {
+    window.localStorage.setItem(EN_B, JSON.stringify(exam("b", "2026-02-02T00:00:00.000Z")));
+
+    const bundle = buildBundleFromLocalStorage();
+
+    expect(bundle.english?.finalExam).toBeNull();
+    expect(bundle.english?.finalExamByLevel?.a).toBeUndefined();
+    expect(bundle.english?.finalExamByLevel?.b?.passed).toBe(true);
+  });
+
+  it("hydrate: an empty map writes nothing and does not throw (no-op branch)", () => {
+    const bundle = {
+      bundleVersion: 4,
+      updatedAt: "2026-02-02T00:00:00.000Z",
+      streak: null,
+      grades: {
+        a: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+        b: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+      },
+      english: { workbook: null, finalExam: null, finalExamByLevel: {}, review: null },
+    } as unknown as UserProgressBundle;
+
+    expect(() => hydrateLocalStorageFromBundle(bundle)).not.toThrow();
+    expect(window.localStorage.getItem(EN_A)).toBeNull();
+    expect(window.localStorage.getItem(EN_B)).toBeNull();
+  });
+});
+
+function bundleWithEnglish(english: unknown): UserProgressBundle {
+  return {
+    bundleVersion: 4,
+    updatedAt: "2026-02-05T00:00:00.000Z",
+    streak: null,
+    grades: {
+      a: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+      b: { workbook: null, badges: null, finalExam: null, gmat: null, review: null },
+    },
+    english,
+  } as unknown as UserProgressBundle;
+}
+
+describe("F1 — merge & clamp edge branches", () => {
+  it("merge tie on updatedAt prefers incoming (per-level LWW tie-break)", () => {
+    const ts = "2026-02-02T00:00:00.000Z";
+    const existing = bundleWithEnglish({
+      workbook: null,
+      finalExamByLevel: { b: { ...exam("b", ts), scorePercent: 11 } },
+      finalExam: null,
+      review: null,
+    });
+    const incoming = bundleWithEnglish({
+      workbook: null,
+      finalExamByLevel: { b: { ...exam("b", ts), scorePercent: 22 } },
+      finalExam: null,
+      review: null,
+    });
+
+    const merged = mergeBundles(existing, incoming);
+    expect(merged.english?.finalExamByLevel?.b?.scorePercent).toBe(22);
+  });
+
+  it("merge with no exams anywhere yields a null legacy slot and empty map", () => {
+    const merged = mergeBundles(
+      bundleWithEnglish({ workbook: null, finalExam: null, finalExamByLevel: {}, review: null }),
+      bundleWithEnglish({ workbook: null, finalExam: null, finalExamByLevel: {}, review: null }),
+    );
+    expect(merged.english?.finalExam).toBeNull();
+    expect(merged.english?.finalExamByLevel).toEqual({});
+  });
+
+  it("clampFutureTimestamps clamps a fast-clock Level ב׳ exam in the per-level map", () => {
+    const now = new Date("2026-03-01T00:00:00.000Z");
+    const bundle = bundleWithEnglish({
+      workbook: null,
+      finalExam: null,
+      finalExamByLevel: { b: exam("b", "2026-05-01T00:00:00.000Z") }, // ~2 months ahead
+      review: null,
+    });
+
+    const clamped = clampFutureTimestamps(bundle, now);
+    expect(clamped.english?.finalExamByLevel?.b?.updatedAt).toBe(now.toISOString());
+  });
+
+  it("clampFutureTimestamps leaves a legacy-only subject (no map) untouched except its slot", () => {
+    const now = new Date("2026-03-01T00:00:00.000Z");
+    const bundle = bundleWithEnglish({
+      workbook: null,
+      finalExam: exam("a", "2026-05-01T00:00:00.000Z"),
+      review: null,
+    });
+
+    const clamped = clampFutureTimestamps(bundle, now);
+    expect(clamped.english?.finalExam?.updatedAt).toBe(now.toISOString());
+    expect(clamped.english?.finalExamByLevel).toBeUndefined();
   });
 });
