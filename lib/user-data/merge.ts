@@ -14,6 +14,30 @@ const LEVELS: readonly GradeId[] = ["a", "b"];
 /** Skew (ms) beyond server `now` at which an incoming timestamp is treated as clock drift and clamped. */
 export const FUTURE_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
 
+/** An empty grade — every domain absent. Used to fill a missing `grades` side (F2). */
+const EMPTY_GRADE: GradeProgressData = {
+  workbook: null,
+  badges: null,
+  finalExam: null,
+  gmat: null,
+  review: null,
+};
+
+/**
+ * Guarantee a `{ a, b }` grades shape (finding F2). The progress envelope schema
+ * validates only `bundleVersion`, so an authenticated client can POST a bundle with no
+ * `grades` at all. Both `clampFutureTimestamps` and `mergeBundles` dereference
+ * `grades.a`/`.b`, which would throw → a 500 that defeats the merge layer's own
+ * "malformed doc must not throw" intent. Normalizing a missing side to {@link EMPTY_GRADE}
+ * (which loses every whole-domain LWW to the other side) keeps the read tolerant without
+ * inventing data.
+ */
+function safeGrades(
+  grades: UserProgressBundle["grades"] | undefined,
+): UserProgressBundle["grades"] {
+  return { a: grades?.a ?? EMPTY_GRADE, b: grades?.b ?? EMPTY_GRADE };
+}
+
 /**
  * Parse an ISO timestamp for last-write-wins comparison. A missing or invalid
  * value is treated as the OLDEST possible instant (epoch 0), so any present,
@@ -182,10 +206,12 @@ export function mergeBundles(
 ): UserProgressBundle {
   if (existing == null) return incoming;
 
-  // Defensive: the stored doc is untrusted Firestore data. A malformed/legacy doc
-  // missing `grades` must not throw (which would 500 and block all pushes) — fall
-  // back to `incoming` per-field so whatever the stored doc does have is preserved.
-  const existingGrades = existing.grades ?? incoming.grades;
+  // Defensive: both sides are untrusted (the stored Firestore doc AND the incoming POST,
+  // which passes envelope validation with `bundleVersion` alone). A malformed/legacy doc
+  // missing `grades` must not throw (which would 500 and block all pushes) — normalize
+  // each side to a full `{ a, b }` so whatever data either side does have is preserved.
+  const existingGrades = safeGrades(existing.grades ?? incoming.grades);
+  const incomingGrades = safeGrades(incoming.grades);
   const bundleVersion = (Math.max(existing.bundleVersion ?? 0, incoming.bundleVersion) as
     UserProgressBundle["bundleVersion"]);
 
@@ -197,8 +223,8 @@ export function mergeBundles(
         : incoming.updatedAt,
     streak: newer(existing.streak, incoming.streak),
     grades: {
-      a: mergeGrade(existingGrades.a, incoming.grades.a),
-      b: mergeGrade(existingGrades.b, incoming.grades.b),
+      a: mergeGrade(existingGrades.a, incomingGrades.a),
+      b: mergeGrade(existingGrades.b, incomingGrades.b),
     },
     english: mergeSubject(existing.english, incoming.english),
     science: mergeSubject(existing.science, incoming.science),
@@ -288,13 +314,14 @@ function clampSubject<T extends EnglishProgressData | ScienceProgressData>(
 export function clampFutureTimestamps(bundle: UserProgressBundle, now: Date): UserProgressBundle {
   const nowMs = now.getTime();
   const nowIso = now.toISOString();
+  const grades = safeGrades(bundle.grades);
   return {
     ...bundle,
     updatedAt: clampIso(bundle.updatedAt, nowMs, nowIso) ?? bundle.updatedAt,
     streak: clampDomain(bundle.streak, nowMs, nowIso),
     grades: {
-      a: clampGrade(bundle.grades.a, nowMs, nowIso),
-      b: clampGrade(bundle.grades.b, nowMs, nowIso),
+      a: clampGrade(grades.a, nowMs, nowIso),
+      b: clampGrade(grades.b, nowMs, nowIso),
     },
     english: clampSubject(bundle.english, nowMs, nowIso),
     science: clampSubject(bundle.science, nowMs, nowIso),

@@ -117,6 +117,18 @@ describe("mergeBundles", () => {
     expect(merged.grades.b).toEqual(incoming.grades.b);
   });
 
+  it("does not throw when the INCOMING bundle is missing grades (F2), preserving stored data", () => {
+    // The progress envelope schema validates `bundleVersion` only, so a client can POST a
+    // grades-less bundle. Old code dereferenced `incoming.grades.a` and 500'd.
+    const existing = makeBundle({ grades: { a: makeGrade({ badges: makeBadges(NEW) }), b: makeGrade() } });
+    const incoming = { bundleVersion: 4, updatedAt: NEW } as unknown as UserProgressBundle;
+
+    const merged = mergeBundles(existing, incoming);
+    // Stored grade-A badges survive the empty incoming side.
+    expect(merged.grades.a.badges?.updatedAt).toBe(NEW);
+    expect(merged.grades.b).toEqual(makeGrade());
+  });
+
   describe("whole-domain LWW", () => {
     it("keeps the newer streak (existing newer)", () => {
       const existing = makeBundle({ streak: makeStreak(NEW, 9) });
@@ -305,6 +317,14 @@ describe("clampFutureTimestamps", () => {
   const nowIso = NOW.toISOString();
   const farFuture = new Date(NOW.getTime() + FUTURE_SKEW_TOLERANCE_MS + 60_000).toISOString();
   const nearFuture = new Date(NOW.getTime() + 60_000).toISOString();
+
+  it("does not throw on a bundle missing grades (F2) and normalizes to an empty {a,b}", () => {
+    const bundle = { bundleVersion: 4, updatedAt: farFuture } as unknown as UserProgressBundle;
+    const clamped = clampFutureTimestamps(bundle, NOW);
+    expect(clamped.updatedAt).toBe(nowIso); // still clamps the envelope
+    expect(clamped.grades.a).toEqual({ workbook: null, badges: null, finalExam: null, gmat: null, review: null });
+    expect(clamped.grades.b.workbook).toBeNull();
+  });
 
   it("clamps envelope + domain + day timestamps that are too far ahead", () => {
     const bundle = makeBundle({
