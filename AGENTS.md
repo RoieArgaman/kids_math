@@ -860,12 +860,47 @@ Other agent entry points (`CLAUDE.md`, `.cursor/rules/`, `.devin/guidelines.md`)
 - `lib/gmat-challenge/storage.ts`
 - `lib/badges/storage.ts`
 - `lib/streak/storage.ts`
+- `lib/english/storage.ts`, `lib/english/final-exam/storage.ts`
+- `lib/science/storage.ts`, `lib/science/final-exam/storage.ts`
+- `lib/review/storage.ts`
+- `lib/user-data/api.ts`, `lib/user-data/merge.ts`, `lib/user-data/types.ts` (the cross-device sync bundle)
 
 ### Storage Change Requirements (MAX mode)
 - [ ] Schema version number incremented
 - [ ] Migration function written for old → new shape
 - [ ] Migration unit test added
 - [ ] Backward compatibility verified (old data still loads)
+
+### Sync coverage / cross-device symmetry (learned from findings F1)
+
+A storage key is only half-real if it lives on disk but not in the sync bundle. When a
+key holds learner progress, it must be wired symmetrically through **all five** stages,
+or data silently vanishes on the next device or the next login:
+
+1. **build** — `buildBundleFromLocalStorage` (`lib/user-data/api.ts`) reads it into the bundle
+2. **hydrate** — `hydrateLocalStorageFromBundle` writes it back to the same key
+3. **merge** — `mergeBundles` (`lib/user-data/merge.ts`) reconciles both sides (LWW or per-item)
+4. **clamp** — `clampFutureTimestamps` sanitizes its timestamps
+5. **clear** — `clearLocalProgress`'s allow-list includes it (so a user switch can't leak it)
+
+**The trap that caused F1:** a store that spans levels/grades in ONE workbook key but keeps
+a **separate per-level/per-grade key** for another domain (e.g. `…final_exam.v1.level.a` vs
+`.level.b`). A build/hydrate that reads only the default level looks correct in every
+single-level test, yet drops the other level from sync — while `clearLocalProgress` (which
+enumerates *all* levels) still wipes it. Net: passing Level ב׳ exam → gone on the next device.
+
+Rules:
+- **Enumerate every level/grade** a domain can occupy in build AND hydrate — never rely on a
+  defaulted `level`/`grade` argument. If a `load*/save*` helper defaults the level, that
+  default is a code smell at a sync call site.
+- Prefer an explicit **`…ByLevel` map** in the bundle over a singular slot whose name hides
+  which level it means; keep any legacy singular field as a documented backward-compat alias.
+- **Round-trip test is mandatory** (not just a load/save test): seed a *non-default*
+  level/grade, `build → merge → hydrate`, and assert it survives. See
+  `tests/unit/lib/user-data/finalExamLevelSync.test.ts` as the template.
+- When you add a new per-level/per-grade key, grep `clearLocalProgress`, `buildBundleFromLocalStorage`,
+  `hydrateLocalStorageFromBundle`, `mergeBundles`, and `clampFutureTimestamps` and confirm the
+  key appears (or is provably covered) in each.
 
 ### Tests when storage or migrations change
 

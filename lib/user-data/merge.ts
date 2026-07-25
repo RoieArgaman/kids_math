@@ -5,7 +5,11 @@ import type {
   ScienceProgressData,
 } from "@/lib/user-data/types";
 import type { WorkbookProgressState, DayId, DayProgressState } from "@/lib/types";
+import type { GradeId } from "@/lib/grades";
 import { mergeBestTimeMs } from "@/lib/progress/engine";
+
+/** The Israeli grade levels a subject's per-level final exam can be keyed by. */
+const LEVELS: readonly GradeId[] = ["a", "b"];
 
 /** Skew (ms) beyond server `now` at which an incoming timestamp is treated as clock drift and clamped. */
 export const FUTURE_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
@@ -105,18 +109,60 @@ function mergeGrade(
   };
 }
 
+/**
+ * Fold a subject's legacy singular `finalExam` and its per-level `finalExamByLevel`
+ * map into one normalized per-level view. When the map is present it is authoritative;
+ * otherwise the singular slot is treated as Level א׳ (its historical meaning). This lets
+ * merge reconcile an old-shape side (legacy `finalExam` only) with a new-shape side
+ * (full map) without dropping either — the fix for F1.
+ */
+function normalizeFinalExams<S extends { updatedAt?: string | null }>(
+  legacy: S | null | undefined,
+  byLevel: Partial<Record<GradeId, S | null>> | undefined,
+): Partial<Record<GradeId, S | null>> {
+  if (byLevel) return byLevel;
+  return legacy == null ? {} : { a: legacy };
+}
+
+/**
+ * Per-level last-write-wins across both sides' final exams. Returns both the merged
+ * map AND the legacy Level-א׳ slot so the written bundle stays readable by older clients.
+ */
+function mergeFinalExams<S extends { updatedAt?: string | null }>(
+  existingLegacy: S | null | undefined,
+  existingByLevel: Partial<Record<GradeId, S | null>> | undefined,
+  incomingLegacy: S | null | undefined,
+  incomingByLevel: Partial<Record<GradeId, S | null>> | undefined,
+): { finalExam: S | null; finalExamByLevel: Partial<Record<GradeId, S | null>> } {
+  const existingMap = normalizeFinalExams(existingLegacy, existingByLevel);
+  const incomingMap = normalizeFinalExams(incomingLegacy, incomingByLevel);
+  const merged: Partial<Record<GradeId, S | null>> = {};
+  for (const level of LEVELS) {
+    const kept = newer(existingMap[level] ?? undefined, incomingMap[level] ?? undefined);
+    if (kept != null) merged[level] = kept;
+  }
+  return { finalExam: merged.a ?? null, finalExamByLevel: merged };
+}
+
 function mergeSubject<T extends EnglishProgressData | ScienceProgressData>(
   existing: T | undefined,
   incoming: T | undefined,
 ): T | undefined {
   if (existing == null) return incoming;
   if (incoming == null) return existing;
+  const finalExams = mergeFinalExams(
+    existing.finalExam,
+    existing.finalExamByLevel,
+    incoming.finalExam,
+    incoming.finalExamByLevel,
+  );
   return {
     ...existing,
     workbook: mergeWorkbook(existing.workbook, incoming.workbook),
-    finalExam: newer(existing.finalExam, incoming.finalExam),
+    finalExam: finalExams.finalExam,
+    finalExamByLevel: finalExams.finalExamByLevel,
     review: newer(existing.review, incoming.review),
-  };
+  } as T;
 }
 
 /**
@@ -204,6 +250,21 @@ function clampGrade(grade: GradeProgressData, nowMs: number, nowIso: string): Gr
   };
 }
 
+/** Clamp every present level's final exam (mirrors {@link clampDomain} per level). */
+function clampFinalExamByLevel<S extends { updatedAt?: string | null }>(
+  byLevel: Partial<Record<GradeId, S | null>> | undefined,
+  nowMs: number,
+  nowIso: string,
+): Partial<Record<GradeId, S | null>> | undefined {
+  if (byLevel == null) return byLevel;
+  const out: Partial<Record<GradeId, S | null>> = {};
+  for (const level of LEVELS) {
+    const value = byLevel[level];
+    if (value !== undefined) out[level] = clampDomain(value ?? null, nowMs, nowIso);
+  }
+  return out;
+}
+
 function clampSubject<T extends EnglishProgressData | ScienceProgressData>(
   subject: T | undefined,
   nowMs: number,
@@ -214,8 +275,9 @@ function clampSubject<T extends EnglishProgressData | ScienceProgressData>(
     ...subject,
     workbook: clampWorkbook(subject.workbook, nowMs, nowIso),
     finalExam: clampDomain(subject.finalExam, nowMs, nowIso),
+    finalExamByLevel: clampFinalExamByLevel(subject.finalExamByLevel, nowMs, nowIso),
     review: clampDomain(subject.review, nowMs, nowIso),
-  };
+  } as T;
 }
 
 /**
