@@ -144,6 +144,22 @@ Each finding maps to a phase. IDs are stable — reference them in phase PRs and
 | ID | Finding | Severity | Phase |
 |----|---------|----------|-------|
 | **M1** | Logged-out (unregistered) visitors get the full app unrestricted — no free-tier cap, so nothing nudges them to create an account. | MEDIUM (monetization) | 5 |
+| **M2** | No paid tier / payments / server-side entitlement — freemium (Phase 5) is a **client-only nudge**, bypassable by clearing storage / incognito. | MEDIUM (monetization) | 13 |
+
+### Grow & Teach (product growth — surfaced 2026-07-24/25)
+
+The "Grow & Teach" arc (Phases 6–14) — beyond the "Scale & Sale" hardening of Phases 0–5. Each gates on a
+product go/no-go and none touch the security/scale spine.
+
+| ID | Finding | Severity | Phase |
+|----|---------|----------|-------|
+| **G1** | No learning analytics or teacher/parent reporting — progress is stored but never surfaced as insight; a top B2B purchase driver. | MEDIUM (growth) | 7 |
+| **G2** | No adaptive difficulty / personalization / spaced review — practice is a fixed sequence regardless of mastery. | MEDIUM (growth) | 8 |
+| **G3** | Content growth is engineering-bound (only grades א׳/ב׳; no authoring tooling for non-engineers). | MEDIUM (growth) | 9 |
+| **G4** | Accessibility only spot-fixed (Phase 3.5 contrast/touch) — no full WCAG audit, keyboard/SR pass, or reduced-motion guard; Hebrew-only (no Arabic/English i18n). | MEDIUM (a11y/market) | 10 |
+| **G5** | No in-app hint/tutoring help for a stuck student. | LOW (growth) | 11 |
+| **G6** | No self-service signup and no *enforced* guardian consent — Phase 3 documents the posture; capture doesn't exist. Rehomes **UX3** + Phase **5.4**. | MEDIUM (growth/compliance) | 12 |
+| **G7** | No offline/PWA — classroom wifi gaps interrupt use despite the localStorage-first design. | MEDIUM (growth) | 14 |
 
 ### Kids-gaming UX (deferred; surfaced in the Phase 1 PM review, 2026-07-15)
 
@@ -156,7 +172,7 @@ Phase 1**; the two below are their own tasks.
 |----|---------|----------|-------|
 | **UX1** | Login asks pre-literate 6–8-year-olds to type a username string + masked password. The kids-native pattern is **pick-your-avatar + a numeric PIN pad** (aligns with the app's numbers/taps-only ethos and the Phase 1 `overridePolicy` simple-password path). Reduces failed logins → fewer lockouts. | MEDIUM (UX) | Backlog (own ULTRA task) |
 | **UX2** | Avatar is two gray initials — no identity/delight. Pick-a-character avatars are a known engagement + retention lever for this age group. **Grown into a full animated companion — now owned by Phase 6.** | LOW (UX/engagement) | 6 |
-| **UX3** | **Guardian-consent capture** has no flow. Split out of Phase 3.5 (2026-07-18): consent is a product/UX problem — who consents, how it is evidenced, what happens when it is withheld or withdrawn — not a document, and designing it for guardians of 6–8-year-olds is a task in its own right. `COMPLIANCE.md` documents the *posture*; capturing consent is separate. | MEDIUM (compliance/UX) | Backlog (own ULTRA task) |
+| **UX3** | **Guardian-consent capture** has no flow. Split out of Phase 3.5 (2026-07-18): consent is a product/UX problem — who consents, how it is evidenced, what happens when it is withheld or withdrawn — not a document, and designing it for guardians of 6–8-year-olds is a task in its own right. `COMPLIANCE.md` documents the *posture*; capturing consent is separate. **Now owned by Phase 12** (onboarding & guardian consent). | MEDIUM (compliance/UX) | 12 |
 
 ### Design system & responsive (surfaced 2026-07-18 by the FE-framework design QA)
 
@@ -1029,6 +1045,123 @@ beyond the MAX already justified by blast radius + CSP.
 
 ---
 
+## Phase 7 — Learning analytics & teacher/parent reporting  ·  Mode: MAX  ·  🚦 product go/no-go
+
+**Objective:** Turn raw progress into **insight** — per-student mastery/coverage, class-level dashboards
+for the `teacher` role, and parent progress reports. Distinct from Phase 2's *ops* observability; this is
+*learning* analytics and is frequently the deciding feature in a school purchase. **Closes G1.**
+**Gate to start:** Phase 4 (teacher/parent roles + org scoping) + product go/no-go.
+
+- **7.1 — Event & rollup model.** A new, **org-scoped** analytics collection (mastery per skill-tag/day,
+  time-on-task, attempts) — **not** bolted onto `user_progress` (Phase 4 is already splitting that for
+  contention, C5). Children's-PII care per Phase 2's deny-list precedent.
+- **7.2 — Teacher class dashboard.** Org-scoped views: who's stuck, coverage vs. MoE syllabus, per-skill
+  mastery. Reuse the shared UI library + the Phase 3.5 desktop density layout.
+- **7.3 — Parent progress report** behind the existing parent-PIN surface.
+- **DoD (seed):** org-scoped analytics collection live; teacher dashboard + parent report ship; no PII
+  leak (asserted); both regression anchors green.
+
+## Phase 8 — Adaptive learning & spaced review  ·  Mode: MAX  ·  🚦 go/no-go · directional (full `/plan` deferred)
+
+**Objective:** Make practice **responsive** — difficulty adapts to performance and a spaced-repetition
+scheduler resurfaces weak skills, turning a fixed workbook into a tutor. Pedagogy-heavy; needs
+`MoE_PedagogyLead` sign-off. **Closes G2.**
+**Gate to start:** best after Phase 7 (needs the mastery signal) + go/no-go.
+
+- **8.1 — Mastery model** per skill-tag (feeds/derives from Phase 7).
+- **8.2 — Adaptive selection** in the generation/grading path (`lib/utils/exercise.ts`, `lib/progress/`),
+  additive + flag-gated, preserving MoE syllabus-coverage guarantees.
+- **8.3 — Spaced-review scheduler** (extends `lib/review/`); persisted state ⇒ **storage-schema, MAX**,
+  additive/backward-compatible.
+- **DoD (seed):** adaptive path flag-gated + unit-tested for correctness/coverage; review scheduler
+  additive; content-accuracy + voice review pass; anchors green.
+
+## Phase 9 — Content scale & authoring  ·  Mode: MAX  ·  🚦 go/no-go · directional (full `/plan` deferred)
+
+**Objective:** Grow the moat — additional grades (grade 3+) and/or subjects, plus **authoring tooling** so
+content grows without engineering. The repo already anticipates this (`.claude/rules/add-grade.mdc`,
+`add-subject.mdc`, `build-school-year.mdc`). **Closes G3.**
+**Gate to start:** independent + go/no-go (which grade/subject is a product call).
+
+- **9.1 — New grade/subject** via the existing add-grade/add-subject rules (unlock chain ⇒ MAX).
+- **9.2 — Authoring pipeline** — a non-engineer path to add/edit day content, with the content-accuracy
+  audit + spoken/voice review (CLAUDE.md rules 11–12) built into the flow, not bolted on.
+- **DoD (seed):** at least one new grade or subject shipped end-to-end (or the authoring tool ships);
+  MoE alignment audited; storage additive; anchors green.
+
+## Phase 10 — Accessibility & internationalization  ·  Mode: ULTRA  ·  a11y ships continuously · 🚦 i18n scope
+
+**Objective:** Extend Phase 3.5's contrast/touch wins into a **full WCAG 2.1 AA audit** (keyboard nav,
+screen-reader/ARIA, focus management app-wide — incl. the still-open **D14** heading gaps and a global
+`prefers-reduced-motion` guard) and add an **i18n framework** for Arabic (a large Israeli school market)
+and an English UI. Public-school procurement often *requires* documented accessibility. **Closes G4 + D14.**
+**Gate to start:** after Phase 3.5 ✅. a11y ships continuously; i18n scope needs a go/no-go (new market).
+
+- **10.1 — WCAG audit + fixes** (keyboard/SR/focus/reduced-motion), enforced by an axe-style e2e sweep
+  like the Phase 3.5 touch-target spec.
+- **10.2 — i18n framework** — externalize copy; keep the numbers/taps-only ethos. **Arabic is RTL** (fits)
+  but an **English UI flips the RTL axis** — the real layout risk, ULTRA-sized.
+- **DoD (seed):** documented WCAG 2.1 AA pass with an automated a11y spec; ≥1 non-Hebrew locale behind a
+  flag; RTL↔LTR verified.
+
+## Phase 11 — AI-assisted hints & tutoring  ·  Mode: MAX  ·  🚦 go/no-go + spike · exploratory
+
+**Objective:** In-app hint/worked-example help for a stuck student (the app already uses AI for
+*authoring*). The highest-risk item in the arc — kids-safety guardrails, cost/latency, and content
+accuracy all apply hard. **Closes G5.**
+**Gate to start:** best last; go/no-go **plus a spike** before committing.
+
+- **11.1 — Spike:** feasibility, guardrails, cost/latency, and a safety review of any child-facing
+  generated text.
+- **11.2 — Hint surface** — server-side (no client keys), gated + rate-limited (reuse the Phase 0/2
+  limiter), with the spoken/voice review on any read-aloud output.
+- **DoD (seed):** spike concludes go/no-go; if go, hints ship flag-gated with a safety review and no
+  client-exposed keys.
+
+## Phase 12 — Self-service onboarding & guardian consent  ·  Mode: MAX  ·  🚦 go/no-go  ·  sequenced last (product, 2026-07-25)
+
+**Objective:** Turn Phase 5's soft nudge into a working funnel — **self-service signup** (the missing
+Phase 5.4) and a real **guardian-consent capture flow**, moving Phase 3's *documented* COPPA/GDPR-K
+posture into an *enforced* consent gate (who consents, how it's evidenced, what happens on withhold/
+withdraw). **Closes G6; rehomes UX3 + Phase 5.4.**
+**Gate to start:** Phase 1 (sessions) ✅ + go/no-go.
+
+- **12.1 — Signup flow** — a **new public (unauthenticated) endpoint** ⇒ must inherit the Phase 0/2
+  rate-limiting, body caps, and zod validation from day one (new abuse surface).
+- **12.2 — Guardian consent** — capture + evidence + a withdraw path; a withheld/withdrawn consent gates
+  account creation/use.
+- **DoD (seed):** a guardian can self-serve an account with evidenced consent; withdraw path works; signup
+  surface is rate-limited/validated/audited; anchors green.
+
+## Phase 13 — Billing & subscriptions  ·  Mode: MAX  ·  🚦 go/no-go  ·  sequenced last (product, 2026-07-25)
+
+**Objective:** The revenue engine **and** the **server-side per-account entitlement** layer Phase 5
+explicitly named as the only way to make metering non-bypassable. B2C family subscriptions + B2B org/
+school licensing (rides Phase 4's org model). **Closes M2** and the Phase 5 "client-only, bypassable" gap.
+**Gate to start:** Phase 4 (org seats) + Phase 12 (accounts to bill) + go/no-go.
+
+- **13.1 — Payment provider** (Stripe/Paddle) — webhook-signature verification, PCI-scope minimization;
+  add the provider to `COMPLIANCE.md`'s sub-processor list.
+- **13.2 — Entitlement layer** enforced at the **same `verifySession` choke point** Phase 3 established —
+  not a new one.
+- **DoD (seed):** paid tier purchasable; entitlement gates content **server-side** (non-bypassable);
+  webhooks signature-verified; sub-processor list updated; anchors green.
+
+## Phase 14 — Offline / PWA & classroom resilience  ·  Mode: ULTRA  ·  🚦 go/no-go  ·  sequenced last (product, 2026-07-25)
+
+**Objective:** PWA install + offline-first (the app is already localStorage-first, so this is a natural
+fit) + background sync on reconnect — the "works on cheap tablets with spotty classroom wifi" story, a
+real B2B objection-killer. **Closes G7.**
+**Gate to start:** best after Phase 4 settles the sync model + go/no-go.
+
+- **14.1 — Service worker + app manifest** (installable, cached shell).
+- **14.2 — Offline queue + reconnect sync** — reuse the existing debounced `scheduleSync`; must not break
+  the Phase 3 client-teardown-on-revocation logic.
+- **DoD (seed):** installable PWA; core practice works offline; queued progress syncs on reconnect without
+  clobbering server-authoritative state; anchors green.
+
+---
+
 ## Cross-cutting rules (apply to every phase)
 
 - **Backward compatibility is sacred.** `multi-user-isolation.spec.ts` and
@@ -1096,6 +1229,17 @@ beyond the MAX already justified by blast radius + CSP.
 - **Inside 3.5, the v4 sweep (3.5.1) precedes the token adoption (3.5.2)** for the same reason
   the limiter shipped shadow before enforcing: you tune against a baseline you trust. Restyling
   on top of an unswept `border`→`currentColor` regression would bake the regression in.
+- **Phases 6–14 open the "Grow & Teach" arc (2026-07-24/25).** Where 0→5 made the product hardened
+  and sellable, 6→14 make it engaging, insightful, and revenue-generating. All gate on a product
+  go/no-go and none touch the security/scale spine, so they can be resequenced freely.
+- **Onboarding (12), billing (13) and offline (14) are deliberately sequenced last (product call,
+  2026-07-25).** Accepted tension, stated plainly: until Phase 12 lands, Phase 5's freemium stays a
+  *nudge only* — a blocked visitor still cannot self-serve an account — and billing (13) depends on
+  12, so revenue waits on both. The product choice is to build analytics (7) and adaptive (8) on the
+  existing account base first.
+- **Among 7–11, order follows dependency:** analytics (7) before adaptive (8, which needs the mastery
+  signal); content (9) and a11y/i18n (10) are independent and continuously shippable; AI tutoring (11)
+  is exploratory and spike-gated.
 
 ---
 
@@ -1131,6 +1275,14 @@ Round 1 (9/9 participated) + Round 2 (9/9, all APPROVE, prior CONCERN cleared). 
 | 4 | Multi-tenancy & scale **+ permanent erasure** | MAX | 🚦 go/no-go + Phases 1–3 | ⬜ Not started — now also owns **C2b** (erasure, super-admin privilege) + **C10** |
 | 5 | Freemium access gating (logged-out daily limit) | ULTRA | ✅ go/no-go given (nudge, not DRM) | ✅ **Implemented** (branch `claude/roadmap-priorities-v1kcgr`) — anon one-day/one-subject cap via a new anon-only localStorage key (`kids_math.anon.dailyUsage.v1`), gated at the day hubs with a login-CTA lock. **Signup (5.4) explicitly deferred to its own phase** (per product): the lock's CTA uses the existing login only. Cap survives login→logout (slot excluded from the teardown allow-list); resets only at local midnight / site-data clear / new profile / incognito session. Soft nudge, not DRM — non-bypassable metering still needs server-side per-account entitlement (post-signup). |
 | 6 | **Animated learning companion** | MAX | 🚦 product go/no-go | ⬜ Not started — planned 2026-07-24 (`/plan`). Persistent Rive companion in the root layout: **Hybrid** growth (progress-derived stages + grade א׳/ב׳ theme), cursor-follow + tap reactions, and **context-aware answer moods** — `concerned` on hover/press, `happy` on correct, `sad` on incorrect, each with **≥3 variants** via an anti-repetition variety engine (practice-only; **hidden on exams / freemium lock / admin**). Answer widgets feed it through a side-effect-free event bus. Scaffold-first against a documented Rive input contract (art-asset-independent), flag-gated, new anon key `kids_math.companion.v1` only (no `lib/*/storage.ts` change). Grows **UX2**. First entry in the **"Grow & Teach"** arc. |
+| 7 | Learning analytics & teacher/parent reporting | MAX | 🚦 go/no-go + Phase 4 | ⬜ Not started — planned 2026-07-25. Org-scoped analytics collection + teacher class dashboard + parent report. Closes **G1**. |
+| 8 | Adaptive learning & spaced review | MAX | 🚦 go/no-go | ⬜ Not started — directional (full `/plan` deferred). Mastery-driven difficulty + spaced review; storage-additive. Closes **G2**. |
+| 9 | Content scale & authoring | MAX | 🚦 go/no-go | ⬜ Not started — directional. New grade/subject + non-engineer authoring pipeline (content-accuracy + voice review built in). Closes **G3**. |
+| 10 | Accessibility & internationalization | ULTRA | a11y continuous · 🚦 i18n | ⬜ Not started — full WCAG 2.1 AA audit + i18n (Arabic/English). Closes **G4** + open **D14**. |
+| 11 | AI-assisted hints & tutoring | MAX | 🚦 go/no-go + spike | ⬜ Not started — exploratory, spike-gated. In-app hints w/ kids-safety guardrails, no client keys. Closes **G5**. |
+| 12 | **Self-service onboarding & guardian consent** | MAX | 🚦 go/no-go | ⬜ Not started — **sequenced last per product (2026-07-25)**. Signup (Phase 5.4) + enforced guardian consent. Closes **G6**, rehomes **UX3**. |
+| 13 | **Billing & subscriptions** | MAX | 🚦 go/no-go + Phases 4/12 | ⬜ Not started — **sequenced last**. Payments + server-side entitlement (non-bypassable metering). Closes **M2** + the Phase 5 bypass gap. |
+| 14 | **Offline / PWA & resilience** | ULTRA | 🚦 go/no-go | ⬜ Not started — **sequenced last**. Installable PWA, offline-first, reconnect sync. Closes **G7**. |
 
 ---
 
