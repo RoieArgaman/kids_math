@@ -82,7 +82,7 @@ implemented yet — this document is the plan of record.
   correctness; documented in `LEARNING_LOG.md` (2026-07-10 isolation entry).
 - **`UserProgressBundle`** (`lib/user-data/types.ts`): `bundleVersion 1|2|3|4`, additive/
   backward-compatible. Merge is whole-domain LWW + per-day workbook merge (`merge.ts`).
-- **CI** (`.github/workflows/ci.yml`): `lint-and-unit` job + 3-shard `e2e`. **No `npm audit`,
+- **CI** (`.github/workflows/ci.yml`): `lint-and-unit` job + 5-shard `e2e`. **No `npm audit`,
   no Dependabot, no secret scanning, no SAST.** `next.config.mjs` sets
   `eslint.ignoreDuringBuilds: true` (lint runs in CI, not in the build itself).
 - **Tests:** strong. Unit API tests (`tests/unit/app/api/*`), unit merge/sync tests, and
