@@ -23,6 +23,22 @@ function isFirstAttemptPerfect(d: DayProgressState): boolean {
   return true;
 }
 
+/**
+ * Local calendar day (`YYYY-MM-DD`) of an ISO timestamp — finding F3.
+ *
+ * `completedAt` is stored as a UTC ISO string, so `.slice(0, 10)` yields the *UTC* date,
+ * while the rest of the app buckets by LOCAL day (`lib/streak/engine.ts` `getTodayDate`,
+ * plus early-bird `getHours()` and weekend-warrior `getDay()` in this same file). That
+ * mismatch let a child who finished near local midnight be mis-counted for the
+ * consecutive-day badges. Deriving the day from LOCAL components realigns the basis.
+ * Consecutive local dates still differ by exactly one day when re-parsed (both become
+ * UTC midnight), so the downstream gap arithmetic is unchanged.
+ */
+function localCalendarDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export interface EvaluateBadgesInput {
   progress: WorkbookProgressState;
   finalExam: FinalExamState | null;
@@ -160,11 +176,12 @@ export function evaluateBadges(input: EvaluateBadgesInput): BadgeId[] {
   // lib/streak tracks "app opened on consecutive days" (for StreakBadge on HomeScreen).
   // These badges track "at least one day completed on consecutive calendar dates".
   // They intentionally differ and must NOT be merged without a data migration plan.
-  // calendar-streak-3 / calendar-streak-7: completed on consecutive calendar days
+  // calendar-streak-3 / calendar-streak-7: completed on consecutive LOCAL calendar days
+  // (see localCalendarDate — bucketing by UTC here was finding F3).
   const completedDateSet = new Set(
     Object.values(progress.days)
       .filter((d) => d.isComplete && d.completedAt)
-      .map((d) => d.completedAt!.substring(0, 10)),
+      .map((d) => localCalendarDate(d.completedAt!)),
   );
   const sortedDates = Array.from(completedDateSet).sort();
   const ONE_DAY_MS = 86_400_000;
