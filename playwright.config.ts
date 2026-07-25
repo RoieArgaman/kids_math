@@ -6,6 +6,13 @@ const PLAYWRIGHT_WEB_SERVER_COMMAND =
   process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ??
   (process.env.CI ? "npm run start -- -p 3005" : "npm run dev -- -p 3005");
 
+// Optional explicit Chromium binary. Used by managed/remote environments that ship a
+// pre-installed browser whose build differs from the one this @playwright/test version
+// would download. Inert in CI (env unset there), which installs its own matching browser
+// via `npx playwright install --with-deps chromium`, so committing this changes nothing
+// about CI or a normal local run.
+const PLAYWRIGHT_CHROMIUM_EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -17,7 +24,17 @@ export default defineConfig({
     baseURL: PLAYWRIGHT_BASE_URL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(PLAYWRIGHT_CHROMIUM_EXECUTABLE
+          ? { launchOptions: { executablePath: PLAYWRIGHT_CHROMIUM_EXECUTABLE } }
+          : {}),
+      },
+    },
+  ],
   // CI uses production server (expects `npm run build` first). Local defaults to dev on port 3005
   // to avoid clashing with a common `next dev` on 3000.
   webServer: {
