@@ -162,4 +162,12 @@ test.describe("Admin Users screen", () => {
     await page.getByTestId(tid.restoreButton("user-1")).click();
     await expect(page.getByTestId(tid.statusBadge("user-1"))).toBeHidden();
   });
+
+  test("guardian data export link points at the per-user export endpoint", async ({ page }) => {
+    // Phase 3.2 guardian export — a plain admin-operated download link. Assert it targets
+    // the right user's export endpoint (the payload itself is covered by unit tests).
+    const exportLink = page.getByTestId(testIds.component.adminUsers.exportButton("user-1")).first();
+    await expect(exportLink).toBeVisible();
+    await expect(exportLink).toHaveAttribute("href", /\/api\/admin\/users\/export\?userId=user-1/);
+  });
 });
