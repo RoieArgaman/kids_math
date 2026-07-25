@@ -96,6 +96,40 @@ jobs:
       - name: Unit tests (with coverage thresholds)
         run: npm run test:coverage
 
+  # Content-accuracy advisory (roadmap finding F5). Runs the AI pedagogy audit on the
+  # learner-content files a PR CHANGED, so new/edited days always get an automatic pass
+  # (the deterministic validator can't judge word-problem semantics, distractor plausibility,
+  # or MoE syllabus fit). WARN-LEVEL: job-level `continue-on-error` makes a finding — or an
+  # API hiccup — neutral, never a failure, so it can't fail `workflow_run.conclusion` and
+  # therefore can't block deploy.yml. The script is also fail-open: it exits 0 when there's no
+  # PR base, no ANTHROPIC_API_KEY (local runs and fork PRs, which can't see repo secrets), or
+  # no changed content. Mirrors the check:coverage-matrix advisory. Skipped on docs-only diffs.
+  content-accuracy:
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'false'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history so the three-dot `origin/<base>...HEAD` merge-base diff resolves.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Content-accuracy audit (advisory, changed content only)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Cheaper model for the per-PR bulk pass; the human CLI keeps its Opus default.
+          AUDIT_MODEL: claude-haiku-4-5
+        run: npm run check:content
+
   # Supply-chain / secret scanning (roadmap S6 / Phase 0.5). Runs in parallel with the
   # other jobs. `npm audit` starts non-blocking (continue-on-error) so a newly-disclosed
   # advisory doesn't wedge unrelated PRs; flip to blocking once the tree is clean. The

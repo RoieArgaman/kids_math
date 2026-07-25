@@ -10,6 +10,7 @@
     "lint": "next lint",
     "check:testids": "node scripts/check-testids.mjs",
     "check:cards": "node scripts/check-cards.mjs",
+    "check:content": "node scripts/check-content-accuracy.mjs",
     "check:coverage-matrix": "node scripts/check-coverage-matrix.mjs",
     "codemod:add-testids": "node scripts/add-missing-testids.mjs",
     "codemod:dedupe-testids": "node scripts/dedupe-testids.mjs",

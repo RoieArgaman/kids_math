@@ -6,6 +6,33 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-25 (F5 — warn-level CI content-accuracy gate, MAX)
+- **Trigger:** audit finding F5 — the AI pedagogy audit (`scripts/audit-content-accuracy.mjs`)
+  was human-run only, so word-problem semantics / distractor plausibility / MoE syllabus fit had
+  no automatic pass. The deterministic validator (already unit-gated) structurally can't judge them.
+- **What changed / where:** exported `auditFile`/`SYSTEM`/`MODEL` from the human CLI (guarded its
+  `main()` with a realpath direct-invocation check so importing is side-effect-free); new
+  `scripts/check-content-accuracy.mjs`; `check:content` npm script; new `content-accuracy` job in
+  `ci.yml`; `.env.example`, `AGENTS.md`, `CLAUDE.md` rule 11, and the F5 finding row updated.
+- **Chose a dedicated advisory job over the finding's literal "wire into `test:qa`."** `test:qa`
+  gates deploy (`deploy.yml` `workflow_run`) and runs locally for every dev — a paid,
+  non-deterministic Anthropic call there would strand key-less runs and could stall a deploy.
+  The repo's established "advisory" pattern is job-level `continue-on-error` (see
+  `check:coverage-matrix`), not `test:qa` — so F5 mirrors that.
+- **Two layers of fail-open, on purpose.** (1) Job-level `continue-on-error` → the job is neutral,
+  never fails `workflow_run.conclusion`, so it can't block `deploy.yml`. (2) The script itself
+  exits 0 on every non-happy path: not a PR event, no `ANTHROPIC_API_KEY` (local runs **and fork
+  PRs**, which can't see repo secrets), no changed content, or a per-file API error (downgraded to
+  a notice). Warn-level means model flakiness can't wedge CI.
+- **Scope + cost bounds.** Diff filter is the four learner-content subdirs only
+  (`grade-a/-b/english/science`) — `lib/content/engine/**` is infrastructure, pointless to send to
+  a pedagogy prompt. Three-dot `origin/<base>...HEAD` (merge-base) + `--diff-filter=d` (skip
+  deletions). Cap 12 files/run with an overflow report; cheap `claude-haiku-4-5` for the bulk pass
+  (CLI keeps Opus). Needs `fetch-depth: 0` on checkout for the merge-base to resolve.
+- **Takeaway:** when adding an AI/paid/non-deterministic check to CI, keep it *off* the deploy-gating
+  path and make it fail-open at both the job and script level — an advisory that can redden CI or
+  block a deploy on an API 429 is worse than no advisory.
+
 ### 2026-07-25 (CI: widen E2E shard matrix 3 → 5)
 - **Trigger:** request for faster CI feedback.
 - **What changed / where:** `.github/workflows/ci.yml` — `e2e` matrix `[1,2,3]` → `[1,2,3,4,5]`,

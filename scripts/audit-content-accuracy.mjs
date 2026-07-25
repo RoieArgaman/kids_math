@@ -19,6 +19,7 @@
  * Model: claude-opus-4-8 (override with AUDIT_MODEL, e.g. claude-haiku-4-5 for cheaper bulk).
  */
 
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,8 +27,9 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const OUT_PATH = join(ROOT, "tmp", "content-audit.md");
-const MODEL = process.env.AUDIT_MODEL || "claude-opus-4-8";
-const API_KEY = process.env.ANTHROPIC_API_KEY;
+// Read lazily inside auditFile so importers (e.g. scripts/check-content-accuracy.mjs)
+// can set AUDIT_MODEL / ANTHROPIC_API_KEY before the first call.
+export const MODEL = process.env.AUDIT_MODEL || "claude-opus-4-8";
 
 // Default sample if no file is passed (keeps token cost bounded).
 const DEFAULT_TARGETS = ["lib/content/grade-a/day-08.ts"];
@@ -40,7 +42,7 @@ function assertSafeOutput(path) {
   }
 }
 
-const SYSTEM = `You are a meticulous math-pedagogy reviewer for an Israeli Hebrew-language
+export const SYSTEM = `You are a meticulous math-pedagogy reviewer for an Israeli Hebrew-language
 math workbook for Grades 1–2 (ages 6–8). You review exercise SOURCE CODE (TypeScript).
 Find issues a calculator cannot: arithmetic that is wrong in context, answers that don't
 match the prompt, implausible or ambiguous multiple-choice distractors, wording too hard
@@ -49,12 +51,19 @@ Hebrew text uses niqqud — that is expected, not an error. Be precise and conse
 only report genuine problems. For each finding give: the exercise id (if visible), a
 severity (HIGH/MEDIUM/LOW), the issue, and a concrete fix. If a file is clean, say so.`;
 
-async function auditFile(relPath) {
+/**
+ * Audit one content file with a real Claude call. Reads ANTHROPIC_API_KEY / AUDIT_MODEL
+ * from the environment at call time so importers can configure them first. Throws on a
+ * missing key or a non-2xx response — the caller decides whether that is fatal.
+ */
+export async function auditFile(relPath) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("auditFile: ANTHROPIC_API_KEY is not set");
   const source = await readFile(resolve(ROOT, relPath), "utf8");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      "x-api-key": API_KEY,
+      "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
@@ -85,7 +94,7 @@ async function auditFile(relPath) {
 
 async function main() {
   assertSafeOutput(OUT_PATH);
-  if (!API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     console.error("Missing ANTHROPIC_API_KEY. Add it to .env.local and run with --env-file=.env.local.");
     process.exit(2);
   }
@@ -101,7 +110,20 @@ async function main() {
   console.log(`[audit] wrote → tmp/content-audit.md (review by hand; nothing was changed)`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Run only when executed directly (`node scripts/audit-content-accuracy.mjs`), not when
+// imported (scripts/check-content-accuracy.mjs reuses auditFile/SYSTEM/MODEL). realpath so
+// a symlinked invocation still matches.
+const invokedDirectly = (() => {
+  try {
+    return realpathSync(process.argv[1] || "") === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+})();
+
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
