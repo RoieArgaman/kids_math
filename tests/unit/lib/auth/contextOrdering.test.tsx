@@ -76,6 +76,13 @@ vi.mock("@/lib/completion/reconcile", () => ({
   clearReconcileGuards: vi.fn(() => calls.push("guards")),
 }));
 
+// Analytics is a device-scoped key that clearLocalProgress deliberately preserves; the
+// auth boundary clears it explicitly on user switch / logout so one child's behavioral
+// events never bleed into the next child's session on a shared device (finding F4).
+vi.mock("@/lib/analytics/events", () => ({
+  clearEvents: vi.fn(() => calls.push("clearAnalytics")),
+}));
+
 import { AuthProvider, useAuth } from "@/lib/auth/context";
 
 function Consumer() {
@@ -138,6 +145,8 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
     expect(calls.indexOf("register")).toBeGreaterThan(calls.indexOf("prime:true"));
     expect(calls.indexOf("resumeSync")).toBeGreaterThan(calls.indexOf("register"));
     expect(calls).toContain("setOwner");
+    // F4: a different user taking over the device wipes the prior child's analytics.
+    expect(calls).toContain("clearAnalytics");
   });
 
   it("same-user device: pushes local (merge) then pulls, preserving offline work", async () => {
@@ -153,6 +162,8 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
     expect(pullIdx).toBeGreaterThan(pushIdx); // push-then-pull
     expect(calls).toContain("hydrate");
     expect(calls).not.toContain("clear"); // same-user work is never wiped
+    // F4: the SAME child returning keeps their own analytics — only a switch clears it.
+    expect(calls).not.toContain("clearAnalytics");
     expect(calls.indexOf("prime:true")).toBeGreaterThan(pullIdx);
   });
 
@@ -211,6 +222,8 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
       expect(calls).toContain("bump");
       expect(calls).toContain("clearOwner");
       expect(calls).toContain("guards");
+      // F4: teardown (logout / revocation) wipes the device's analytics too.
+      expect(calls).toContain("clearAnalytics");
       expect(screen.getByTestId("logged-in")).toHaveTextContent("no");
     });
 
