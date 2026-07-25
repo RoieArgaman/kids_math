@@ -57,18 +57,39 @@ function buildGradeData(grade: GradeId): GradeProgressData {
   };
 }
 
+/**
+ * Collect a subject's per-level final exams into the bundle map. The workbook store
+ * spans both levels but each level's final exam is a SEPARATE localStorage key, so we
+ * must read every level explicitly — reading only the default ("a") is exactly the bug
+ * (F1) that dropped Level ב׳ results from sync. Null entries are omitted to keep the
+ * bundle lean; the merge/hydrate readers treat an absent level as "no exam".
+ */
+function finalExamsByLevel<T>(load: (level: GradeId) => T | null): Partial<Record<GradeId, T>> {
+  const byLevel: Partial<Record<GradeId, T>> = {};
+  for (const grade of GRADES) {
+    const state = load(grade);
+    if (state) byLevel[grade] = state;
+  }
+  return byLevel;
+}
+
 function buildEnglishData(): EnglishProgressData {
+  const byLevel = finalExamsByLevel(loadEnglishFinalExamState);
   return {
     workbook: loadEnglishProgressState(),
-    finalExam: loadEnglishFinalExamState(),
+    // Legacy Level א׳ slot for backward-compatible readers; `finalExamByLevel` is authoritative.
+    finalExam: byLevel.a ?? null,
+    finalExamByLevel: byLevel,
     review: loadReviewState({ subject: "english" }),
   };
 }
 
 function buildScienceData(): ScienceProgressData {
+  const byLevel = finalExamsByLevel(loadScienceFinalExamState);
   return {
     workbook: loadScienceProgressState(),
-    finalExam: loadScienceFinalExamState(),
+    finalExam: byLevel.a ?? null,
+    finalExamByLevel: byLevel,
     review: loadReviewState({ subject: "science" }),
   };
 }
@@ -205,6 +226,29 @@ export function replaceLocalStorageFromBundle(bundle: UserProgressBundle): void 
   hydrateLocalStorageFromBundle(bundle);
 }
 
+/**
+ * Restore a subject's per-level final exams. Prefers the authoritative
+ * `finalExamByLevel` map (writes every level to its own key); falls back to the legacy
+ * singular `finalExam` slot — which is Level א׳ — for older bundles that predate the map.
+ * Writing only the default level here would strip Level ב׳ on the next device (F1).
+ */
+function hydrateFinalExamByLevel(
+  keyForLevel: (level: GradeId) => string,
+  data: { finalExam: unknown; finalExamByLevel?: Partial<Record<GradeId, unknown>> },
+): void {
+  const byLevel = data.finalExamByLevel;
+  if (byLevel) {
+    for (const grade of GRADES) {
+      const state = byLevel[grade];
+      if (state) window.localStorage.setItem(keyForLevel(grade), JSON.stringify(state));
+    }
+    return;
+  }
+  if (data.finalExam) {
+    window.localStorage.setItem(keyForLevel("a"), JSON.stringify(data.finalExam));
+  }
+}
+
 /** Writes server bundle directly to localStorage (bypasses storage module save guards). */
 export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void {
   if (typeof window === "undefined") return;
@@ -240,9 +284,7 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     if (bundle.english.workbook) {
       window.localStorage.setItem(englishProgressStorageKey(), JSON.stringify(bundle.english.workbook));
     }
-    if (bundle.english.finalExam) {
-      window.localStorage.setItem(englishFinalExamStorageKey(), JSON.stringify(bundle.english.finalExam));
-    }
+    hydrateFinalExamByLevel(englishFinalExamStorageKey, bundle.english);
     // English review state (bundleVersion 3+). Absent on v1/v2 bundles — guard handles that.
     if (bundle.english.review) {
       window.localStorage.setItem(englishReviewStorageKey(), JSON.stringify(bundle.english.review));
@@ -254,9 +296,7 @@ export function hydrateLocalStorageFromBundle(bundle: UserProgressBundle): void 
     if (bundle.science.workbook) {
       window.localStorage.setItem(scienceProgressStorageKey(), JSON.stringify(bundle.science.workbook));
     }
-    if (bundle.science.finalExam) {
-      window.localStorage.setItem(scienceFinalExamStorageKey(), JSON.stringify(bundle.science.finalExam));
-    }
+    hydrateFinalExamByLevel(scienceFinalExamStorageKey, bundle.science);
     if (bundle.science.review) {
       window.localStorage.setItem(scienceReviewStorageKey(), JSON.stringify(bundle.science.review));
     }

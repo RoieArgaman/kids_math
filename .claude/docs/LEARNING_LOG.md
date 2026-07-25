@@ -6,6 +6,31 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-25 (F1 fix — per-level final-exam cross-device sync, MAX)
+- **Trigger:** the full-codebase audit (`roadmap/CODE_REVIEW_FINDINGS_2026-07-25.md`, finding F1)
+  found that English & Science **Level ב׳** final-exam results were silently lost across devices.
+- **Root cause is a *symmetry* bug, not a schema bug.** The workbook store spans both levels in
+  one key, but each level's final exam is a **separate** localStorage key
+  (`…final_exam.v1.level.a` / `.level.b`). `buildBundleFromLocalStorage` and hydrate read only the
+  defaulted level (`"a"`), so Level ב׳ was never bundled or restored — yet `clearLocalProgress`
+  enumerates *all* levels and wiped it on logout/user-switch. A passed Level ב׳ exam vanished on
+  the next device. Every existing test used the defaulted (`"a"`) key, so nothing caught it.
+- **The tell was a `load*()` call with no `level` arg at a sync call site.** When a storage helper
+  defaults `level`/`grade`, that default at a *sync* boundary is the smell — it means "only one of
+  N levels is actually syncing." Fix: read **every** level explicitly.
+- **Fixed additively, no `bundleVersion` bump.** Added an optional `finalExamByLevel` map to the
+  English/Science bundle data; kept the singular `finalExam` as a documented **legacy Level-א׳
+  alias** so older readers degrade gracefully. Merge normalizes legacy+map into one per-level view,
+  does per-level LWW, and writes both back — so an old-shape push (legacy slot only) never drops the
+  server's Level ב׳. No envelope-schema change ⇒ zero rollback-rejection risk. Preferring additive
+  over a version bump kept backward-compat sacred *and* avoided the deploy/rollback edge.
+- **Prevention wired in, not just noted.** Added the **five-stage sync-symmetry checklist**
+  (build → hydrate → merge → clamp → clear) to `AGENTS.md → Data & Storage Rules`, listed the
+  English/Science/review/user-data files as MAX-escalate (they were missing), and made a
+  **non-default-level round-trip test mandatory** — `tests/unit/lib/user-data/finalExamLevelSync.test.ts`
+  is the template. The general lesson: a per-level/per-grade key needs a round-trip test that seeds a
+  **non-default** level, or the whole class of "looks right in single-level tests" bugs slips through.
+
 ### 2026-07-24 (Phase 5 — freemium anon daily cap, ULTRA)
 - **Trigger:** Roadmap Phase 5. Product chose the **nudge** framing (localStorage, not server
   enforcement) and **deferred signup (5.4) to its own phase** — the lock's CTA reuses the existing
