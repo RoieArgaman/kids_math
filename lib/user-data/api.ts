@@ -237,7 +237,10 @@ function hydrateFinalExamByLevel(
   data: { finalExam: unknown; finalExamByLevel?: Partial<Record<GradeId, unknown>> },
 ): void {
   const byLevel = data.finalExamByLevel;
-  if (byLevel) {
+  // Only treat the map as authoritative when it actually carries a level. A present-but-empty
+  // (or all-null) map must fall back to the legacy Level-א׳ slot, or a malformed bundle would
+  // strip a real exam from localStorage on hydrate (data loss).
+  if (byLevel && GRADES.some((grade) => byLevel[grade])) {
     for (const grade of GRADES) {
       const state = byLevel[grade];
       if (state) window.localStorage.setItem(keyForLevel(grade), JSON.stringify(state));

@@ -144,7 +144,10 @@ function normalizeFinalExams<S extends { updatedAt?: string | null }>(
   legacy: S | null | undefined,
   byLevel: Partial<Record<GradeId, S | null>> | undefined,
 ): Partial<Record<GradeId, S | null>> {
-  if (byLevel) return byLevel;
+  // The map is authoritative only when it actually carries a level. A present-but-empty
+  // (or all-null) `finalExamByLevel` — the shape a malformed/inconsistent bundle can hold —
+  // must fall through to the legacy Level-א׳ slot rather than silently drop it (data loss).
+  if (byLevel && LEVELS.some((level) => byLevel[level] != null)) return byLevel;
   return legacy == null ? {} : { a: legacy };
 }
 

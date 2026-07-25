@@ -44,7 +44,9 @@ const matrixText = readFileSync(MATRIX, "utf8");
 const missing = routes.filter((r) => !matrixText.includes(r));
 
 // Route paths referenced in the matrix but no longer present in app/ (stale, warn-only).
-const referenced = [...matrixText.matchAll(/app\/[A-Za-z0-9_\-[\]/]+\/page\.tsx/g)].map((m) => m[0]);
+// The character class must allow Next.js route-group parens `(group)`, catch-all dots
+// `[...slug]`, and dynamic brackets — otherwise those routes silently escape stale detection.
+const referenced = [...matrixText.matchAll(/app\/[A-Za-z0-9_.\-[\]()/]+\/page\.tsx/g)].map((m) => m[0]);
 const routeSet = new Set(routes);
 const stale = [...new Set(referenced)].filter((r) => !routeSet.has(r)).sort();
 

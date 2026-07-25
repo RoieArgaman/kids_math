@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { routes } from "@/lib/routes";
-import { testIds } from "@/lib/testIds";
+import { childTid, testIds } from "@/lib/testIds";
 import { STORAGE_KEYS } from "./testUtils";
 
 /**
@@ -49,8 +49,12 @@ test.describe("storage resilience", () => {
     await page.goto(routes.gradeHome(GRADE));
 
     await expect(page.getByTestId(testIds.screen.home.root(GRADE))).toBeVisible();
-    // Streak recomputes from scratch (tolerant read → first visit), so the badge is present.
     await expect(page.getByTestId(testIds.screen.home.dayCard("day-1"))).toBeVisible();
+    // Streak recomputes from scratch (tolerant read → first visit), so the badge renders
+    // with the day-1 streak rather than the corrupt value.
+    const streakBadge = page.getByTestId(childTid(testIds.screen.home.root(GRADE), "streakBadge"));
+    await expect(streakBadge).toBeVisible();
+    await expect(streakBadge).toContainText("יום 1 ברצף");
   });
 
   test("corrupt badge state → badge gallery renders its empty state, no crash", async ({ page }) => {
