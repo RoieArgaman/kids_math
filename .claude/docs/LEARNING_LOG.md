@@ -6,6 +6,24 @@ Append-only record of what we learned while working on this repo.
 
 - (Add new entries here. Prefer short, concrete notes.)
 
+### 2026-07-25 (CI: widen E2E shard matrix 3 → 5)
+- **Trigger:** request for faster CI feedback.
+- **What changed / where:** `.github/workflows/ci.yml` — `e2e` matrix `[1,2,3]` → `[1,2,3,4,5]`,
+  `--shard=i/3` → `i/5`, step label + comments updated. `PRODUCTION_HARDENING_ROADMAP.md`
+  "3-shard" → "5-shard". No `deploy.yml` change: it gates on the whole `CI` `workflow_run`
+  success, so it's shard-count-agnostic and all 5 must pass.
+- **Trade-off we consciously accepted (speed over CPU):** wall-clock gain is *sublinear* — the
+  per-shard fixed overhead (checkout + `npm ci` + `build` + `playwright install` ≈ ~90s) does
+  **not** parallelize away, so 3→5 saves only ~40s of test-time while adding ~+25% CPU-minutes
+  from 2 extra parallel builds. Kept the **self-contained build-per-shard** pattern; the shared
+  `.next/cache` keeps the extra builds incremental.
+- **Why NOT "one shared build + 5 shards":** a single build job becomes a *serial predecessor*
+  (nothing e2e starts until build finishes) → worse wall-clock, the opposite of the goal. Same
+  reasoning as the 2026-07-01 entry; a shared build is a CPU optimizer, not a speed one.
+- **Takeaway:** shard count is coupled in 3 places in `ci.yml` (matrix list, `--shard=i/N`
+  denominator, step label) — change all together. More shards ≠ proportionally faster once
+  fixed build/install overhead dominates; past ~4–5 shards the overhead wins.
+
 ### 2026-07-25 (F1 fix — per-level final-exam cross-device sync, MAX)
 - **Trigger:** the full-codebase audit (`roadmap/CODE_REVIEW_FINDINGS_2026-07-25.md`, finding F1)
   found that English & Science **Level ב׳** final-exam results were silently lost across devices.

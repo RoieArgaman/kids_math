@@ -126,8 +126,8 @@ jobs:
           # because deploy.yml gates on full CI success, would block all deploys.
           # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
-  # E2E, split across 3 parallel shards. Each shard is self-contained (builds its own
-  # production server) so the shards run fully in parallel — 3 parallel builds cost the
+  # E2E, split across 5 parallel shards. Each shard is self-contained (builds its own
+  # production server) so the shards run fully in parallel — 5 parallel builds cost the
   # same wall-clock as one, and the shared .next/cache keeps them incremental. This is
   # faster end-to-end than a single shared build that would serialize build -> e2e.
   # Skipped on docs-only changes.
@@ -139,7 +139,7 @@ jobs:
       # One failing shard should not cancel the others — we want the full failure picture.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v7
 
@@ -172,5 +172,5 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: E2E tests (shard ${{ matrix.shard }}/3)
-        run: npx playwright test --shard=${{ matrix.shard }}/3
+      - name: E2E tests (shard ${{ matrix.shard }}/5)
+        run: npx playwright test --shard=${{ matrix.shard }}/5
