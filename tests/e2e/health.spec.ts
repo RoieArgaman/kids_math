@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("health endpoint responds with the readiness contract", async ({ request }) => {
+test("health endpoint responds with the readiness contract @smoke", async ({ request }) => {
   const res = await request.get("/api/health");
   // The CI e2e server has no Firestore backend (other specs mock Firestore at the network
   // layer; this real request does not), so the probe legitimately reports "degraded" (503)

@@ -86,6 +86,13 @@ jobs:
       - name: Check data-testid coverage
         run: npm run check:testids
 
+      # Every app route must have a row in docs/TEST_COVERAGE_MATRIX.md. Advisory for now
+      # (continue-on-error) while the matrix backfills — mirrors the `npm audit` phasing
+      # below; drop continue-on-error to make an undocumented route fail the build.
+      - name: Check coverage matrix
+        continue-on-error: true
+        run: npm run check:coverage-matrix
+
       - name: Unit tests (with coverage thresholds)
         run: npm run test:coverage
 
@@ -126,20 +133,62 @@ jobs:
           # because deploy.yml gates on full CI success, would block all deploys.
           # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
-  # E2E, split across 5 parallel shards. Each shard is self-contained (builds its own
-  # production server) so the shards run fully in parallel — 5 parallel builds cost the
+  # Fast-fail smoke lane: runs the `@smoke`-tagged happy-path E2E tests un-sharded (~1-2 min).
+  # The full sharded `e2e` job gates on this (`needs: e2e-smoke`), so a broadly-broken PR
+  # fails here in ~90s and the 8 shard builds never spin up — cheap failure on the common
+  # "obviously broken" push, at the cost of ~90s added to the front of a green run.
+  e2e-smoke:
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Cache Next.js compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json', 'next.config.mjs') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: .playwright-browsers
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke (@smoke tag)
+        run: npm run test:e2e:smoke
+
+  # E2E, split across 8 parallel shards. Each shard is self-contained (builds its own
+  # production server) so the shards run fully in parallel — parallel builds cost the
   # same wall-clock as one, and the shared .next/cache keeps them incremental. This is
   # faster end-to-end than a single shared build that would serialize build -> e2e.
-  # Skipped on docs-only changes.
+  # Gated on e2e-smoke so a broadly-broken PR never spins these up. Skipped on docs-only.
   e2e:
-    needs: changes
+    needs: [changes, e2e-smoke]
     if: needs.changes.outputs.docs_only == 'false'
     runs-on: ubuntu-latest
     strategy:
       # One failing shard should not cancel the others — we want the full failure picture.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@v7
 
@@ -172,5 +221,5 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: E2E tests (shard ${{ matrix.shard }}/5)
-        run: npx playwright test --shard=${{ matrix.shard }}/5
+      - name: E2E tests (shard ${{ matrix.shard }}/8)
+        run: npx playwright test --shard=${{ matrix.shard }}/8

@@ -205,6 +205,25 @@ describe("mergeBundles", () => {
       expect(merged.english?.workbook?.days.e1.updatedAt).toBe(NEW);
       expect(merged.english?.review?.updatedAt).toBe(NEW);
     });
+
+    it("an empty finalExamByLevel does NOT drop a present legacy finalExam", () => {
+      // Malformed/inconsistent bundle shape: empty map + a real legacy Level-א׳ exam.
+      // The empty map must not be treated as authoritative (that dropped the exam).
+      const exam = makeFinalExam(NEW);
+      const existing = makeBundle({
+        english: {
+          workbook: makeWorkbook(OLD),
+          finalExam: exam,
+          finalExamByLevel: {},
+          review: null,
+        } as EnglishProgressData,
+      });
+      const incoming = makeBundle({ english: { workbook: makeWorkbook(OLD), finalExam: null, review: null } });
+
+      const merged = mergeBundles(existing, incoming);
+      expect(merged.english?.finalExam?.updatedAt).toBe(NEW);
+      expect(merged.english?.finalExamByLevel?.a?.updatedAt).toBe(NEW);
+    });
   });
 
   describe("same-subject per-day merge", () => {

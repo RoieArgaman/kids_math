@@ -20,7 +20,7 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe("grade A lifecycle", () => {
-  test("can complete day-1 and progress persists after refresh", async ({ page }) => {
+  test("can complete day-1 and progress persists after refresh @smoke", async ({ page }) => {
     // Seed day-1 as 100% done (all exercises correct) but not yet marked complete,
     // so DayOverviewScreen shows allSectionsComplete = true and the completeCta appears.
     await seedProgressState(

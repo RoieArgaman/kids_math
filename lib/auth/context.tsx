@@ -33,6 +33,7 @@ import {
   setLocalOwner,
 } from "@/lib/user-data/api";
 import { clearReconcileGuards } from "@/lib/completion/reconcile";
+import { clearEvents as clearAnalyticsEvents } from "@/lib/analytics/events";
 import { SyncGate } from "@/lib/hooks/useSyncGate";
 
 interface AuthContextValue {
@@ -84,6 +85,12 @@ async function reconcileForUser(userId: string): Promise<boolean> {
     if (merged) hydrateLocalStorageFromBundle(merged);
     setSyncPrimed(true);
   } else {
+    // Different user taking over this device: wipe the prior child's per-device
+    // behavioral analytics so their events never bleed into the incoming session
+    // (finding F4). Progress keys are cleared below by replace/clear; analytics is
+    // a device-scoped key that clearLocalProgress deliberately preserves, so it
+    // must be cleared explicitly here at the user-switch boundary.
+    clearAnalyticsEvents();
     const result = await fetchUserProgressResult();
     if (getAuthEpoch() !== epoch) return false;
     if (result.status === "ok") {
@@ -117,6 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSyncPrimed(false);
     unregisterSyncCallback();
     clearLocalProgress();
+    // Clear per-device behavioral analytics on logout so the next child on a shared
+    // device starts clean (finding F4) — analytics is a device-scoped key outside
+    // clearLocalProgress's progress allow-list.
+    clearAnalyticsEvents();
     clearReconcileGuards();
     clearLocalOwner();
     setUser(null);

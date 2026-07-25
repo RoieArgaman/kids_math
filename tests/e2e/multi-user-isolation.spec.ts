@@ -247,4 +247,54 @@ test.describe("per-student progress isolation", () => {
     const parsed = JSON.parse(raw!) as { days: Record<string, { isComplete?: boolean }> };
     expect(parsed.days["day-2"]?.isComplete).toBe(true);
   });
+
+  // ─── F4: per-device analytics must not bleed across a user switch ───────────
+  const ANALYTICS_KEY = "kids_math.analytics_events.v1";
+
+  async function seedAnalytics(page: Page): Promise<void> {
+    await page.evaluate((key) => {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify([{ name: "home_viewed", at: new Date().toISOString() }]),
+      );
+    }, ANALYTICS_KEY);
+  }
+
+  function readAnalytics(page: Page): Promise<string | null> {
+    return page.evaluate((key) => window.localStorage.getItem(key), ANALYTICS_KEY);
+  }
+
+  test("F4: logout clears the device's analytics events", async ({ page }) => {
+    const store: Record<string, Bundle | null> = { [ALICE.userId]: bundleWithCompletedDay1() };
+    await mockMultiUser(page, store);
+    await page.goto("/");
+    await page.evaluate(() => window.localStorage.clear());
+
+    await login(page, "alice");
+    await seedAnalytics(page);
+    expect(await readAnalytics(page)).toBeTruthy();
+
+    await logout(page);
+    // The next child on this shared device must not inherit Alice's behavioral events.
+    expect(await readAnalytics(page)).toBeNull();
+  });
+
+  test("F4: a different student logging in clears the prior student's analytics", async ({ page }) => {
+    const store: Record<string, Bundle | null> = {
+      [ALICE.userId]: bundleWithCompletedDay1(),
+      [BOB.userId]: null,
+    };
+    await mockMultiUser(page, store);
+    await page.goto("/");
+    await page.evaluate(() => window.localStorage.clear());
+
+    await login(page, "alice");
+    await seedAnalytics(page);
+    await logout(page);
+
+    // Even if events somehow linger past logout, Bob taking over the device clears them.
+    await seedAnalytics(page); // simulate residual events on the shared device
+    await login(page, "bob");
+    expect(await readAnalytics(page)).toBeNull();
+  });
 });

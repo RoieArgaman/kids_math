@@ -45,7 +45,7 @@ test.describe("science day smoke", () => {
     await page.evaluate(() => window.localStorage.clear());
   });
 
-  test("learner reaches Science from home and completes Day 1 end-to-end", async ({ page }) => {
+  test("learner reaches Science from home and completes Day 1 end-to-end @smoke", async ({ page }) => {
     // Grade → Subject → Day: grade A subject picker → Science → Level א׳ home
     await page.goto("/subjects/a");
     await page.getByTestId(testIds.screen.subjectPicker.scienceCardCta()).click();

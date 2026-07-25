@@ -72,7 +72,7 @@ test.describe("auth UI — Login modal", () => {
 });
 
 test.describe("auth UI — successful login", () => {
-  test("login with correct credentials shows avatar and hides login button", async ({ page }) => {
+  test("login with correct credentials shows avatar and hides login button @smoke", async ({ page }) => {
     await mockAuthApi(page);
     await page.goto("/");
     await page.getByTestId(testIds.component.auth.loginButton()).click();

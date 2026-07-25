@@ -55,7 +55,7 @@ test.describe("english day smoke", () => {
     await page.evaluate(() => window.localStorage.clear());
   });
 
-  test("learner reaches English from home and completes Day 1 end-to-end", async ({ page }) => {
+  test("learner reaches English from home and completes Day 1 end-to-end @smoke", async ({ page }) => {
     // Grade → Subject → Day: grade A subject picker → English → Level A home
     await page.goto("/subjects/a");
     await page.getByTestId(testIds.screen.subjectPicker.englishCardCta()).click();

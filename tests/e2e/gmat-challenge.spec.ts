@@ -11,7 +11,7 @@ test.beforeEach(async ({ page, context }) => {
   await page.evaluate(() => window.localStorage.clear());
 });
 
-test("gmat challenge is locked until final exam passed", async ({ page }) => {
+test("gmat challenge is locked until final exam passed @smoke", async ({ page }) => {
   await page.goto("/grade/a/gmat-challenge");
   await expect(page.getByTestId(testIds.screen.gmatChallenge.locked("a"))).toBeVisible();
 });
