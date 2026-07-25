@@ -70,7 +70,7 @@ npm run test:qa          # Full QA suite (lint + unit + build + E2E)
 8. No console.log — in production code
 9. No secrets — flag immediately if found
 10. Numbers only — students type digits or click buttons. **No text/character input.** Use `number_input` or `multiple_choice`, never free-text fields
-11. **Content accuracy audit** — when adding/editing exercises or day content, run an AI content audit (in-session, or `scripts/audit-content-accuracy.mjs`) for word-problems, natural-language claims, distractor plausibility, and MoE syllabus fit. The deterministic checker can't catch these. Full rules: **`AGENTS.md` → Educational Content Changes**
+11. **Content accuracy audit** — when adding/editing exercises or day content, run an AI content audit (in-session, or `scripts/audit-content-accuracy.mjs`) for word-problems, natural-language claims, distractor plausibility, and MoE syllabus fit. The deterministic checker can't catch these. CI also runs this as a **warn-level** backstop on changed content days (the `content-accuracy` job), but it does not replace hands-on triage. Full rules: **`AGENTS.md` → Educational Content Changes**
 12. **Voice/speech review** — when adding/editing any read-aloud text (exercise prompts, teaching primers, worked examples, English layer), review how it *sounds*: niqqud/spelling, grammar & gender agreement, math/comparison symbols voiced by `normalizeTextForHebrewTts`, and step-label numbering. The deterministic lint and content audit don't cover pronunciation. Full rules: **`AGENTS.md` → Educational Content Changes → Spoken-Content / Voice Review**
 
 ### Self-Review (before every response)

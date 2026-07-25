@@ -25,7 +25,7 @@ pile of nitpicks — the one that matters is **F1 (real cross-device data loss).
 | F2 | LOW | robustness | data-sync | `clampFutureTimestamps` 500s on an envelope-valid bundle missing `grades`, defeating the merge layer's explicit "must not throw" guard | **NEW** |
 | F3 | LOW | bug | metrics/badges | `calendar-streak` badge buckets by **UTC** date while the rest of the app uses **local** date → mis-counts near local midnight | **NEW** |
 | F4 | LOW | privacy/isolation | analytics | Per-device analytics events are not cleared on user switch → one child's behavioral events persist into the next child's session on a shared device | **NEW** |
-| F5 | GAP | process | content | Pedagogy accuracy (word-problem semantics, distractor plausibility, MoE syllabus fit) has no CI gate; deterministic backstop only catches clean arithmetic contradictions | partial |
+| F5 | GAP | process | content | Pedagogy accuracy (word-problem semantics, distractor plausibility, MoE syllabus fit) has no CI gate; deterministic backstop only catches clean arithmetic contradictions — **✅ warn-level `content-accuracy` CI job added** | partial |
 | F6 | INFO | security-posture | ops | Staged protections still non-enforcing by default: CSP report-only w/ `unsafe-inline`, HSTS `max-age=86400`, rate-limiter & body-cap in shadow mode | KNOWN |
 | F7 | INFO | security-by-design | access | Grade-B unlock/lock routes are intentionally unauthenticated (content gate, not data) | KNOWN (S7) |
 
@@ -145,6 +145,19 @@ or MoE syllabus fit. My spot-check (`grade-a/day-01.ts`) was internally consiste
 **Fix direction:** out of scope for a code audit — a full pedagogy pass is a separate large
 effort. Minimum: wire `scripts/audit-content-accuracy.mjs` (or the in-session audit) into
 `test:qa` as a warn-level gate so new/edited days are always checked.
+
+**✅ Resolved (2026-07-25, warn-level CI gate).** Added a `content-accuracy` CI job
+(`scripts/check-content-accuracy.mjs`) that runs the AI audit on the learner-content day files a
+PR changes (`lib/content/{grade-a,grade-b,english,science}/**`). Chosen over the literal
+"into `test:qa`" because `test:qa` gates deploy and runs locally for every dev — a paid,
+non-deterministic Anthropic call there would strand key-less runs and could stall a deploy.
+Instead it mirrors the `check:coverage-matrix` advisory: job-level `continue-on-error` (neutral,
+never fails `workflow_run.conclusion`, so it can't block `deploy.yml`) and a fail-open script
+(exits 0 with no PR base, no `ANTHROPIC_API_KEY` — local runs and fork PRs — or no changed
+content; per-file API errors downgrade to a notice). Cheap model (`claude-haiku-4-5`) for the
+bulk pass; the human CLI keeps its Opus default. **Still advisory, not a hard gate** — a human
+triages findings (AGENTS.md → Educational Content Changes); the full pedagogy sweep remains
+future work.
 
 ---
 

@@ -1028,6 +1028,12 @@ So for every changed exercise also run an **AI content audit**, via either:
 - **script** — `node --env-file=.env.local scripts/audit-content-accuracy.mjs <files>`
   (needs `ANTHROPIC_API_KEY`; read-only, writes `tmp/content-audit.md`).
 
+CI also runs this audit **automatically** on any PR that changes a learner-content day file
+(`lib/content/{grade-a,grade-b,english,science}/**`) via the `content-accuracy` job
+(`scripts/check-content-accuracy.mjs`) — findings land in the job's step summary. It is
+**warn-level** (never blocks the build) and does **not** replace the in-session/manual triage
+below; it is a backstop so a changed day is never merged without *any* AI pass (roadmap F5).
+
 Triage findings by hand. **Never auto-flip a `true_false` answer or reword content without
 review.** See `docs/AI_AUTHORING_GUIDELINES.md`. (This audit has already caught real bugs the
 deterministic checker structurally cannot — e.g. a false odd/even claim and a wrong-answer
