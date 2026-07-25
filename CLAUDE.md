@@ -17,6 +17,7 @@
 | `/plan` | Before non-trivial work | Multi-role plan with risk assessment, waits for confirmation before coding |
 | `/verify` | After completing changes | Runs quality gates, produces structured PASS/FAIL verification report |
 | `/review` | Before PR / after implementation | Multi-role code review with severity levels, role participation tracking |
+| `/tests-gaps` | Auditing test coverage | Researches the codebase for gaps in automated testing, ranks them by risk, then authors the missing tests (mostly E2E) on approval |
 
 ## Auto-Enforced Hooks
 
