@@ -52,8 +52,11 @@
 | Auth (login/logout/avatar) | `auth.spec.ts`, `auth-backward-compat.spec.ts` | `authLogin.test.ts`, `context*.test.tsx` | one real-login path env-gated |
 | Account lockout / show-password | `account-lockout.spec.ts` | `accountLockout.test.ts` | cooldown, one-more-try nudge |
 | Session revocation / logout-all | `session-revocation.spec.ts` | `tokenVersion.test.ts` | token-version bump |
-| Per-student isolation / sync | `multi-user-isolation.spec.ts`, `cross-device-sync.spec.ts` | `isolation.test.ts`, `merge.test.ts` | F1 level-ב exam, F4 analytics clear |
-| Grade-B unlock (per subject) | `grade-b-gate.spec.ts`, `grade-b-lifecycle.spec.ts` | `gradeUnlock.test.ts`, `reconcile.test.ts` | unlock via English/Science too |
+| Per-student isolation / sync | `multi-user-isolation.spec.ts` | `isolation.test.ts`, `merge.test.ts` | F1 level-ב exam (unit); F4 analytics clear (E2E) |
+| Session revocation (401 teardown) | `session-lifecycle.spec.ts`, `session-revocation.spec.ts` | `contextOrdering.test.tsx`, `tokenVersion.test.ts` | 401 wipes device; anon not wiped |
+| Grade-B unlock (per subject) | `grade-b-gate.spec.ts`, `grade-b-lifecycle.spec.ts`, `grade-b-unlock-paths.spec.ts`, `grade-subject-flow.spec.ts` | `gradeUnlock.test.ts`, `reconcile.test.ts` | English/Science-only unlock isolation |
+| Storage resilience | `storage-resilience.spec.ts` | `progress/storage.test.ts` | corrupt/wrong-shape → no crash (F2-style) |
+| Adaptive weak-spot suggestions | `adaptive-suggestions.spec.ts` | `adaptiveSuggestions.test.ts` | shown on completed day w/ wrong ex; MetacognitionToast unit-only |
 | Anonymous daily limit | `anon-daily-limit.spec.ts` | `anonDailyLimit.test.ts` | per-subject cap, login lifts |
 | Final exam (math) | `grade-a-lifecycle.spec.ts` | `final-exam/grading.test.ts`, `picker.test.ts` | boundary score, reset |
 | Spiral review | `spiral-review.spec.ts` | `review/engine.test.ts` | prior-wrong resurfacing |
@@ -64,6 +67,8 @@
 | Touch targets / a11y | `touch-targets.spec.ts`, `edge-and-a11y.spec.ts` | — | ≥44px, mobile viewport |
 | Security headers / health | `security-headers.spec.ts`, `health.spec.ts` | `health.test.ts` | staged CSP/HSTS posture |
 | Error routes / 404 | `edge-and-a11y.spec.ts`, `error-pages.spec.ts` | `parseDayId.test.ts` | invalid grade/level/day/section |
+| Exercise-kind mechanics | `exercise-kinds.spec.ts`, `exercise-negative.spec.ts` | `exercise.test.ts` | per-kind wrong→retry→correct |
+| RTL / layout invariants | `rtl-i18n.spec.ts`, `touch-targets.spec.ts` | — | dir=rtl, no horizontal overflow |
 | Seed-key contract (harness) | — | `seedKeyContract.test.ts` | guards E2E seed prefixes vs lib keys |
 
 ## Status legend
