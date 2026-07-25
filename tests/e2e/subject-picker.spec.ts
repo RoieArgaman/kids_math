@@ -8,7 +8,7 @@ test.describe("grade picker (landing)", () => {
     await page.evaluate(() => window.localStorage.clear());
   });
 
-  test("landing `/` shows the grade picker with Grade A and Grade B cards", async ({ page }) => {
+  test("landing `/` shows the grade picker with Grade A and Grade B cards @smoke", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId(testIds.screen.gradePicker.root())).toBeVisible();
     await expect(page.getByTestId(testIds.screen.gradePicker.gradeCard("a"))).toBeVisible();

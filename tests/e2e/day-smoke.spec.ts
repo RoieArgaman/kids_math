@@ -32,7 +32,7 @@ test.describe("day smoke", () => {
     await page.evaluate(() => window.localStorage.clear());
   });
 
-  test("grade A all days show Day Hub and accept answers in warmup section", async ({ page }) => {
+  test("grade A all days show Day Hub and accept answers in warmup section @smoke", async ({ page }) => {
     const byId = getWorkbookDaysById("a") as Record<string, WorkbookDay>;
     const dayIds = allDayIdsForGrade("a");
 
