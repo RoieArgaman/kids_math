@@ -19,7 +19,10 @@ export default defineConfig({
   workers: 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: [["list"]],
+  // Local: `list` only (unchanged dev behavior). CI: also emit a `blob` report per shard,
+  // which the `e2e-report` job in ci.yml downloads and stitches into one HTML report via
+  // `playwright merge-reports`. Playwright names each blob by its shard index automatically.
+  reporter: process.env.CI ? [["list"], ["blob"]] : [["list"]],
   use: {
     baseURL: PLAYWRIGHT_BASE_URL,
     trace: "on-first-retry",

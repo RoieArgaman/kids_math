@@ -31,6 +31,20 @@ If Playwright or Node changes in a way caches miss, CI should still fail loudly 
 
 If E2E dominates wall time, consider Playwright **`--shard=i/n`** with a **matrix** of `n` jobs, **one shared build artifact** (or accept install+build per shard), and **blob reporters + merge** (or project equivalent) for a single combined report. Parallelizing lint vs build vs E2E is possible but easy to get wrong; sharding is often simpler once E2E is the bottleneck.
 
+### Merged E2E report → GitHub Pages
+
+CI runs E2E across **8 shards**. Each shard emits a Playwright **`blob`** report (enabled only under CI — `playwright.config.ts` uses `reporter: process.env.CI ? [["list"],["blob"]] : [["list"]]`, so local `npm run test:e2e` is unchanged) and uploads it as artifact `blob-report-<shard>` (`if: !cancelled()`, so **failed** runs still publish a report). The **`e2e-report`** job then downloads all shard blobs, runs `playwright merge-reports --reporter html`, and publishes the single combined report:
+
+- **Live on GitHub Pages** on every run — commit/PR **and** merge to `main`. It's a **single site, "latest wins"**: the URL shows the most recent run for that ref (no per-PR isolation by design).
+- **Downloadable artifact** (`playwright-html-report`) on every run — the fallback when a live deploy can't happen (e.g. fork PRs, whose read-only token has no `pages:write`/`id-token`).
+- Reproduce locally: collect the shard zips into `all-blob-reports/` and run `npm run test:e2e:merge`.
+
+**Non-blocking by design:** `e2e-report` sets `continue-on-error: true`. `deploy.yml` gates Firebase on this workflow's `workflow_run.conclusion == 'success'`, so a Pages/merge hiccup must **never** be able to flip CI to failed and wedge the app deploy (same rationale as the `content-accuracy` / `npm audit` advisories).
+
+**One-time prerequisites** (repo settings, not code):
+1. **Settings → Pages → Source: GitHub Actions.**
+2. **Settings → Environments → `github-pages`:** allow non-`main` branches to deploy (or leave protection off) — otherwise on-commit (PR) deploys are rejected.
+
 ## Firebase App Hosting
 
 `firebase.json` uses **`alwaysDeployFromSource: true`** — **remote build** is expected. Local `npm run build` in `deploy.sh` validates tests and sanity; it does **not** replace the cloud build unless you adopt an [artifact-based flow](https://firebase.google.com/docs/app-hosting/alt-deploy) (out of scope unless the team opts in).
