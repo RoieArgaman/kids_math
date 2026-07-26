@@ -49,6 +49,7 @@ export function SubjectFinalExamScreen({
   const [previewAll, setPreviewAll] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [state, setState] = useState<FinalExamState | null>(null);
+  const [showReward, setShowReward] = useState(false);
   const stateRef = useRef<FinalExamState | null>(null);
 
   useEffect(() => {
@@ -127,6 +128,7 @@ export function SubjectFinalExamScreen({
       passed: result.passed,
       submittedAt: new Date().toISOString(),
     });
+    if (result.passed) setShowReward(true);
 
     // Passing the level-A final exam (only reachable after all lessons) unlocks this
     // subject in Grade B.
@@ -282,7 +284,7 @@ export function SubjectFinalExamScreen({
         </button>
       )}
 
-      <StarReward visible={submitted && Boolean(state?.passed)} text="עָבַרְתָּ אֶת הַמִּבְחָן הַמְסַכֵּם!" onConfirm={() => {}} />
+      <StarReward visible={showReward} text="עָבַרְתָּ אֶת הַמִּבְחָן הַמְסַכֵּם!" onConfirm={() => setShowReward(false)} />
     </main>
   );
 }

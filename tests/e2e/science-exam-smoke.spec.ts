@@ -70,6 +70,13 @@ test.describe("science final exam smoke", () => {
       await expect(
         page.getByTestId(childTid(testIds.screen.science.exam.finishPanel(), "score")),
       ).toHaveText("100%");
+
+      // Passing pops the celebration dialog; confirming must dismiss it (regression: it
+      // used to be stuck open) and reveal the reachable results CTAs underneath.
+      await expect(page.getByTestId(testIds.component.starReward.dialog())).toBeVisible();
+      await page.getByTestId(testIds.component.starReward.confirm()).click();
+      await expect(page.getByTestId(testIds.component.starReward.overlay())).toHaveCount(0);
+      await expect(page.getByTestId(testIds.screen.science.exam.retryCta())).toBeVisible();
     });
   }
 
