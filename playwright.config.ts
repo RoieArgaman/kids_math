@@ -16,7 +16,12 @@ const PLAYWRIGHT_CHROMIUM_EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABL
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
-  workers: 4,
+  // Cap workers on CI to 2. Each shard's runner also hosts the Next production server, so 4
+  // parallel Chromium instances plus the memory-heavy visual-smoke lane (loads ~14 full screens)
+  // OOM-kills the browser mid-shard — every remaining test then fails with "Target page, context
+  // or browser has been closed". 2 workers keeps peak memory under the runner's ceiling; local
+  // dev (more RAM, no sharding) stays at 4 for speed.
+  workers: process.env.CI ? 2 : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: [["list"]],

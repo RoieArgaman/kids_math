@@ -212,12 +212,12 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
   // A soft-deleted or deactivated child must not leave their workbook readable to whoever opens
   // the browser next — school and family devices are shared.
   describe("revocation teardown", () => {
-    it("wipes the device when a signed-in session comes back 401", async () => {
+    it("wipes the device when a signed-in session comes back 401 (confirmed by retry)", async () => {
       apiMeResult.mockResolvedValue({ status: "unauthorized" });
       getLocalOwner.mockReturnValue("u1"); // this device WAS signed in
 
       renderProvider();
-      await waitFor(() => expect(calls).toContain("clear"));
+      await waitFor(() => expect(calls).toContain("clear"), { timeout: 2000 });
 
       expect(calls).toContain("bump");
       expect(calls).toContain("clearOwner");
@@ -225,6 +225,29 @@ describe("AuthProvider — server-authoritative reconcile on mount", () => {
       // F4: teardown (logout / revocation) wipes the device's analytics too.
       expect(calls).toContain("clearAnalytics");
       expect(screen.getByTestId("logged-in")).toHaveTextContent("no");
+      // A genuine revocation is confirmed with exactly one retry before teardown.
+      expect(apiMeResult).toHaveBeenCalledTimes(2);
+    });
+
+    it("does NOT wipe when a lone boot 401 is followed by a healthy 200 (transient blip)", async () => {
+      // Android-tablet Back-reload: the cookie is momentarily omitted so /me returns 401 once,
+      // then the confirm-retry succeeds. The session and local work must be preserved — the
+      // device must NOT be torn down on the ambiguous first 401.
+      apiMeResult
+        .mockResolvedValueOnce({ status: "unauthorized" })
+        .mockResolvedValueOnce({ status: "ok", user: { userId: "u1", username: "kid", role: "user" } });
+      getLocalOwner.mockReturnValue("u1"); // same user returning
+
+      renderProvider();
+      await waitFor(() => expect(screen.getByTestId("logged-in")).toHaveTextContent("yes"), {
+        timeout: 2000,
+      });
+
+      // Reconciled as the same user — never torn down.
+      expect(calls).not.toContain("bump");
+      expect(calls).not.toContain("clearOwner");
+      expect(calls).not.toContain("clearAnalytics");
+      expect(apiMeResult).toHaveBeenCalledTimes(2);
     });
 
     it("does NOT wipe an anonymous visitor (no owner marker)", async () => {
