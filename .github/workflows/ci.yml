@@ -219,8 +219,8 @@ jobs:
     if: needs.changes.outputs.docs_only == 'false'
     runs-on: ubuntu-latest
     # Fail fast on a hung shard: without this the job inherits GitHub's 6h default, so a
-    # crashed browser (see the CI-only worker cap in playwright.config.ts) would sit for
-    # hours burning per-test timeouts instead of surfacing quickly.
+    # crashed browser (e.g. a renderer OOM) would sit for hours burning per-test timeouts
+    # across the remaining tests instead of surfacing quickly.
     timeout-minutes: 20
     strategy:
       # One failing shard should not cancel the others — we want the full failure picture.

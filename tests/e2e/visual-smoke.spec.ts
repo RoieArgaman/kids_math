@@ -69,8 +69,12 @@ test.describe("visual smoke (live-browser)", () => {
       // Body should be present and visible (not a blank crash page).
       await expect(page.locator("body")).toBeVisible();
 
-      // Capture a screenshot artifact for visual review.
-      const buffer = await page.screenshot({ fullPage: true });
+      // Capture a screenshot artifact for visual review. Viewport-only (NOT fullPage):
+      // a fullPage capture allocates a canvas the height of the entire scrollable page,
+      // which on the tall screens here (plan/badges/admin) grows large enough to crash the
+      // Chromium renderer ("Target page, context or browser has been closed"), taking down
+      // the whole shard. A viewport shot is bounded and still serves the smoke-review purpose.
+      const buffer = await page.screenshot();
       await testInfo.attach(`${screen.name}.png`, { body: buffer, contentType: "image/png" });
 
       // FAIL if any genuine console error or page error fired.
